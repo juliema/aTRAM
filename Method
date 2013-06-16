@@ -15,6 +15,8 @@ BLAST SHORT READS AGAINST THE REFERENCE DNA
 7. 7-getexons.pl  -- will read through the blast output and pull only the sequence that matched (exons) reverse transcribe if necessary.
 
 ALIGN SHORT READS TO REFERENCE GENE USING MUSCLE
-8. 8-makealignmentfiles.pl
+
+8. 8-makealignmentfiles.pl -- need reference DNA reads
+9. 9-runmuscle.pl -- need muscle program
 
 
