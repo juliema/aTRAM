@@ -21,7 +21,7 @@ ALIGN SHORT READS TO REFERENCE GENE USING MUSCLE
 
 CREATE CONSENSUS FILES PER GENE
 
-10. makefastafrommuscleruns.pl
+10. makefastafrommuscle.pl
 11. makeconsensussequence.pl
 
 
