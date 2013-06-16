@@ -1,9 +1,9 @@
 FIRST STEP BLAST: NEED TO HAVE BLAST LOADED
 
-1. create blast database with illumina reads
-2. runtblastn.pl -- run tblastn of reference peptides against blast database
-3. getsequencetoretrieve.pl -- makes gene files with top hits from blast
-4. runretrieveseq.pl -- uses blastdbcmd to pull sequences from blast db
+
+1. runtblastn.pl -- run tblastn of reference peptides against blast database
+2. getsequencetoretrieve.pl -- makes gene files with top hits from blast
+3. runretrieveseq.pl -- uses blastdbcmd to pull sequences from blast db
 
 ASSEMBLE SHORT READS PER GENE - NEED TO HAVE AMOS LOADED
 
