@@ -19,4 +19,10 @@ ALIGN SHORT READS TO REFERENCE GENE USING MUSCLE
 8. 8-makealignmentfiles.pl -- need reference DNA reads
 9. 9-runmuscle.pl -- need muscle program -- strong gap opening penalty
 
+CREATE CONSENSUS FILES PER GENE
+
+10. makefastafrommuscleruns.pl
+11. makeconsensussequence.pl
+
+
 
