@@ -1,5 +1,5 @@
 
+1. create blast database with illumina reads
+2. runtblastn.pl -- run tblastn of reference peptides against blast database
+3. runretreieveseq.pl  -- retreives sequences from blast database
 
-2. create blast database with illumina reads
-1. runtblastn.pl -- run tblastn of reference peptides against blast database
-2. 
