@@ -11,4 +11,8 @@ ASSEMBLE SHORT READS PER GENE - NEED TO HAVE AMOS LOADED
 
 BLAST SHORT READS AGAINST THE REFERENCE DNA
 
+6. 6-runblast.pl
+7. 7-getexons.pl  -- will read through the blast output and pull only the sequence that matched (exons) reverse transcribe if necessary.
+
+
 
