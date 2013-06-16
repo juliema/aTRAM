@@ -1,5 +1,9 @@
+
+FIRST STEP BLAST:
 1. create blast database with illumina reads
 2. runtblastn.pl -- run tblastn of reference peptides against blast database
 3. getsequencetoretrieve.pl -- makes gene files with top hits from blast
 4. runretrieveseq.pl -- uses blastdbcmd to pull sequences from blast db
-5. 
+
+ASSEMBLE SHORT READS PER GENE
+
