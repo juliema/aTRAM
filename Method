@@ -1,0 +1,5 @@
+
+
+2. create blast database with illumina reads
+1. runtblastn.pl -- run tblastn of reference peptides against blast database
+2. 
