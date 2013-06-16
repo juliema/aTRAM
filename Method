@@ -1,4 +1,4 @@
 1. create blast database with illumina reads
 2. runtblastn.pl -- run tblastn of reference peptides against blast database
-3. runretreieveseq.pl  -- retrieves sequences from blast database
-4. 
+3. getsequencetoretrieve.pl -- makes gene files with top hits from blast
+4. runretrieveseq.pl --
