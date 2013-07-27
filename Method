@@ -5,9 +5,14 @@ FIRST STEP BLAST: NEED TO HAVE BLAST LOADED
 2. getsequencetoretrieve.pl -- makes gene files with top hits from blast
 3. runretrieveseq.pl -- uses blastdbcmd to pull sequences from blast db
 
+## IF illumina run was paired end run getpairedend.pl script to pull the other read####
+
 ASSEMBLE SHORT READS PER GENE - NEED TO HAVE AMOS LOADED
 
 5.  runminimus.pl  -- 
+
+### Possibly add in an iterative step here where we go back with the assemblies and blast them against the illumina database again###
+### Kevin suggested running it 5 times, I am doing some tests here to see how this affects our %coverage#########
 
 BLAST SHORT READS AGAINST THE REFERENCE DNA
 
