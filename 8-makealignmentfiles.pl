@@ -10,7 +10,7 @@ for $file (@array)
     $file =~ s/\S+\/5-MUSCLE\/(\S+).blastn.out.fasta/$1/g;
 #    print "$file\n";
     print "$count\n";
-    open FH, "<BodyLouse.$file\-RA.fasta";
+    open FH, "</Users/juliema/Documents/Projects/TRAMiEvoBio/3-EXONSBLAST/BodyLouse.$file\-RA.fasta";
     while (<FH>)
     {
   if (/^>body\_louse\_(\S+)-RA/)
