@@ -14,7 +14,7 @@ ASSEMBLE SHORT READS PER GENE - NEED TO HAVE AMOS LOADED
 ### Possibly add in an iterative step here where we go back with the assemblies and blast them against the illumina database again###
 ### Kevin suggested running it 5 times, I am doing some tests here to see how this affects our %coverage#########
 
-BLAST SHORT READS AGAINST THE REFERENCE DNA
+BLAST SHORT READS AGAINST THE REFERENCE GENE - for all 10,774 genes
 
 6. 6-runblast.pl
 7. 7-getexons.pl  -- will read through the blast output and pull only the sequence that matched (exons) reverse transcribe if necessary.
