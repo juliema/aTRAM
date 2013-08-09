@@ -6,6 +6,8 @@ FIRST STEP BLAST: NEED TO HAVE BLAST LOADED
 3. runretrieveseq.pl -- uses blastdbcmd to pull sequences from blast db
 
 ## IF illumina run was paired end run getpairedend.pl script to pull the other read####
+--getboth.pl
+
 
 ASSEMBLE SHORT READS PER GENE - NEED TO HAVE AMOS LOADED
 
