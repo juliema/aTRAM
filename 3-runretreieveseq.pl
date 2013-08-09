@@ -1,5 +1,7 @@
 #!usr/bin/perl
 
+####### There are duplicates, need to get rid of them, it takes time and space
+
 $pathDB='/Users/juliema/Documents/Projects/TRAMiEvoBio/P_schaefBlastDB';
 
 
