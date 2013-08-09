@@ -18,13 +18,13 @@ ASSEMBLE SHORT READS PER GENE - NEED TO HAVE AMOS LOADED
 
 BLAST SHORT READS AGAINST THE REFERENCE GENE - for all 10,774 genes
 
-6. 6-runblast.pl
-7. 7-getexons.pl  -- will read through the blast output and pull only the sequence that matched (exons) reverse transcribe if necessary.
+6. runblast.pl
+7. getexons.pl  -- will read through the blast output and pull only the sequence that matched (exons) reverse transcribe if necessary.
 
 ALIGN SHORT READS TO REFERENCE GENE USING MUSCLE
 
-8. 8-makealignmentfiles.pl -- need reference DNA reads
-9. 9-runmuscle.pl -- need muscle program -- strong gap opening penalty
+8. makealignmentfiles.pl -- need reference DNA reads
+9. runmuscle.pl -- need muscle program -- strong gap opening penalty
 
 CREATE CONSENSUS FILES PER GENE
 
