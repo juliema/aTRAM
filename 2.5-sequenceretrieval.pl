@@ -1,9 +1,12 @@
 use strict;
 
-my $seq_names = shift;
+my $seq_blast = shift;
 my $fastafile_1 = shift;
 my $fastafile_2 = shift;
 my $outfile = "$seq_names.fasta";
+
+my $seq_names = "$seq_blast.sorted";
+system ("gawk '{sub(\"/1\",\"\");print $2;}' $seq_blast | sort > $seq_names");
 
 open LIST_FH, "<", "$seq_names";
 open FA1_FH, "<", "$fastafile_1";
