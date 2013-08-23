@@ -2,12 +2,12 @@
 use strict;
 
 my $short_read_archive = shift;
-my $genes_file = shift;
 
 my $fastq_input = 0;
 
 # if the sra is a fastq file, make it fasta.
 if ($short_read_archive =~ /\.f.*q/) { # if it's a fastq file:
+	print "fastq file inputted...converting to fasta.\n";
 	$fastq_input = 1;
 	# un-interleave fastq file into fasta:
 	open FH, "<", $short_read_archive or die "couldn't open fasta file";
@@ -38,9 +38,11 @@ if ($fastq_input == 1) {
 }
 
 # sort fasta short-read file
+print "sorting fasta file.\n";
 system ("bash 3.5-sort_fasta.sh $working_sra");
 
 # un-interleave fasta file into two paired files:
+print "un-interleaving fasta file into paired files.\n"
 open FH, "<", $short_read_archive or die "couldn't open fasta file";
 
 open OUT1_FH, ">", "$short_read_archive.1.fasta" or die "couldn't create result file";
@@ -63,4 +65,6 @@ close OUT1_FH;
 close OUT2_FH;
 
 # make the blast db from the first of the paired end files
+print "making blastdb from first of paired fasta files.\n";
 system ("makeblastdb -in $short_read_archive.1.fasta -dbtype nucl -out $short_read_archive.db");
+
