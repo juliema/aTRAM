@@ -1,8 +1,8 @@
 use strict;
 
-my $seq_blast = shift;
 my $fastafile_1 = shift;
 my $fastafile_2 = shift;
+my $seq_blast = shift;
 
 my $seq_names = "$seq_blast.sorted";
 my $outfile = "$seq_names.fasta";
