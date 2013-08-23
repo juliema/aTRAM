@@ -13,6 +13,7 @@ open OUT_FH, ">", "$outfile";
 my $curr_name = readline LIST_FH;
 
 while ($curr_name) {
+	print "looking for $curr_name\n";
 	my $fa_seq1 = (readline FA1_FH) . (readline FA1_FH);
 	my $fa_seq2 = (readline FA2_FH) . (readline FA2_FH);
 
@@ -20,7 +21,13 @@ while ($curr_name) {
 	if ($fa_seq2 eq "") { last; }
 
 	if ($fa_seq1 =~ /$curr_name/) {
+		print "found $curr_name\n";
 		print OUT_FH "$fa_seq1$fa_seq2";
 		$curr_name = readline LIST_FH;
 	}
 }
+
+close LIST_FH;
+close FA1_FH;
+close FA2_FH;
+close OUT_FH;
