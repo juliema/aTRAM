@@ -3,9 +3,9 @@ use strict;
 my $seq_blast = shift;
 my $fastafile_1 = shift;
 my $fastafile_2 = shift;
-my $outfile = "$seq_names.fasta";
 
 my $seq_names = "$seq_blast.sorted";
+my $outfile = "$seq_names.fasta";
 system ("gawk '{sub(\"/1\",\"\");print $2;}' $seq_blast | sort > $seq_names");
 
 open LIST_FH, "<", "$seq_names";
