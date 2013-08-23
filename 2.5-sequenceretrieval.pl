@@ -14,7 +14,6 @@ my $curr_name = readline LIST_FH;
 
 while ($curr_name) {
 	chomp $curr_name;
-	print "looking for $curr_name\n";
 	my $fa_seq1 = (readline FA1_FH) . (readline FA1_FH);
 	my $fa_seq2 = (readline FA2_FH) . (readline FA2_FH);
 
