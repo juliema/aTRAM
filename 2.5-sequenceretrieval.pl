@@ -6,7 +6,8 @@ my $fastafile_2 = shift;
 
 my $seq_names = "$seq_blast.sorted";
 my $outfile = "$seq_names.fasta";
-system ("gawk '{sub(\"/1\",\"\");print $2;}' $seq_blast | sort > $seq_names");
+system ("gawk '{sub(\"/1\",\"\");print \$2;}' $seq_blast | sort > $seq_names");
+print "made file $seq_names\n";
 
 open LIST_FH, "<", "$seq_names";
 open FA1_FH, "<", "$fastafile_1";
