@@ -3,4 +3,4 @@
 
 infile=$1
 outfile=$1.sorted.fasta
-gawk '{sub(/lcl\|/,""); print $1 "," $2 $3 }' RS=">" $infile | sort | gawk '/^\s+$/ {print "hi"; } {print ">" $1 "\n" $2}' FS="," > $outfile
+gawk '{sub(/lcl\|/,""); print $1 "," $2 $3 }' RS=">" $infile | sort | gawk '{if ($2 - /^,$/) next; print ">" $1 "\n" $2}' FS="," > $outfile
