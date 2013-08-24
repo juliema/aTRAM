@@ -1,7 +1,9 @@
 #!/usr/bin/perl
 use strict;
+use File::Basename;
 
 my $short_read_archive = shift;
+my $executing_path = dirname(__FILE__);
 
 my $fastq_input = 0;
 
@@ -39,11 +41,11 @@ if ($fastq_input == 1) {
 
 # sort fasta short-read file
 print "sorting fasta file.\n";
-system ("bash 3.5-sort_fasta.sh $working_sra");
+system ("bash $executing_path/3.5-sort_fasta.sh $working_sra");
 
 # un-interleave fasta file into two paired files:
-print "un-interleaving fasta file into paired files.\n"
-open FH, "<", $short_read_archive or die "couldn't open fasta file";
+print "un-interleaving fasta file into paired files.\n";
+open FH, "<", "$short_read_archive" or die "couldn't open fasta file";
 
 open OUT1_FH, ">", "$short_read_archive.1.fasta" or die "couldn't create result file";
 open OUT2_FH, ">", "$short_read_archive.2.fasta" or die "couldn't create result file";
