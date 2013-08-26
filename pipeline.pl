@@ -6,6 +6,7 @@ my $short_read_archive = shift;
 my $search_fasta = shift;
 
 # for (my $i=0; $i<5; $i++) {
+my $i=0;
 	print ("interation $i starting...\n");
 	print ("\t blastn...\n");
 	system("blastn -db $short_read_archive.db -query $search_fasta -outfmt 6 -num_threads 8 -out $short_read_archive.blast.$i");
