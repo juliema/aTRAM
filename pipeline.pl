@@ -12,7 +12,7 @@ for (my $i=0; $i<5; $i++) {
 	print ("\t retrieving reads...\n");
 	system ("perl ~/TRAM/2.5-sequenceretrieval.pl $short_read_archive.1.fasta $short_read_archive.2.fasta $short_read_archive.blast.$i");
 	print ("\t velveth...\n");
-	system ("velveth $short_read_archive.velvet 31 -fasta -shortPaired $short_read_archive.fasta.sorted.fasta");
+	system ("velveth $short_read_archive.velvet 31 -fasta -shortPaired $short_read_archive.1.fasta $short_read_archive.2.fasta");
 	print ("\t velvetg...\n");
 	system ("velvetg $short_read_archive.velvet -ins_length 300 -exp_cov 30 -min_contig_lgth 200");
 	$search_fasta = "$short_read_archive.$1.contigs.fa";
