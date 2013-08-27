@@ -44,11 +44,11 @@ print "sorting fasta file.\n";
 system ("bash $executing_path/3.5-sort_fasta.sh $working_sra");
 
 # un-interleave fasta file into two paired files:
-print "un-interleaving fasta file into paired files.\n";
-open FH, "<", "$short_read_archive" or die "couldn't open fasta file";
+print "un-interleaving $working_sra.sorted.fasta into paired files.\n";
+open FH, "<", "$working_sra.sorted.fasta" or die "couldn't open fasta file";
 
-open OUT1_FH, ">", "$short_read_archive.1.fasta" or die "couldn't create result file";
-open OUT2_FH, ">", "$short_read_archive.2.fasta" or die "couldn't create result file";
+open OUT1_FH, ">", "$working_sra.1.fasta" or die "couldn't create result file";
+open OUT2_FH, ">", "$working_sra.2.fasta" or die "couldn't create result file";
 
 my $fs = readline FH;
 while ($fs) {
