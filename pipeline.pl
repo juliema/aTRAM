@@ -8,7 +8,7 @@ my $search_fasta = shift;
 for (my $i=0; $i<5; $i++) {
 # my $i=0;
 	print ("interation $i starting...\n");
-	print ("\t blastn...\n");
+	print ("\t blastn -db $short_read_archive.db -query $search_fasta -outfmt 6 -num_threads 8 -out $short_read_archive.blast.$i\n");
 	system("blastn -db $short_read_archive.db -query $search_fasta -outfmt 6 -num_threads 8 -out $short_read_archive.blast.$i");
 	print ("\t retrieving reads...\n");
 	system ("perl ~/TRAM/2.5-sequenceretrieval.pl $short_read_archive.1.fasta $short_read_archive.2.fasta $short_read_archive.blast.$i");
