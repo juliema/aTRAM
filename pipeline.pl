@@ -1,21 +1,82 @@
 use strict;
+use Getopt::Long;
+use Pod::Usage;
+use File::Basename;
 
-my $short_read_archive = shift;
+if (@ARGV == 0) {
+    pod2usage(-verbose => 1);
+}
 
-#initially, run the pipeline on the inputted gene:
-my $search_fasta = shift;
+my $runline = "running " . basename($0) . " " . join (" ", @ARGV) . "\n";
 
-for (my $i=0; $i<5; $i++) {
-# my $i=0;
+my $short_read_archive = 0;
+my $search_fasta = 0;
+my $ins_length = 300;
+my $iterations = 5;
+my $start_iter = 0;
+
+GetOptions ('reads=s' => \$short_read_archive,
+            'target=s' => \$search_fasta,
+            'insert_length|ins_length=i' => \$ins_length,
+            'iterations=i' => \$iterations,
+            'start_iteration=i' => \$start_iter,
+            'help|?' => \$help) or pod2usage(-msg => "GetOptions failed.", -exitval => 2);
+
+if ($help) {
+    pod2usage(-verbose => 1);
+}
+
+unless($short_read_archive and $search_fasta) {
+    pod2usage(-msg => "Must specify a short read archive (that has already been prepared with 0-prepare_files.pl) and a target gene in fasta form.");
+}
+
+print $runline;
+
+my $cmd;
+
+for (my $i=$start_iter; $i<$iterations; $i++) {
 	print ("interation $i starting...\n");
-	print ("\t blastn -db $short_read_archive.db -query $search_fasta -outfmt 6 -num_threads 8 -out $short_read_archive.blast.$i\n");
-	system("blastn -db $short_read_archive.db -query $search_fasta -outfmt 6 -num_threads 8 -out $short_read_archive.blast.$i");
-	print ("\t retrieving reads...\n");
-	system ("perl ~/TRAM/2.5-sequenceretrieval.pl $short_read_archive.1.fasta $short_read_archive.2.fasta $short_read_archive.blast.$i");
-	print ("\t velveth...\n");
-	system ("velveth $short_read_archive.velvet 31 -fasta -shortPaired $short_read_archive.blast.$i.sorted.fasta");
-	print ("\t velvetg...\n");
-	system ("velvetg $short_read_archive.velvet -ins_length 300 -exp_cov 30 -min_contig_lgth 200");
-	$search_fasta = "$short_read_archive.$i.contigs.fa";
+	$cmd = "blastn -db $short_read_archive.db -query $search_fasta -outfmt 6 -num_threads 8 -out $short_read_archive.blast.$i";
+	print ("\t$cmd\n");
+	system($cmd);
+
+	$cmd = "perl ~/TRAM/2.5-sequenceretrieval.pl $short_read_archive.1.fasta $short_read_archive.2.fasta $short_read_archive.blast.$i";
+	print ("\t$cmd\n");
+	system($cmd);
+
+	$cmd = "velveth $short_read_archive.velvet 31 -fasta -shortPaired $short_read_archive.blast.$i.sorted.fasta";
+	print ("\t$cmd\n");
+	system($cmd);
+
+	$cmd = "velvetg $short_read_archive.velvet -ins_length $ins_length -exp_cov 30 -min_contig_lgth 200";
+	print ("\t$cmd\n");
+	system($cmd);
 	system ("mv $short_read_archive.velvet/contigs.fa $search_fasta");
 }
+
+
+
+__END__
+
+=head1 NAME
+
+pipeline.pl
+
+=head1 SYNOPSIS
+
+pipeline.pl -reads -target [-ins_length]
+
+=head1 OPTIONS
+
+  -reads:     		short read archive (already run through 0-prepare_files.pl).
+  -target:          fasta file with sequences of interest.
+  -ins_length:	    optional: if specified, the size of the fragments used in the short-read library (default 300).
+
+=head1 DESCRIPTION
+
+Takes a fasta file and finds aligned regions in each sequence in the fasta file that
+match the reference sequence(es). Returns a fasta file of aligned regions of similarity.
+Uses BLASTN to find regions of similarity.
+
+=cut
+
