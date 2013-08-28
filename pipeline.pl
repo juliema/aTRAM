@@ -14,6 +14,7 @@ my $search_fasta = 0;
 my $ins_length = 300;
 my $iterations = 5;
 my $start_iter = 0;
+my $help = 0;
 
 GetOptions ('reads=s' => \$short_read_archive,
             'target=s' => \$search_fasta,
