@@ -57,26 +57,26 @@ for (my $i=$start_iter; $i<$iterations; $i++) {
 	print ("interation $i starting...\n");
 	$cmd = "blastn -db $short_read_archive.db -query $search_fasta -outfmt 6 -num_threads 8 -out $short_read_archive.blast.$i";
 	print $log_fh ("\t$cmd\n");
-	system( EXIT_ANY , $cmd);
+	capture(EXIT_ANY, $cmd);
 
-	$cmd = "perl ~/TRAM/2.5-sequenceretrieval.pl $short_read_archive.1.fasta $short_read_archive.2.fasta $short_read_archive.blast.$i";
+	$cmd = "perl $executing_path/2.5-sequenceretrieval.pl $short_read_archive.1.fasta $short_read_archive.2.fasta $short_read_archive.blast.$i";
 	print $log_fh ("\t$cmd\n");
-	system($cmd);
+	capture (EXIT_ANY, $cmd);
 
 	$cmd = "velveth $short_read_archive.velvet 31 -fasta -shortPaired $short_read_archive.blast.$i.sorted.fasta";
 	print $log_fh ("\t$cmd\n");
-	system($cmd);
+	capture (EXIT_ANY, $cmd);
 
 	$cmd = "velvetg $short_read_archive.velvet -ins_length $ins_length -exp_cov 30 -min_contig_lgth 200";
 	print $log_fh ("\t$cmd\n");
-	system($cmd);
+	capture (EXIT_ANY, $cmd);
 	$search_fasta = "$short_read_archive.$i.contigs.fa";
 	system ("mv $short_read_archive.velvet/contigs.fa $search_fasta");
 
 	print OUT_FH `cat $search_fasta | gawk '{sub(/>/,">\$1"); print $0}'`;
 
 	$cmd = "bash $executing_path/5.5-sort_contigs.sh $search_fasta";
-	system($cmd);
+	capture (EXIT_ANY, $cmd);
 
 	open FH, "<", "$search_fasta.sorted.tab";
 	my @contigs = <FH>;
@@ -105,7 +105,6 @@ for (my $i=$start_iter; $i<$iterations; $i++) {
 		print FH ">$2\n$3";
 	}
 	close FH;
-# 	system ("mv $search_fasta.sorted.tab $search_fasta");
 
 }
 
