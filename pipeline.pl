@@ -71,7 +71,7 @@ for (my $i=$start_iter; $i<$iterations; $i++) {
 	print $log_fh ("\t$cmd\n");
 	capture (EXIT_ANY, $cmd);
 	$search_fasta = "$short_read_archive.$i.contigs.fa";
-	system ("mv $short_read_archive.velvet/contigs.fa $search_fasta");
+	capture ("mv $short_read_archive.velvet/contigs.fa $search_fasta");
 
 	print OUT_FH `cat $search_fasta | gawk '{sub(/>/,">\$1"); print $0}'`;
 
