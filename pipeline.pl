@@ -57,7 +57,7 @@ for (my $i=$start_iter; $i<$iterations; $i++) {
 	print ("interation $i starting...\n");
 	$cmd = "blastn -db $short_read_archive.db -query $search_fasta -outfmt 6 -num_threads 8 -out $short_read_archive.blast.$i";
 	print $log_fh ("\t$cmd\n");
-	system($cmd);
+	system([0,1,2], $cmd);
 
 	$cmd = "perl ~/TRAM/2.5-sequenceretrieval.pl $short_read_archive.1.fasta $short_read_archive.2.fasta $short_read_archive.blast.$i";
 	print $log_fh ("\t$cmd\n");
