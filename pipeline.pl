@@ -55,26 +55,27 @@ for (my $i=$start_iter; $i<$iterations; $i++) {
 	print ("interation $i starting...\n");
 	$cmd = "blastn -db $short_read_archive.db -query $search_fasta -outfmt 6 -num_threads 8 -out $short_read_archive.blast.$i";
 	print $log_fh ("\t$cmd\n");
-	system($cmd);
+	system($cmd) or die "blastn failed";
 
 	$cmd = "perl ~/TRAM/2.5-sequenceretrieval.pl $short_read_archive.1.fasta $short_read_archive.2.fasta $short_read_archive.blast.$i";
 	print $log_fh ("\t$cmd\n");
-	system($cmd);
+	system($cmd) or die "sequence retrieval failed";
 
 	$cmd = "velveth $short_read_archive.velvet 31 -fasta -shortPaired $short_read_archive.blast.$i.sorted.fasta";
 	print $log_fh ("\t$cmd\n");
-	system($cmd);
+	system($cmd) or die "velveth failed";
 
 	$cmd = "velvetg $short_read_archive.velvet -ins_length $ins_length -exp_cov 30 -min_contig_lgth 200";
 	print $log_fh ("\t$cmd\n");
-	system($cmd);
+	system($cmd) or die "velvetg failed";
+
 	$search_fasta = "$short_read_archive.$i.contigs.fa";
 	system ("mv $short_read_archive.velvet/contigs.fa $search_fasta");
 
 	print OUT_FH `cat $search_fasta | gawk '{sub(/>/,">\$1"); print $0}'`;
 
 	$cmd = "bash $executing_path/5.5-sort_contigs.sh $search_fasta";
-	system($cmd);
+	system($cmd) or die "system call failed";
 
 	open FH, "<", "$search_fasta.sorted.tab";
 	my @contigs = <FH>;
