@@ -41,7 +41,7 @@ my $log_fh;
 if ($log_file) {
 	open $log_fh, ">", $log_file or die "couldn't open $log_file\n";
 } else {
-	$log_fh = STDOUT;
+	$log_fh = *STDOUT;
 }
 
 my $cmd;
