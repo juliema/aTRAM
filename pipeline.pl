@@ -73,7 +73,7 @@ for (my $i=$start_iter; $i<$iterations; $i++) {
 	$search_fasta = "$short_read_archive.$i.contigs.fa";
 	capture ("mv $short_read_archive.velvet/contigs.fa $search_fasta");
 
-	print OUT_FH `cat $search_fasta | gawk '{sub(/>/,">\$1"); print $0}'`;
+	print OUT_FH `cat $search_fasta | gawk '{sub(/>/,">\$1"); print \$0}'`;
 
 	$cmd = "bash $executing_path/5.5-sort_contigs.sh $search_fasta";
 	capture (EXIT_ANY, $cmd);
@@ -102,7 +102,7 @@ for (my $i=$start_iter; $i<$iterations; $i++) {
 	foreach my $line (@new_contigs) {
 		chomp $line;
 		$line =~ /(.*?)\t(.*?)\t(.*)/;
-		print FH ">$2\n$3";
+		print FH ">$2\n$3\n";
 	}
 	close FH;
 
