@@ -71,7 +71,7 @@ for (my $i=$start_iter; $i<$iterations; $i++) {
 	$search_fasta = "$short_read_archive.$i.contigs.fa";
 	system ("mv $short_read_archive.velvet/contigs.fa $search_fasta");
 
-	print OUT_FH `cat $search_fasta | gawk '{sub(/>/,">$1"); print $0}'`;
+	print OUT_FH `cat $search_fasta | gawk '{sub(/>/,">\$1"); print $0}'`;
 
 	$cmd = "bash $executing_path/5.5-sort_contigs.sh $search_fasta";
 	system($cmd);
