@@ -49,7 +49,7 @@ if ($start_iter > 0) {
 	$search_fasta = "$short_read_archive.$start_iter.contigs.fa";
 }
 
-open OUT_FH, ">+", "$short_read_archive.all.fasta";
+open OUT_FH, ">>", "$short_read_archive.all.fasta";
 
 for (my $i=$start_iter; $i<$iterations; $i++) {
 	print ("interation $i starting...\n");
