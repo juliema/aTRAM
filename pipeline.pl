@@ -2,7 +2,7 @@ use strict;
 use Getopt::Long;
 use Pod::Usage;
 use File::Basename;
-use IPC::System::Simple;
+use IPC::System::Simple qw(run system capture EXIT_ANY);
 use autodie qw(:all);
 
 if (@ARGV == 0) {
