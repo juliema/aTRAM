@@ -18,6 +18,7 @@ my $iterations = 5;
 my $start_iter = 0;
 my $help = 0;
 my $log_file = 0;
+my $use_ends = 0;
 
 GetOptions ('reads=s' => \$short_read_archive,
             'target=s' => \$search_fasta,
@@ -25,6 +26,7 @@ GetOptions ('reads=s' => \$short_read_archive,
             'iterations=i' => \$iterations,
             'start_iteration=i' => \$start_iter,
             'log_file=s' => \$log_file,
+            'use_ends' => \$use_ends,
             'help|?' => \$help) or pod2usage(-msg => "GetOptions failed.", -exitval => 2);
 
 if ($help) {
@@ -73,38 +75,40 @@ for (my $i=$start_iter; $i<$iterations; $i++) {
 	$search_fasta = "$short_read_archive.$i.contigs.fa";
 	capture ("mv $short_read_archive.velvet/contigs.fa $search_fasta");
 
-	print OUT_FH `cat $search_fasta | gawk '{sub(/>/,">\$1"); print \$0}'`;
+	if ($use_ends != 0) {
+		print OUT_FH `cat $search_fasta | gawk '{sub(/>/,">$1"); print \$0}'`;
 
-	$cmd = "bash $executing_path/5.5-sort_contigs.sh $search_fasta";
-	capture (EXIT_ANY, $cmd);
+		$cmd = "bash $executing_path/5.5-sort_contigs.sh $search_fasta";
+		capture (EXIT_ANY, $cmd);
 
-	open FH, "<", "$search_fasta.sorted.tab";
-	my @contigs = <FH>;
-	close FH;
-	my @new_contigs = ();
+		open FH, "<", "$search_fasta.sorted.tab";
+		my @contigs = <FH>;
+		close FH;
+		my @new_contigs = ();
 
-	for (my $j=0; $j<@contigs; $j++) {
-		my ($len,$name,$seq) = split (/\t/,$contigs[$j]);
-		if ($len > ($ins_length * 5)) {
-			my $name_start = $name. "_start";
-			my $name_end = $name . "_end";
-			$seq =~ /^(.{$ins_length}).*(.{$ins_length})$/;
-			my $seq_start = $1;
-			my $seq_end = $2;
-			push @new_contigs, "$ins_length\t$name_start\t$seq_start";
-			push @new_contigs, "$ins_length\t$name_end\t$seq_end";
-		} else {
-			push @new_contigs, $contigs[$j];
+		for (my $j=0; $j<@contigs; $j++) {
+			my ($len,$name,$seq) = split (/\t/,$contigs[$j]);
+			if ($len > ($ins_length * 5)) {
+				my $name_start = $name. "_start";
+				my $name_end = $name . "_end";
+				$seq =~ /^(.{$ins_length}).*(.{$ins_length})$/;
+				my $seq_start = $1;
+				my $seq_end = $2;
+				push @new_contigs, "$ins_length\t$name_start\t$seq_start";
+				push @new_contigs, "$ins_length\t$name_end\t$seq_end";
+			} else {
+				push @new_contigs, $contigs[$j];
+			}
 		}
-	}
 
-	open FH, ">", "$search_fasta";
-	foreach my $line (@new_contigs) {
-		chomp $line;
-		$line =~ /(.*?)\t(.*?)\t(.*)/;
-		print FH ">$2\n$3\n";
+		open FH, ">", "$search_fasta";
+		foreach my $line (@new_contigs) {
+			chomp $line;
+			$line =~ /(.*?)\t(.*?)\t(.*)/;
+			print FH ">$2\n$3\n";
+		}
+		close FH;
 	}
-	close FH;
 
 }
 
