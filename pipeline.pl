@@ -19,7 +19,7 @@ my $start_iter = 0;
 my $help = 0;
 my $log_file = 0;
 my $use_ends = 0;
-my $output_name = 0;
+my $output_file = 0;
 
 GetOptions ('reads=s' => \$short_read_archive,
             'target=s' => \$search_fasta,
