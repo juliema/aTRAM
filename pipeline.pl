@@ -50,7 +50,7 @@ if ($log_file) {
 	$log_fh = *STDOUT;
 }
 
-if ($output_file == 0) {
+unless ($output_file) {
     $output_file = $short_read_archive;
 }
 
