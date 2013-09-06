@@ -19,6 +19,7 @@ my $start_iter = 0;
 my $help = 0;
 my $log_file = 0;
 my $use_ends = 0;
+my $output_name = 0;
 
 GetOptions ('reads=s' => \$short_read_archive,
             'target=s' => \$search_fasta,
@@ -27,6 +28,7 @@ GetOptions ('reads=s' => \$short_read_archive,
             'start_iteration=i' => \$start_iter,
             'log_file=s' => \$log_file,
             'use_ends' => \$use_ends,
+            'output=s' => \$output_file,
             'help|?' => \$help) or pod2usage(-msg => "GetOptions failed.", -exitval => 2);
 
 if ($help) {
@@ -48,32 +50,37 @@ if ($log_file) {
 	$log_fh = *STDOUT;
 }
 
-my $cmd;
-if ($start_iter > 0) {
-	$search_fasta = "$short_read_archive.$start_iter.contigs.fa";
+if ($output_file == 0) {
+    $output_file = $short_read_archive;
 }
 
-open OUT_FH, ">>", "$short_read_archive.all.fasta";
+
+my $cmd;
+if ($start_iter > 0) {
+	$search_fasta = "$output_file.$start_iter.contigs.fa";
+}
+
+open OUT_FH, ">>", "$output_file.all.fasta";
 
 for (my $i=$start_iter; $i<$iterations; $i++) {
 	print ("interation $i starting...\n");
-	$cmd = "blastn -db $short_read_archive.db -query $search_fasta -outfmt 6 -num_threads 8 -out $short_read_archive.blast.$i";
+	$cmd = "blastn -db $short_read_archive.db -query $search_fasta -outfmt 6 -num_threads 8 -out $output_file.blast.$i";
 	print $log_fh ("\t$cmd\n");
 	capture(EXIT_ANY, $cmd);
 
-	$cmd = "perl $executing_path/2.5-sequenceretrieval.pl $short_read_archive.1.fasta $short_read_archive.2.fasta $short_read_archive.blast.$i";
+	$cmd = "perl $executing_path/2.5-sequenceretrieval.pl $short_read_archive.1.fasta $short_read_archive.2.fasta $output_file.blast.$i";
 	print $log_fh ("\t$cmd\n");
 	capture (EXIT_ANY, $cmd);
 
-	$cmd = "velveth $short_read_archive.velvet 31 -fasta -shortPaired $short_read_archive.blast.$i.sorted.fasta";
+	$cmd = "velveth $output_file.velvet 31 -fasta -shortPaired $output_file.blast.$i.sorted.fasta";
 	print $log_fh ("\t$cmd\n");
 	capture (EXIT_ANY, $cmd);
 
-	$cmd = "velvetg $short_read_archive.velvet -ins_length $ins_length -exp_cov 30 -min_contig_lgth 200";
+	$cmd = "velvetg $output_file.velvet -ins_length $ins_length -exp_cov 30 -min_contig_lgth 200";
 	print $log_fh ("\t$cmd\n");
 	capture (EXIT_ANY, $cmd);
-	$search_fasta = "$short_read_archive.$i.contigs.fa";
-	capture ("mv $short_read_archive.velvet/contigs.fa $search_fasta");
+	$search_fasta = "$output_file.$i.contigs.fa";
+	capture ("mv $output_file.velvet/contigs.fa $search_fasta");
 
 	if ($use_ends != 0) {
 		print OUT_FH `cat $search_fasta | gawk '{sub(/>/,">$1"); print \$0}'`;
