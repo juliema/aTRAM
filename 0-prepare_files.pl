@@ -68,5 +68,6 @@ close OUT2_FH;
 
 # make the blast db from the first of the paired end files
 print "making blastdb from first of paired fasta files.\n";
-system ("makeblastdb -in $short_read_archive.1.fasta -dbtype nucl -out $short_read_archive.db");
+system ("makeblastdb -in $working_sra.1.fasta -dbtype nucl -out $working_sra.db");
 
+system ("rm $working_sra.sorted.fasta; rm $working_sra;");
