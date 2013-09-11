@@ -82,8 +82,9 @@ for (my $i=$start_iter; $i<$iterations; $i++) {
 	$search_fasta = "$output_file.$i.contigs.fa";
 	capture ("mv $output_file.velvet/contigs.fa $search_fasta");
 
+	print OUT_FH `cat $search_fasta | gawk '{sub(/>/,">$i_"); print \$0}'`;
+
 	if ($use_ends != 0) {
-		print OUT_FH `cat $search_fasta | gawk '{sub(/>/,">$1"); print \$0}'`;
 
 		$cmd = "bash $executing_path/5.5-sort_contigs.sh $search_fasta";
 		capture (EXIT_ANY, $cmd);
