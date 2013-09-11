@@ -64,7 +64,8 @@ open OUT_FH, ">>", "$output_file.all.fasta";
 
 for (my $i=$start_iter; $i<$iterations; $i++) {
 	print ("interation $i starting...\n");
-	$cmd = "blastn -db $short_read_archive.db -query $search_fasta -outfmt 6 -num_threads 8 -out $output_file.blast.$i";
+# 	$cmd = "blastn -db $short_read_archive.db -query $search_fasta -outfmt 6 -num_threads 8 -out $output_file.blast.$i";
+	$cmd = "blastn -task blastn -evalue 10e500 -max_target_seqs 100000000 -db $short_read_archive.db -query $search_fasta -outfmt 6 -num_threads 8 -out $output_file.blast.$i";
 	print $log_fh ("\t$cmd\n");
 	capture(EXIT_ANY, $cmd);
 
