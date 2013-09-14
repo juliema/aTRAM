@@ -3,6 +3,4 @@
 
 infile=$1
 outfile=$1.sorted.tab
-gawk '{if ($0 - /^$/) next; s = ""; for (i=2;i<=NF;i++) s = s$i; print length(s)","$1","s}' RS=">" $infile | sort -n -r | gawk '{ print $1 "\t" $2 "\t" $3}' FS="," > $outfile
-
-# gawk '{sub(/[[:digit:]]+_/,"",$1); print ">" $1 "\n" $2}' FS="," > $outfile
+gawk '{if (NF == 0) next; s = ""; for (i=2;i<=NF;i++) s = s$i; print length(s)","$1","s}' RS=">" $infile | sort -n -r | gawk '{ print $1 "\t" $2 "\t" $3}' FS="," > $outfile
