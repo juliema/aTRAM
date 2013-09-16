@@ -11,19 +11,26 @@ if (@ARGV == 0) {
 
 my $runline = "running " . basename($0) . " " . join (" ", @ARGV) . "\n";
 
+#required: input file names
 my $short_read_archive = 0;
 my $search_fasta = 0;
-my $ins_length = 300;
-my $iterations = 5;
-my $start_iter = 0;
+
+#optional parameters:
 my $help = 0;
 my $log_file = 0;
 my $use_ends = 0;
+
+#parameters with modifiable default values
 my $output_file = 0;
+my $ins_length = 300;
+my $iterations = 5;
+my $start_iter = 0;
+my $exp_cov = 30;
 
 GetOptions ('reads=s' => \$short_read_archive,
             'target=s' => \$search_fasta,
             'insert_length|ins_length=i' => \$ins_length,
+            'exp_coverage|expected_coverage=i' => \$exp_cov,
             'iterations=i' => \$iterations,
             'start_iteration=i' => \$start_iter,
             'log_file=s' => \$log_file,
@@ -77,7 +84,7 @@ for (my $i=$start_iter; $i<$iterations; $i++) {
 	print $log_fh ("\t$cmd\n");
 	capture (EXIT_ANY, $cmd);
 
-	$cmd = "velvetg $output_file.velvet -ins_length $ins_length -exp_cov 30 -min_contig_lgth 200";
+	$cmd = "velvetg $output_file.velvet -ins_length $ins_length -exp_cov $exp_cov -min_contig_lgth 200";
 	print $log_fh ("\t$cmd\n");
 	capture (EXIT_ANY, $cmd);
 	$search_fasta = "$output_file.$i.contigs.fa";
