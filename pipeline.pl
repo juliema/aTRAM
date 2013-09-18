@@ -19,6 +19,7 @@ my $search_fasta = 0;
 my $help = 0;
 my $log_file = 0;
 my $use_ends = 0;
+my $protein = 0;
 
 #parameters with modifiable default values
 my $output_file = 0;
@@ -36,6 +37,7 @@ GetOptions ('reads=s' => \$short_read_archive,
             'log_file=s' => \$log_file,
             'use_ends' => \$use_ends,
             'output=s' => \$output_file,
+            'protein=s' => \$protein,
             'help|?' => \$help) or pod2usage(-msg => "GetOptions failed.", -exitval => 2);
 
 if ($help) {
@@ -73,7 +75,11 @@ for (my $i=$start_iter; $i<$iterations; $i++) {
 	print ("interation $i starting...\n");
 # 	$cmd = "blastn -db $short_read_archive.db -query $search_fasta -outfmt 6 -num_threads 8 -out $output_file.blast.$i";
 # 	$cmd = "blastn -task blastn -evalue 10e-10 -max_target_seqs 100000000 -db $short_read_archive.db -query $search_fasta -outfmt 6 -num_threads 8 -out $output_file.blast.$i";
-	$cmd = "tblastn -max_target_seqs 100000000 -db $short_read_archive.db -query $search_fasta -outfmt 6 -num_threads 8 -out $output_file.blast.$i";
+	if (($protein == 1) && ($i == 0)) {
+		$cmd = "tblastn -max_target_seqs 100000000 -db $short_read_archive.db -query $search_fasta -outfmt 6 -num_threads 8 -out $output_file.blast.$i";
+	} else {
+		$cmd = "blastn -task blastn -evalue 10e-10 -max_target_seqs 100000000 -db $short_read_archive.db -query $search_fasta -outfmt 6 -num_threads 8 -out $output_file.blast.$i";
+	}
 	print $log_fh ("\t$cmd\n");
 	capture(EXIT_ANY, $cmd);
 
