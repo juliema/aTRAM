@@ -37,7 +37,7 @@ GetOptions ('reads=s' => \$short_read_archive,
             'log_file=s' => \$log_file,
             'use_ends' => \$use_ends,
             'output=s' => \$output_file,
-            'protein=s' => \$protein,
+            'protein' => \$protein,
             'help|?' => \$help) or pod2usage(-msg => "GetOptions failed.", -exitval => 2);
 
 if ($help) {
