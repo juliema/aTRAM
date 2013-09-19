@@ -69,7 +69,7 @@ if ($start_iter > 0) {
 	$search_fasta = "$output_file.$start_iter.contigs.fa";
 }
 
-open OUT_FH, ">>", "$output_file.all.fasta";
+open CONTIGS_FH, ">>", "$output_file.all.fasta";
 
 for (my $i=$start_iter; $i<$iterations; $i++) {
 	print ("interation $i starting...\n");
@@ -97,7 +97,8 @@ for (my $i=$start_iter; $i<$iterations; $i++) {
 	$search_fasta = "$output_file.$i.contigs.fa";
 	capture ("mv $output_file.velvet/contigs.fa $search_fasta");
 
-	print OUT_FH `cat $search_fasta | gawk '{sub(/>/,">$i\_"); print \$0}'`;
+	# save off these resulting contigs to the ongoing contigs file.
+	print CONTIGS_FH `cat $search_fasta | gawk '{sub(/>/,">$i\_"); print \$0}'`;
 
 	if ($use_ends != 0) {
 
