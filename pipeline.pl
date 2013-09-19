@@ -70,9 +70,9 @@ my (undef, $sort_file) = tempfile(UNLINK => 1);
 
 # make a database from the target so that we can compare contigs to the target.
 if ($protein == 1) {
-	system ("makeblastdb -in $search_fasta -dbtype prot -out $targetdb");
+	system ("makeblastdb -in $search_fasta -dbtype prot -out $targetdb.db");
 } else {
-	system ("makeblastdb -in $search_fasta -dbtype nucl -out $targetdb");
+	system ("makeblastdb -in $search_fasta -dbtype nucl -out $targetdb.db");
 }
 
 my $cmd;
@@ -114,9 +114,9 @@ for (my $i=$start_iter; $i<$iterations; $i++) {
 
 	# 5. now we filter out the contigs to look for just the best ones.
 	if ($protein == 1) {
-		$cmd = "blastx -db targetdb -query $search_fasta -out $blast_file -outfmt '6 qseqid bitscore'";
+		$cmd = "blastx -db targetdb.db -query $search_fasta -out $blast_file -outfmt '6 qseqid bitscore'";
 	} else {
-		$cmd = "tblastx -db targetdb -query $search_fasta -out $blast_file -outfmt '6 qseqid bitscore'";
+		$cmd = "tblastx -db targetdb.db -query $search_fasta -out $blast_file -outfmt '6 qseqid bitscore'";
 	}
 	print $log_fh ("\t$cmd\n");
 	capture (EXIT_ANY, $cmd);
