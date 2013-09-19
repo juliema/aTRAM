@@ -70,9 +70,9 @@ my (undef, $sort_file) = tempfile(UNLINK => 1);
 
 # make a database from the target so that we can compare contigs to the target.
 if ($protein == 1) {
-	system ("makeblastdb -in $search_fasta -dbtype prot -out $targetdb.db");
+	capture ("makeblastdb -in $search_fasta -dbtype prot -out $targetdb.db");
 } else {
-	system ("makeblastdb -in $search_fasta -dbtype nucl -out $targetdb.db");
+	capture ("makeblastdb -in $search_fasta -dbtype nucl -out $targetdb.db");
 }
 
 my $cmd;
