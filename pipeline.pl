@@ -114,9 +114,9 @@ for (my $i=$start_iter; $i<$iterations; $i++) {
 
 	# 5. now we filter out the contigs to look for just the best ones.
 	if ($protein == 1) {
-		$cmd = "blastx -db targetdb.db -query $search_fasta -out $blast_file -outfmt '6 qseqid bitscore'";
+		$cmd = "blastx -db $targetdb.db -query $search_fasta -out $blast_file -outfmt '6 qseqid bitscore'";
 	} else {
-		$cmd = "tblastx -db targetdb.db -query $search_fasta -out $blast_file -outfmt '6 qseqid bitscore'";
+		$cmd = "tblastx -db $targetdb.db -query $search_fasta -out $blast_file -outfmt '6 qseqid bitscore'";
 	}
 	print $log_fh ("\t$cmd\n");
 	capture (EXIT_ANY, $cmd);
