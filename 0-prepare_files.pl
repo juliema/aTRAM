@@ -1,13 +1,15 @@
 #!/usr/bin/perl
 use strict;
+use File::Basename;
 
 my $short_read_archive = shift;
-my $genes_file = shift;
+my $executing_path = dirname(__FILE__);
 
 my $fastq_input = 0;
 
 # if the sra is a fastq file, make it fasta.
 if ($short_read_archive =~ /\.f.*q/) { # if it's a fastq file:
+	print "fastq file inputted...converting to fasta.\n";
 	$fastq_input = 1;
 	# un-interleave fastq file into fasta:
 	open FH, "<", $short_read_archive or die "couldn't open fasta file";
@@ -38,13 +40,15 @@ if ($fastq_input == 1) {
 }
 
 # sort fasta short-read file
-system ("bash 3.5-sort_fasta.sh $working_sra");
+print "sorting fasta file.\n";
+system ("bash $executing_path/3.5-sort_fasta.sh $working_sra");
 
 # un-interleave fasta file into two paired files:
-open FH, "<", $short_read_archive or die "couldn't open fasta file";
+print "un-interleaving $working_sra.sorted.fasta into paired files.\n";
+open FH, "<", "$working_sra.sorted.fasta" or die "couldn't open fasta file";
 
-open OUT1_FH, ">", "$short_read_archive.1.fasta" or die "couldn't create result file";
-open OUT2_FH, ">", "$short_read_archive.2.fasta" or die "couldn't create result file";
+open OUT1_FH, ">", "$working_sra.1.fasta" or die "couldn't create result file";
+open OUT2_FH, ">", "$working_sra.2.fasta" or die "couldn't create result file";
 
 my $fs = readline FH;
 while ($fs) {
@@ -63,4 +67,7 @@ close OUT1_FH;
 close OUT2_FH;
 
 # make the blast db from the first of the paired end files
-system ("makeblastdb -in $short_read_archive.1.fasta -dbtype nucl -out $short_read_archive.db");
+print "making blastdb from first of paired fasta files.\n";
+system ("makeblastdb -in $working_sra.1.fasta -dbtype nucl -out $working_sra.db");
+
+system ("rm $working_sra.sorted.fasta; rm $working_sra;");
