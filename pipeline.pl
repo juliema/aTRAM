@@ -52,6 +52,7 @@ unless($short_read_archive and $search_fasta) {
 print $runline;
 
 my $executing_path = dirname(__FILE__);
+my $cmd;
 
 my $log_fh;
 if ($log_file) {
@@ -59,6 +60,8 @@ if ($log_file) {
 } else {
 	open $log_fh, ">", "$output_file.log" or die "couldn't open $output_file.log\n";
 }
+
+print $log_fh $runline;
 
 unless ($output_file) {
     $output_file = $short_read_archive;
@@ -70,12 +73,14 @@ my (undef, $sort_file) = tempfile(UNLINK => 1);
 
 # make a database from the target so that we can compare contigs to the target.
 if ($protein == 1) {
-	capture ("makeblastdb -in $search_fasta -dbtype prot -out $targetdb.db");
+	$cmd = "makeblastdb -in $search_fasta -dbtype prot -out $targetdb.db";
 } else {
-	capture ("makeblastdb -in $search_fasta -dbtype nucl -out $targetdb.db");
+	$cmd = "makeblastdb -in $search_fasta -dbtype nucl -out $targetdb.db";
 }
+print $log_fh ("$cmd\n");
+capture(EXIT_ANY, $cmd);
 
-my $cmd;
+
 if ($start_iter > 0) {
 	$search_fasta = "$output_file.$start_iter.contigs.fa";
 }
