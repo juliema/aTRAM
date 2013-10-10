@@ -58,16 +58,19 @@ open FH, "<", "$working_sra.sorted.fasta" or die "couldn't open fasta file";
 open OUT1_FH, ">", "$working_sra.1.fasta" or die "couldn't create result file";
 open OUT2_FH, ">", "$working_sra.2.fasta" or die "couldn't create result file";
 
-my $fs = readline FH;
-while ($fs) {
-	print OUT1_FH $fs;
-	$fs = readline FH;
-	print OUT1_FH $fs;
-	$fs = readline FH;
-	print OUT2_FH $fs;
-	$fs = readline FH;
-	print OUT2_FH $fs;
-	$fs = readline FH;
+my $name1 = readline FH;
+while ($name1) {
+	my $seq1 = readline FH;
+	my $name2 = readline FH;
+	my $seq2 = readline FH;
+	$name1 =~ />(.*?)\/1/;
+	my $name = $1;
+	if ($name2 !~ /$name\/2/) {
+		die "$working_sra.sorted.fasta does not contain paired reads: read $name\/1 is not followed by $name\/2 at line " . ($. - 4);
+	}
+	print OUT1_FH $name1 . $seq1;
+	print OUT2_FH $name2 . $seq2;
+	$name1 = readline FH;
 }
 
 close FH;
