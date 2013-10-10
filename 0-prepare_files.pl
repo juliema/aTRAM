@@ -48,6 +48,9 @@ if ($fastq_input == 1) {
 print "sorting fasta file.\n";
 system ("bash $executing_path/3.5-sort_fasta.sh $working_sra") == 0 or die "Couldn't find 3.5-sort_fasta.sh. This script needs to be in the same directory as the rest of TRAM";
 
+if (-z "$working_sra.sorted.fasta") {
+	die "Sort failed. Are you sure $working_sra exists?";
+}
 # un-interleave fasta file into two paired files:
 print "un-interleaving $working_sra.sorted.fasta into paired files.\n";
 open FH, "<", "$working_sra.sorted.fasta" or die "couldn't open fasta file";
@@ -70,6 +73,9 @@ while ($fs) {
 close FH;
 close OUT1_FH;
 close OUT2_FH;
+if ((-s "$working_sra.1.fasta") != (-s "$working_sra.2.fasta")) {
+	die "Uninterleave failed. Are you sure $working_sra has an equal number of paired ends?";
+}
 
 # make the blast db from the first of the paired end files
 print "making blastdb from first of paired fasta files.\n";
