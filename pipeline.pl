@@ -49,6 +49,11 @@ unless($short_read_archive and $search_fasta) {
     pod2usage(-msg => "Must specify a short read archive (that has already been prepared with 0-prepare_files.pl) and a target gene in fasta form.");
 }
 
+# check to make sure that the specified short read archive exists:
+unless ((-e $short_read_archive.1.fasta) && (-e $short_read_archive.2.fasta) && (-e $short_read_archive.db.nal)) {
+    pod2usage(-msg => "Short read archive does not seem to be in the format made by 0-prepare_files.pl. Did you specify the name correctly?");
+}
+
 print $runline;
 
 my $executing_path = dirname(__FILE__);
@@ -89,6 +94,7 @@ open CONTIGS_FH, ">>", "$output_file.all.fasta";
 
 for (my $i=$start_iter; $i<$iterations; $i++) {
 	print ("interation $i starting...\n");
+	print $log_fh("interation $i starting...\n");
 
 	# 1. blast to find any short reads that match the target.
 	if (($protein == 1) && ($i == 0)) {
