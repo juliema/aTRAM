@@ -2,11 +2,11 @@
 use strict;
 use File::Basename;
 
-my $short_read_archive = shift;
 
 if (@ARGV == 0) {
 	die "Usage: 0-prepare_files.pl short_read_archive.fasta/fastq";
 }
+my $short_read_archive = shift;
 
 my $executing_path = dirname(__FILE__);
 
@@ -46,7 +46,7 @@ if ($fastq_input == 1) {
 
 # sort fasta short-read file
 print "sorting fasta file.\n";
-system ("bash $executing_path/3.5-sort_fasta.sh $working_sra") == 0 or die "Couldn't find 3.5-sort_fasta.sh. This script needs to be in the same directory as the rest of TRAM.";
+system ("bash $executing_path/3.5-sort_fasta.sh $working_sra") == 0 or die "Couldn't find 3.5-sort_fasta.sh. This script needs to be in the same directory as the rest of TRAM";
 
 # un-interleave fasta file into two paired files:
 print "un-interleaving $working_sra.sorted.fasta into paired files.\n";
