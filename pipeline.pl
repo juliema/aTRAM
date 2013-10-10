@@ -49,16 +49,24 @@ unless($short_read_archive and $search_fasta) {
     pod2usage(-msg => "Must specify a short read archive (that has already been prepared with 0-prepare_files.pl) and a target gene in fasta form.");
 }
 
+# check to make sure that the specified short read archive exists:
+unless ((-e $short_read_archive.1.fasta) && (-e $short_read_archive.2.fasta) && (-e $short_read_archive.db.nal)) {
+    pod2usage(-msg => "Short read archive does not seem to be in the format made by 0-prepare_files.pl. Did you specify the name correctly?");
+}
+
 print $runline;
 
 my $executing_path = dirname(__FILE__);
+my $cmd;
 
 my $log_fh;
 if ($log_file) {
 	open $log_fh, ">", $log_file or die "couldn't open $log_file\n";
 } else {
-	$log_fh = *STDOUT;
+	open $log_fh, ">", "$output_file.log" or die "couldn't open $output_file.log\n";
 }
+
+print $log_fh $runline;
 
 unless ($output_file) {
     $output_file = $short_read_archive;
@@ -70,12 +78,14 @@ my (undef, $sort_file) = tempfile(UNLINK => 1);
 
 # make a database from the target so that we can compare contigs to the target.
 if ($protein == 1) {
-	capture ("makeblastdb -in $search_fasta -dbtype prot -out $targetdb.db");
+	$cmd = "makeblastdb -in $search_fasta -dbtype prot -out $targetdb.db";
 } else {
-	capture ("makeblastdb -in $search_fasta -dbtype nucl -out $targetdb.db");
+	$cmd = "makeblastdb -in $search_fasta -dbtype nucl -out $targetdb.db";
 }
+print $log_fh ("$cmd\n");
+capture(EXIT_ANY, $cmd);
 
-my $cmd;
+
 if ($start_iter > 0) {
 	$search_fasta = "$output_file.$start_iter.contigs.fa";
 }
@@ -84,6 +94,7 @@ open CONTIGS_FH, ">>", "$output_file.all.fasta";
 
 for (my $i=$start_iter; $i<$iterations; $i++) {
 	print ("interation $i starting...\n");
+	print $log_fh("interation $i starting...\n");
 
 	# 1. blast to find any short reads that match the target.
 	if (($protein == 1) && ($i == 0)) {
