@@ -140,7 +140,6 @@ for (my $i=$start_iter; $i<$iterations; $i++) {
 		$cmd = "bash $executing_path/5.5-sort_contigs.sh $search_fasta";
 		system_call($cmd);
 
-
 		open FH, "<", "$search_fasta.sorted.tab";
 		my @contigs = <FH>;
 		close FH;
@@ -189,6 +188,7 @@ sub system_call {
 		system ($cmd);
 	} >> 8;
 
+	if ($exit_val != 0) { exit; }
 	return $exit_val;
 }
 
