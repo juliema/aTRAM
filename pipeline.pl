@@ -2,8 +2,6 @@ use strict;
 use Getopt::Long;
 use Pod::Usage;
 use File::Basename;
-use IPC::System::Simple qw(run system capture EXIT_ANY);
-# use autodie qw(:all);
 use File::Temp qw/ tempfile tempdir /;
 
 if (@ARGV == 0) {
@@ -82,9 +80,7 @@ if ($protein == 1) {
 } else {
 	$cmd = "makeblastdb -in $search_fasta -dbtype nucl -out $targetdb.db";
 }
-print $log_fh ("$cmd\n");
-capture(EXIT_ANY, $cmd);
-
+system_call ($cmd);
 
 if ($start_iter > 0) {
 	$search_fasta = "$output_file.$start_iter.contigs.fa";
@@ -94,61 +90,47 @@ open CONTIGS_FH, ">>", "$output_file.all.fasta";
 
 for (my $i=$start_iter; $i<$iterations; $i++) {
 	print ("interation $i starting...\n");
-	print $log_fh("interation $i starting...\n");
+	print $log_fh ("interation $i starting...\n");
 
 	# 1. blast to find any short reads that match the target.
+	print "\tblasting short reads...\n";
 	if (($protein == 1) && ($i == 0)) {
-		$cmd = "tblastn -max_target_seqs 100000000 -db $short_read_archive.db -query $search_fasta -outfmt 6 -num_threads 8 -out $output_file.blast.$i";
+		system_call ("tblastn -max_target_seqs 100000000 -db $short_read_archive.db -query $search_fasta -outfmt 6 -num_threads 8 -out $output_file.blast.$i");
 	} else {
-		$cmd = "blastn -task blastn -evalue 10e-10 -max_target_seqs 100000000 -db $short_read_archive.db -query $search_fasta -outfmt 6 -num_threads 8 -out $output_file.blast.$i";
+		system_call ("blastn -task blastn -evalue 10e-10 -max_target_seqs 100000000 -db $short_read_archive.db -query $search_fasta -outfmt 6 -num_threads 8 -out $output_file.blast.$i");
 	}
-	print $log_fh ("\t$cmd\n");
-	capture(EXIT_ANY, $cmd);
 
 	# 2 and 3. find the paired end of all of the blast hits.
-	$cmd = "perl $executing_path/2.5-pairedsequenceretrieval.pl $short_read_archive.#.fasta $output_file.blast.$i $output_file.blast.$i.fasta";
-	print $log_fh ("\t$cmd\n");
-	capture (EXIT_ANY, $cmd);
+	print "\tgetting paired ends...\n";
+	system_call("perl $executing_path/2.5-pairedsequenceretrieval.pl $short_read_archive.#.fasta $output_file.blast.$i $output_file.blast.$i.fasta");
 
 	# 4. assemble the reads using velvet
-	$cmd = "velveth $output_file.velvet 31 -fasta -shortPaired $output_file.blast.$i.fasta";
-	print $log_fh ("\t$cmd\n");
-	capture (EXIT_ANY, $cmd);
-
-	$cmd = "velvetg $output_file.velvet -ins_length $ins_length -exp_cov $exp_cov -min_contig_lgth 200";
-	print $log_fh ("\t$cmd\n");
-	capture (EXIT_ANY, $cmd);
+	print "\tassembling with Velvet...\n";
+	system_call("velveth $output_file.velvet 31 -fasta -shortPaired $output_file.blast.$i.fasta");
+	system_call("velvetg $output_file.velvet -ins_length $ins_length -exp_cov $exp_cov -min_contig_lgth 200");
 
 	# we'll use the resulting contigs as the query for the next iteration.
 	$search_fasta = "$output_file.$i.contigs.fa";
-	capture ("mv $output_file.velvet/contigs.fa $search_fasta");
+	system_call("mv $output_file.velvet/contigs.fa $search_fasta");
 
 	# 5. now we filter out the contigs to look for just the best ones.
+	print "\tfiltering contigs...\n";
 	if ($protein == 1) {
-		$cmd = "blastx -db $targetdb.db -query $search_fasta -out $blast_file -outfmt '6 qseqid bitscore'";
+		system_call ("blastx -db $targetdb.db -query $search_fasta -out $blast_file -outfmt '6 qseqid bitscore'");
 	} else {
-		$cmd = "tblastx -db $targetdb.db -query $search_fasta -out $blast_file -outfmt '6 qseqid bitscore'";
+		system_call ("tblastx -db $targetdb.db -query $search_fasta -out $blast_file -outfmt '6 qseqid bitscore'");
 	}
-	print $log_fh ("\t$cmd\n");
-	capture (EXIT_ANY, $cmd);
 
 	# 6. we want to keep the contigs that have a bitscore higher than 100.
-	$cmd = "gawk '{print \$2\"\\t\"\$1;}' $blast_file | sort -n -r | gawk '{if (\$1 > 100) print \$2;}' | sort | uniq > $sort_file";
-	print $log_fh ("\t$cmd\n");
-	capture (EXIT_ANY, $cmd);
-
-	$cmd = "perl $executing_path/6.5-findsequences.pl $search_fasta $sort_file $search_fasta";
-	print $log_fh ("\t$cmd\n");
-	capture (EXIT_ANY, $cmd);
+	system_call("gawk '{print \$2\"\\t\"\$1;}' $blast_file | sort -n -r | gawk '{if (\$1 > 100) print \$2;}' | sort | uniq > $sort_file");
+	system_call("perl $executing_path/6.5-findsequences.pl $search_fasta $sort_file $search_fasta");
 
 	# save off these resulting contigs to the ongoing contigs file.
 	print CONTIGS_FH `cat $search_fasta | gawk '{sub(/>/,">$i\_"); print \$0}'`;
 
 	# if we flagged to use just the ends of the contigs, clean that up.
 	if ($use_ends != 0) {
-
-		$cmd = "bash $executing_path/5.5-sort_contigs.sh $search_fasta";
-		capture (EXIT_ANY, $cmd);
+		system_call("bash $executing_path/5.5-sort_contigs.sh $search_fasta");
 
 		open FH, "<", "$search_fasta.sorted.tab";
 		my @contigs = <FH>;
@@ -178,11 +160,33 @@ for (my $i=$start_iter; $i<$iterations; $i++) {
 		}
 		close FH;
 	}
-
 }
 
 close $log_fh;
 
+sub exit_with_msg {
+	my $msg = shift;
+	print STDERR "$msg\n";
+	exit 1;
+}
+
+sub system_call {
+	my $cmd = shift;
+	print $log_fh ("\t$cmd\n");
+
+	open my $saveout, ">&STDOUT";
+	open my $saveerr, ">&STDERR";
+	open STDOUT, '>', File::Spec->devnull();
+	open STDERR, '>', File::Spec->devnull();
+	my $exit_val = eval {
+		system ($cmd);
+	};
+	open STDOUT, ">&", $saveout;
+	open STDERR, ">&", $saveerr;
+
+	if ($exit_val != 0) { exit; }
+	return $exit_val;
+}
 
 __END__
 
