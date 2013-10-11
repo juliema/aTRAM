@@ -29,6 +29,10 @@ if ($short_read_archive =~ /\.f.*q/) { # if it's a fastq file:
 		print OUT_FH $fs;
 		$fs = readline FH;
 		# toss quality lines
+		if ($fs !~ /^\+/) {
+			print "$fs";
+			die "$short_read_archive is not a properly-formed fastq file: line ". $. ." is problematic."
+		}
 		$fs = readline FH;
 		$fs = readline FH;
 	}
@@ -58,16 +62,19 @@ open FH, "<", "$working_sra.sorted.fasta" or die "couldn't open fasta file";
 open OUT1_FH, ">", "$working_sra.1.fasta" or die "couldn't create result file";
 open OUT2_FH, ">", "$working_sra.2.fasta" or die "couldn't create result file";
 
-my $fs = readline FH;
-while ($fs) {
-	print OUT1_FH $fs;
-	$fs = readline FH;
-	print OUT1_FH $fs;
-	$fs = readline FH;
-	print OUT2_FH $fs;
-	$fs = readline FH;
-	print OUT2_FH $fs;
-	$fs = readline FH;
+my $name1 = readline FH;
+while ($name1) {
+	my $seq1 = readline FH;
+	my $name2 = readline FH;
+	my $seq2 = readline FH;
+	$name1 =~ />(.*?)\/1/;
+	my $name = $1;
+	if ($name2 !~ /$name\/2/) {
+		die "$working_sra.sorted.fasta does not contain paired reads: read $name\/1 is not followed by $name\/2 at line " . ($. - 4);
+	}
+	print OUT1_FH $name1 . $seq1;
+	print OUT2_FH $name2 . $seq2;
+	$name1 = readline FH;
 }
 
 close FH;
@@ -78,7 +85,12 @@ if ((-s "$working_sra.1.fasta") != (-s "$working_sra.2.fasta")) {
 }
 
 # make the blast db from the first of the paired end files
-print "making blastdb from first of paired fasta files.\n";
+print "Making blastdb from first of paired fasta files.\n";
 system ("makeblastdb -in $working_sra.1.fasta -dbtype nucl -out $working_sra.db");
 
-system ("rm $working_sra.sorted.fasta; rm $working_sra;");
+if (((-s "$working_sra.1.fasta") + (-s "$working_sra.2.fasta")) == (-s "$working_sra")) {
+	print "Files prepared successfully, cleaning up.\n";
+	system ("rm $working_sra.sorted.fasta; rm $working_sra;");
+} else {
+	print "Something went wrong; leaving intermediate files alone.\n";
+}

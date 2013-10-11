@@ -1,7 +1,5 @@
-DAISE ROCKS FOR HELPING ME FIGURE OUT GITHUB and TRAM RULES!
-
-TRAM
+sTRAM
 ====
 
-Target Restricted Assembly Method
+simple Target Restricted Assembly Method
 
