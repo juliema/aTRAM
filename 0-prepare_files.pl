@@ -29,6 +29,10 @@ if ($short_read_archive =~ /\.f.*q/) { # if it's a fastq file:
 		print OUT_FH $fs;
 		$fs = readline FH;
 		# toss quality lines
+		if ($fs !~ /^\+/) {
+			print "$fs";
+			die "$short_read_archive is not a properly-formed fastq file: line ". $. ." is problematic."
+		}
 		$fs = readline FH;
 		$fs = readline FH;
 	}
@@ -81,7 +85,12 @@ if ((-s "$working_sra.1.fasta") != (-s "$working_sra.2.fasta")) {
 }
 
 # make the blast db from the first of the paired end files
-print "making blastdb from first of paired fasta files.\n";
+print "Making blastdb from first of paired fasta files.\n";
 system ("makeblastdb -in $working_sra.1.fasta -dbtype nucl -out $working_sra.db");
 
-system ("rm $working_sra.sorted.fasta; rm $working_sra;");
+if (((-s "$working_sra.1.fasta") + (-s "$working_sra.2.fasta")) == (-s "$working_sra")) {
+	print "Files prepared successfully, cleaning up.\n";
+	system ("rm $working_sra.sorted.fasta; rm $working_sra;");
+} else {
+	print "Something went wrong; leaving intermediate files alone.\n";
+}
