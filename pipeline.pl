@@ -50,7 +50,7 @@ unless($short_read_archive and $search_fasta) {
 }
 
 # check to make sure that the specified short read archive exists:
-unless ((-e "$short_read_archive.1.fasta") && (-e "$short_read_archive.2.fasta") && (-e "$short_read_archive.db.nin")) {
+unless ((-e "$short_read_archive.1.fasta") && (-e "$short_read_archive.2.fasta")) {
     pod2usage(-msg => "Short read archive does not seem to be in the format made by 0-prepare_files.pl. Did you specify the name correctly?");
 }
 
