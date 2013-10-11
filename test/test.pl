@@ -18,7 +18,18 @@ foreach my $mod (@req_modules) {
 
 print $i++ .". Checking for required software...\n";
 my $temp = `which velveth`;
-print $temp."\n";
+if ($temp == 0) {
+	print "   Velveth is not installed in the usual place. If it is installed and accessible with a specific path, please enter it: ";
+	my $userpath = <STDIN>;
+	if ($userpath =~ /[qQeE]\n/) {
+		print "quit";
+	} else {
+	print "  you said $userpath";
+	}
+} else {
+	print "velveth is present\n";
+}
+
 
 # print $i++ .". Checking that prepare_files works correctly...\n";
 # system ("cp test_good.fastq test.fastq");
