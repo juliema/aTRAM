@@ -28,13 +28,13 @@ while (<FH>)
         @array = split(//, $seq);
         print OUT ">$name\n$seq\n";
         print OUT ">$name\_first\n";
-        for (1..99)
+        for (0..99)
         {
             $pos=$_;
             print OUT "$array[$pos]";
         }
         print OUT "\n>$name\_last\n";
-        for (($len-100)..$len)
+        for ($min..$len)
         {
             $pos=$_;
             print OUT "$array[$pos]";
