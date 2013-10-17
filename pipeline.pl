@@ -1,3 +1,4 @@
+#!/usr/bin/perl
 use strict;
 use Getopt::Long;
 use Pod::Usage;
@@ -24,7 +25,7 @@ my $protein = 0;
 my $output_file = 0;
 my $ins_length = 300;
 my $iterations = 5;
-my $start_iter = 0;
+my $start_iter = 1;
 my $exp_cov = 30;
 
 GetOptions ('reads=s' => \$short_read_archive,
@@ -73,22 +74,80 @@ unless ($output_file) {
 my (undef, $targetdb) = tempfile(UNLINK => 1);
 my (undef, $blast_file) = tempfile(UNLINK => 1);
 my (undef, $sort_file) = tempfile(UNLINK => 1);
+my ($TARGET_FH, $target_fasta) = tempfile();
+
+my $start_seq = "";
+my $end_seq = "";
+
+# process the target sequence file to look for the start seq and end seq.
+my @target_seqs = ();
+open SEARCH_FH, "<", $search_fasta;
+while (my $line=readline SEARCH_FH) {
+	my $name = $line;
+	chomp $name;
+	my $seq = readline SEARCH_FH;
+	chomp $seq;
+	push @target_seqs, "$name,$seq";
+}
+close SEARCH_FH;
+
+my $len = 100;
+if ($protein ==1) {
+	$len = 30;
+}
+
+# check first target seq, see if we need to make just the first bit separated for checking completeness.
+my $firstseq = shift @target_seqs;
+
+if ($firstseq =~ /(.*),(.{$len})(.*)/) {
+	# split into two smaller seqs:
+	$start_seq = ">sTRAM_target_start";
+	unshift @target_seqs, "$1,$3";
+	unshift @target_seqs, "$start_seq,$2";
+} else {
+	# it's short enough to just go as-is
+	$firstseq =~ /(.*),/;
+	$start_seq = $1;
+	unshift @target_seqs, $firstseq;
+}
+
+# check last target seq, see if we need to make just the first bit separated for checking completeness.
+my $lastseq = pop @target_seqs;
+
+if ($lastseq =~ /(.*),(.*)(.{$len})/) {
+	# split into two smaller seqs:
+	$end_seq = ">sTRAM_target_end";
+	push @target_seqs, "$1,$2";
+	push @target_seqs, "$end_seq,$3";
+} else {
+	# it's short enough to just go as-is
+	$lastseq =~ /(.*),/;
+	$end_seq = $1;
+	push @target_seqs, $lastseq;
+}
+
+# okay, let's re-assemble the file for the target fasta.
+foreach my $line (@target_seqs) {
+	$line =~ /(.*),(.*)/;
+	print $TARGET_FH "$1\n$2\n";
+}
+close $TARGET_FH;
 
 # make a database from the target so that we can compare contigs to the target.
 if ($protein == 1) {
-	$cmd = "makeblastdb -in $search_fasta -dbtype prot -out $targetdb.db";
+	$cmd = "makeblastdb -in $target_fasta -dbtype prot -out $targetdb.db -input_type fasta";
 } else {
-	$cmd = "makeblastdb -in $search_fasta -dbtype nucl -out $targetdb.db";
+	$cmd = "makeblastdb -in $target_fasta -dbtype nucl -out $targetdb.db -input_type fasta";
 }
 system_call ($cmd);
 
-if ($start_iter > 0) {
-	$search_fasta = "$output_file.$start_iter.contigs.fa";
+if ($start_iter > 1) {
+	my $x = $start_iter-1;
+	$search_fasta = "$output_file.$x.contigs.fa";
 }
-
 open CONTIGS_FH, ">>", "$output_file.all.fasta";
 
-for (my $i=$start_iter; $i<$iterations; $i++) {
+for (my $i=$start_iter; $i<=$iterations; $i++) {
 	print ("interation $i starting...\n");
 	print $log_fh ("interation $i starting...\n");
 
@@ -184,7 +243,10 @@ sub system_call {
 	open STDOUT, ">&", $saveout;
 	open STDERR, ">&", $saveerr;
 
-	if ($exit_val != 0) { exit; }
+	if ($exit_val != 0) {
+		print "System call \"$cmd\" exited with $exit_val\n";
+		exit;
+	}
 	return $exit_val;
 }
 
