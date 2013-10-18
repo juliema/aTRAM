@@ -20,6 +20,7 @@ my $help = 0;
 my $log_file = 0;
 my $use_ends = 0;
 my $protein = 0;
+my $blast_file = 0;
 
 #parameters with modifiable default values
 my $output_file = 0;
@@ -38,6 +39,7 @@ GetOptions ('reads=s' => \$short_read_archive,
             'use_ends' => \$use_ends,
             'output=s' => \$output_file,
             'protein' => \$protein,
+            'blast=s' => \$blast_file,
             'help|?' => \$help) or pod2usage(-msg => "GetOptions failed.", -exitval => 2);
 
 if ($help) {
@@ -70,9 +72,10 @@ print $log_fh $runline;
 unless ($output_file) {
     $output_file = $short_read_archive;
 }
-
+if ($blast_file == 0) {
+	(undef, $blast_file) = tempfile(UNLINK => 1);
+}
 my (undef, $targetdb) = tempfile(UNLINK => 1);
-my (undef, $blast_file) = tempfile(UNLINK => 1);
 my (undef, $sort_file) = tempfile(UNLINK => 1);
 my ($TARGET_FH, $target_fasta) = tempfile();
 
