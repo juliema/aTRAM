@@ -161,6 +161,11 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 		system_call ("blastn -task blastn -evalue 10e-10 -max_target_seqs 100000000 -db $short_read_archive.db -query $search_fasta -outfmt 6 -num_threads 8 -out $output_file.blast.$i");
 	}
 
+	# did we not find any reads? Go ahead and quit.
+	if ((-s "$output_file.blast.$i") == 0) {
+		die "No similar reads were found.\n";
+	}
+
 	# 2 and 3. find the paired end of all of the blast hits.
 	print "\tgetting paired ends...\n";
 	system_call("perl $executing_path/2.5-pairedsequenceretrieval.pl $short_read_archive.#.fasta $output_file.blast.$i $output_file.blast.$i.fasta");
