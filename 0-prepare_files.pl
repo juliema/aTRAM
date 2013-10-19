@@ -13,7 +13,7 @@ my $executing_path = dirname(__FILE__);
 my $fastq_input = 0;
 
 # if the sra is a fastq file, make it fasta.
-if ($short_read_archive =~ /\.f.*q/) { # if it's a fastq file:
+if ($short_read_archive =~ /\.f.*q$/) { # if it's a fastq file:
 	print "fastq file inputted...converting to fasta.\n";
 	$fastq_input = 1;
 	# un-interleave fastq file into fasta:
