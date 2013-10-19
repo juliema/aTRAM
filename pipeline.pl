@@ -182,13 +182,15 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 	# 5. now we filter out the contigs to look for just the best ones.
 	print "\tfiltering contigs...\n";
 	if ($protein == 1) {
-		system_call ("blastx -db $targetdb.db -query $search_fasta -out $blast_file -outfmt '6 qseqid bitscore'");
+		system_call ("blastx -db $targetdb.db -query $search_fasta -out $blast_file -outfmt '6 qseqid sseqid bitscore'");
 	} else {
-		system_call ("tblastx -db $targetdb.db -query $search_fasta -out $blast_file -outfmt '6 qseqid bitscore'");
+		system_call ("tblastx -db $targetdb.db -query $search_fasta -out $blast_file -outfmt '6 qseqid sseqid bitscore'");
 	}
 
 	# 6. we want to keep the contigs that have a bitscore higher than 100.
-	system_call("gawk '{print \$2\"\\t\"\$1;}' $blast_file | sort -n -r | gawk '{if (\$1 > 100) print \$2;}' | sort | uniq > $sort_file");
+	system_call("gawk '\/$start_seq\/ {sub(\"NODE\",\"STARTNODE\"); print \$0;}' $blast_file > $sort_file");
+	system_call("gawk '\/$end_seq\/ {sub(\"NODE\",\"ENDNODE\"); print \$0;}' $sort_file > $blast_file");
+	system_call("gawk '{print \$3\"\\t\"\$1;}' $blast_file | sort -n -r | gawk '{if (\$1 > 100) print \$2;}' | sort | uniq > $sort_file");
 	system_call("perl $executing_path/6.5-findsequences.pl $search_fasta $sort_file $search_fasta");
 
 	# save off these resulting contigs to the ongoing contigs file.
