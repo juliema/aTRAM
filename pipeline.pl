@@ -148,7 +148,6 @@ if ($start_iter > 1) {
 	my $x = $start_iter-1;
 	$search_fasta = "$output_file.$x.contigs.fa";
 }
-open CONTIGS_FH, ">>", "$output_file.all.fasta";
 
 for (my $i=$start_iter; $i<=$iterations; $i++) {
 	print ("interation $i starting...\n");
@@ -156,7 +155,7 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 
 	# 1. blast to find any short reads that match the target.
 	print "\tblasting short reads...\n";
-	if (($protein == 1) && ($i == 0)) {
+	if (($protein == 1) && ($i == 1)) {
 		system_call ("tblastn -max_target_seqs 100000000 -db $short_read_archive.db -query $search_fasta -outfmt 6 -num_threads 8 -out $output_file.blast.$i");
 	} else {
 		system_call ("blastn -task blastn -evalue 10e-10 -max_target_seqs 100000000 -db $short_read_archive.db -query $search_fasta -outfmt 6 -num_threads 8 -out $output_file.blast.$i");
@@ -188,7 +187,9 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 	system_call("perl $executing_path/6.5-findsequences.pl $search_fasta $sort_file $search_fasta");
 
 	# save off these resulting contigs to the ongoing contigs file.
+	open CONTIGS_FH, ">>", "$output_file.all.fasta";
 	print CONTIGS_FH `cat $search_fasta | gawk '{sub(/>/,">$i\_"); print \$0}'`;
+	close CONTIGS_FH;
 
 	# if we flagged to use just the ends of the contigs, clean that up.
 	if ($use_ends != 0) {
