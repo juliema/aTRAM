@@ -168,7 +168,7 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 
 	# 2 and 3. find the paired end of all of the blast hits.
 	print "\tgetting paired ends...\n";
-	system_call("perl $executing_path/2.5-pairedsequenceretrieval.pl $short_read_archive.#.fasta $output_file.blast.$i $output_file.blast.$i.fasta");
+	system_call("perl $executing_path/lib/pairedsequenceretrieval.pl $short_read_archive.#.fasta $output_file.blast.$i $output_file.blast.$i.fasta");
 
 	# 4. assemble the reads using velvet
 	print "\tassembling with Velvet...\n";
@@ -189,7 +189,7 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 
 	# 6. we want to keep the contigs that have a bitscore higher than 100.
 	system_call("gawk '{print \$2\"\\t\"\$1;}' $blast_file | sort -n -r | gawk '{if (\$1 > 100) print \$2;}' | sort | uniq > $sort_file");
-	system_call("perl $executing_path/6.5-findsequences.pl $search_fasta $sort_file $search_fasta");
+	system_call("perl $executing_path/lib/findsequences.pl $search_fasta $sort_file $search_fasta");
 
 	# save off these resulting contigs to the ongoing contigs file.
 	open CONTIGS_FH, ">>", "$output_file.all.fasta";
@@ -198,7 +198,7 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 
 	# if we flagged to use just the ends of the contigs, clean that up.
 	if ($use_ends != 0) {
-		system_call("bash $executing_path/5.5-sort_contigs.sh $search_fasta");
+		system_call("bash $executing_path/lib/sort_contigs.sh $search_fasta");
 
 		open FH, "<", "$search_fasta.sorted.tab";
 		my @contigs = <FH>;
@@ -263,11 +263,11 @@ __END__
 
 =head1 NAME
 
-pipeline.pl
+sTRAM.pl
 
 =head1 SYNOPSIS
 
-pipeline.pl -reads shortreadfile -target target.fasta [-ins_length int] [-exp_coverage int] [-iterations int] [-start_iteration int] [-log_file filename] [-use_ends] [-output filename]
+sTRAM.pl -reads shortreadfile -target target.fasta [-ins_length int] [-exp_coverage int] [-iterations int] [-start_iteration int] [-log_file filename] [-use_ends] [-output filename]
 
 =head1 OPTIONS
 

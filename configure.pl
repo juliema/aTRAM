@@ -41,33 +41,33 @@ if ($sw_ready == 0) {
 	}
 }
 
-print $i++ .". Checking that prepare_files works correctly...\n";
+print $i++ .". Checking that makelibrary works correctly...\n";
 
 my $executing_path = dirname(__FILE__);
 
-unless (system_call ("cp $executing_path/test_good.fastq test_inst.fastq") == 0) {
+unless (system_call ("cp $executing_path/test/test_good.fastq $executing_path/test_inst.fastq") == 0) {
 	die "Couldn't find test_good.fastq";
 }
 
-my $result = system_call ("perl ../0-prepare_files.pl test_inst.fastq");
+my $result = system_call ("perl $executing_path/makelibrary.pl $executing_path/test_inst.fastq");
 if ($result == 1) {
 	print "Test failed. Please contact the developers with details of this failure at https://github.com/juliema/TRAM/issues.\n";
 	exit;
 }
 
 print $i++ .". Checking a defective file...\n";
-unless (system_call ("cp $executing_path/test_bad.fasta test_inst.fasta") == 0) {
+unless (system_call ("cp $executing_path/test/test_bad.fasta $executing_path/test_inst.fasta") == 0) {
 	die "Couldn't find test_bad.fasta";
 }
 
-my $result = system_call ("perl ../0-prepare_files.pl test_inst.fasta");
+my $result = system_call ("perl $executing_path/makelibrary.pl $executing_path/test_inst.fasta");
 if ($result == 0) {
 	print "Test failed. Please contact the developers with details of this failure at https://github.com/juliema/TRAM/issues.\n";
 	exit;
 }
 
 print "Looks good! You are ready to sTRAM it up!\n";
-system_call("rm test_inst.*");
+system_call("rm $executing_path/test_inst.*");
 
 sub system_call {
 	my $cmd = shift;
