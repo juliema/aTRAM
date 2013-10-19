@@ -1,8 +1,8 @@
 # sTRAM: Simple Target Restricted Assembly Method
 
 sTRAM consists of two scripts:
-1. makelibrary.pl: this script takes a short-read archive and prepares it for sTRAMming.
-2. sTRAM.pl: this script runs the pipeline on a prepared short-read archive.
+  1. makelibrary.pl: this script takes a short-read archive and prepares it for sTRAMming.
+  2. sTRAM.pl: this script runs the pipeline on a prepared short-read archive.
     sTRAM.pl -reads shortreadfile -target target.fasta [-ins_length int] [-exp_coverage int] [-iterations int] [-start_iteration int] [-log_file filename] [-use_ends] [-output filename]
 
   * -reads:     		short read archive (already run through 0-prepare_files.pl).
