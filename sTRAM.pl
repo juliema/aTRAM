@@ -271,7 +271,7 @@ sTRAM.pl -reads shortreadfile -target target.fasta [-ins_length int] [-exp_cover
 
 =head1 OPTIONS
 
-  -reads:     		short read archive (already run through 0-prepare_files.pl).
+  -reads:     		short read archive (already run through makelibrary.pl).
   -target:          fasta file with sequences of interest.
   -output:	        optional: the prefix for the pipeline's output files (default name is the same as -reads).
   -ins_length:	    optional: the size of the fragments used in the short-read library (default 300).
