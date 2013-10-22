@@ -1,4 +1,5 @@
 # given two fasta files corresponding to paired ends of short reads, find the specified sequences and then output them into a single output file.
+#!/usr/bin/perl
 use strict;
 use File::Temp qw/ tempfile tempdir /;
 
@@ -23,7 +24,7 @@ $fastafile_1 =~ s/#/1/;
 my $fastafile_2 = "$fastafile";
 $fastafile_2 =~ s/#/2/;
 
-unless (-e $fastafile_1) {
+unless (-e $fastafile_2) {
 	die "Files $fastafile_1 and $fastafile_2 do not exist.\n";
 }
 

@@ -1,3 +1,4 @@
+#!/usr/bin/perl
 use strict;
 use Getopt::Long;
 use Pod::Usage;
@@ -19,12 +20,13 @@ my $help = 0;
 my $log_file = 0;
 my $use_ends = 0;
 my $protein = 0;
+my $blast_file = 0;
 
 #parameters with modifiable default values
 my $output_file = 0;
 my $ins_length = 300;
 my $iterations = 5;
-my $start_iter = 0;
+my $start_iter = 1;
 my $exp_cov = 30;
 
 GetOptions ('reads=s' => \$short_read_archive,
@@ -37,6 +39,7 @@ GetOptions ('reads=s' => \$short_read_archive,
             'use_ends' => \$use_ends,
             'output=s' => \$output_file,
             'protein' => \$protein,
+            'blast=s' => \$blast_file,
             'help|?' => \$help) or pod2usage(-msg => "GetOptions failed.", -exitval => 2);
 
 if ($help) {
@@ -69,40 +72,103 @@ print $log_fh $runline;
 unless ($output_file) {
     $output_file = $short_read_archive;
 }
-
+if ($blast_file == 0) {
+	(undef, $blast_file) = tempfile(UNLINK => 1);
+}
 my (undef, $targetdb) = tempfile(UNLINK => 1);
-my (undef, $blast_file) = tempfile(UNLINK => 1);
 my (undef, $sort_file) = tempfile(UNLINK => 1);
+my ($TARGET_FH, $target_fasta) = tempfile();
+
+my $start_seq = "";
+my $end_seq = "";
+
+# process the target sequence file to look for the start seq and end seq.
+my @target_seqs = ();
+open SEARCH_FH, "<", $search_fasta;
+while (my $line=readline SEARCH_FH) {
+	my $name = $line;
+	chomp $name;
+	my $seq = readline SEARCH_FH;
+	chomp $seq;
+	push @target_seqs, "$name,$seq";
+}
+close SEARCH_FH;
+
+my $len = 100;
+if ($protein ==1) {
+	$len = 30;
+}
+
+# check first target seq, see if we need to make just the first bit separated for checking completeness.
+my $firstseq = shift @target_seqs;
+
+if ($firstseq =~ /(.*),(.{$len})(.*)/) {
+	# split into two smaller seqs:
+	$start_seq = ">sTRAM_target_start";
+	unshift @target_seqs, "$1,$3";
+	unshift @target_seqs, "$start_seq,$2";
+} else {
+	# it's short enough to just go as-is
+	$firstseq =~ /(.*),/;
+	$start_seq = $1;
+	unshift @target_seqs, $firstseq;
+}
+
+# check last target seq, see if we need to make just the first bit separated for checking completeness.
+my $lastseq = pop @target_seqs;
+
+if ($lastseq =~ /(.*),(.*)(.{$len})/) {
+	# split into two smaller seqs:
+	$end_seq = ">sTRAM_target_end";
+	push @target_seqs, "$1,$2";
+	push @target_seqs, "$end_seq,$3";
+} else {
+	# it's short enough to just go as-is
+	$lastseq =~ /(.*),/;
+	$end_seq = $1;
+	push @target_seqs, $lastseq;
+}
+
+# okay, let's re-assemble the file for the target fasta.
+foreach my $line (@target_seqs) {
+	$line =~ /(.*),(.*)/;
+	print $TARGET_FH "$1\n$2\n";
+}
+close $TARGET_FH;
 
 # make a database from the target so that we can compare contigs to the target.
 if ($protein == 1) {
-	$cmd = "makeblastdb -in $search_fasta -dbtype prot -out $targetdb.db";
+	$cmd = "makeblastdb -in $target_fasta -dbtype prot -out $targetdb.db -input_type fasta";
 } else {
-	$cmd = "makeblastdb -in $search_fasta -dbtype nucl -out $targetdb.db";
+	$cmd = "makeblastdb -in $target_fasta -dbtype nucl -out $targetdb.db -input_type fasta";
 }
 system_call ($cmd);
 
-if ($start_iter > 0) {
-	$search_fasta = "$output_file.$start_iter.contigs.fa";
+if ($start_iter > 1) {
+	my $x = $start_iter-1;
+	$search_fasta = "$output_file.$x.contigs.fa";
 }
 
-open CONTIGS_FH, ">>", "$output_file.all.fasta";
-
-for (my $i=$start_iter; $i<$iterations; $i++) {
+for (my $i=$start_iter; $i<=$iterations; $i++) {
 	print ("interation $i starting...\n");
 	print $log_fh ("interation $i starting...\n");
 
 	# 1. blast to find any short reads that match the target.
 	print "\tblasting short reads...\n";
-	if (($protein == 1) && ($i == 0)) {
+	if (($protein == 1) && ($i == 1)) {
 		system_call ("tblastn -max_target_seqs 100000000 -db $short_read_archive.db -query $search_fasta -outfmt 6 -num_threads 8 -out $output_file.blast.$i");
 	} else {
 		system_call ("blastn -task blastn -evalue 10e-10 -max_target_seqs 100000000 -db $short_read_archive.db -query $search_fasta -outfmt 6 -num_threads 8 -out $output_file.blast.$i");
 	}
 
+	# did we not find any reads? Go ahead and quit.
+	if ((-s "$output_file.blast.$i") == 0) {
+		die "No similar reads were found.\n";
+	}
+
 	# 2 and 3. find the paired end of all of the blast hits.
 	print "\tgetting paired ends...\n";
-	system_call("perl $executing_path/2.5-pairedsequenceretrieval.pl $short_read_archive.#.fasta $output_file.blast.$i $output_file.blast.$i.fasta");
+	system_call("perl $executing_path/lib/pairedsequenceretrieval.pl $short_read_archive.#.fasta $output_file.blast.$i $output_file.blast.$i.fasta");
 
 	# 4. assemble the reads using velvet
 	print "\tassembling with Velvet...\n";
@@ -123,14 +189,16 @@ for (my $i=$start_iter; $i<$iterations; $i++) {
 
 	# 6. we want to keep the contigs that have a bitscore higher than 100.
 	system_call("gawk '{print \$2\"\\t\"\$1;}' $blast_file | sort -n -r | gawk '{if (\$1 > 100) print \$2;}' | sort | uniq > $sort_file");
-	system_call("perl $executing_path/6.5-findsequences.pl $search_fasta $sort_file $search_fasta");
+	system_call("perl $executing_path/lib/findsequences.pl $search_fasta $sort_file $search_fasta");
 
 	# save off these resulting contigs to the ongoing contigs file.
+	open CONTIGS_FH, ">>", "$output_file.all.fasta";
 	print CONTIGS_FH `cat $search_fasta | gawk '{sub(/>/,">$i\_"); print \$0}'`;
+	close CONTIGS_FH;
 
 	# if we flagged to use just the ends of the contigs, clean that up.
 	if ($use_ends != 0) {
-		system_call("bash $executing_path/5.5-sort_contigs.sh $search_fasta");
+		system_call("bash $executing_path/lib/sort_contigs.sh $search_fasta");
 
 		open FH, "<", "$search_fasta.sorted.tab";
 		my @contigs = <FH>;
@@ -184,7 +252,10 @@ sub system_call {
 	open STDOUT, ">&", $saveout;
 	open STDERR, ">&", $saveerr;
 
-	if ($exit_val != 0) { exit; }
+	if ($exit_val != 0) {
+		print "System call \"$cmd\" exited with $exit_val\n";
+		exit;
+	}
 	return $exit_val;
 }
 
@@ -192,11 +263,11 @@ __END__
 
 =head1 NAME
 
-pipeline.pl
+sTRAM.pl
 
 =head1 SYNOPSIS
 
-pipeline.pl -reads shortreadfile -target target.fasta [-ins_length int] [-exp_coverage int] [-iterations int] [-start_iteration int] [-log_file filename] [-use_ends] [-output filename]
+sTRAM.pl -reads shortreadfile -target target.fasta [-ins_length int] [-exp_coverage int] [-iterations int] [-start_iteration int] [-log_file filename] [-use_ends] [-output filename]
 
 =head1 OPTIONS
 
