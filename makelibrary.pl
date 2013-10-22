@@ -50,7 +50,7 @@ if ($fastq_input == 1) {
 
 # sort fasta short-read file
 print "sorting fasta file.\n";
-system ("bash $executing_path/3.5-sort_fasta.sh $working_sra") == 0 or exit_with_msg ("Couldn't find 3.5-sort_fasta.sh. This script needs to be in the same directory as the rest of TRAM");
+system ("bash $executing_path/lib/sort_fasta.sh $working_sra") == 0 or exit_with_msg ("Couldn't find sort_fasta.sh. This script needs to be in the same directory as the rest of TRAM");
 
 if (-z "$working_sra.sorted.fasta") {
 	exit_with_msg ("Sort failed. Are you sure $working_sra exists?");
