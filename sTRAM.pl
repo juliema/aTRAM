@@ -89,13 +89,23 @@ my $end_seq = "";
 # process the target sequence file to look for the start seq and end seq.
 my @target_seqs = ();
 open SEARCH_FH, "<", $search_fasta;
+my $name = "";
+my $seq = "";
 while (my $line=readline SEARCH_FH) {
-	my $name = $line;
-	chomp $name;
-	my $seq = readline SEARCH_FH;
-	chomp $seq;
-	push @target_seqs, "$name,$seq";
+	if ($line =~ />(.*)/) {
+		if ($name ne "") {
+			push @target_seqs, "$name,$seq";
+		}
+		$name = $1;
+		chomp $name;
+		$seq = "";
+	} else {
+		$seq .= $line;
+		chomp $seq;
+	}
 }
+push @target_seqs, "$name,$seq";
+
 close SEARCH_FH;
 
 my $len = 100;
@@ -105,10 +115,9 @@ if ($protein ==1) {
 
 # check first target seq, see if we need to make just the first bit separated for checking completeness.
 my $firstseq = shift @target_seqs;
-
 if ($firstseq =~ /(.*),(.{$len})(.*)/) {
 	# split into two smaller seqs:
-	$start_seq = ">sTRAM_target_start";
+	$start_seq = "sTRAM_target_start";
 	unshift @target_seqs, "$1,$3";
 	unshift @target_seqs, "$start_seq,$2";
 } else {
@@ -120,10 +129,9 @@ if ($firstseq =~ /(.*),(.{$len})(.*)/) {
 
 # check last target seq, see if we need to make just the first bit separated for checking completeness.
 my $lastseq = pop @target_seqs;
-
 if ($lastseq =~ /(.*),(.*)(.{$len})/) {
 	# split into two smaller seqs:
-	$end_seq = ">sTRAM_target_end";
+	$end_seq = "sTRAM_target_end";
 	push @target_seqs, "$1,$2";
 	push @target_seqs, "$end_seq,$3";
 } else {
@@ -136,7 +144,7 @@ if ($lastseq =~ /(.*),(.*)(.{$len})/) {
 # okay, let's re-assemble the file for the target fasta.
 foreach my $line (@target_seqs) {
 	$line =~ /(.*),(.*)/;
-	print $TARGET_FH "$1\n$2\n";
+	print $TARGET_FH ">$1\n$2\n";
 }
 close $TARGET_FH;
 
