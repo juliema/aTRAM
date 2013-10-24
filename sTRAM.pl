@@ -74,9 +74,11 @@ print $log_fh $runline;
 unless ($output_file) {
     $output_file = $short_read_archive;
 }
-if ($blast_file == 0) {
+
+unless ($blast_file) {
 	(undef, $blast_file) = tempfile(UNLINK => 1);
 }
+
 my (undef, $targetdb) = tempfile(UNLINK => 1);
 my (undef, $sort_file) = tempfile(UNLINK => 1);
 my ($TARGET_FH, $target_fasta) = tempfile();
