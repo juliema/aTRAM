@@ -85,6 +85,7 @@ my ($TARGET_FH, $target_fasta) = tempfile();
 
 my $start_seq = "";
 my $end_seq = "";
+my $hit_matrix = ();
 
 # process the target sequence file to look for the start seq and end seq.
 my @target_seqs = ();
@@ -189,7 +190,9 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 
 	# we'll use the resulting contigs as the query for the next iteration.
 	$search_fasta = "$output_file.$i.contigs.fa";
-	system_call("mv $output_file.velvet/contigs.fa $search_fasta");
+	system_call("cp $output_file.velvet/contigs.fa $search_fasta");
+	print "starting with this: \n";
+	system_call("grep '>' $search_fasta");
 
 	# 5. now we filter out the contigs to look for just the best ones.
 	print "\tfiltering contigs...\n";
@@ -200,11 +203,47 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 	}
 
 	# 6. we want to keep the contigs that have a bitscore higher than 100.
-	system_call("gawk '\/$start_seq\/ {sub(\"NODE\",\"STARTNODE\"); print \$0;}' $blast_file > $sort_file");
-	system_call("gawk '\/$end_seq\/ {sub(\"NODE\",\"ENDNODE\"); print \$0;}' $sort_file > $blast_file");
-	system_call("gawk '{print \$3\"\\t\"\$1;}' $blast_file | sort -n -r | gawk '{if (\$1 > 100) print \$2;}' | sort | uniq > $sort_file");
-	system_call("perl $executing_path/lib/findsequences.pl $search_fasta $sort_file $search_fasta");
+# 	system_call("gawk '{if (\$2 ~ \/$start_seq\/) print \$0\"\\tstart\"; else print \$0;}' $blast_file > $sort_file");
+# 	system_call("gawk '{if (\$2 ~ \/$end_seq\/) print \$0\"\\tend\"; else print \$0;}' $sort_file > $blast_file");
+# 	system_call("gawk '{print \$3\"\\t\"\$1;}' $blast_file | sort -n -r | gawk '{if (\$1 > 100) print \$2;}' | sort | uniq > $sort_file");
+	open BLAST_FH, "<", $blast_file;
+	while (my $line = readline BLAST_FH) {
+		$line =~ /(.*?)\s+(.*?)\s+(.*)\s/;
+		my $contig = $1;
+		my $baitseq = $2;
+		my $score = $3;
+		my $currscore = $hit_matrix->{$contig}->{$baitseq};
+		if ($currscore == undef) {
+			$hit_matrix->{$contig}->{$baitseq} = $score;
+		} else {
+			if ($currscore < $score) {
+				$hit_matrix->{$contig}->{$baitseq} = $score;
+			}
+		}
+	}
+	close BLAST_FH;
 
+	foreach my $contig (keys $hit_matrix) {
+		my $contig_high_score = 0;
+		foreach my $baitseq (keys $hit_matrix->{$contig}) {
+			my $score = $hit_matrix->{$contig}->{$baitseq};
+			if ($score > $contig_high_score) {
+				$contig_high_score = $score;
+			}
+		}
+		if ($contig_high_score < 100) {
+			delete $hit_matrix->{$contig};
+		}
+	}
+
+	open SORT_FH, ">", $blast_file;
+	foreach my $contig (keys $hit_matrix) {
+		print SORT_FH $contig . "\n";
+	}
+	system_call("sort -n $blast_file > $sort_file");
+	system_call("perl $executing_path/lib/findsequences.pl $search_fasta $sort_file $search_fasta");
+	print "ending with this: \n";
+	system_call("grep '>' $search_fasta");
 	# save off these resulting contigs to the ongoing contigs file.
 	open CONTIGS_FH, ">>", "$output_file.all.fasta";
 	print CONTIGS_FH `cat $search_fasta | gawk '{sub(/>/,">$i\_"); print \$0}'`;
