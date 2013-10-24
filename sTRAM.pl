@@ -5,6 +5,7 @@ use Pod::Usage;
 use File::Basename;
 use File::Temp qw/ tempfile tempdir /;
 
+my $debug = 0;
 if (@ARGV == 0) {
     pod2usage(-verbose => 1);
 }
@@ -40,6 +41,7 @@ GetOptions ('reads=s' => \$short_read_archive,
             'output=s' => \$output_file,
             'protein' => \$protein,
             'blast=s' => \$blast_file,
+            'debug' => \$debug,
             'help|?' => \$help) or pod2usage(-msg => "GetOptions failed.", -exitval => 2);
 
 if ($help) {
@@ -243,16 +245,21 @@ sub exit_with_msg {
 sub system_call {
 	my $cmd = shift;
 	print $log_fh ("\t$cmd\n");
-
-	open my $saveout, ">&STDOUT";
-	open my $saveerr, ">&STDERR";
-	open STDOUT, '>', File::Spec->devnull();
-	open STDERR, '>', File::Spec->devnull();
+	my ($saveout, $saveerr);
+	if ($debug == 0) {
+		open $saveout, ">&STDOUT";
+		open $saveerr, ">&STDERR";
+		open STDOUT, '>', File::Spec->devnull();
+		open STDERR, '>', File::Spec->devnull();
+	}
 	my $exit_val = eval {
 		system ($cmd);
 	};
-	open STDOUT, ">&", $saveout;
-	open STDERR, ">&", $saveerr;
+
+	if ($debug == 0) {
+		open STDOUT, ">&", $saveout;
+		open STDERR, ">&", $saveerr;
+	}
 
 	if ($exit_val != 0) {
 		print "System call \"$cmd\" exited with $exit_val\n";
