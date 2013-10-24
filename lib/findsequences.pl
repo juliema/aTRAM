@@ -31,13 +31,18 @@ open OUT_FH, ">", "$outfile";
 my $curr_name = readline LIST_FH;
 
 while ($curr_name) {
+	print "$curr_name\n";
 	chomp $curr_name;
+	$curr_name =~ /(.*)(NODE.*)$/;
+	$curr_name = $2;
+	my $prefix = $1;
 	my $fa_seq = (readline FA_FH) . (readline FA_FH);
 
 	if ($fa_seq eq "") { last; }
 
 	if ($fa_seq =~ /$curr_name/) {
-		print OUT_FH "$fa_seq";
+		$fa_seq =~ />(.*)/;
+		print OUT_FH ">$prefix$1";
 		$curr_name = readline LIST_FH;
 	}
 }

@@ -5,6 +5,7 @@ use Pod::Usage;
 use File::Basename;
 use File::Temp qw/ tempfile tempdir /;
 
+my $debug = 0;
 if (@ARGV == 0) {
     pod2usage(-verbose => 1);
 }
@@ -28,6 +29,8 @@ my $ins_length = 300;
 my $iterations = 5;
 my $start_iter = 1;
 my $exp_cov = 30;
+my $evalue = 10e-10;
+my $max_target_seqs = 100000000;
 
 GetOptions ('reads=s' => \$short_read_archive,
             'target=s' => \$search_fasta,
@@ -40,6 +43,12 @@ GetOptions ('reads=s' => \$short_read_archive,
             'output=s' => \$output_file,
             'protein' => \$protein,
             'blast=s' => \$blast_file,
+<<<<<<< HEAD
+            'max_target_seqs=i' => \$max_target_seqs,
+            'evalue=i' => \$evalue,
+=======
+            'debug' => \$debug,
+>>>>>>> check_for_ends
             'help|?' => \$help) or pod2usage(-msg => "GetOptions failed.", -exitval => 2);
 
 if ($help) {
@@ -72,9 +81,11 @@ print $log_fh $runline;
 unless ($output_file) {
     $output_file = $short_read_archive;
 }
-if ($blast_file == 0) {
+
+unless ($blast_file) {
 	(undef, $blast_file) = tempfile(UNLINK => 1);
 }
+
 my (undef, $targetdb) = tempfile(UNLINK => 1);
 my (undef, $sort_file) = tempfile(UNLINK => 1);
 my ($TARGET_FH, $target_fasta) = tempfile();
@@ -85,13 +96,23 @@ my $end_seq = "";
 # process the target sequence file to look for the start seq and end seq.
 my @target_seqs = ();
 open SEARCH_FH, "<", $search_fasta;
+my $name = "";
+my $seq = "";
 while (my $line=readline SEARCH_FH) {
-	my $name = $line;
-	chomp $name;
-	my $seq = readline SEARCH_FH;
-	chomp $seq;
-	push @target_seqs, "$name,$seq";
+	if ($line =~ />(.*)/) {
+		if ($name ne "") {
+			push @target_seqs, "$name,$seq";
+		}
+		$name = $1;
+		chomp $name;
+		$seq = "";
+	} else {
+		$seq .= $line;
+		chomp $seq;
+	}
 }
+push @target_seqs, "$name,$seq";
+
 close SEARCH_FH;
 
 my $len = 100;
@@ -101,10 +122,9 @@ if ($protein ==1) {
 
 # check first target seq, see if we need to make just the first bit separated for checking completeness.
 my $firstseq = shift @target_seqs;
-
 if ($firstseq =~ /(.*),(.{$len})(.*)/) {
 	# split into two smaller seqs:
-	$start_seq = ">sTRAM_target_start";
+	$start_seq = "sTRAM_target_start";
 	unshift @target_seqs, "$1,$3";
 	unshift @target_seqs, "$start_seq,$2";
 } else {
@@ -116,10 +136,9 @@ if ($firstseq =~ /(.*),(.{$len})(.*)/) {
 
 # check last target seq, see if we need to make just the first bit separated for checking completeness.
 my $lastseq = pop @target_seqs;
-
 if ($lastseq =~ /(.*),(.*)(.{$len})/) {
 	# split into two smaller seqs:
-	$end_seq = ">sTRAM_target_end";
+	$end_seq = "sTRAM_target_end";
 	push @target_seqs, "$1,$2";
 	push @target_seqs, "$end_seq,$3";
 } else {
@@ -132,7 +151,7 @@ if ($lastseq =~ /(.*),(.*)(.{$len})/) {
 # okay, let's re-assemble the file for the target fasta.
 foreach my $line (@target_seqs) {
 	$line =~ /(.*),(.*)/;
-	print $TARGET_FH "$1\n$2\n";
+	print $TARGET_FH ">$1\n$2\n";
 }
 close $TARGET_FH;
 
@@ -156,9 +175,9 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 	# 1. blast to find any short reads that match the target.
 	print "\tblasting short reads...\n";
 	if (($protein == 1) && ($i == 1)) {
-		system_call ("tblastn -max_target_seqs 100000000 -db $short_read_archive.db -query $search_fasta -outfmt 6 -num_threads 8 -out $output_file.blast.$i");
+		system_call ("tblastn -max_target_seqs $max_target_seqs -db $short_read_archive.db -query $search_fasta -outfmt 6 -num_threads 8 -out $output_file.blast.$i");
 	} else {
-		system_call ("blastn -task blastn -evalue 10e-10 -max_target_seqs 100000000 -db $short_read_archive.db -query $search_fasta -outfmt 6 -num_threads 8 -out $output_file.blast.$i");
+		system_call ("blastn -task blastn -evalue $evalue -max_target_seqs $max_target_seqs -db $short_read_archive.db -query $search_fasta -outfmt 6 -num_threads 8 -out $output_file.blast.$i");
 	}
 
 	# did we not find any reads? Go ahead and quit.
@@ -182,13 +201,15 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 	# 5. now we filter out the contigs to look for just the best ones.
 	print "\tfiltering contigs...\n";
 	if ($protein == 1) {
-		system_call ("blastx -db $targetdb.db -query $search_fasta -out $blast_file -outfmt '6 qseqid bitscore'");
+		system_call ("blastx -db $targetdb.db -query $search_fasta -out $blast_file -outfmt '6 qseqid sseqid bitscore'");
 	} else {
-		system_call ("tblastx -db $targetdb.db -query $search_fasta -out $blast_file -outfmt '6 qseqid bitscore'");
+		system_call ("tblastx -db $targetdb.db -query $search_fasta -out $blast_file -outfmt '6 qseqid sseqid bitscore'");
 	}
 
 	# 6. we want to keep the contigs that have a bitscore higher than 100.
-	system_call("gawk '{print \$2\"\\t\"\$1;}' $blast_file | sort -n -r | gawk '{if (\$1 > 100) print \$2;}' | sort | uniq > $sort_file");
+	system_call("gawk '\/$start_seq\/ {sub(\"NODE\",\"STARTNODE\"); print \$0;}' $blast_file > $sort_file");
+	system_call("gawk '\/$end_seq\/ {sub(\"NODE\",\"ENDNODE\"); print \$0;}' $sort_file > $blast_file");
+	system_call("gawk '{print \$3\"\\t\"\$1;}' $blast_file | sort -n -r | gawk '{if (\$1 > 100) print \$2;}' | sort | uniq > $sort_file");
 	system_call("perl $executing_path/lib/findsequences.pl $search_fasta $sort_file $search_fasta");
 
 	# save off these resulting contigs to the ongoing contigs file.
@@ -241,16 +262,21 @@ sub exit_with_msg {
 sub system_call {
 	my $cmd = shift;
 	print $log_fh ("\t$cmd\n");
-
-	open my $saveout, ">&STDOUT";
-	open my $saveerr, ">&STDERR";
-	open STDOUT, '>', File::Spec->devnull();
-	open STDERR, '>', File::Spec->devnull();
+	my ($saveout, $saveerr);
+	if ($debug == 0) {
+		open $saveout, ">&STDOUT";
+		open $saveerr, ">&STDERR";
+		open STDOUT, '>', File::Spec->devnull();
+		open STDERR, '>', File::Spec->devnull();
+	}
 	my $exit_val = eval {
 		system ($cmd);
 	};
-	open STDOUT, ">&", $saveout;
-	open STDERR, ">&", $saveerr;
+
+	if ($debug == 0) {
+		open STDOUT, ">&", $saveout;
+		open STDERR, ">&", $saveerr;
+	}
 
 	if ($exit_val != 0) {
 		print "System call \"$cmd\" exited with $exit_val\n";
@@ -280,6 +306,7 @@ sTRAM.pl -reads shortreadfile -target target.fasta [-ins_length int] [-exp_cover
   -start_iteration: optional: if resuming from previous run, which iteration number to start from (default 0).
   -log_file:        optional: a file to store output of the pipeline.
   -use_ends:        optional: if this flag is present, use the first and last $ins_length of long contigs in the search.
+  -protein:         optional: if the target sequence is a protein fasta file.
 
 
 =head1 DESCRIPTION
