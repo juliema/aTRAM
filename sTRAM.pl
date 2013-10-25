@@ -253,6 +253,12 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 	$search_fasta = "$output_file.$i.contigs.fa";
 
 	system_call("perl $executing_path/lib/findsequences.pl $output_file.velvet/contigs.fa $sort_results $search_fasta");
+
+	# SHUTDOWN CHECK:
+	if (-z $search_fasta) {
+		die ("No contigs had a bitscore greater than 100; quitting at iteration $i.");
+	}
+
 	# save off these resulting contigs to the ongoing contigs file.
 	open CONTIGS_FH, ">>", "$output_file.all.fasta";
 	print CONTIGS_FH `cat $search_fasta | gawk '{sub(/>/,">$i\_"); print \$0}'`;
