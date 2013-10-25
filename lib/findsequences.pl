@@ -3,7 +3,7 @@ use strict;
 use File::Temp qw/ tempfile tempdir /;
 
 if (@ARGV < 3) {
-	die "Usage: 6.5-findsequences.pl fastafile sequencelist outfile\n";
+    die "Usage: 6.5-findsequences.pl fastafile sequencelist outfile\n";
 }
 
 my $fastafile = shift;
@@ -11,11 +11,11 @@ my $sequencelist = shift;
 my $outfile = shift;
 
 unless (-e $sequencelist) {
-	die "File $sequencelist does not exist.\n";
+    die "File $sequencelist does not exist.\n";
 }
 
 unless (-e $fastafile) {
-	die "File $fastafile does not exist.\n";
+    die "File $fastafile does not exist.\n";
 }
 
 my (undef, $seq_names) = tempfile(UNLINK => 1);
@@ -31,18 +31,13 @@ open OUT_FH, ">", "$outfile";
 my $curr_name = readline LIST_FH;
 
 while ($curr_name) {
-	print "$curr_name\n";
 	chomp $curr_name;
-	$curr_name =~ /(.*)(NODE.*)$/;
-	$curr_name = $2;
-	my $prefix = $1;
 	my $fa_seq = (readline FA_FH) . (readline FA_FH);
 
 	if ($fa_seq eq "") { last; }
 
 	if ($fa_seq =~ /$curr_name/) {
-		$fa_seq =~ />(.*)/;
-		print OUT_FH ">$prefix$1";
+		print OUT_FH "$fa_seq";
 		$curr_name = readline LIST_FH;
 	}
 }
