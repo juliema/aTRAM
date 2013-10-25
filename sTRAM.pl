@@ -21,7 +21,7 @@ my $help = 0;
 my $log_file = 0;
 my $use_ends = 0;
 my $protein = 0;
-my $blast_file = 0;
+my $blast_name = 0;
 
 #parameters with modifiable default values
 my $output_file = 0;
@@ -40,7 +40,7 @@ GetOptions ('reads=s' => \$short_read_archive,
             'use_ends' => \$use_ends,
             'output=s' => \$output_file,
             'protein' => \$protein,
-            'blast=s' => \$blast_file,
+            'blast=s' => \$blast_name,
             'debug' => \$debug,
             'help|?' => \$help) or pod2usage(-msg => "GetOptions failed.", -exitval => 2);
 
@@ -75,13 +75,9 @@ unless ($output_file) {
     $output_file = $short_read_archive;
 }
 
-unless ($blast_file) {
-	(undef, $blast_file) = tempfile(UNLINK => 1);
-}
-
-my (undef, $targetdb) = tempfile(UNLINK => 1);
-my (undef, $sort_file) = tempfile(UNLINK => 1);
-my ($TARGET_FH, $target_fasta) = tempfile();
+open CONTIGS_FH, ">", "$output_file.all.fasta";
+truncate CONTIGS_FH, 0;
+close CONTIGS_FH;
 
 my $start_seq = "";
 my $end_seq = "";
@@ -89,6 +85,7 @@ my $hit_matrix = ();
 
 # process the target sequence file to look for the start seq and end seq.
 my @target_seqs = ();
+
 open SEARCH_FH, "<", $search_fasta;
 my $name = "";
 my $seq = "";
@@ -110,7 +107,7 @@ push @target_seqs, "$name,$seq";
 close SEARCH_FH;
 
 my $len = 100;
-if ($protein ==1) {
+if ($protein==1) {
 	$len = 30;
 }
 
@@ -143,13 +140,14 @@ if ($lastseq =~ /(.*),(.*)(.{$len})/) {
 }
 
 # okay, let's re-assemble the file for the target fasta.
+my ($TARGET_FH, $target_fasta) = tempfile(UNLINK => 1);
 foreach my $line (@target_seqs) {
 	$line =~ /(.*),(.*)/;
 	print $TARGET_FH ">$1\n$2\n";
 }
-close $TARGET_FH;
 
 # make a database from the target so that we can compare contigs to the target.
+my (undef, $targetdb) = tempfile(UNLINK => 1);
 if ($protein == 1) {
 	$cmd = "makeblastdb -in $target_fasta -dbtype prot -out $targetdb.db -input_type fasta";
 } else {
@@ -196,12 +194,19 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 
 	# 5. now we filter out the contigs to look for just the best ones.
 	print "\tfiltering contigs...\n";
-	if ($protein == 1) {
-		system_call ("blastx -db $targetdb.db -query $search_fasta -out $blast_file -outfmt '6 qseqid sseqid bitscore'");
+
+	my $blast_file = "";
+	unless ($blast_name) {
+		(undef, $blast_file) = tempfile(UNLINK => 1);
 	} else {
-		system_call ("tblastx -db $targetdb.db -query $search_fasta -out $blast_file -outfmt '6 qseqid sseqid bitscore'");
+		$blast_file = "$blast_name.$i";
 	}
 
+	if ($protein == 1) {
+		system_call ("blastx -db $targetdb.db -query $output_file.velvet/contigs.fa -out $blast_file -outfmt '6 qseqid sseqid bitscore'");
+	} else {
+		system_call ("tblastx -db $targetdb.db -query $output_file.velvet/contigs.fa -out $blast_file -outfmt '6 qseqid sseqid bitscore'");
+	}
 	# 6. we want to keep the contigs that have a bitscore higher than 100.
 # 	system_call("gawk '{if (\$2 ~ \/$start_seq\/) print \$0\"\\tstart\"; else print \$0;}' $blast_file > $sort_file");
 # 	system_call("gawk '{if (\$2 ~ \/$end_seq\/) print \$0\"\\tend\"; else print \$0;}' $sort_file > $blast_file");
