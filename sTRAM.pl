@@ -29,6 +29,8 @@ my $ins_length = 300;
 my $iterations = 5;
 my $start_iter = 1;
 my $exp_cov = 30;
+my $evalue = 10e-10;
+my $max_target_seqs = 100000000;
 
 GetOptions ('reads=s' => \$short_read_archive,
             'target=s' => \$search_fasta,
@@ -42,6 +44,8 @@ GetOptions ('reads=s' => \$short_read_archive,
             'protein' => \$protein,
             'blast=s' => \$blast_name,
             'debug' => \$debug,
+            'max_target_seqs=i' => \$max_target_seqs,
+            'evalue=i' => \$evalue,
             'help|?' => \$help) or pod2usage(-msg => "GetOptions failed.", -exitval => 2);
 
 if ($help) {
@@ -171,9 +175,9 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 	# 1. blast to find any short reads that match the target.
 	print "\tblasting short reads...\n";
 	if (($protein == 1) && ($i == 1)) {
-		system_call ("tblastn -max_target_seqs 100000000 -db $short_read_archive.db -query $search_fasta -outfmt 6 -num_threads 8 -out $output_file.blast.$i");
+		system_call ("tblastn -max_target_seqs $max_target_seqs -db $short_read_archive.db -query $search_fasta -outfmt 6 -num_threads 8 -out $output_file.blast.$i");
 	} else {
-		system_call ("blastn -task blastn -evalue 10e-10 -max_target_seqs 100000000 -db $short_read_archive.db -query $search_fasta -outfmt 6 -num_threads 8 -out $output_file.blast.$i");
+		system_call ("blastn -task blastn -evalue $evalue -max_target_seqs $max_target_seqs -db $short_read_archive.db -query $search_fasta -outfmt 6 -num_threads 8 -out $output_file.blast.$i");
 	}
 
 	# did we not find any reads? Go ahead and quit.
@@ -364,6 +368,7 @@ sTRAM.pl -reads shortreadfile -target target.fasta [-ins_length int] [-exp_cover
   -start_iteration: optional: if resuming from previous run, which iteration number to start from (default 0).
   -log_file:        optional: a file to store output of the pipeline.
   -use_ends:        optional: if this flag is present, use the first and last $ins_length of long contigs in the search.
+  -protein:         optional: if the target sequence is a protein fasta file.
 
 
 =head1 DESCRIPTION
