@@ -22,6 +22,7 @@ my $log_file = 0;
 my $use_ends = 0;
 my $protein = 0;
 my $blast_name = 0;
+my $complete = 0;
 my $velvet = 0;
 
 #parameters with modifiable default values
@@ -48,6 +49,7 @@ GetOptions ('reads=s' => \$short_read_archive,
             'velvet' => \$velvet,
             'max_target_seqs=i' => \$max_target_seqs,
             'evalue=i' => \$evalue,
+            'complete' => \$complete,
             'help|?' => \$help) or pod2usage(-msg => "GetOptions failed.", -exitval => 2);
 
 if ($help) {
@@ -209,23 +211,31 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 	}
 
 	if ($protein == 1) {
-		system_call ("blastx -db $targetdb.db -query $output_file.velvet/contigs.fa -out $blast_file -outfmt '6 qseqid sseqid bitscore'");
+		system_call ("blastx -db $targetdb.db -query $output_file.velvet/contigs.fa -out $blast_file -outfmt '6 qseqid sseqid bitscore qstart qend sstart send'");
 	} else {
-		system_call ("tblastx -db $targetdb.db -query $output_file.velvet/contigs.fa -out $blast_file -outfmt '6 qseqid sseqid bitscore'");
+		system_call ("tblastx -db $targetdb.db -query $output_file.velvet/contigs.fa -out $blast_file -outfmt '6 qseqid sseqid bitscore qstart qend sstart send'");
 	}
 	# 6. we want to keep the contigs that have a bitscore higher than 100.
 	open BLAST_FH, "<", $blast_file;
 	while (my $line = readline BLAST_FH) {
-		$line =~ /(.*?)\s+(.*?)\s+(.*)\s/;
+		$line =~ /(.*?)\s+(.*?)\s+(.*?)\s+(.*?)\s+(.*?)\s+(.*?)\s+(.*)\s/;
 		my $contig = $1;
 		my $baitseq = $2;
 		my $score = $3;
+		my $qstart = $4;
+		my $qend = $5;
+		my $sstart = $6;
+		my $send = $7;
+		my $strand = (($qend-$qstart) / ($send-$sstart));
 		my $currscore = $hit_matrix{$contig}->{$baitseq};
 		if ($currscore == undef) {
 			$hit_matrix{$contig}->{$baitseq} = $score;
+			$hit_matrix{$contig}->{"strand"} = $strand;
+			print "$strand, " . $hit_matrix{$contig}->{"strand"} . "\n";
 		} else {
 			if ($currscore < $score) {
 				$hit_matrix{$contig}->{$baitseq} = $score;
+				$hit_matrix{$contig}->{"strand"} = $strand;
 			}
 		}
 	}
@@ -233,16 +243,16 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 
 	foreach my $contig (keys %hit_matrix) {
 		my $contig_high_score = 0;
-		foreach my $baitseq (keys $hit_matrix{$contig}) {
+		foreach my $baitseq (@targets) {
 			my $score = $hit_matrix{$contig}->{$baitseq};
 			if ($score > $contig_high_score) {
 				$contig_high_score = $score;
 			}
-			if ($score < 100) {
+			if ($score < 70) {
 				delete $hit_matrix{$contig}->{$baitseq};
 			}
 		}
-		if ($contig_high_score < 100) {
+		if ($contig_high_score < 70) {
 			delete $hit_matrix{$contig};
 		}
 	}
@@ -257,10 +267,26 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 	$search_fasta = "$output_file.$i.contigs.fa";
 
 	system_call("perl $executing_path/lib/findsequences.pl $output_file.velvet/contigs.fa $sort_results $search_fasta");
+
+	# SHUTDOWN CHECK:
+	if (-z $search_fasta) {
+		die ("No contigs had a bitscore greater than 100; quitting at iteration $i.");
+	}
+
 	# save off these resulting contigs to the ongoing contigs file.
 	open CONTIGS_FH, ">>", "$output_file.all.fasta";
 	print CONTIGS_FH `cat $search_fasta | gawk '{sub(/>/,">$i\_"); print \$0}'`;
 	close CONTIGS_FH;
+
+	# SHUTDOWN CHECK:
+	if ($complete == 1) {
+		foreach my $contig (keys %hit_matrix) {
+			my $contigname = "$i"."_$contig";
+			if (($hit_matrix{$contig}->{$start_seq} > 0) && ($hit_matrix{$contig}->{$end_seq} > 0)) {
+				die ("Contig $contigname contains both the start and end of the target sequence; quitting at iteration $i.");
+			}
+		}
+	}
 
 	# if we flagged to use just the ends of the contigs, clean that up.
 	if ($use_ends != 0) {
@@ -298,12 +324,15 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 
 print "Finished!\n";
 
-print "contig\t" . join ("\t",@targets) . "\n";
+print "contig\tstrand\t" . join ("\t",@targets) . "\n";
+
+my @complete_contigs = ();
 
 for (my $i=0; $i<@hit_matrices; $i++) {
 	my $hitmatrix = @hit_matrices[$i];
 	foreach my $contig (keys $hitmatrix) {
-		print "".($i+1)."_$contig\t";
+		my $contigname = "".($i+1)."_$contig";
+		print "$contigname\t". $hitmatrix->{$contig}->{"strand"} . "\t";
 		foreach my $target (@targets) {
 			if ($hitmatrix->{$contig}->{$target} == undef) {
 				print "-\t";
@@ -312,10 +341,15 @@ for (my $i=0; $i<@hit_matrices; $i++) {
 			}
 		}
 		print "\n";
+		if (($hitmatrix->{$contig}->{$start_seq} > 0) && ($hitmatrix->{$contig}->{$end_seq} > 0)) {
+			push @complete_contigs, $contigname;
+		}
 	}
 }
 
-
+print "\nContigs containing the entire target sequence:\n\t";
+print join("\n\t", @complete_contigs);
+print "\n";
 
 close $log_fh;
 
