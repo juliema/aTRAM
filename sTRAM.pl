@@ -273,9 +273,37 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 		die ("No contigs had a bitscore greater than 100; quitting at iteration $i.");
 	}
 
+	# revcomping contigs with negative strand directions:
+	my @contigs = ();
+
+	open SEARCH_FH, "<", $search_fasta;
+	my $name = "";
+	my $seq = "";
+	while (my $line=readline SEARCH_FH) {
+		if ($line =~ />(.*)/) {
+			if ($name ne "") {
+				if ($hit_matrix{$name}->{"strand"} < 0) {
+					$seq = reverse_complement($seq);
+				}
+				push @contigs, ">$i"."_$name\n$seq";
+			}
+			$name = $1;
+			chomp $name;
+			$seq = "";
+		} else {
+			$seq .= $line;
+			chomp $seq;
+		}
+	}
+	if ($hit_matrix{$name}->{"strand"} < 0) {
+		$seq = reverse_complement($seq);
+	}
+	push @contigs, ">$i"."_$name\n$seq";
+	close SEARCH_FH;
+
 	# save off these resulting contigs to the ongoing contigs file.
 	open CONTIGS_FH, ">>", "$output_file.all.fasta";
-	print CONTIGS_FH `cat $search_fasta | gawk '{sub(/>/,">$i\_"); print \$0}'`;
+	print CONTIGS_FH join("\n",@contigs) . "\n";
 	close CONTIGS_FH;
 
 	# SHUTDOWN CHECK:
@@ -332,7 +360,7 @@ for (my $i=0; $i<@hit_matrices; $i++) {
 	my $hitmatrix = @hit_matrices[$i];
 	foreach my $contig (keys $hitmatrix) {
 		my $contigname = "".($i+1)."_$contig";
-		print "$contigname\t". $hitmatrix->{$contig}->{"strand"} . "\t";
+		print "$contigname\t";
 		foreach my $target (@targets) {
 			if ($hitmatrix->{$contig}->{$target} == undef) {
 				print "-\t";
@@ -383,6 +411,17 @@ sub system_call {
 		exit;
 	}
 	return $exit_val;
+}
+
+sub reverse_complement {
+	my $charstr = shift;
+
+	# reverse the DNA sequence
+	my $revcomp = reverse($charstr);
+
+	# complement the reversed DNA sequence
+	$revcomp =~ tr/ABCDGHMNRSTUVWXYabcdghmnrstuvwxy/TVGHCDKNYSAABWXRtvghcdknysaabwxr/;
+	return $revcomp;
 }
 
 __END__
