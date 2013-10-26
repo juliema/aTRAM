@@ -22,6 +22,7 @@ my $log_file = 0;
 my $use_ends = 0;
 my $protein = 0;
 my $blast_name = 0;
+my $complete = 0;
 
 #parameters with modifiable default values
 my $output_file = 0;
@@ -46,6 +47,7 @@ GetOptions ('reads=s' => \$short_read_archive,
             'debug' => \$debug,
             'max_target_seqs=i' => \$max_target_seqs,
             'evalue=i' => \$evalue,
+            'complete' => \$complete,
             'help|?' => \$help) or pod2usage(-msg => "GetOptions failed.", -exitval => 2);
 
 if ($help) {
@@ -234,11 +236,11 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 			if ($score > $contig_high_score) {
 				$contig_high_score = $score;
 			}
-			if ($score < 100) {
+			if ($score < 70) {
 				delete $hit_matrix{$contig}->{$baitseq};
 			}
 		}
-		if ($contig_high_score < 100) {
+		if ($contig_high_score < 70) {
 			delete $hit_matrix{$contig};
 		}
 	}
@@ -263,6 +265,16 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 	open CONTIGS_FH, ">>", "$output_file.all.fasta";
 	print CONTIGS_FH `cat $search_fasta | gawk '{sub(/>/,">$i\_"); print \$0}'`;
 	close CONTIGS_FH;
+
+	# SHUTDOWN CHECK:
+	if ($complete == 1) {
+		foreach my $contig (keys %hit_matrix) {
+			my $contigname = "$i"."_$contig";
+			if (($hit_matrix{$contig}->{$start_seq} > 0) && ($hit_matrix{$contig}->{$end_seq} > 0)) {
+				die ("Contig $contigname contains both the start and end of the target sequence; quitting at iteration $i.");
+			}
+		}
+	}
 
 	# if we flagged to use just the ends of the contigs, clean that up.
 	if ($use_ends != 0) {
@@ -302,10 +314,13 @@ print "Finished!\n";
 
 print "contig\t" . join ("\t",@targets) . "\n";
 
+my @complete_contigs = ();
+
 for (my $i=0; $i<@hit_matrices; $i++) {
 	my $hitmatrix = @hit_matrices[$i];
 	foreach my $contig (keys $hitmatrix) {
-		print "".($i+1)."_$contig\t";
+		my $contigname = "".($i+1)."_$contig";
+		print "$contigname\t";
 		foreach my $target (@targets) {
 			if ($hitmatrix->{$contig}->{$target} == undef) {
 				print "-\t";
@@ -314,10 +329,15 @@ for (my $i=0; $i<@hit_matrices; $i++) {
 			}
 		}
 		print "\n";
+		if (($hitmatrix->{$contig}->{$start_seq} > 0) && ($hitmatrix->{$contig}->{$end_seq} > 0)) {
+			push @complete_contigs, $contigname;
+		}
 	}
 }
 
-
+print "\nContigs containing the entire target sequence:\n\t";
+print join("\n\t", @complete_contigs);
+print "\n";
 
 close $log_fh;
 
