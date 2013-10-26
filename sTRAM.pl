@@ -23,6 +23,7 @@ my $use_ends = 0;
 my $protein = 0;
 my $blast_name = 0;
 my $complete = 0;
+my $velvet = 0;
 
 #parameters with modifiable default values
 my $output_file = 0;
@@ -45,6 +46,7 @@ GetOptions ('reads=s' => \$short_read_archive,
             'protein' => \$protein,
             'blast=s' => \$blast_name,
             'debug' => \$debug,
+            'velvet' => \$velvet,
             'max_target_seqs=i' => \$max_target_seqs,
             'evalue=i' => \$evalue,
             'complete' => \$complete,
@@ -174,23 +176,25 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 
 	my %hit_matrix = ();
 	push @hit_matrices, \%hit_matrix;
+
+	if ($velvet==0) {
 	# 1. blast to find any short reads that match the target.
 	print "\tblasting short reads...\n";
-	if (($protein == 1) && ($i == 1)) {
-		system_call ("tblastn -max_target_seqs $max_target_seqs -db $short_read_archive.db -query $search_fasta -outfmt 6 -num_threads 8 -out $output_file.blast.$i");
-	} else {
-		system_call ("blastn -task blastn -evalue $evalue -max_target_seqs $max_target_seqs -db $short_read_archive.db -query $search_fasta -outfmt 6 -num_threads 8 -out $output_file.blast.$i");
+		if (($protein == 1) && ($i == 1)) {
+			system_call ("tblastn -max_target_seqs $max_target_seqs -db $short_read_archive.db -query $search_fasta -outfmt 6 -num_threads 8 -out $output_file.blast.$i");
+		} else {
+			system_call ("blastn -task blastn -evalue $evalue -max_target_seqs $max_target_seqs -db $short_read_archive.db -query $search_fasta -outfmt 6 -num_threads 8 -out $output_file.blast.$i");
+		}
+
+		# did we not find any reads? Go ahead and quit.
+		if ((-s "$output_file.blast.$i") == 0) {
+			die "No similar reads were found.\n";
+		}
+
+		# 2 and 3. find the paired end of all of the blast hits.
+		print "\tgetting paired ends...\n";
+		system_call("perl $executing_path/lib/pairedsequenceretrieval.pl $short_read_archive.#.fasta $output_file.blast.$i $output_file.blast.$i.fasta");
 	}
-
-	# did we not find any reads? Go ahead and quit.
-	if ((-s "$output_file.blast.$i") == 0) {
-		die "No similar reads were found.\n";
-	}
-
-	# 2 and 3. find the paired end of all of the blast hits.
-	print "\tgetting paired ends...\n";
-	system_call("perl $executing_path/lib/pairedsequenceretrieval.pl $short_read_archive.#.fasta $output_file.blast.$i $output_file.blast.$i.fasta");
-
 	# 4. assemble the reads using velvet
 	print "\tassembling with Velvet...\n";
 	system_call("velveth $output_file.velvet 31 -fasta -shortPaired $output_file.blast.$i.fasta");
