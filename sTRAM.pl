@@ -229,13 +229,10 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 		my $strand = (($qend-$qstart) / ($send-$sstart));
 		my $currscore = $hit_matrix{$contig}->{$baitseq};
 		if ($currscore == undef) {
-			$hit_matrix{$contig}->{$baitseq} = $score;
-			$hit_matrix{$contig}->{"strand"} = $strand;
-			print "$strand, " . $hit_matrix{$contig}->{"strand"} . "\n";
+			$hit_matrix{$contig}->{$baitseq} = $strand * $score;
 		} else {
 			if ($currscore < $score) {
-				$hit_matrix{$contig}->{$baitseq} = $score;
-				$hit_matrix{$contig}->{"strand"} = $strand;
+			$hit_matrix{$contig}->{$baitseq} = $strand * $score;
 			}
 		}
 	}
@@ -243,10 +240,13 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 
 	foreach my $contig (keys %hit_matrix) {
 		my $contig_high_score = 0;
+		$hit_matrix{$contig}->{"strand"} = 1;
 		foreach my $baitseq (@targets) {
-			my $score = $hit_matrix{$contig}->{$baitseq};
+			my $score = abs($hit_matrix{$contig}->{$baitseq});
 			if ($score > $contig_high_score) {
 				$contig_high_score = $score;
+				$hit_matrix{$contig}->{"strand"} = ($hit_matrix{$contig}->{$baitseq})/$score;
+				$hit_matrix{$contig}->{$baitseq} = $score;
 			}
 			if ($score < 70) {
 				delete $hit_matrix{$contig}->{$baitseq};
@@ -337,7 +337,7 @@ for (my $i=0; $i<@hit_matrices; $i++) {
 			if ($hitmatrix->{$contig}->{$target} == undef) {
 				print "-\t";
 			} else {
-				print "X\t";
+				print "".$hitmatrix->{$contig}->{$target}."\t";
 			}
 		}
 		print "\n";
