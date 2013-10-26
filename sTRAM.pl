@@ -207,23 +207,31 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 	}
 
 	if ($protein == 1) {
-		system_call ("blastx -db $targetdb.db -query $output_file.velvet/contigs.fa -out $blast_file -outfmt '6 qseqid sseqid bitscore'");
+		system_call ("blastx -db $targetdb.db -query $output_file.velvet/contigs.fa -out $blast_file -outfmt '6 qseqid sseqid bitscore qstart qend sstart send'");
 	} else {
-		system_call ("tblastx -db $targetdb.db -query $output_file.velvet/contigs.fa -out $blast_file -outfmt '6 qseqid sseqid bitscore'");
+		system_call ("tblastx -db $targetdb.db -query $output_file.velvet/contigs.fa -out $blast_file -outfmt '6 qseqid sseqid bitscore qstart qend sstart send'");
 	}
 	# 6. we want to keep the contigs that have a bitscore higher than 100.
 	open BLAST_FH, "<", $blast_file;
 	while (my $line = readline BLAST_FH) {
-		$line =~ /(.*?)\s+(.*?)\s+(.*)\s/;
+		$line =~ /(.*?)\s+(.*?)\s+(.*?)\s+(.*?)\s+(.*?)\s+(.*?)\s+(.*)\s/;
 		my $contig = $1;
 		my $baitseq = $2;
 		my $score = $3;
+		my $qstart = $4;
+		my $qend = $5;
+		my $sstart = $6;
+		my $send = $7;
+		my $strand = (($qend-$qstart) / ($send-$sstart));
 		my $currscore = $hit_matrix{$contig}->{$baitseq};
 		if ($currscore == undef) {
 			$hit_matrix{$contig}->{$baitseq} = $score;
+			$hit_matrix{$contig}->{"strand"} = $strand;
+			print "$strand, " . $hit_matrix{$contig}->{"strand"} . "\n";
 		} else {
 			if ($currscore < $score) {
 				$hit_matrix{$contig}->{$baitseq} = $score;
+				$hit_matrix{$contig}->{"strand"} = $strand;
 			}
 		}
 	}
@@ -231,7 +239,7 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 
 	foreach my $contig (keys %hit_matrix) {
 		my $contig_high_score = 0;
-		foreach my $baitseq (keys $hit_matrix{$contig}) {
+		foreach my $baitseq (@targets) {
 			my $score = $hit_matrix{$contig}->{$baitseq};
 			if ($score > $contig_high_score) {
 				$contig_high_score = $score;
@@ -312,7 +320,7 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 
 print "Finished!\n";
 
-print "contig\t" . join ("\t",@targets) . "\n";
+print "contig\tstrand\t" . join ("\t",@targets) . "\n";
 
 my @complete_contigs = ();
 
@@ -320,7 +328,7 @@ for (my $i=0; $i<@hit_matrices; $i++) {
 	my $hitmatrix = @hit_matrices[$i];
 	foreach my $contig (keys $hitmatrix) {
 		my $contigname = "".($i+1)."_$contig";
-		print "$contigname\t";
+		print "$contigname\t". $hitmatrix->{$contig}->{"strand"} . "\t";
 		foreach my $target (@targets) {
 			if ($hitmatrix->{$contig}->{$target} == undef) {
 				print "-\t";
