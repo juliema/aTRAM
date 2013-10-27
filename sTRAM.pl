@@ -211,22 +211,17 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 	}
 
 	if ($protein == 1) {
-		system_call ("blastx -db $targetdb.db -query $output_file.velvet/contigs.fa -out $blast_file -outfmt '6 qseqid sseqid bitscore qstart qend sstart send'");
+		system_call ("blastx -db $targetdb.db -query $output_file.velvet/contigs.fa -out $blast_file -outfmt '6 qseqid sseqid bitscore'");
 	} else {
-		system_call ("tblastx -db $targetdb.db -query $output_file.velvet/contigs.fa -out $blast_file -outfmt '6 qseqid sseqid bitscore qstart qend sstart send'");
+		system_call ("tblastx -db $targetdb.db -query $output_file.velvet/contigs.fa -out $blast_file -outfmt '6 qseqid sseqid bitscore'");
 	}
 	# 6. we want to keep the contigs that have a bitscore higher than 100.
 	open BLAST_FH, "<", $blast_file;
 	while (my $line = readline BLAST_FH) {
-		$line =~ /(.*?)\s+(.*?)\s+(.*?)\s+(.*?)\s+(.*?)\s+(.*?)\s+(.*)\s/;
+		$line =~ /(.*?)\s+(.*?)\s+(.*)\s/;
 		my $contig = $1;
 		my $baitseq = $2;
 		my $score = $3;
-		my $qstart = $4;
-		my $qend = $5;
-		my $sstart = $6;
-		my $send = $7;
-		my $strand = (($qend-$qstart) / ($send-$sstart));
 		my $currscore = $hit_matrix{$contig}->{$baitseq};
 		if ($currscore == undef) {
 			$hit_matrix{$contig}->{$baitseq} = $strand * $score;
@@ -352,7 +347,7 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 
 print "Finished!\n";
 
-print "contig\tstrand\t" . join ("\t",@targets) . "\n";
+print "contig\t" . join ("\t",@targets) . "\n";
 
 my @complete_contigs = ();
 
