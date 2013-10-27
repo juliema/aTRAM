@@ -345,10 +345,9 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 	}
 }
 
-print "Finished!\n\nContigs by target coverage:\n";
+print "Finished!\n";
 
-open CONTIGS_FH, ">", "$output_file.results.txt";
-print CONTIGS_FH "contig\t" . join ("\t",@targets) . "\n";
+print "contig\tstrand\t" . join ("\t",@targets) . "\n";
 
 my @complete_contigs = ();
 
@@ -356,23 +355,21 @@ for (my $i=0; $i<@hit_matrices; $i++) {
 	my $hitmatrix = @hit_matrices[$i];
 	foreach my $contig (keys $hitmatrix) {
 		my $contigname = "".($i+1)."_$contig";
-		print CONTIGS_FH "$contigname\t";
+		print "$contigname\t";
 		foreach my $target (@targets) {
 			if ($hitmatrix->{$contig}->{$target} == undef) {
-				print CONTIGS_FH "-\t";
+				print "-\t";
 			} else {
-				print CONTIGS_FH "".$hitmatrix->{$contig}->{$target}."\t";
+				print "".$hitmatrix->{$contig}->{$target}."\t";
 			}
 		}
-		print CONTIGS_FH "\n";
+		print "\n";
 		if (($hitmatrix->{$contig}->{$start_seq} > 0) && ($hitmatrix->{$contig}->{$end_seq} > 0)) {
 			push @complete_contigs, $contigname;
 		}
 	}
 }
-close CONTIGS_FH;
 
-system ("cat $output_file.results.txt");
 print "\nContigs containing the entire target sequence:\n\t";
 print join("\n\t", @complete_contigs);
 print "\n";
