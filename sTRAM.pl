@@ -211,23 +211,28 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 	}
 
 	if ($protein == 1) {
-		system_call ("blastx -db $targetdb.db -query $output_file.velvet/contigs.fa -out $blast_file -outfmt '6 qseqid sseqid bitscore'");
+		system_call ("blastx -db $targetdb.db -query $output_file.velvet/contigs.fa -out $blast_file -outfmt '6 qseqid sseqid bitscore qstart qend sstart send'");
 	} else {
-		system_call ("tblastx -db $targetdb.db -query $output_file.velvet/contigs.fa -out $blast_file -outfmt '6 qseqid sseqid bitscore'");
+		system_call ("tblastx -db $targetdb.db -query $output_file.velvet/contigs.fa -out $blast_file -outfmt '6 qseqid sseqid bitscore qstart qend sstart send'");
 	}
 	# 6. we want to keep the contigs that have a bitscore higher than 100.
 	open BLAST_FH, "<", $blast_file;
 	while (my $line = readline BLAST_FH) {
-		$line =~ /(.*?)\s+(.*?)\s+(.*)\s/;
+		$line =~ /(.*?)\s+(.*?)\s+(.*?)\s+(.*?)\s+(.*?)\s+(.*?)\s+(.*)\s/;
 		my $contig = $1;
 		my $baitseq = $2;
 		my $score = $3;
+		my $qstart = $4;
+		my $qend = $5;
+		my $sstart = $6;
+		my $send = $7;
+		my $strand = (($qend-$qstart) / ($send-$sstart));
 		my $currscore = $hit_matrix{$contig}->{$baitseq};
 		if ($currscore == undef) {
-			$hit_matrix{$contig}->{$baitseq} = $score;
+			$hit_matrix{$contig}->{$baitseq} = $strand * $score;
 		} else {
 			if ($currscore < $score) {
-				$hit_matrix{$contig}->{$baitseq} = $score;
+			$hit_matrix{$contig}->{$baitseq} = $strand * $score;
 			}
 		}
 	}
@@ -235,10 +240,13 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 
 	foreach my $contig (keys %hit_matrix) {
 		my $contig_high_score = 0;
-		foreach my $baitseq (keys $hit_matrix{$contig}) {
-			my $score = $hit_matrix{$contig}->{$baitseq};
+		$hit_matrix{$contig}->{"strand"} = 1;
+		foreach my $baitseq (@targets) {
+			my $score = abs($hit_matrix{$contig}->{$baitseq});
 			if ($score > $contig_high_score) {
 				$contig_high_score = $score;
+				$hit_matrix{$contig}->{"strand"} = ($hit_matrix{$contig}->{$baitseq})/$score;
+				$hit_matrix{$contig}->{$baitseq} = $score;
 			}
 			if ($score < 70) {
 				delete $hit_matrix{$contig}->{$baitseq};
@@ -265,9 +273,37 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 		die ("No contigs had a bitscore greater than 100; quitting at iteration $i.");
 	}
 
+	# revcomping contigs with negative strand directions:
+	my @contigs = ();
+
+	open SEARCH_FH, "<", $search_fasta;
+	my $name = "";
+	my $seq = "";
+	while (my $line=readline SEARCH_FH) {
+		if ($line =~ />(.*)/) {
+			if ($name ne "") {
+				if ($hit_matrix{$name}->{"strand"} < 0) {
+					$seq = reverse_complement($seq);
+				}
+				push @contigs, ">$i"."_$name\n$seq";
+			}
+			$name = $1;
+			chomp $name;
+			$seq = "";
+		} else {
+			$seq .= $line;
+			chomp $seq;
+		}
+	}
+	if ($hit_matrix{$name}->{"strand"} < 0) {
+		$seq = reverse_complement($seq);
+	}
+	push @contigs, ">$i"."_$name\n$seq";
+	close SEARCH_FH;
+
 	# save off these resulting contigs to the ongoing contigs file.
 	open CONTIGS_FH, ">>", "$output_file.all.fasta";
-	print CONTIGS_FH `cat $search_fasta | gawk '{sub(/>/,">$i\_"); print \$0}'`;
+	print CONTIGS_FH join("\n",@contigs) . "\n";
 	close CONTIGS_FH;
 
 	# SHUTDOWN CHECK:
@@ -316,7 +352,7 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 
 print "Finished!\n";
 
-print "contig\t" . join ("\t",@targets) . "\n";
+print "contig\tstrand\t" . join ("\t",@targets) . "\n";
 
 my @complete_contigs = ();
 
@@ -329,7 +365,7 @@ for (my $i=0; $i<@hit_matrices; $i++) {
 			if ($hitmatrix->{$contig}->{$target} == undef) {
 				print "-\t";
 			} else {
-				print "X\t";
+				print "".$hitmatrix->{$contig}->{$target}."\t";
 			}
 		}
 		print "\n";
@@ -375,6 +411,17 @@ sub system_call {
 		exit;
 	}
 	return $exit_val;
+}
+
+sub reverse_complement {
+	my $charstr = shift;
+
+	# reverse the DNA sequence
+	my $revcomp = reverse($charstr);
+
+	# complement the reversed DNA sequence
+	$revcomp =~ tr/ABCDGHMNRSTUVWXYabcdghmnrstuvwxy/TVGHCDKNYSAABWXRtvghcdknysaabwxr/;
+	return $revcomp;
 }
 
 __END__
