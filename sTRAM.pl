@@ -48,7 +48,7 @@ GetOptions ('reads=s' => \$short_read_archive,
             'debug' => \$debug,
             'velvet' => \$velvet,
             'max_target_seqs=i' => \$max_target_seqs,
-            'evalue=i' => \$evalue,
+            'evalue=f' => \$evalue,
             'complete' => \$complete,
             'help|?' => \$help) or pod2usage(-msg => "GetOptions failed.", -exitval => 2);
 
