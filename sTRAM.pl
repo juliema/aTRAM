@@ -378,9 +378,9 @@ for (my $i=0; $i<@hit_matrices; $i++) {
 close CONTIGS_FH;
 
 system ("cat $output_file.results.txt");
-print "\nContigs containing the entire target sequence:\n\t";
-print join("\n\t", @complete_contigs);
-print "\n";
+print "\nContigs containing the entire target sequence:\n\t" . join("\n\t", @complete_contigs) . "\n";
+print $log_fh "Contig coverage in $output_file.results.txt\n";
+print $log_fh "\nContigs containing the entire target sequence:\n\t" . join("\n\t", @complete_contigs) . "\n";
 
 close $log_fh;
 
