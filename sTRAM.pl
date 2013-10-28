@@ -242,6 +242,7 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 		}
 	}
 	close BLAST_FH;
+	my $high_score = 0;
 
 	foreach my $contig (keys %hit_matrix) {
 		my $contig_high_score = 0;
@@ -253,8 +254,8 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 				$hit_matrix{$contig}->{"strand"} = ($hit_matrix{$contig}->{$baitseq})/$score;
 				$hit_matrix{$contig}->{$baitseq} = $score;
 			}
-			if ($score < 70) {
-				delete $hit_matrix{$contig}->{$baitseq};
+			if ($score > $high_score) {
+				$high_score = $score;
 			}
 		}
 		if ($contig_high_score < $bitscore) {
@@ -263,6 +264,11 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 		if ($hit_matrix{$contig}->{"length"} < $contiglength) {
 			delete $hit_matrix{$contig};
 		}
+	}
+
+	# SHUTDOWN CHECK:
+	if (keys %hit_matrix == 0) {
+		die ("No contigs had a bitscore greater than $bitscore; quitting at iteration $i. Try using a bitscore threshold smaller than $high_score.");
 	}
 
 	my ($SORT_FH, $sort_results) = tempfile(UNLINK => 1);
@@ -275,11 +281,6 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 	$search_fasta = "$output_file.$i.contigs.fa";
 
 	system_call("perl $executing_path/lib/findsequences.pl $output_file.velvet/contigs.fa $sort_results $search_fasta");
-
-	# SHUTDOWN CHECK:
-	if (-z $search_fasta) {
-		die ("No contigs had a bitscore greater than $bitscore; quitting at iteration $i.");
-	}
 
 	# revcomping contigs with negative strand directions:
 	my @contigs = ();
