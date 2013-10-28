@@ -177,7 +177,7 @@ if ($start_iter > 1) {
 
 # writing the header line for the results file
 open RESULTS_FH, ">", "$output_file.results.txt";
-print RESULTS_FH "contig\t" . join ("\t",@targets) . "\n";
+print RESULTS_FH "contig\t" . join ("\t",@targets) . "\ttotal score\n";
 close RESULTS_FH;
 
 # STARTING ITERATIONS:
@@ -318,6 +318,7 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 	open RESULTS_FH, ">>", "$output_file.results.txt";
 	foreach my $contig (keys %hit_matrix) {
 		my $contigname = "".($i)."_$contig";
+		my $total = 0;
 		print RESULTS_FH "$contigname\t";
 		foreach my $target (@targets) {
 			if ($hit_matrix{$contig}->{$target} == undef) {
@@ -325,9 +326,11 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 			} else {
 				my $score = abs($hit_matrix{$contig}->{$target});
 				$score =~ /(\d+\.\d\d)/;
+				$total += $1;
 				print RESULTS_FH "$1\t";
 			}
 		}
+		$hit_matrix{$contig}->{"total"} = $total;
 		print RESULTS_FH "$total\n";
 		if ((abs($hit_matrix{$contig}->{$start_seq}) > 70) && (abs($hit_matrix{$contig}->{$end_seq}) > 70)) {
 			push @complete_contigs, $contigname;
