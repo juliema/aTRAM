@@ -326,8 +326,8 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 				print RESULTS_FH "". abs($hit_matrix{$contig}->{$target})."\t";
 			}
 		}
-		print RESULTS_FH "\n";
-		if ((abs($hit_matrix{$contig}->{$start_seq}) > 0) && (abs($hit_matrix{$contig}->{$end_seq}) > 0)) {
+		print RESULTS_FH "$total\n";
+		if ((abs($hit_matrix{$contig}->{$start_seq}) > 70) && (abs($hit_matrix{$contig}->{$end_seq}) > 70)) {
 			push @complete_contigs, $contigname;
 		}
 	}
