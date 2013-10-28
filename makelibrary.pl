@@ -4,7 +4,7 @@ use File::Basename;
 
 
 if (@ARGV == 0) {
-	exit_with_msg ("Usage: 0-prepare_files.pl short_read_archive.fasta/fastq");
+	exit_with_msg ("Usage: makelibrary.pl short_read_archive.fasta/fastq");
 }
 my $short_read_archive = shift;
 

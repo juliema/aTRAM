@@ -57,12 +57,12 @@ if ($help) {
 }
 
 unless($short_read_archive and $search_fasta) {
-    pod2usage(-msg => "Must specify a short read archive (that has already been prepared with 0-prepare_files.pl) and a target gene in fasta form.");
+    pod2usage(-msg => "Must specify a short read archive (that has already been prepared with makelibrary.pl) and a target gene in fasta form.");
 }
 
 # check to make sure that the specified short read archive exists:
 unless ((-e "$short_read_archive.1.fasta") && (-e "$short_read_archive.2.fasta")) {
-    pod2usage(-msg => "Short read archive does not seem to be in the format made by 0-prepare_files.pl. Did you specify the name correctly?");
+    pod2usage(-msg => "Short read archive does not seem to be in the format made by makelibrary.pl. Did you specify the name correctly?");
 }
 
 print $runline;
