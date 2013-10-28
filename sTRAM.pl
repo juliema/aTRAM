@@ -24,6 +24,7 @@ my $protein = 0;
 my $blast_name = 0;
 my $complete = 0;
 my $velvet = 0;
+my $bitscore = 70;
 
 #parameters with modifiable default values
 my $output_file = 0;
@@ -47,6 +48,7 @@ GetOptions ('reads=s' => \$short_read_archive,
             'blast=s' => \$blast_name,
             'debug' => \$debug,
             'velvet' => \$velvet,
+            'bitscore=i' => \$bitscore,
             'max_target_seqs=i' => \$max_target_seqs,
             'evalue=f' => \$evalue,
             'complete' => \$complete,
@@ -252,7 +254,7 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 				delete $hit_matrix{$contig}->{$baitseq};
 			}
 		}
-		if ($contig_high_score < 70) {
+		if ($contig_high_score < $bitscore) {
 			delete $hit_matrix{$contig};
 		}
 	}
@@ -270,7 +272,7 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 
 	# SHUTDOWN CHECK:
 	if (-z $search_fasta) {
-		die ("No contigs had a bitscore greater than 100; quitting at iteration $i.");
+		die ("No contigs had a bitscore greater than $bitscore; quitting at iteration $i.");
 	}
 
 	# revcomping contigs with negative strand directions:
