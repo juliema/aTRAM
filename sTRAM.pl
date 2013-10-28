@@ -25,6 +25,7 @@ my $blast_name = 0;
 my $complete = 0;
 my $velvet = 0;
 my $bitscore = 70;
+my $contiglength = 500;
 
 #parameters with modifiable default values
 my $output_file = 0;
@@ -37,9 +38,6 @@ my $max_target_seqs = 100000000;
 
 GetOptions ('reads=s' => \$short_read_archive,
             'target=s' => \$search_fasta,
-            'insert_length|ins_length=i' => \$ins_length,
-            'exp_coverage|expected_coverage=i' => \$exp_cov,
-            'iterations=i' => \$iterations,
             'start_iteration=i' => \$start_iter,
             'log_file=s' => \$log_file,
             'use_ends' => \$use_ends,
@@ -48,10 +46,14 @@ GetOptions ('reads=s' => \$short_read_archive,
             'blast=s' => \$blast_name,
             'debug' => \$debug,
             'velvet' => \$velvet,
+            'complete' => \$complete,
+            'insert_length|ins_length=i' => \$ins_length,
+            'exp_coverage|expected_coverage=i' => \$exp_cov,
+            'iterations=i' => \$iterations,
             'bitscore=i' => \$bitscore,
             'max_target_seqs=i' => \$max_target_seqs,
             'evalue=f' => \$evalue,
-            'complete' => \$complete,
+            'length=i' => \$contiglength,
             'help|?' => \$help) or pod2usage(-msg => "GetOptions failed.", -exitval => 2);
 
 if ($help) {
@@ -213,23 +215,17 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 	}
 
 	if ($protein == 1) {
-		system_call ("blastx -db $targetdb.db -query $output_file.velvet/contigs.fa -out $blast_file -outfmt '6 qseqid sseqid bitscore qstart qend sstart send'");
+		system_call ("blastx -db $targetdb.db -query $output_file.velvet/contigs.fa -out $blast_file -outfmt '6 qseqid sseqid bitscore qstart qend sstart send qlen'");
 	} else {
-		system_call ("tblastx -db $targetdb.db -query $output_file.velvet/contigs.fa -out $blast_file -outfmt '6 qseqid sseqid bitscore qstart qend sstart send'");
+		system_call ("tblastx -db $targetdb.db -query $output_file.velvet/contigs.fa -out $blast_file -outfmt '6 qseqid sseqid bitscore qstart qend sstart send qlen'");
 	}
 	# 6. we want to keep the contigs that have a bitscore higher than 100.
 	open BLAST_FH, "<", $blast_file;
 	while (my $line = readline BLAST_FH) {
-		$line =~ /(.*?)\s+(.*?)\s+(.*?)\s+(.*?)\s+(.*?)\s+(.*?)\s+(.*)\s/;
-		my $contig = $1;
-		my $baitseq = $2;
-		my $score = $3;
-		my $qstart = $4;
-		my $qend = $5;
-		my $sstart = $6;
-		my $send = $7;
+		my ($contig, $baitseq, $score, $qstart, $qend, $sstart, $send, $qlen, undef) = split(/\s+/,$line);
 		my $strand = (($qend-$qstart) / ($send-$sstart));
 		my $currscore = $hit_matrix{$contig}->{$baitseq};
+		$hit_matrix{$contig}->{"length"} = $qlen;
 		if ($currscore == undef) {
 			$hit_matrix{$contig}->{$baitseq} = $strand * $score;
 		} else {
@@ -255,6 +251,9 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 			}
 		}
 		if ($contig_high_score < $bitscore) {
+			delete $hit_matrix{$contig};
+		}
+		if ($hit_matrix{$contig}->{"length"} < $contiglength) {
 			delete $hit_matrix{$contig};
 		}
 	}
