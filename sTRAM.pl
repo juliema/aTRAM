@@ -94,6 +94,7 @@ close CONTIGS_FH;
 my $start_seq = "";
 my $end_seq = "";
 my @hit_matrices = ();
+my @complete_contigs = ();
 
 # process the target sequence file to look for the start seq and end seq.
 my @target_seqs = ();
@@ -174,6 +175,12 @@ if ($start_iter > 1) {
 	$search_fasta = "$output_file.$x.contigs.fa";
 }
 
+# writing the header line for the results file
+open RESULTS_FH, ">", "$output_file.results.txt";
+print RESULTS_FH "contig\t" . join ("\t",@targets) . "\n";
+close RESULTS_FH;
+
+# STARTING ITERATIONS:
 for (my $i=$start_iter; $i<=$iterations; $i++) {
 	print ("interation $i starting...\n");
 	print $log_fh ("interation $i starting...\n");
@@ -307,6 +314,24 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 	print CONTIGS_FH join("\n",@contigs) . "\n";
 	close CONTIGS_FH;
 
+	open RESULTS_FH, ">>", "$output_file.results.txt";
+	foreach my $contig (keys %hit_matrix) {
+		my $contigname = "".($i)."_$contig";
+		print RESULTS_FH "$contigname\t";
+		foreach my $target (@targets) {
+			if ($hit_matrix{$contig}->{$target} == undef) {
+				print RESULTS_FH "-\t";
+			} else {
+				print RESULTS_FH "". abs($hit_matrix{$contig}->{$target})."\t";
+			}
+		}
+		print RESULTS_FH "\n";
+		if ((abs($hit_matrix{$contig}->{$start_seq}) > 0) && (abs($hit_matrix{$contig}->{$end_seq}) > 0)) {
+			push @complete_contigs, $contigname;
+		}
+	}
+	close RESULTS_FH;
+
 	# SHUTDOWN CHECK:
 	if ($complete == 1) {
 		foreach my $contig (keys %hit_matrix) {
@@ -352,31 +377,6 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 }
 
 print "Finished!\n\nContigs by target coverage:\n";
-
-open CONTIGS_FH, ">", "$output_file.results.txt";
-print CONTIGS_FH "contig\t" . join ("\t",@targets) . "\n";
-
-my @complete_contigs = ();
-
-for (my $i=0; $i<@hit_matrices; $i++) {
-	my $hitmatrix = @hit_matrices[$i];
-	foreach my $contig (keys $hitmatrix) {
-		my $contigname = "".($i+1)."_$contig";
-		print CONTIGS_FH "$contigname\t";
-		foreach my $target (@targets) {
-			if ($hitmatrix->{$contig}->{$target} == undef) {
-				print CONTIGS_FH "-\t";
-			} else {
-				print CONTIGS_FH "".$hitmatrix->{$contig}->{$target}."\t";
-			}
-		}
-		print CONTIGS_FH "\n";
-		if (($hitmatrix->{$contig}->{$start_seq} > 0) && ($hitmatrix->{$contig}->{$end_seq} > 0)) {
-			push @complete_contigs, $contigname;
-		}
-	}
-}
-close CONTIGS_FH;
 
 system ("cat $output_file.results.txt");
 print "\nContigs containing the entire target sequence:\n\t" . join("\n\t", @complete_contigs) . "\n";
