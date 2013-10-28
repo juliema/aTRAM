@@ -323,7 +323,9 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 			if ($hit_matrix{$contig}->{$target} == undef) {
 				print RESULTS_FH "-\t";
 			} else {
-				print RESULTS_FH "". abs($hit_matrix{$contig}->{$target})."\t";
+				my $score = abs($hit_matrix{$contig}->{$target});
+				$score =~ /(\d+\.\d\d)/;
+				print RESULTS_FH "$1\t";
 			}
 		}
 		print RESULTS_FH "$total\n";
