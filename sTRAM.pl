@@ -25,7 +25,7 @@ my $blast_name = 0;
 my $complete = 0;
 my $velvet = 0;
 my $bitscore = 70;
-my $contiglength = 500;
+my $contiglength = 100;
 
 #parameters with modifiable default values
 my $output_file = 0;
