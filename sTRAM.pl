@@ -226,7 +226,7 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 	} else {
 		system_call ("tblastx -db $targetdb.db -query $output_file.velvet/contigs.fa -out $blast_file -outfmt '6 qseqid sseqid bitscore qstart qend sstart send qlen'");
 	}
-	# 6. we want to keep the contigs that have a bitscore higher than 100.
+	# 6. we want to keep the contigs that have a bitscore higher than $bitscore.
 	open BLAST_FH, "<", $blast_file;
 	while (my $line = readline BLAST_FH) {
 		my ($contig, $baitseq, $score, $qstart, $qend, $sstart, $send, $qlen, undef) = split(/\s+/,$line);
@@ -246,9 +246,11 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 
 	foreach my $contig (keys %hit_matrix) {
 		my $contig_high_score = 0;
+		my $total = 0;
 		$hit_matrix{$contig}->{"strand"} = 1;
 		foreach my $baitseq (@targets) {
 			my $score = abs($hit_matrix{$contig}->{$baitseq});
+			$total += $score;
 			if ($score > $contig_high_score) {
 				$contig_high_score = $score;
 				$hit_matrix{$contig}->{"strand"} = ($hit_matrix{$contig}->{$baitseq})/$score;
@@ -258,7 +260,8 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 				$high_score = $score;
 			}
 		}
-		if ($contig_high_score < $bitscore) {
+		$hit_matrix{$contig}->{"total"} = $total;
+		if ($total < $bitscore) {
 			delete $hit_matrix{$contig};
 		}
 		if ($hit_matrix{$contig}->{"length"} < $contiglength) {
@@ -318,7 +321,6 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 	open RESULTS_FH, ">>", "$output_file.results.txt";
 	foreach my $contig (keys %hit_matrix) {
 		my $contigname = "".($i)."_$contig";
-		my $total = 0;
 		print RESULTS_FH "$contigname\t";
 		foreach my $target (@targets) {
 			if ($hit_matrix{$contig}->{$target} == undef) {
@@ -326,13 +328,13 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 			} else {
 				my $score = abs($hit_matrix{$contig}->{$target});
 				$score =~ /(\d+\.\d\d)/;
-				$total += $1;
 				print RESULTS_FH "$1\t";
 			}
 		}
-		$hit_matrix{$contig}->{"total"} = $total;
-		print RESULTS_FH "$total\n";
-		if ((abs($hit_matrix{$contig}->{$start_seq}) > 70) && (abs($hit_matrix{$contig}->{$end_seq}) > 70)) {
+		my $total = $hit_matrix{$contig}->{"total"};
+		$total =~ /(\d+\.\d\d)/;
+		print RESULTS_FH "$1\n";
+		if ((abs($hit_matrix{$contig}->{$start_seq}) > 70) && (abs($hit_matrix{$contig}->{$end_seq}) > 70) && ($hit_matrix{$contig}->{"total"} > $bitscore)) {
 			push @complete_contigs, $contigname;
 		}
 	}
@@ -340,11 +342,8 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 
 	# SHUTDOWN CHECK:
 	if ($complete == 1) {
-		foreach my $contig (keys %hit_matrix) {
-			my $contigname = "$i"."_$contig";
-			if (($hit_matrix{$contig}->{$start_seq} > 0) && ($hit_matrix{$contig}->{$end_seq} > 0)) {
-				die ("Contig $contigname contains both the start and end of the target sequence; quitting at iteration $i.");
-			}
+		if (@complete_contigs > 0) {
+			die ("Contigs that cover the entire target sequence were found; quitting at iteration $i.");
 		}
 	}
 
