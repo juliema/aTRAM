@@ -475,20 +475,39 @@ sTRAM.pl
 
 =head1 SYNOPSIS
 
-sTRAM.pl -reads shortreadfile -target target.fasta [-ins_length int] [-exp_coverage int] [-iterations int] [-start_iteration int] [-log_file filename] [-use_ends] [-output filename]
+sTRAM.pl -reads shortreadfile -target target.fasta [-iterations int] [-start_iteration int] [-log_file filename] [-use_ends] [-output filename] -options
 
 =head1 OPTIONS
-
+  pipeline parameters:
   -reads:     		short read archive (already run through makelibrary.pl).
   -target:          fasta file with sequences of interest.
   -output:	        optional: the prefix for the pipeline's output files (default name is the same as -reads).
-  -ins_length:	    optional: the size of the fragments used in the short-read library (default 300).
-  -exp_coverage:    optional: the expected coverage of the region for velvetg (default 30).
+  -log_file:        optional: a file to store output of the pipeline.
   -iterations:      optional: the number of pipeline iterations (default 5).
   -start_iteration: optional: if resuming from previous run, which iteration number to start from (default 0).
-  -log_file:        optional: a file to store output of the pipeline.
-  -use_ends:        optional: if this flag is present, use the first and last $ins_length of long contigs in the search.
-  -protein:         optional: if the target sequence is a protein fasta file.
+  -blast:			optional: saves the blast hits for the raw read library to the specified file.
+
+  target fasta type: sTRAM, by default, tries to guess the type of fasta file specified with -target (either protein or dna).
+  override options:
+  -protein:         if the target sequence is a protein fasta file.
+  -type:            one of the following values: dna, nucl, aa, protein.
+
+  optional parameters:
+  -use_ends:        if this flag is present, use the first and last $ins_length of long contigs in the search.
+  -velvet:          if specified, skips the blast steps and performs only velvet assembly on previously-generated intermediate files.
+  -complete:        if specified, automatically quits when a complete homolog is recovered.
+
+  optional velvet assembly parameters:
+  -ins_length:	    the size of the fragments used in the short-read library (default 300).
+  -exp_coverage:    the expected coverage of the region for velvetg (default 30).
+
+  optional values for searching short reads:
+  -max_target_seqs: default value is 10e8.
+  -evalue:          default value is 10e-10.
+
+  optional values for blast-filtering contigs:
+  -bitscore:        default value is 70.
+  -length:          default value is 100.
 
 
 =head1 DESCRIPTION
