@@ -185,8 +185,8 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 	print ("interation $i starting...\n");
 	print $log_fh ("interation $i starting...\n");
 
-	my %hit_matrix = ();
-	push @hit_matrices, \%hit_matrix;
+	my $hit_matrix = {};
+	push @hit_matrices, \$hit_matrix;
 
 	if ($velvet==0) {
 	# 1. blast to find any short reads that match the target.
@@ -232,56 +232,55 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 	while (my $line = readline BLAST_FH) {
 		my ($contig, $baitseq, $score, $qstart, $qend, $sstart, $send, $qlen, undef) = split(/\s+/,$line);
 		my $strand = (($qend-$qstart) / ($send-$sstart));
-		my $currscore = $hit_matrix{$contig}->{$baitseq};
+		my $currscore = $hit_matrix->{$contig}->{$baitseq};
 		if ($score =~ /(\d+\.\d\d)/) {
 			$score = $1;
 		}
-		$hit_matrix{$contig}->{"length"} = $qlen;
+		$hit_matrix->{$contig}->{"length"} = $qlen;
 		if ($currscore == undef) {
-			$hit_matrix{$contig}->{$baitseq} = $strand * $score;
+			$hit_matrix->{$contig}->{$baitseq} = $strand * $score;
 		} else {
 			if ($currscore < $score) {
-			$hit_matrix{$contig}->{$baitseq} = $strand * $score;
+			$hit_matrix->{$contig}->{$baitseq} = $strand * $score;
 			}
 		}
 	}
 	close BLAST_FH;
 	my $high_score = 0;
 
-	foreach my $contig (keys %hit_matrix) {
+	my $new_matrix = {};
+
+	foreach my $contig (keys $hit_matrix) {
 		my $contig_high_score = 0;
 		my $total = 0;
-		$hit_matrix{$contig}->{"strand"} = 1;
+		$hit_matrix->{$contig}->{"strand"} = 1;
 		foreach my $baitseq (@targets) {
-			my $score = abs($hit_matrix{$contig}->{$baitseq});
+			my $score = abs($hit_matrix->{$contig}->{$baitseq});
 			$total += $score;
 			if ($score > $contig_high_score) {
 				$contig_high_score = $score;
-				$hit_matrix{$contig}->{"strand"} = ($hit_matrix{$contig}->{$baitseq})/$score;
-				$hit_matrix{$contig}->{$baitseq} = $score;
-			}
-			if ($score > $high_score) {
-				$score =~ /(\d+)/;
-				$high_score = $1;
+				$hit_matrix->{$contig}->{"strand"} = ($hit_matrix->{$contig}->{$baitseq})/$score;
+				$hit_matrix->{$contig}->{$baitseq} = $score;
 			}
 		}
-		$hit_matrix{$contig}->{"total"} = $total;
-		if ($total < $bitscore) {
-			delete $hit_matrix{$contig};
+		$hit_matrix->{$contig}->{"total"} = $total;
+		if ($total > $high_score) {
+			$high_score = $total;
 		}
-		if ($hit_matrix{$contig}->{"length"} < $contiglength) {
-			delete $hit_matrix{$contig};
+		if (($total >= $bitscore) && ($hit_matrix->{$contig}->{"length"} >= $contiglength)) {
+			$new_matrix->{$contig} = $hit_matrix->{$contig};
 		}
 	}
 
 	# SHUTDOWN CHECK:
-	if (keys %hit_matrix == 0) {
-		print ("No contigs had a bitscore greater than $bitscore; quitting at iteration $i. Try using a bitscore threshold smaller than $high_score.\n");
+	if ((keys $new_matrix) == 0) {
+		print ("No contigs had a bitscore greater than $bitscore and longer than $contiglength in iteration $i: the highest bitscore this time was $high_score.\n");
 		last;
 	}
+	$hit_matrix = $new_matrix;
 
 	my ($SORT_FH, $sort_results) = tempfile(UNLINK => 1);
-	foreach my $contig (keys %hit_matrix ) {
+	foreach my $contig (keys $hit_matrix ) {
 		print $SORT_FH $contig . "\n";
 	}
 	close $SORT_FH;
@@ -300,7 +299,7 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 	while (my $line=readline SEARCH_FH) {
 		if ($line =~ />(.*)/) {
 			if ($name ne "") {
-				if ($hit_matrix{$name}->{"strand"} < 0) {
+				if ($hit_matrix->{$name}->{"strand"} < 0) {
 					$seq = reverse_complement($seq);
 				}
 				push @contigs, ">$i"."_$name\n$seq";
@@ -313,7 +312,7 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 			chomp $seq;
 		}
 	}
-	if ($hit_matrix{$name}->{"strand"} < 0) {
+	if ($hit_matrix->{$name}->{"strand"} < 0) {
 		$seq = reverse_complement($seq);
 	}
 	push @contigs, ">$i"."_$name\n$seq";
@@ -325,20 +324,20 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 	close CONTIGS_FH;
 
 	open RESULTS_FH, ">>", "$output_file.results.txt";
-	foreach my $contig (keys %hit_matrix) {
+	foreach my $contig (keys $hit_matrix) {
 		my $contigname = "".($i)."_$contig";
 		print RESULTS_FH "$contigname\t";
 		foreach my $target (@targets) {
-			if ($hit_matrix{$contig}->{$target} == undef) {
+			if ($hit_matrix->{$contig}->{$target} == undef) {
 				print RESULTS_FH "-\t";
 			} else {
-				my $score = abs($hit_matrix{$contig}->{$target});
+				my $score = abs($hit_matrix->{$contig}->{$target});
 				print RESULTS_FH "$score\t";
 			}
 		}
-		my $total = $hit_matrix{$contig}->{"total"};
+		my $total = $hit_matrix->{$contig}->{"total"};
 		print RESULTS_FH "$total\n";
-		if ((abs($hit_matrix{$contig}->{$start_seq}) > 70) && (abs($hit_matrix{$contig}->{$end_seq}) > 70) && ($hit_matrix{$contig}->{"total"} > $bitscore)) {
+		if ((abs($hit_matrix->{$contig}->{$start_seq}) > 70) && (abs($hit_matrix->{$contig}->{$end_seq}) > 70) && ($hit_matrix->{$contig}->{"total"} > $bitscore)) {
 			push @complete_contigs, $contigname;
 		}
 	}
