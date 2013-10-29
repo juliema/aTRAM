@@ -231,7 +231,10 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 	open BLAST_FH, "<", $blast_file;
 	while (my $line = readline BLAST_FH) {
 		my ($contig, $baitseq, $score, $qstart, $qend, $sstart, $send, $qlen, undef) = split(/\s+/,$line);
-		my $strand = (($qend-$qstart) / ($send-$sstart));
+		my $strand = 1;
+		if ($qend > $qstart) {
+			$strand = -1;
+		}
 		my $currscore = $hit_matrix->{$contig}->{$baitseq};
 		if ($score =~ /(\d+\.\d\d)/) {
 			$score = $1;
