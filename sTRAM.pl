@@ -20,10 +20,11 @@ my $search_fasta = 0;
 my $help = 0;
 my $log_file = 0;
 my $use_ends = 0;
-my $protein = 0;
+my $type = "";
 my $blast_name = 0;
 my $complete = 0;
 my $velvet = 0;
+my $protflag = 0;
 my $bitscore = 70;
 my $contiglength = 100;
 
@@ -42,7 +43,8 @@ GetOptions ('reads=s' => \$short_read_archive,
             'log_file=s' => \$log_file,
             'use_ends' => \$use_ends,
             'output=s' => \$output_file,
-            'protein' => \$protein,
+            'type=s' => \$type,
+            'protein' => \$protflag,
             'blast=s' => \$blast_name,
             'debug' => \$debug,
             'velvet' => \$velvet,
@@ -102,6 +104,7 @@ my @target_seqs = ();
 open SEARCH_FH, "<", $search_fasta;
 my $name = "";
 my $seq = "";
+my $fullseq = "";
 while (my $line=readline SEARCH_FH) {
 	if ($line =~ />(.*)/) {
 		if ($name ne "") {
@@ -113,11 +116,26 @@ while (my $line=readline SEARCH_FH) {
 	} else {
 		$seq .= $line;
 		chomp $seq;
+		$fullseq .= $seq;
 	}
 }
 push @target_seqs, "$name,$seq";
 
 close SEARCH_FH;
+
+my $protein = 0;
+if ($protflag != 0) {
+	$protein = 1;
+} else {
+	# if the type of target isn't specified, let's figure it out.
+	if ($type ne "") {
+		if ($type !~ /nucl|dna/i) {
+			$protein = 1;
+		}
+	} else {
+		$protein = is_protein($fullseq);
+	}
+}
 
 my $len = 100;
 if ($protein==1) {
@@ -438,6 +456,15 @@ sub reverse_complement {
 	# complement the reversed DNA sequence
 	$revcomp =~ tr/ABCDGHMNRSTUVWXYabcdghmnrstuvwxy/TVGHCDKNYSAABWXRtvghcdknysaabwxr/;
 	return $revcomp;
+}
+
+sub is_protein {
+	my $sequence = shift;
+	if ($sequence =~ /[EFILPQ]/) {
+		return 1;
+	} else {
+		return 0;
+	}
 }
 
 __END__
