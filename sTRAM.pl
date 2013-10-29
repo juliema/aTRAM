@@ -477,6 +477,8 @@ sTRAM.pl
 
 sTRAM.pl -reads shortreadfile -target target.fasta [-iterations int] [-start_iteration int] [-log_file filename] [-use_ends] [-output filename] -options
 
+sTRAM does targeted denovo assembly of short reads to find homologs or paralogs of a target sequence.
+
 =head1 OPTIONS
   pipeline parameters:
   -reads:     		short read archive (already run through makelibrary.pl).
@@ -508,13 +510,6 @@ sTRAM.pl -reads shortreadfile -target target.fasta [-iterations int] [-start_ite
   optional values for blast-filtering contigs:
   -bitscore:        default value is 70.
   -length:          default value is 100.
-
-
-=head1 DESCRIPTION
-
-Takes a fasta file and finds aligned regions in each sequence in the fasta file that
-match the reference sequence(es). Returns a fasta file of aligned regions of similarity.
-Uses BLASTN to find regions of similarity.
 
 =cut
 
