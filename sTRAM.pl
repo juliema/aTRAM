@@ -199,7 +199,8 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 
 		# did we not find any reads? Go ahead and quit.
 		if ((-s "$output_file.blast.$i") == 0) {
-			die "No similar reads were found.\n";
+			print "No similar reads were found.\n";
+			last;
 		}
 
 		# 2 and 3. find the paired end of all of the blast hits.
@@ -257,7 +258,8 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 				$hit_matrix{$contig}->{$baitseq} = $score;
 			}
 			if ($score > $high_score) {
-				$high_score = $score;
+				$score =~ /(\d+)/;
+				$high_score = $1;
 			}
 		}
 		$hit_matrix{$contig}->{"total"} = $total;
@@ -271,7 +273,8 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 
 	# SHUTDOWN CHECK:
 	if (keys %hit_matrix == 0) {
-		die ("No contigs had a bitscore greater than $bitscore; quitting at iteration $i. Try using a bitscore threshold smaller than $high_score.");
+		print ("No contigs had a bitscore greater than $bitscore; quitting at iteration $i. Try using a bitscore threshold smaller than $high_score.\n");
+		last;
 	}
 
 	my ($SORT_FH, $sort_results) = tempfile(UNLINK => 1);
@@ -343,7 +346,8 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 	# SHUTDOWN CHECK:
 	if ($complete == 1) {
 		if (@complete_contigs > 0) {
-			die ("Contigs that cover the entire target sequence were found; quitting at iteration $i.");
+			print ("Contigs that cover the entire target sequence were found; quitting at iteration $i.\n");
+			last;
 		}
 	}
 
@@ -381,7 +385,7 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 	}
 }
 
-print "Finished!\n\nContigs by target coverage:\n";
+print "\n\nContigs by target coverage:\n";
 
 system ("cat $output_file.results.txt");
 print "\nContigs containing the entire target sequence:\n\t" . join("\n\t", @complete_contigs) . "\n";
