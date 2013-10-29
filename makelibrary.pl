@@ -1,12 +1,35 @@
 #!/usr/bin/perl
 use strict;
 use File::Basename;
+use Getopt::Long;
+use Pod::Usage;
 
 
 if (@ARGV == 0) {
-	exit_with_msg ("Usage: makelibrary.pl short_read_archive.fasta/fastq");
+    pod2usage(-verbose => 1);
 }
-my $short_read_archive = shift;
+
+my $short_read_archive = "";
+my $output_file = "";
+my $numlibraries = 1;
+my $help = 0;
+
+GetOptions ('input=s' => \$short_read_archive,
+            'output=s' => \$output_file,
+            'number=i' => \$numlibraries,
+            'help|?' => \$help) or pod2usage(-msg => "GetOptions failed.", -exitval => 2);
+
+if ($help) {
+    pod2usage(-verbose => 1);
+}
+
+unless($short_read_archive) {
+    pod2usage(-msg => "Must specify a short read archive (that has already been prepared with makelibrary.pl) and a target gene in fasta form.");
+}
+
+unless ($output_file) {
+    $output_file = $short_read_archive;
+}
 
 my $executing_path = dirname(__FILE__);
 
@@ -97,3 +120,24 @@ sub exit_with_msg {
 	print STDERR "$msg\n";
 	exit 1;
 }
+
+__END__
+
+=head1 NAME
+
+sTRAM.pl
+
+=head1 SYNOPSIS
+
+makelibrary.pl -input short_read_archive [-output library_name] [-number int]
+
+Takes a fasta or fastq file of paired-end short reads and prepares it for sTRAM.
+
+=head1 OPTIONS
+
+ -input:   short read archive.
+ -output:  optional: prefix of output library (default is the same as -input).
+ -number:  optional: the number of partitioned libraries to make.
+
+=cut
+
