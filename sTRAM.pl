@@ -233,6 +233,9 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 		my ($contig, $baitseq, $score, $qstart, $qend, $sstart, $send, $qlen, undef) = split(/\s+/,$line);
 		my $strand = (($qend-$qstart) / ($send-$sstart));
 		my $currscore = $hit_matrix{$contig}->{$baitseq};
+		if ($score =~ /(\d+\.\d\d)/) {
+			$score = $1;
+		}
 		$hit_matrix{$contig}->{"length"} = $qlen;
 		if ($currscore == undef) {
 			$hit_matrix{$contig}->{$baitseq} = $strand * $score;
@@ -330,13 +333,11 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 				print RESULTS_FH "-\t";
 			} else {
 				my $score = abs($hit_matrix{$contig}->{$target});
-				$score =~ /(\d+\.\d\d)/;
-				print RESULTS_FH "$1\t";
+				print RESULTS_FH "$score\t";
 			}
 		}
 		my $total = $hit_matrix{$contig}->{"total"};
-		$total =~ /(\d+\.\d\d)/;
-		print RESULTS_FH "$1\n";
+		print RESULTS_FH "$total\n";
 		if ((abs($hit_matrix{$contig}->{$start_seq}) > 70) && (abs($hit_matrix{$contig}->{$end_seq}) > 70) && ($hit_matrix{$contig}->{"total"} > $bitscore)) {
 			push @complete_contigs, $contigname;
 		}
