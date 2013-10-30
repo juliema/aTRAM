@@ -82,9 +82,17 @@ if (-z "$working_sra.sorted.fasta") {
 print "un-interleaving $working_sra.sorted.fasta into paired files.\n";
 open FH, "<", "$working_sra.sorted.fasta" or exit_with_msg ("couldn't open fasta file");
 
-open OUT1_FH, ">", "$working_sra.1.fasta" or exit_with_msg ("couldn't create result file");
-open OUT2_FH, ">", "$working_sra.2.fasta" or exit_with_msg ("couldn't create result file");
+my @out1_fhs = ();
+my @out2_fhs = ();
 
+for (my $i=1; $i<=$numlibraries; $i++) {
+	open my $out1_fh, ">", "$working_sra.$i.1.fasta" or exit_with_msg ("couldn't create result file");
+	open my $out2_fh, ">", "$working_sra.$i.2.fasta" or exit_with_msg ("couldn't create result file");
+	push @out1_fhs, $out1_fh;
+	push @out2_fhs, $out2_fh;
+}
+
+my $count = 0;
 while (1) {
 	my $name1 = readline FH;
 	my $seq1 = readline FH;
@@ -99,34 +107,43 @@ while (1) {
 		chomp $seq2;
 		if (($name2 eq "") || ($seq2 eq "")) { last; }
 		if ($name2 =~ /$seqname\/2/) {
-# 			print "$name1 and $name2 are a pair\n";
-			print OUT1_FH "$name1\n$seq1\n";
-			print OUT2_FH "$name2\n$seq2\n";
+			# these two sequences are a pair: write them out.
+			my $i = $count % $numlibraries;
+			$count++;
+			my $out1_fh = $out1_fhs[$i];
+			my $out2_fh = $out2_fhs[$i];
+			print $out1_fh "$name1\n$seq1\n";
+			print $out2_fh "$name2\n$seq2\n";
 		} else {
-# 			print "$name2 wasn't the pair of $name1\n";
+			# the next sequence isn't the pair of the first sequence. Skip these.
 			next;
 		}
 	} else {
-		# print "$name1 doesn't seem to be a paired read.";
+		# this sequence doesn't have the name format of a paired read. Skip it.
 		next;
 	}
 }
 
-
 close FH;
-close OUT1_FH;
-close OUT2_FH;
 
-# make the blast db from the first of the paired end files
-print "Making blastdb from first of paired fasta files.\n";
-system ("makeblastdb -in $working_sra.1.fasta -dbtype nucl -out $working_sra.db");
-
-if (((-s "$working_sra.1.fasta") + (-s "$working_sra.2.fasta")) == (-s "$working_sra")) {
-	print "Files prepared successfully, cleaning up.\n";
-	system ("rm $working_sra.sorted.fasta; rm $working_sra;");
-} else {
-	exit_with_msg ("Something went wrong; leaving intermediate files alone.\n");
+for (my $i=0; $i<$numlibraries; $i++) {
+	my $out1_fh = $out1_fhs[$i];
+	my $out2_fh = $out2_fhs[$i];
+	close $out1_fh;
+	close $out2_fh;
 }
+
+for (my $i=1; $i<=$numlibraries; $i++) {
+	# make the blast db from the first of the paired end files
+	print "Making blastdb from first of paired fasta files.\n";
+	system ("makeblastdb -in $working_sra.$i.1.fasta -dbtype nucl -out $working_sra.$i.db");
+}
+
+system ("rm $working_sra.sorted.fasta");
+if ($fastq_input == 1) {
+	system ("rm $working_sra");
+}
+
 
 sub exit_with_msg {
 	my $msg = shift;
