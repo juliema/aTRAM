@@ -20,6 +20,7 @@ my $search_fasta = 0;
 my $help = 0;
 my $log_file = 0;
 my $use_ends = 0;
+my $numlibraries = 0;
 my $type = "";
 my $blast_name = 0;
 my $complete = 0;
@@ -40,18 +41,19 @@ my $max_target_seqs = 100000000;
 GetOptions ('reads=s' => \$short_read_archive,
             'target=s' => \$search_fasta,
             'start_iteration=i' => \$start_iter,
+            'iterations=i' => \$iterations,
+            'processes=i' => \$numlibraries,
             'log_file=s' => \$log_file,
-            'use_ends' => \$use_ends,
             'output=s' => \$output_file,
             'type=s' => \$type,
             'protein' => \$protflag,
             'blast=s' => \$blast_name,
+            'use_ends' => \$use_ends,
             'debug' => \$debug,
             'velvet' => \$velvet,
             'complete' => \$complete,
             'insert_length|ins_length=i' => \$ins_length,
             'exp_coverage|expected_coverage=i' => \$exp_cov,
-            'iterations=i' => \$iterations,
             'bitscore=i' => \$bitscore,
             'max_target_seqs=i' => \$max_target_seqs,
             'evalue=f' => \$evalue,
@@ -67,8 +69,14 @@ unless($short_read_archive and $search_fasta) {
 }
 
 # check to make sure that the specified short read archive exists:
-unless ((-e "$short_read_archive.1.fasta") && (-e "$short_read_archive.2.fasta")) {
-    pod2usage(-msg => "Short read archive does not seem to be in the format made by makelibrary.pl. Did you specify the name correctly?");
+if ($numlibraries > 0) {
+	unless ((-e "$short_read_archive.1.1.fasta") && (-e "$short_read_archive.1.2.fasta")) {
+		pod2usage(-msg => "Short read archive does not seem to be in the format made by makelibrary.pl. Did you specify the name correctly?");
+	}
+} else {
+	unless ((-e "$short_read_archive.1.fasta") && (-e "$short_read_archive.2.fasta")) {
+		pod2usage(-msg => "Short read archive does not seem to be in the format made by makelibrary.pl. Did you specify the name correctly?");
+	}
 }
 
 print $runline;
@@ -203,6 +211,12 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 	print ("interation $i starting...\n");
 	print $log_fh ("interation $i starting...\n");
 
+	my $sra = "$short_read_archive";
+	if ($numlibraries > 0) {
+		my $j = ($i % $numlibraries) + 1;
+		$sra = "$short_read_archive.$j";
+		print "working with $sra\n";
+	}
 	my $hit_matrix = {};
 	push @hit_matrices, \$hit_matrix;
 
@@ -210,9 +224,9 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 	# 1. blast to find any short reads that match the target.
 	print "\tblasting short reads...\n";
 		if (($protein == 1) && ($i == 1)) {
-			system_call ("tblastn -max_target_seqs $max_target_seqs -db $short_read_archive.db -query $search_fasta -outfmt 6 -num_threads 8 -out $output_file.blast.$i");
+			system_call ("tblastn -max_target_seqs $max_target_seqs -db $sra.db -query $search_fasta -outfmt 6 -num_threads 8 -out $output_file.blast.$i");
 		} else {
-			system_call ("blastn -task blastn -evalue $evalue -max_target_seqs $max_target_seqs -db $short_read_archive.db -query $search_fasta -outfmt 6 -num_threads 8 -out $output_file.blast.$i");
+			system_call ("blastn -task blastn -evalue $evalue -max_target_seqs $max_target_seqs -db $sra.db -query $search_fasta -outfmt 6 -num_threads 8 -out $output_file.blast.$i");
 		}
 
 		# did we not find any reads? Go ahead and quit.
@@ -223,7 +237,7 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 
 		# 2 and 3. find the paired end of all of the blast hits.
 		print "\tgetting paired ends...\n";
-		system_call("perl $executing_path/lib/pairedsequenceretrieval.pl $short_read_archive.#.fasta $output_file.blast.$i $output_file.blast.$i.fasta");
+		system_call("perl $executing_path/lib/pairedsequenceretrieval.pl $sra.#.fasta $output_file.blast.$i $output_file.blast.$i.fasta");
 	}
 	# 4. assemble the reads using velvet
 	print "\tassembling with Velvet...\n";
