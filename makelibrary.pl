@@ -85,20 +85,33 @@ open FH, "<", "$working_sra.sorted.fasta" or exit_with_msg ("couldn't open fasta
 open OUT1_FH, ">", "$working_sra.1.fasta" or exit_with_msg ("couldn't create result file");
 open OUT2_FH, ">", "$working_sra.2.fasta" or exit_with_msg ("couldn't create result file");
 
-my $name1 = readline FH;
-while ($name1) {
+while (1) {
+	my $name1 = readline FH;
 	my $seq1 = readline FH;
-	my $name2 = readline FH;
-	my $seq2 = readline FH;
-	$name1 =~ />(.*?)\/1/;
-	my $name = $1;
-	if ($name2 !~ /$name\/2/) {
-		exit_with_msg ("$working_sra.sorted.fasta does not contain paired reads: read $name\/1 is not followed by $name\/2 at line " . ($. - 4));
+	chomp $name1;
+	chomp $seq1;
+	if (($name1 eq "") || ($seq1 eq "")) { last; }
+	if ($name1 =~ />(.*?)\/1/) {
+		my $seqname = $1;
+		my $name2 = readline FH;
+		my $seq2 = readline FH;
+		chomp $name2;
+		chomp $seq2;
+		if (($name2 eq "") || ($seq2 eq "")) { last; }
+		if ($name2 =~ /$seqname\/2/) {
+# 			print "$name1 and $name2 are a pair\n";
+			print OUT1_FH "$name1\n$seq1\n";
+			print OUT2_FH "$name2\n$seq2\n";
+		} else {
+# 			print "$name2 wasn't the pair of $name1\n";
+			next;
+		}
+	} else {
+		# print "$name1 doesn't seem to be a paired read.";
+		next;
 	}
-	print OUT1_FH $name1 . $seq1;
-	print OUT2_FH $name2 . $seq2;
-	$name1 = readline FH;
 }
+
 
 close FH;
 close OUT1_FH;
