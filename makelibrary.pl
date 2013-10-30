@@ -24,7 +24,7 @@ if ($help) {
 }
 
 unless($short_read_archive) {
-    pod2usage(-msg => "Must specify a short read archive (that has already been prepared with makelibrary.pl) and a target gene in fasta form.");
+    pod2usage(-msg => "Must specify a short read archive in fasta or fastq form.");
 }
 
 unless ($output_file) {
