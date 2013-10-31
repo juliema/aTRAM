@@ -18,7 +18,8 @@ my $search_fasta = 0;
 
 #optional parameters:
 my $help = 0;
-my $log_file = 0;
+my $log_file = "";
+my $output_file = "";
 my $use_ends = 0;
 my $numlibraries = 0;
 my $type = "";
@@ -30,7 +31,6 @@ my $bitscore = 70;
 my $contiglength = 100;
 
 #parameters with modifiable default values
-my $output_file = 0;
 my $ins_length = 300;
 my $iterations = 5;
 my $start_iter = 1;
@@ -79,23 +79,22 @@ if ($numlibraries > 0) {
 	}
 }
 
+if ($output_file eq "") {
+    $output_file = $short_read_archive;
+}
+if ($log_file eq "") {
+	$log_file = "$output_file.log";
+}
+
+my $log_fh;
+open $log_fh, ">", $log_file or die "couldn't open $log_file\n";
+
 print $runline;
+print $log_fh $runline;
 
 my $executing_path = dirname(__FILE__);
 my $cmd;
 
-my $log_fh;
-if ($log_file) {
-	open $log_fh, ">", $log_file or die "couldn't open $log_file\n";
-} else {
-	open $log_fh, ">", "$output_file.log" or die "couldn't open $output_file.log\n";
-}
-
-print $log_fh $runline;
-
-unless ($output_file) {
-    $output_file = $short_read_archive;
-}
 
 open CONTIGS_FH, ">", "$output_file.all.fasta";
 truncate CONTIGS_FH, 0;
