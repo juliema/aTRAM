@@ -10,7 +10,7 @@ tempdir=$(dirname $1)
 gawk '{if (NF==0) next; sub(/lcl\|/,""); s = ""; for (i=2;i<=NF;i++) s = s$i; print $1","s}' RS=">" $infile > $tempfile
 echo "wrote $tempfile"
 date
-sort -t',' -k 1 -T $tempdir $tempfile > $tempfile2
+sort -t',' -k 1 --parallel=8 -T $tempdir $tempfile > $tempfile2
 echo "wrote $tempfile2"
 date
 rm $tempfile
