@@ -83,21 +83,21 @@ my $tempfile2 = "$working_sra.temp2";
 my $tempdir = dirname ("$working_sra");
 # gawk '{if (NF==0) next; sub(/lcl\|/,""); s = ""; for (i=2;i<=NF;i++) s = s$i; print $1","s}' RS=">" $infile > $tempfile
 system ("gawk '{if (NF==0) next; sub(\/lcl\|\/,\"\"); s = \"\"; for (i=2;i<=NF;i++) s = s\$i; print \$1\",\"s}' RS=\">\" $infile > $tempfile");
-print "" . timestamp() . ": wrote $tempfile";
+print "" . timestamp() . ": wrote $tempfile, now running sort.\n";
 system ("sort -t',' -k 1 --parallel=8 -T $tempdir $tempfile > $tempfile2");
-print "" . timestamp() . ": wrote $tempfile2";
+print "" . timestamp() . ": wrote $tempfile2, now reformatting to fasta.\n";
 system ("rm $tempfile");
 system ("gawk '{print \">\" \$1 \"\\n\" \$2}' FS=\",\" $tempfile2 > $outfile");
-print "" . timestamp() . ": wrote $outfile";
+print "" . timestamp() . ": wrote $outfile, which is one giant sorted fasta file.\n";
 system ("rm $tempfile2");
 # end translation
 
-if (-z "$working_sra.sorted.fasta") {
+if (-z "$outfile") {
 	exit_with_msg ("Sort failed. Are you sure $working_sra exists?");
 }
 # un-interleave fasta file into two paired files:
-print "" . timestamp() . ": un-interleaving $working_sra.sorted.fasta into paired files.\n";
-open FH, "<", "$working_sra.sorted.fasta" or exit_with_msg ("couldn't open fasta file");
+print "" . timestamp() . ": un-interleaving $outfile into paired files.\n";
+open FH, "<", "$outfile" or exit_with_msg ("couldn't open fasta file");
 
 my @out1_fhs = ();
 my @out2_fhs = ();
