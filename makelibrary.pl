@@ -37,7 +37,7 @@ my $fastq_input = 0;
 
 # if the sra is a fastq file, make it fasta.
 if ($short_read_archive =~ /\.f.*q$/) { # if it's a fastq file:
-	print "fastq file inputted...converting to fasta.\n";
+	print "" . timestamp() . ": fastq file inputted...converting to fasta.\n";
 	$fastq_input = 1;
 	# un-interleave fastq file into fasta:
 	open FH, "<", $short_read_archive or exit_with_msg("couldn't open fasta file");
@@ -72,14 +72,14 @@ if ($fastq_input == 1) {
 }
 
 # sort fasta short-read file
-print "sorting fasta file.\n";
+print "" . timestamp() . ": sorting fasta file.\n";
 system ("bash $executing_path/lib/sort_fasta.sh $working_sra") == 0 or exit_with_msg ("Couldn't find sort_fasta.sh. This script needs to be in the same directory as the rest of TRAM");
 
 if (-z "$working_sra.sorted.fasta") {
 	exit_with_msg ("Sort failed. Are you sure $working_sra exists?");
 }
 # un-interleave fasta file into two paired files:
-print "un-interleaving $working_sra.sorted.fasta into paired files.\n";
+print "" . timestamp() . ": un-interleaving $working_sra.sorted.fasta into paired files.\n";
 open FH, "<", "$working_sra.sorted.fasta" or exit_with_msg ("couldn't open fasta file");
 
 my @out1_fhs = ();
@@ -135,7 +135,7 @@ for (my $i=0; $i<$numlibraries; $i++) {
 
 for (my $i=1; $i<=$numlibraries; $i++) {
 	# make the blast db from the first of the paired end files
-	print "Making blastdb from first of paired fasta files.\n";
+	print "" . timestamp() . ": Making blastdb from first of paired fasta files.\n";
 	system ("makeblastdb -in $working_sra.$i.1.fasta -dbtype nucl -out $working_sra.$i.db");
 }
 
@@ -149,6 +149,21 @@ sub exit_with_msg {
 	my $msg = shift;
 	print STDERR "$msg\n";
 	exit 1;
+}
+
+sub timestamp {
+    my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime(time);
+    $mon++;
+    $mon = sprintf("%02d", $mon);
+    $min = sprintf("%02d", $min);
+    $sec = sprintf("%02d", $sec);
+    $hour = sprintf("%02d", $hour);
+    $mday = sprintf("%02d", $mday);
+
+    $year -= 100;
+    my $time = "$hour:$min:$sec";
+    my $date = "$year$mon$mday";
+    return "$date $time";
 }
 
 __END__
