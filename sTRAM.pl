@@ -21,7 +21,7 @@ my $help = 0;
 my $log_file = "";
 my $output_file = "";
 my $use_ends = 0;
-my $numlibraries = 0;
+my $processes = 0;
 my $type = "";
 my $blast_name = 0;
 my $complete = 0;
@@ -42,7 +42,7 @@ GetOptions ('reads=s' => \$short_read_archive,
             'target=s' => \$search_fasta,
             'start_iteration=i' => \$start_iter,
             'iterations=i' => \$iterations,
-            'processes=i' => \$numlibraries,
+            'processes=i' => \$processes,
             'log_file=s' => \$log_file,
             'output=s' => \$output_file,
             'type=s' => \$type,
@@ -69,9 +69,12 @@ unless($short_read_archive and $search_fasta) {
 }
 
 # check to make sure that the specified short read archive exists:
-if ($numlibraries > 0) {
+if ($processes > 0) {
 	unless ((-e "$short_read_archive.1.1.fasta") && (-e "$short_read_archive.1.2.fasta")) {
 		pod2usage(-msg => "Short read archive does not seem to be in the format made by makelibrary.pl. Did you specify the name correctly?");
+	}
+	unless ((-e "$short_read_archive.$processes.1.fasta") && (-e "$short_read_archive.$processes.2.fasta")) {
+		pod2usage(-msg => "Short read archives were not prepared to handle $processes processes. Try a smaller value for -processes.");
 	}
 } else {
 	unless ((-e "$short_read_archive.1.fasta") && (-e "$short_read_archive.2.fasta")) {
@@ -189,15 +192,14 @@ foreach my $line (@target_seqs) {
 # make a database from the target so that we can compare contigs to the target.
 my (undef, $targetdb) = tempfile(UNLINK => 1);
 if ($protein == 1) {
-	$cmd = "makeblastdb -in $target_fasta -dbtype prot -out $targetdb.db -input_type fasta";
+	system_call ("makeblastdb -in $target_fasta -dbtype prot -out $targetdb.db -input_type fasta");
 } else {
-	$cmd = "makeblastdb -in $target_fasta -dbtype nucl -out $targetdb.db -input_type fasta";
+	system_call ("makeblastdb -in $target_fasta -dbtype nucl -out $targetdb.db -input_type fasta");
 }
-system_call ($cmd);
 
 if ($start_iter > 1) {
 	my $x = $start_iter-1;
-	$search_fasta = "$output_file.$x.contigs.fa";
+	$search_fasta = "$output_file.".($start_iter-1).".contigs.fa";
 }
 
 # writing the header line for the results file
@@ -210,34 +212,55 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 	print ("interation $i starting...\n");
 	print $log_fh ("interation $i starting...\n");
 
-	my $sra = "$short_read_archive";
-	if ($numlibraries > 0) {
-		my $j = ($i % $numlibraries) + 1;
-		$sra = "$short_read_archive.$j";
-		print "working with $sra\n";
-	}
 	my $hit_matrix = {};
 	push @hit_matrices, \$hit_matrix;
 
 	if ($velvet==0) {
-	# 1. blast to find any short reads that match the target.
-	print "\tblasting short reads...\n";
-		if (($protein == 1) && ($i == 1)) {
-			system_call ("tblastn -max_target_seqs $max_target_seqs -db $sra.db -query $search_fasta -outfmt 6 -num_threads 8 -out $output_file.blast.$i");
-		} else {
-			system_call ("blastn -task blastn -evalue $evalue -max_target_seqs $max_target_seqs -db $sra.db -query $search_fasta -outfmt 6 -num_threads 8 -out $output_file.blast.$i");
+		my $sra = "$short_read_archive";
+		my $current_partial_file = "$output_file.blast.$i";
+		my @partialfiles = ();
+		my $p = 0;
+		while ($p <= $processes) {
+			$p++;
+			if ($processes > 0) {
+				# we are multiprocessing; make sure to name the $sra to the correct partial library
+				$sra = "$short_read_archive.$p";
+				$current_partial_file = "$output_file.blast.$i.$p";
+			}
+			push @partialfiles, $current_partial_file;
+
+			# 1. blast to find any short reads that match the target.
+			print "\tblasting short reads...\n";
+			if (($protein == 1) && ($i == 1)) {
+				system_call ("tblastn -max_target_seqs $max_target_seqs -db $sra.db -query $search_fasta -outfmt 6 -num_threads 8 -out $current_partial_file");
+			} else {
+				system_call ("blastn -task blastn -evalue $evalue -max_target_seqs $max_target_seqs -db $sra.db -query $search_fasta -outfmt 6 -num_threads 8 -out $current_partial_file");
+			}
+
+			# 2 and 3. find the paired end of all of the blast hits.
+			print "\tgetting paired ends...\n";
+			system_call("perl $executing_path/lib/pairedsequenceretrieval.pl $sra.#.fasta $current_partial_file $current_partial_file.fasta");
+			if ($p == $processes) {
+				last;
+			}
 		}
 
+		# now we need to piece all of the partial files back together.
+		my $fastafiles = join (" ", map {$_ . ".fasta"} @partialfiles);
+		system_call("cat $fastafiles > $output_file.blast.$i.fasta");
+		system_call("rm $fastafiles");
+
+		# remove intermediate blast results
+		my $readfiles = join (" ", @partialfiles);
+		system_call("rm $readfiles");
+
 		# did we not find any reads? Go ahead and quit.
-		if ((-s "$output_file.blast.$i") == 0) {
+		if ((-s "$output_file.blast.$i.fasta") == 0) {
 			print "No similar reads were found.\n";
 			last;
 		}
-
-		# 2 and 3. find the paired end of all of the blast hits.
-		print "\tgetting paired ends...\n";
-		system_call("perl $executing_path/lib/pairedsequenceretrieval.pl $sra.#.fasta $output_file.blast.$i $output_file.blast.$i.fasta");
 	}
+
 	# 4. assemble the reads using velvet
 	print "\tassembling with Velvet...\n";
 	system_call("velveth $output_file.velvet 31 -fasta -shortPaired $output_file.blast.$i.fasta");
