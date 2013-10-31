@@ -73,7 +73,24 @@ if ($fastq_input == 1) {
 
 # sort fasta short-read file
 print "" . timestamp() . ": sorting fasta file.\n";
-system ("bash $executing_path/lib/sort_fasta.sh $working_sra") == 0 or exit_with_msg ("Couldn't find sort_fasta.sh. This script needs to be in the same directory as the rest of TRAM");
+# system ("bash $executing_path/lib/sort_fasta.sh $working_sra") == 0 or exit_with_msg ("Couldn't find sort_fasta.sh. This script needs to be in the same directory as the rest of TRAM");
+
+# the following is a direct translation of sort_fasta.sh to perl:
+my $infile = "$working_sra";
+my $outfile = "$working_sra.sorted.fasta";
+my $tempfile = "$working_sra.temp";
+my $tempfile2 = "$working_sra.temp2";
+my $tempdir = dirname ("$working_sra");
+# gawk '{if (NF==0) next; sub(/lcl\|/,""); s = ""; for (i=2;i<=NF;i++) s = s$i; print $1","s}' RS=">" $infile > $tempfile
+system ("gawk '{if (NF==0) next; sub(\/lcl\|\/,\"\"); s = \"\"; for (i=2;i<=NF;i++) s = s\$i; print \$1\",\"s}' RS=\">\" $infile > $tempfile");
+print "" . timestamp() . ": wrote $tempfile";
+system ("sort -t',' -k 1 --parallel=8 -T $tempdir $tempfile > $tempfile2");
+print "" . timestamp() . ": wrote $tempfile2";
+system ("rm $tempfile");
+system ("gawk '{print \">\" \$1 \"\\n\" \$2}' FS=\",\" $tempfile2 > $outfile");
+print "" . timestamp() . ": wrote $outfile";
+system ("rm $tempfile2");
+# end translation
 
 if (-z "$working_sra.sorted.fasta") {
 	exit_with_msg ("Sort failed. Are you sure $working_sra exists?");
