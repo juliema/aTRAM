@@ -181,7 +181,8 @@ for (my $i=1; $i<=$numlibraries; $i++) {
 	system ("makeblastdb -in $working_sra.$i.1.fasta -dbtype nucl -out $working_sra.$i.db");
 }
 
-system ("rm $working_sra.sorted.fasta");
+system ("rm $tempsort1");
+system ("rm $tempsort2");
 if ($fastq_input == 1) {
 	system ("rm $working_sra");
 }
