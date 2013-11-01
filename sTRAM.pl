@@ -224,8 +224,8 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 			if ($processes > 0) {
 				# we are multiprocessing; make sure to name the $sra to the correct partial library
 				$sra = "$short_read_archive.$p";
-				$current_partial_file = "$output_file.blast.$i.$p";
 			}
+			$current_partial_file = "$output_file.blast.$i.$p";
 			push @partialfiles, $current_partial_file;
 
 			# 1. blast to find any short reads that match the target.
