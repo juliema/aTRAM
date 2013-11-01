@@ -71,33 +71,65 @@ if ($fastq_input == 1) {
 	$working_sra = "$short_read_archive.fasta";
 }
 
+my $tempfile1 = "$working_sra.temp.1";
+my $tempfile2 = "$working_sra.temp.2";
+my $tempdir = dirname ("$working_sra");
+my $outfile = "$working_sra.sorted.fasta";
+
 # sort fasta short-read file
 print "" . timestamp() . ": sorting fasta file.\n";
-# system ("bash $executing_path/lib/sort_fasta.sh $working_sra") == 0 or exit_with_msg ("Couldn't find sort_fasta.sh. This script needs to be in the same directory as the rest of TRAM");
 
-# the following is a direct translation of sort_fasta.sh to perl:
-my $infile = "$working_sra";
-my $outfile = "$working_sra.sorted.fasta";
-my $tempfile = "$working_sra.temp";
-my $tempfile2 = "$working_sra.temp2";
-my $tempdir = dirname ("$working_sra");
-# gawk '{if (NF==0) next; sub(/lcl\|/,""); s = ""; for (i=2;i<=NF;i++) s = s$i; print $1","s}' RS=">" $infile > $tempfile
-system ("gawk '{if (NF==0) next; sub(\/lcl\|\/,\"\"); s = \"\"; for (i=2;i<=NF;i++) s = s\$i; print \$1\",\"s}' RS=\">\" $infile > $tempfile");
-print "" . timestamp() . ": wrote $tempfile, now running sort.\n";
-system ("sort -t',' -k 1 --parallel=8 -T $tempdir $tempfile > $tempfile2");
-print "" . timestamp() . ": wrote $tempfile2, now reformatting to fasta.\n";
-system ("rm $tempfile");
-system ("gawk '{print \">\" \$1 \"\\n\" \$2}' FS=\",\" $tempfile2 > $outfile");
-print "" . timestamp() . ": wrote $outfile, which is one giant sorted fasta file.\n";
+open SEARCH_FH, "<", $working_sra;
+open TEMP1_FH, ">", $tempfile1;
+open TEMP2_FH, ">", $tempfile2;
+my $name = "";
+my $seq = "";
+my $line;
+while ($line = readline SEARCH_FH) {
+	chomp $line;
+	if ($line =~ />(.*)/) {
+		if ($name ne "") {
+			if ($line =~ /\/1/) {
+				print TEMP1_FH ">$name,$seq\n";
+			} elsif ($name =~ /\/2/) {
+				print TEMP2_FH ">$name,$seq\n";
+			}
+		}
+		$name = $1;
+		$seq = "";
+	} else {
+		$seq .= $line;
+	}
+}
+
+if ($line =~ /\/1/) {
+	print TEMP1_FH ">$name,$seq\n";
+} elsif ($name =~ /\/2/) {
+	print TEMP2_FH ">$name,$seq\n";
+}
+close SEARCH_FH;
+close TEMP1_FH;
+close TEMP2_FH;
+
+my $tempsort1 = "$working_sra.sort.1";
+my $tempsort2 = "$working_sra.sort.2";
+
+print "" . timestamp() . ": running sort on $tempsort1.\n";
+system ("sort -t',' -k 1 --parallel=8 -T $tempdir $tempfile1 > $tempsort1");
+print "" . timestamp() . ": running sort on $tempsort2.\n";
+system ("sort -t',' -k 1 --parallel=8 -T $tempdir $tempfile2 > $tempsort2");
+print "" . timestamp() . ": sorted.\n";
+system ("rm $tempfile1");
 system ("rm $tempfile2");
-# end translation
 
-if (-z "$outfile") {
+if (-z "$tempsort1") {
 	exit_with_msg ("Sort failed. Are you sure $working_sra exists?");
 }
 # un-interleave fasta file into two paired files:
-print "" . timestamp() . ": un-interleaving $outfile into paired files.\n";
-open FH, "<", "$outfile" or exit_with_msg ("couldn't open fasta file");
+print "" . timestamp() . ": validating paired files.\n";
+# open FH, "<", "$outfile" or exit_with_msg ("couldn't open fasta file");
+open FH1, "<", "$tempsort1";
+open FH2, "<", "$tempsort2";
 
 my @out1_fhs = ();
 my @out2_fhs = ();
@@ -111,17 +143,15 @@ for (my $i=1; $i<=$numlibraries; $i++) {
 
 my $count = 0;
 while (1) {
-	my $name1 = readline FH;
-	my $seq1 = readline FH;
-	chomp $name1;
-	chomp $seq1;
+	my $line1 = readline FH1;
+	chomp $line1;
+	my ($name1, $seq1) = split(/,/,$line1);
 	if (($name1 eq "") || ($seq1 eq "")) { last; }
 	if ($name1 =~ />(.*?)\/1/) {
 		my $seqname = $1;
-		my $name2 = readline FH;
-		my $seq2 = readline FH;
-		chomp $name2;
-		chomp $seq2;
+		my $line2 = readline FH2;
+		chomp $line2;
+		my ($name2, $seq2) = split(/,/,$line2);
 		if (($name2 eq "") || ($seq2 eq "")) { last; }
 		if ($name2 =~ /$seqname\/2/) {
 			# these two sequences are a pair: write them out.
@@ -141,7 +171,8 @@ while (1) {
 	}
 }
 
-close FH;
+close FH1;
+close FH2;
 
 for (my $i=0; $i<$numlibraries; $i++) {
 	my $out1_fh = $out1_fhs[$i];
