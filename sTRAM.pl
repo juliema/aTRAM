@@ -232,9 +232,9 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 			# 1. blast to find any short reads that match the target.
 			print "\tblasting short reads...\n";
 			if (($protein == 1) && ($i == 1)) {
-				system_call ("tblastn -max_target_seqs $max_target_seqs -db $sra.db -query $search_fasta -outfmt 6 -num_threads 8 -out $current_partial_file");
+				system_call ("tblastn -max_target_seqs $max_target_seqs -db $sra.db -query $search_fasta -outfmt '6 qseqid sseqid sseq evalue bitscore' -num_threads 8 -out $current_partial_file");
 			} else {
-				system_call ("blastn -task blastn -evalue $evalue -max_target_seqs $max_target_seqs -db $sra.db -query $search_fasta -outfmt 6 -num_threads 8 -out $current_partial_file");
+				system_call ("blastn -task blastn -evalue $evalue -max_target_seqs $max_target_seqs -db $sra.db -query $search_fasta -outfmt '6 qseqid sseqid sseq evalue bitscore' -num_threads 8 -out $current_partial_file");
 			}
 
 			# 2 and 3. find the paired end of all of the blast hits.
