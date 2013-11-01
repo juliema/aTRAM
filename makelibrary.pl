@@ -46,8 +46,8 @@ if ($short_read_archive =~ /\.f.*q$/) { # if it's a fastq file:
 
 	my $fs = readline FH;
 	while ($fs) {
-		$fs =~ s/@/>/;
-		print OUT_FH $fs;
+		$fs =~ /@(.*?)([\s\/])([12])/;
+		print OUT_FH ">$1\/$3\n";
 		$fs = readline FH;
 		print OUT_FH $fs;
 		$fs = readline FH;
