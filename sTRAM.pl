@@ -116,16 +116,15 @@ my $name = "";
 my $seq = "";
 my $fullseq = "";
 while (my $line=readline SEARCH_FH) {
+	chomp $line;
 	if ($line =~ />(.*)/) {
 		if ($name ne "") {
 			push @target_seqs, "$name,$seq";
 		}
 		$name = $1;
-		chomp $name;
 		$seq = "";
 	} else {
 		$seq .= $line;
-		chomp $seq;
 		$fullseq .= $seq;
 	}
 }
