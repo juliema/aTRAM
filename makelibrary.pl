@@ -153,18 +153,12 @@ while (1) {
 		chomp $line2;
 		my ($name2, $seq2) = split(/,/,$line2);
 		if (($name2 eq "") || ($seq2 eq "")) { last; }
-		if ($name2 =~ /$seqname\/2/) {
-			# these two sequences are a pair: write them out.
-			my $i = $count % $numlibraries;
-			$count++;
-			my $out1_fh = $out1_fhs[$i];
-			my $out2_fh = $out2_fhs[$i];
-			print $out1_fh "$name1\n$seq1\n";
-			print $out2_fh "$name2\n$seq2\n";
-		} else {
-			# the next sequence isn't the pair of the first sequence. Skip these.
-			next;
-		}
+		my $i = $count % $numlibraries;
+		$count++;
+		my $out1_fh = $out1_fhs[$i];
+		my $out2_fh = $out2_fhs[$i];
+		print $out1_fh "$name1\n$seq1\n";
+		print $out2_fh "$name2\n$seq2\n";
 	} else {
 		# this sequence doesn't have the name format of a paired read. Skip it.
 		next;
