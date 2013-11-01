@@ -115,9 +115,9 @@ my $tempsort1 = "$working_sra.sort.1";
 my $tempsort2 = "$working_sra.sort.2";
 
 print "" . timestamp() . ": running sort on $tempsort1.\n";
-system ("sort -t',' -k 1 --parallel=8 -T $tempdir $tempfile1 > $tempsort1");
+system ("sort -t',' -k 1 -T $tempdir $tempfile1 > $tempsort1");
 print "" . timestamp() . ": running sort on $tempsort2.\n";
-system ("sort -t',' -k 1 --parallel=8 -T $tempdir $tempfile2 > $tempsort2");
+system ("sort -t',' -k 1 -T $tempdir $tempfile2 > $tempsort2");
 print "" . timestamp() . ": sorted.\n";
 system ("rm $tempfile1");
 system ("rm $tempfile2");
