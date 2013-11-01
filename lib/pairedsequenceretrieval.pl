@@ -31,26 +31,27 @@ unless (-e $fastafile_2) {
 
 my (undef, $seq_names) = tempfile(UNLINK => 1);
 
-system ("gawk '{sub(\"/1\",\"\");print \$2;}' $sequencelist | sort | uniq -u > $seq_names");
+# -outfmt '6 qseqid sseqid sseq evalue bitscore'
+system ("gawk '{sub(\"/1\",\"\");print \$2\",\"\$3;}' $sequencelist | sort > $seq_names");
 
 open LIST_FH, "<", "$seq_names";
 open FA1_FH, "<", "$fastafile_1";
 open FA2_FH, "<", "$fastafile_2";
 open OUT_FH, ">", "$outfile";
 
-my $curr_name = readline LIST_FH;
+my $line = readline LIST_FH;
 
-while ($curr_name) {
-	chomp $curr_name;
-	my $fa_seq1 = (readline FA1_FH) . (readline FA1_FH);
-	my $fa_seq2 = (readline FA2_FH) . (readline FA2_FH);
+while ($line) {
+	chomp $line;
+	my ($curr_name, $curr_seq) = split (/,/,$line);
+ 	my $fa_seq2 = (readline FA2_FH) . (readline FA2_FH);
 
-	if ($fa_seq1 eq "") { last; }
 	if ($fa_seq2 eq "") { last; }
 
-	if ($fa_seq1 =~ /$curr_name/) {
-		print OUT_FH "$fa_seq1$fa_seq2";
-		$curr_name = readline LIST_FH;
+	if ($fa_seq2 =~ /$curr_name/) {
+		print OUT_FH ">curr_name\n$curr_seq\n";
+		print OUT_FH "$fa_seq2";
+		$line = readline LIST_FH;
 	}
 }
 
