@@ -11,7 +11,7 @@ if (@ARGV == 0) {
 
 my $short_read_archive = "";
 my $output_file = "";
-my $numlibraries = 1;
+my $numlibraries = 8;
 my $help = 0;
 
 GetOptions ('input=s' => \$short_read_archive,
@@ -31,34 +31,36 @@ unless ($output_file) {
     $output_file = $short_read_archive;
 }
 
-my $executing_path = dirname(__FILE__);
-
-my $tempfile1 = "$short_read_archive.temp.1";
-my $tempfile2 = "$short_read_archive.temp.2";
 my $tempdir = dirname ("$short_read_archive");
-my $outfile = "$short_read_archive.sorted.fasta";
 
 # sort fasta short-read file
-print "" . timestamp() . ": sorting fasta file.\n";
+print "" . timestamp() . ": separating fasta/fastq file.\n";
 
 open SEARCH_FH, "<", $short_read_archive;
-open TEMP1_FH, ">", $tempfile1;
-open TEMP2_FH, ">", $tempfile2;
+
+my @out1_fhs = ();
+my @out2_fhs = ();
+
+for (my $i=0; $i<$numlibraries; $i++) {
+	open my $out1_fh, ">", "$short_read_archive.temp.$i.1" or exit_with_msg ("couldn't create result file");
+	open my $out2_fh, ">", "$short_read_archive.temp.$i.2" or exit_with_msg ("couldn't create result file");
+	push @out1_fhs, $out1_fh;
+	push @out2_fhs, $out2_fh;
+}
+
 my $name = "";
 my $seq = "";
-my $line;
 my $seqlen = 0;
-while ($line = readline SEARCH_FH) {
+while (my $line = readline SEARCH_FH) {
 	chomp $line;
 	if ($line =~ /[@>](.*?)([\s\/])([12])/) {
 		if ($name ne "") {
 			if ($name =~ /\/1/) {
-				print TEMP1_FH ">$name,$seq\n";
+				print {$out1_fhs[(hash_to_bucket($name))]} ">$name,$seq\n";
 			} elsif ($name =~ /\/2/) {
-				print TEMP2_FH ">$name,$seq\n";
+				print {$out2_fhs[(hash_to_bucket($name))]} ">$name,$seq\n";
 			}
 		}
-		hash_to_bucket($name);
 		$name = "$1\/$3";
 		$seq = "";
 	} elsif ($line =~ /^\+/){
@@ -75,83 +77,62 @@ while ($line = readline SEARCH_FH) {
 }
 
 if ($name =~ /\/1/) {
-	print TEMP1_FH ">$name,$seq\n";
+	print {$out1_fhs[(hash_to_bucket($name))]} ">$name,$seq\n";
 } elsif ($name =~ /\/2/) {
-	print TEMP2_FH ">$name,$seq\n";
+	print {$out2_fhs[(hash_to_bucket($name))]} ">$name,$seq\n";
 }
 close SEARCH_FH;
-close TEMP1_FH;
-close TEMP2_FH;
-my $tempsort1 = "$short_read_archive.sort.1";
-my $tempsort2 = "$short_read_archive.sort.2";
 
-print "" . timestamp() . ": running sort on $tempsort1.\n";
-system ("sort -t',' -k 1 -T $tempdir $tempfile1 > $tempsort1");
-print "" . timestamp() . ": running sort on $tempsort2.\n";
-system ("sort -t',' -k 1 -T $tempdir $tempfile2 > $tempsort2");
-print "" . timestamp() . ": sorted.\n";
-system ("rm $tempfile1");
-system ("rm $tempfile2");
-
-if (-z "$tempsort1") {
-	exit_with_msg ("Sort failed. Are you sure $short_read_archive exists?");
-}
-# un-interleave fasta file into two paired files:
-print "" . timestamp() . ": validating paired files.\n";
-# open FH, "<", "$outfile" or exit_with_msg ("couldn't open fasta file");
-open FH1, "<", "$tempsort1";
-open FH2, "<", "$tempsort2";
-
-my @out1_fhs = ();
-my @out2_fhs = ();
-
-for (my $i=1; $i<=$numlibraries; $i++) {
-	open my $out1_fh, ">", "$short_read_archive.$i.1.fasta" or exit_with_msg ("couldn't create result file");
-	open my $out2_fh, ">", "$short_read_archive.$i.2.fasta" or exit_with_msg ("couldn't create result file");
-	push @out1_fhs, $out1_fh;
-	push @out2_fhs, $out2_fh;
+for (my $i=0; $i<$numlibraries; $i++) {
+	close $out1_fhs[$i];
+	close $out2_fhs[$i];
 }
 
-while (1) {
-	my $line1 = readline FH1;
-	chomp $line1;
-	my ($name1, $seq1) = split(/,/,$line1);
-	if (($name1 eq "") || ($seq1 eq "")) { last; }
-	if ($name1 =~ />(.*?)\/1/) {
-		my $seqname = $1;
-		my $line2 = readline FH2;
-		chomp $line2;
-		my ($name2, $seq2) = split(/,/,$line2);
-		if (($name2 eq "") || ($seq2 eq "")) { last; }
-		my $i = hash_to_bucket($name);
-		my $out1_fh = $out1_fhs[$i];
-		my $out2_fh = $out2_fhs[$i];
-		print $out1_fh "$name1\n$seq1\n";
-		print $out2_fh "$name2\n$seq2\n";
-	} else {
-		# this sequence doesn't have the name format of a paired read. Skip it.
-		next;
+for (my $i=0; $i<$numlibraries; $i++) {
+	my $tempsort1 = "$short_read_archive.sort.$i.1";
+	my $tempsort2 = "$short_read_archive.sort.$i.2";
+	print "" . timestamp() . ": running sort on $short_read_archive.sort.$i.1.\n";
+	system ("sort -t',' -k 1 -T $tempdir $short_read_archive.temp.$i.1 > $short_read_archive.sort.$i.1");
+	print "" . timestamp() . ": running sort on $short_read_archive.sort.$i.2.\n";
+	system ("sort -t',' -k 1 -T $tempdir $short_read_archive.temp.$i.2 > $short_read_archive.sort.$i.2");
+	print "" . timestamp() . ": sorted.\n";
+	system ("rm $short_read_archive.temp.$i.1");
+	system ("rm $short_read_archive.temp.$i.2");
+	if (-z "$short_read_archive.sort.$i.1") {
+		exit_with_msg ("Sort failed. Are you sure $short_read_archive exists?");
 	}
 }
 
-close FH1;
-close FH2;
-
 for (my $i=0; $i<$numlibraries; $i++) {
-	my $out1_fh = $out1_fhs[$i];
-	my $out2_fh = $out2_fhs[$i];
-	close $out1_fh;
-	close $out2_fh;
-}
+	print "" . timestamp() . ": Making $short_read_archive.$i.1.fasta.\n";
+	open my $in_fh, "<", "$short_read_archive.sort.$i.1" or exit_with_msg ("couldn't create result file");
+	open my $out_fh, ">", "$short_read_archive.$i.1.fasta" or exit_with_msg ("couldn't create result file");
+	while (my $line = readline $in_fh) {
+		chomp $line;
+		my ($name, $seq) = split(/,/,$line);
+		print $out_fh "$name\n$seq\n";
+	}
+	close $in_fh;
+	close $out_fh;
+	system ("rm $short_read_archive.sort.$i.1");
 
-for (my $i=1; $i<=$numlibraries; $i++) {
+	print "" . timestamp() . ": Making $short_read_archive.$i.2.fasta.\n";
+	open my $in_fh, "<", "$short_read_archive.sort.$i.2" or exit_with_msg ("couldn't create result file");
+	open my $out_fh, ">", "$short_read_archive.$i.2.fasta" or exit_with_msg ("couldn't create result file");
+	while (my $line = readline $in_fh) {
+		chomp $line;
+		my ($name, $seq) = split(/,/,$line);
+		print $out_fh "$name\n$seq\n";
+	}
+	close $in_fh;
+	close $out_fh;
+	system ("rm $short_read_archive.sort.$i.2");
+
 	# make the blast db from the first of the paired end files
 	print "" . timestamp() . ": Making blastdb from $short_read_archive.$i.1.fasta.\n";
 	system ("makeblastdb -in $short_read_archive.$i.1.fasta -dbtype nucl -out $short_read_archive.$i.db");
+	system ("rm $short_read_archive.$i.1.fasta");
 }
-
-system ("rm $tempsort1");
-system ("rm $tempsort2");
 
 print "" . timestamp() . ": Finished\n";
 
@@ -183,8 +164,9 @@ sub hash_to_bucket {
 	if ($key =~ /(.+)\/\d/) {
 		$key = $1;
 	}
-
 	$key =~ s/\D//g;
+	$key =~ s/.*(.{3})$/$1/;
+
 	$bucket = $key % $numlibraries;
 	return $bucket;
 }
