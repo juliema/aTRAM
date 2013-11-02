@@ -33,76 +33,47 @@ unless ($output_file) {
 
 my $executing_path = dirname(__FILE__);
 
-my $fastq_input = 0;
-
-# if the sra is a fastq file, make it fasta.
-if ($short_read_archive =~ /\.f.*q$/) { # if it's a fastq file:
-	print "" . timestamp() . ": fastq file inputted...converting to fasta.\n";
-	$fastq_input = 1;
-	# un-interleave fastq file into fasta:
-	open FH, "<", $short_read_archive or exit_with_msg("couldn't open fasta file");
-
-	open OUT_FH, ">", "$short_read_archive.fasta" or exit_with_msg ("couldn't create result file");
-
-	my $fs = readline FH;
-	while ($fs) {
-		$fs =~ s/@/>/;
-		print OUT_FH $fs;
-		$fs = readline FH;
-		print OUT_FH $fs;
-		$fs = readline FH;
-		# toss quality lines
-		if ($fs !~ /^\+/) {
-			print "$fs";
-			exit_with_msg ("$short_read_archive is not a properly-formed fastq file: line ". $. ." is problematic.");
-		}
-		$fs = readline FH;
-		$fs = readline FH;
-	}
-
-	close FH;
-	close OUT1_FH;
-
-}
-
-# now we're working with a fasta file for sure.
-my $working_sra = $short_read_archive;
-if ($fastq_input == 1) {
-	$working_sra = "$short_read_archive.fasta";
-}
-
-my $tempfile1 = "$working_sra.temp.1";
-my $tempfile2 = "$working_sra.temp.2";
-my $tempdir = dirname ("$working_sra");
-my $outfile = "$working_sra.sorted.fasta";
+my $tempfile1 = "$short_read_archive.temp.1";
+my $tempfile2 = "$short_read_archive.temp.2";
+my $tempdir = dirname ("$short_read_archive");
+my $outfile = "$short_read_archive.sorted.fasta";
 
 # sort fasta short-read file
 print "" . timestamp() . ": sorting fasta file.\n";
 
-open SEARCH_FH, "<", $working_sra;
+open SEARCH_FH, "<", $short_read_archive;
 open TEMP1_FH, ">", $tempfile1;
 open TEMP2_FH, ">", $tempfile2;
 my $name = "";
 my $seq = "";
 my $line;
+my $seqlen = 0;
 while ($line = readline SEARCH_FH) {
 	chomp $line;
-	if ($line =~ />(.*)/) {
+	if ($line =~ /[@>](.*?)([\s\/])([12])/) {
 		if ($name ne "") {
-			if ($line =~ /\/1/) {
+			if ($name =~ /\/1/) {
 				print TEMP1_FH ">$name,$seq\n";
 			} elsif ($name =~ /\/2/) {
 				print TEMP2_FH ">$name,$seq\n";
 			}
 		}
-		$name = $1;
+		$name = "$1\/$3";
 		$seq = "";
+	} elsif ($line =~ /^\+/){
+		# is this a fastq quality line? eat chars to the length of the full sequence.
+		while ($seqlen > 0) {
+			$line = readline SEARCH_FH;
+			chomp $line;
+			$seqlen = $seqlen - length($line);
+		}
 	} else {
 		$seq .= $line;
+		$seqlen = length ($seq);
 	}
 }
 
-if ($line =~ /\/1/) {
+if ($name =~ /\/1/) {
 	print TEMP1_FH ">$name,$seq\n";
 } elsif ($name =~ /\/2/) {
 	print TEMP2_FH ">$name,$seq\n";
@@ -110,9 +81,8 @@ if ($line =~ /\/1/) {
 close SEARCH_FH;
 close TEMP1_FH;
 close TEMP2_FH;
-
-my $tempsort1 = "$working_sra.sort.1";
-my $tempsort2 = "$working_sra.sort.2";
+my $tempsort1 = "$short_read_archive.sort.1";
+my $tempsort2 = "$short_read_archive.sort.2";
 
 print "" . timestamp() . ": running sort on $tempsort1.\n";
 system ("sort -t',' -k 1 -T $tempdir $tempfile1 > $tempsort1");
@@ -123,7 +93,7 @@ system ("rm $tempfile1");
 system ("rm $tempfile2");
 
 if (-z "$tempsort1") {
-	exit_with_msg ("Sort failed. Are you sure $working_sra exists?");
+	exit_with_msg ("Sort failed. Are you sure $short_read_archive exists?");
 }
 # un-interleave fasta file into two paired files:
 print "" . timestamp() . ": validating paired files.\n";
@@ -135,8 +105,8 @@ my @out1_fhs = ();
 my @out2_fhs = ();
 
 for (my $i=1; $i<=$numlibraries; $i++) {
-	open my $out1_fh, ">", "$working_sra.$i.1.fasta" or exit_with_msg ("couldn't create result file");
-	open my $out2_fh, ">", "$working_sra.$i.2.fasta" or exit_with_msg ("couldn't create result file");
+	open my $out1_fh, ">", "$short_read_archive.$i.1.fasta" or exit_with_msg ("couldn't create result file");
+	open my $out2_fh, ">", "$short_read_archive.$i.2.fasta" or exit_with_msg ("couldn't create result file");
 	push @out1_fhs, $out1_fh;
 	push @out2_fhs, $out2_fh;
 }
@@ -177,16 +147,14 @@ for (my $i=0; $i<$numlibraries; $i++) {
 
 for (my $i=1; $i<=$numlibraries; $i++) {
 	# make the blast db from the first of the paired end files
-	print "" . timestamp() . ": Making blastdb from first of paired fasta files.\n";
-	system ("makeblastdb -in $working_sra.$i.1.fasta -dbtype nucl -out $working_sra.$i.db");
+	print "" . timestamp() . ": Making blastdb from $short_read_archive.$i.1.fasta.\n";
+	system ("makeblastdb -in $short_read_archive.$i.1.fasta -dbtype nucl -out $short_read_archive.$i.db");
 }
 
 system ("rm $tempsort1");
 system ("rm $tempsort2");
-if ($fastq_input == 1) {
-	system ("rm $working_sra");
-}
 
+print "" . timestamp() . ": Finished\n";
 
 sub exit_with_msg {
 	my $msg = shift;
