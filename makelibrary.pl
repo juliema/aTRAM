@@ -58,6 +58,7 @@ while ($line = readline SEARCH_FH) {
 				print TEMP2_FH ">$name,$seq\n";
 			}
 		}
+		hash_to_bucket($name);
 		$name = "$1\/$3";
 		$seq = "";
 	} elsif ($line =~ /^\+/){
@@ -111,7 +112,6 @@ for (my $i=1; $i<=$numlibraries; $i++) {
 	push @out2_fhs, $out2_fh;
 }
 
-my $count = 0;
 while (1) {
 	my $line1 = readline FH1;
 	chomp $line1;
@@ -123,8 +123,7 @@ while (1) {
 		chomp $line2;
 		my ($name2, $seq2) = split(/,/,$line2);
 		if (($name2 eq "") || ($seq2 eq "")) { last; }
-		my $i = $count % $numlibraries;
-		$count++;
+		my $i = hash_to_bucket($name);
 		my $out1_fh = $out1_fhs[$i];
 		my $out2_fh = $out2_fhs[$i];
 		print $out1_fh "$name1\n$seq1\n";
@@ -175,6 +174,19 @@ sub timestamp {
     my $time = "$hour:$min:$sec";
     my $date = "$year$mon$mday";
     return "$date $time";
+}
+
+sub hash_to_bucket {
+	my $key = shift;
+	my $bucket;
+
+	if ($key =~ /(.+)\/\d/) {
+		$key = $1;
+	}
+
+	$key =~ s/\D//g;
+	$bucket = $key % $numlibraries;
+	return $bucket;
 }
 
 __END__
