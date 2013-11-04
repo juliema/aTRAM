@@ -44,8 +44,8 @@ my @out1_fhs = ();
 my @out2_fhs = ();
 
 for (my $i=0; $i<$numlibraries; $i++) {
-	open my $out1_fh, ">", "$output_file.partial.$i.1" or exit_with_msg ("couldn't create result file");
-	open my $out2_fh, ">", "$output_file.partial.$i.2" or exit_with_msg ("couldn't create result file");
+	open my $out1_fh, ">", "$output_file.partial.$i.1" or exit_with_msg ("couldn't create $output_file.partial.$i.1");
+	open my $out2_fh, ">", "$output_file.partial.$i.2" or exit_with_msg ("couldn't create $output_file.partial.$i.2");
 	push @out1_fhs, $out1_fh;
 	push @out2_fhs, $out2_fh;
 }
@@ -94,12 +94,11 @@ for (my $i=0; $i<$numlibraries; $i++) {
 	if ($half == 0) {
 		print "" . timestamp() . ": sorting $output_file.partial.$i.1 into $output_file.sorted.$i.1.\n";
 		system ("sort -t',' -k 1 -T $tempdir $output_file.partial.$i.1 > $output_file.sorted.$i.1");
+		system ("rm $output_file.partial.$i.1");
 	}
 	print "" . timestamp() . ": sorting $output_file.partial.$i.2 into $output_file.sorted.$i.2.\n";
 	system ("sort -t',' -k 1 -T $tempdir $output_file.partial.$i.2 > $output_file.sorted.$i.2");
 	print "" . timestamp() . ": sorted.\n";
-	system ("rm $output_file.partial.$i.1");
-	system ("rm $output_file.partial.$i.2");
 	if (-z "$output_file.sorted.$i.2") {
 		exit_with_msg ("Sort failed. Are you sure $short_read_archive exists?");
 	}
@@ -113,8 +112,8 @@ for (my $i=0; $i<$numlibraries; $i++) {
 	} else {
 		$infile = "$output_file.partial.$i.1";
 	}
-	open my $in_fh, "<", $infile or exit_with_msg ("couldn't create result file");
-	open my $out_fh, ">", "$output_file.$i.1.fasta" or exit_with_msg ("couldn't create result file");
+	open my $in_fh, "<", $infile or exit_with_msg ("couldn't read $infile");
+	open my $out_fh, ">", "$output_file.$i.1.fasta" or exit_with_msg ("couldn't create $output_file.$i.1.fasta");
 	while (my $line = readline $in_fh) {
 		chomp $line;
 		my ($name, $seq) = split(/,/,$line);
@@ -126,8 +125,8 @@ for (my $i=0; $i<$numlibraries; $i++) {
 
 	if ($half == 0) {
 		print "" . timestamp() . ": Making $output_file.$i.2.fasta.\n";
-		open my $in_fh, "<", "$output_file.sorted.$i.2" or exit_with_msg ("couldn't create result file");
-		open my $out_fh, ">", "$output_file.$i.2.fasta" or exit_with_msg ("couldn't create result file");
+		open my $in_fh, "<", "$output_file.sorted.$i.2" or exit_with_msg ("couldn't read $output_file.sorted.$i.2");
+		open my $out_fh, ">", "$output_file.$i.2.fasta" or exit_with_msg ("couldn't create $output_file.$i.2.fasta");
 		while (my $line = readline $in_fh) {
 			chomp $line;
 			my ($name, $seq) = split(/,/,$line);
