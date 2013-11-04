@@ -13,10 +13,12 @@ my $short_read_archive = "";
 my $output_file = "";
 my $numlibraries = 8;
 my $help = 0;
+my $half = 0;
 
 GetOptions ('input=s' => \$short_read_archive,
             'output=s' => \$output_file,
             'number=i' => \$numlibraries,
+            'half' => \$half,
             'help|?' => \$help) or pod2usage(-msg => "GetOptions failed.", -exitval => 2);
 
 if ($help) {
@@ -34,7 +36,7 @@ unless ($output_file) {
 my $tempdir = dirname ("$short_read_archive");
 
 # sort fasta short-read file
-print "" . timestamp() . ": separating fasta/fastq file.\n";
+print "" . timestamp() . ": separating fasta/fastq file. ($half)\n";
 
 open SEARCH_FH, "<", $short_read_archive;
 
@@ -42,8 +44,8 @@ my @out1_fhs = ();
 my @out2_fhs = ();
 
 for (my $i=0; $i<$numlibraries; $i++) {
-	open my $out1_fh, ">", "$short_read_archive.temp.$i.1" or exit_with_msg ("couldn't create result file");
-	open my $out2_fh, ">", "$short_read_archive.temp.$i.2" or exit_with_msg ("couldn't create result file");
+	open my $out1_fh, ">", "$output_file.partial.$i.1" or exit_with_msg ("couldn't create result file");
+	open my $out2_fh, ">", "$output_file.partial.$i.2" or exit_with_msg ("couldn't create result file");
 	push @out1_fhs, $out1_fh;
 	push @out2_fhs, $out2_fh;
 }
@@ -53,7 +55,7 @@ my $seq = "";
 my $seqlen = 0;
 while (my $line = readline SEARCH_FH) {
 	chomp $line;
-	if ($line =~ /[@>](.*?)([\s\/])([12])/) {
+	if ($line =~ /^[@>](.*?)([\s\/])([12])/) {
 		if ($name ne "") {
 			if ($name =~ /\/1/) {
 				print {$out1_fhs[(hash_to_bucket($name))]} ">$name,$seq\n";
@@ -89,24 +91,30 @@ for (my $i=0; $i<$numlibraries; $i++) {
 }
 
 for (my $i=0; $i<$numlibraries; $i++) {
-	my $tempsort1 = "$short_read_archive.sort.$i.1";
-	my $tempsort2 = "$short_read_archive.sort.$i.2";
-	print "" . timestamp() . ": running sort on $short_read_archive.sort.$i.1.\n";
-	system ("sort -t',' -k 1 -T $tempdir $short_read_archive.temp.$i.1 > $short_read_archive.sort.$i.1");
-	print "" . timestamp() . ": running sort on $short_read_archive.sort.$i.2.\n";
-	system ("sort -t',' -k 1 -T $tempdir $short_read_archive.temp.$i.2 > $short_read_archive.sort.$i.2");
+	if ($half == 0) {
+		print "" . timestamp() . ": sorting $output_file.partial.$i.1 into $output_file.sorted.$i.1.\n";
+		system ("sort -t',' -k 1 -T $tempdir $output_file.partial.$i.1 > $output_file.sorted.$i.1");
+	}
+	print "" . timestamp() . ": sorting $output_file.partial.$i.2 into $output_file.sorted.$i.2.\n";
+	system ("sort -t',' -k 1 -T $tempdir $output_file.partial.$i.2 > $output_file.sorted.$i.2");
 	print "" . timestamp() . ": sorted.\n";
-	system ("rm $short_read_archive.temp.$i.1");
-	system ("rm $short_read_archive.temp.$i.2");
-	if (-z "$short_read_archive.sort.$i.1") {
+	system ("rm $output_file.partial.$i.1");
+	system ("rm $output_file.partial.$i.2");
+	if (-z "$output_file.sorted.$i.2") {
 		exit_with_msg ("Sort failed. Are you sure $short_read_archive exists?");
 	}
 }
 
 for (my $i=0; $i<$numlibraries; $i++) {
-	print "" . timestamp() . ": Making $short_read_archive.$i.1.fasta.\n";
-	open my $in_fh, "<", "$short_read_archive.sort.$i.1" or exit_with_msg ("couldn't create result file");
-	open my $out_fh, ">", "$short_read_archive.$i.1.fasta" or exit_with_msg ("couldn't create result file");
+	print "" . timestamp() . ": Making $output_file.$i.1.fasta.\n";
+	my $infile;
+	if ($half == 0) {
+		$infile = "$output_file.sorted.$i.1";
+	} else {
+		$infile = "$output_file.partial.$i.1";
+	}
+	open my $in_fh, "<", $infile or exit_with_msg ("couldn't create result file");
+	open my $out_fh, ">", "$output_file.$i.1.fasta" or exit_with_msg ("couldn't create result file");
 	while (my $line = readline $in_fh) {
 		chomp $line;
 		my ($name, $seq) = split(/,/,$line);
@@ -114,24 +122,26 @@ for (my $i=0; $i<$numlibraries; $i++) {
 	}
 	close $in_fh;
 	close $out_fh;
-	system ("rm $short_read_archive.sort.$i.1");
+	system ("rm $infile");
 
-	print "" . timestamp() . ": Making $short_read_archive.$i.2.fasta.\n";
-	open my $in_fh, "<", "$short_read_archive.sort.$i.2" or exit_with_msg ("couldn't create result file");
-	open my $out_fh, ">", "$short_read_archive.$i.2.fasta" or exit_with_msg ("couldn't create result file");
-	while (my $line = readline $in_fh) {
-		chomp $line;
-		my ($name, $seq) = split(/,/,$line);
-		print $out_fh "$name\n$seq\n";
+	if ($half == 0) {
+		print "" . timestamp() . ": Making $output_file.$i.2.fasta.\n";
+		open my $in_fh, "<", "$output_file.sorted.$i.2" or exit_with_msg ("couldn't create result file");
+		open my $out_fh, ">", "$output_file.$i.2.fasta" or exit_with_msg ("couldn't create result file");
+		while (my $line = readline $in_fh) {
+			chomp $line;
+			my ($name, $seq) = split(/,/,$line);
+			print $out_fh "$name\n$seq\n";
+		}
+		close $in_fh;
+		close $out_fh;
+		system ("rm $output_file.sorted.$i.2");
 	}
-	close $in_fh;
-	close $out_fh;
-	system ("rm $short_read_archive.sort.$i.2");
 
 	# make the blast db from the first of the paired end files
-	print "" . timestamp() . ": Making blastdb from $short_read_archive.$i.1.fasta.\n";
-	system ("makeblastdb -in $short_read_archive.$i.1.fasta -dbtype nucl -out $short_read_archive.$i.db");
-	system ("rm $short_read_archive.$i.1.fasta");
+	print "" . timestamp() . ": Making blastdb from $output_file.$i.1.fasta.\n";
+	system ("makeblastdb -in $output_file.$i.1.fasta -dbtype nucl -out $output_file.$i.db");
+# 	system ("rm $output_file.$i.1.fasta");
 }
 
 print "" . timestamp() . ": Finished\n";
