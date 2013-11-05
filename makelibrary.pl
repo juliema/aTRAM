@@ -3,7 +3,9 @@ use strict;
 use File::Basename;
 use Getopt::Long;
 use Pod::Usage;
-
+use FindBin;
+use lib "$FindBin::Bin/lib";
+require Subfunctions;
 
 if (@ARGV == 0) {
     pod2usage(-verbose => 1);
@@ -145,25 +147,7 @@ for (my $i=0; $i<$numlibraries; $i++) {
 
 print "" . timestamp() . ": Finished\n";
 
-sub exit_with_msg {
-	my $msg = shift;
-	print STDERR "$msg\n";
-	exit 1;
-}
 
-sub timestamp {
-    my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime(time);
-    $mon++;
-    $mon = sprintf("%02d", $mon);
-    $min = sprintf("%02d", $min);
-    $sec = sprintf("%02d", $sec);
-    $hour = sprintf("%02d", $hour);
-    $mday = sprintf("%02d", $mday);
-
-    $year -= 100;
-    my $time = "$hour:$min:$sec";
-    my $date = "$year$mon$mday";
-    return "$date $time";
 }
 
 sub hash_to_bucket {
