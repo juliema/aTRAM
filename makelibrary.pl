@@ -36,7 +36,7 @@ unless ($output_file) {
     $output_file = $short_read_archive;
 }
 
-my $tempdir = dirname ("$short_read_archive");
+my $tempdir = dirname ("$output_file");
 my @tempfiles = ();
 
 my @out1_fhs = ();
@@ -48,21 +48,21 @@ my @out2_sortedfiles = ();
 
 # setting up tempfiles for sorting:
 for (my $i=0; $i<$numlibraries; $i++) {
-	my ($fh, $filename) = tempfile("$output_file.bucket.$i.1.XXXX", DIR => $tempdir, UNLINK => 1);
+	my ($fh, $filename) = tempfile("$output_file.bucket.$i.1.XXXX", UNLINK => 1);
 	push @out1_bucketfiles, $filename;
 	push @out1_fhs, $fh;
 
-	($fh, $filename) = tempfile("$output_file.bucket.$i.2.XXXX", DIR => $tempdir, UNLINK => 1);
+	($fh, $filename) = tempfile("$output_file.bucket.$i.2.XXXX", UNLINK => 1);
 	push @out2_bucketfiles, $filename;
 	push @out2_fhs, $fh;
 
-	($fh, $filename) = tempfile("$output_file.sorted.$i.1.XXXX", DIR => $tempdir, UNLINK => 1);
+	($fh, $filename) = tempfile("$output_file.sorted.$i.1.XXXX", UNLINK => 1);
 	push @out1_sortedfiles, $filename;
 
 	if ($half) {
 		$filename = "$output_file.$i.2.sorted";
 	} else {
-		($fh, $filename) = tempfile("$output_file.sorted.$i.2.XXXX", DIR => $tempdir, UNLINK => 1);
+		($fh, $filename) = tempfile("$output_file.sorted.$i.2.XXXX", UNLINK => 1);
 	}
 	push @out2_sortedfiles, $filename;
 }
@@ -106,19 +106,18 @@ if ($name =~ /\/1/) {
 }
 close SEARCH_FH;
 my @pids = ();
+print "" . timestamp() . ": starting sort.\n";
 
 for (my $i=0; $i<$numlibraries; $i++) {
 	close $out1_fhs[$i];
 	close $out2_fhs[$i];
 	if ($half == 0) {
-		print "" . timestamp() . ": sorting @out1_bucketfiles[$i] into @out1_sortedfiles[$i].\n";
 		push @pids, fork_cmd("sort -t',' -k 1 -T $tempdir @out1_bucketfiles[$i] > @out1_sortedfiles[$i]");
 	}
 }
 wait_for_forks(\@pids);
 
 for (my $i=0; $i<$numlibraries; $i++) {
-	print "" . timestamp() . ": sorting @out2_bucketfiles[$i] into @out2_sortedfiles[$i].\n";
     push @pids, fork_cmd("sort -t',' -k 1 -T $tempdir @out2_bucketfiles[$i] > @out2_sortedfiles[$i]");
 }
 wait_for_forks(\@pids);
@@ -157,9 +156,9 @@ for (my $i=0; $i<$numlibraries; $i++) {
 	}
 }
 
+print "" . timestamp() . ": Making blastdbs.\n";
 for (my $i=0; $i<$numlibraries; $i++) {
 	# make the blast db from the first of the paired end files
-	print "" . timestamp() . ": Making blastdb from $output_file.$i.1.fasta.\n";
 	push @pids, fork_cmd("makeblastdb -in $output_file.$i.1.fasta -dbtype nucl -out $output_file.$i.db");
 }
 
