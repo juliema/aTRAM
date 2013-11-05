@@ -3,6 +3,9 @@ use strict;
 use File::Basename;
 use Getopt::Long;
 use Pod::Usage;
+use FindBin;
+use lib "$FindBin::Bin/lib";
+require Subfunctions;
 
 
 if (@ARGV == 0) {
@@ -126,12 +129,6 @@ if (((-s "$working_sra.1.fasta") + (-s "$working_sra.2.fasta")) == (-s "$working
 	system ("rm $working_sra.sorted.fasta; rm $working_sra;");
 } else {
 	exit_with_msg ("Something went wrong; leaving intermediate files alone.\n");
-}
-
-sub exit_with_msg {
-	my $msg = shift;
-	print STDERR "$msg\n";
-	exit 1;
 }
 
 __END__
