@@ -1,6 +1,7 @@
 #!/usr/bin/perl
 use strict;
 use File::Basename;
+use File::Temp qw(tempfile cleanup);
 use Getopt::Long;
 use Pod::Usage;
 use FindBin;
@@ -36,25 +37,43 @@ unless ($output_file) {
 }
 
 my $tempdir = dirname ("$short_read_archive");
-
-# sort fasta short-read file
-print "" . timestamp() . ": separating fasta/fastq file. ($half)\n";
-
-open SEARCH_FH, "<", $short_read_archive;
+my @tempfiles = ();
 
 my @out1_fhs = ();
 my @out2_fhs = ();
+my @out1_bucketfiles = ();
+my @out2_bucketfiles = ();
+my @out1_sortedfiles = ();
+my @out2_sortedfiles = ();
 
+# setting up tempfiles for sorting:
 for (my $i=0; $i<$numlibraries; $i++) {
-	open my $out1_fh, ">", "$output_file.partial.$i.1" or exit_with_msg ("couldn't create $output_file.partial.$i.1");
-	open my $out2_fh, ">", "$output_file.partial.$i.2" or exit_with_msg ("couldn't create $output_file.partial.$i.2");
-	push @out1_fhs, $out1_fh;
-	push @out2_fhs, $out2_fh;
+	my ($fh, $filename) = tempfile("$output_file.bucket.$i.1.XXXX", DIR => $tempdir, UNLINK => 1);
+	push @out1_bucketfiles, $filename;
+	push @out1_fhs, $fh;
+
+	($fh, $filename) = tempfile("$output_file.bucket.$i.2.XXXX", DIR => $tempdir, UNLINK => 1);
+	push @out2_bucketfiles, $filename;
+	push @out2_fhs, $fh;
+
+	($fh, $filename) = tempfile("$output_file.sorted.$i.1.XXXX", DIR => $tempdir, UNLINK => 1);
+	push @out1_sortedfiles, $filename;
+
+	if ($half) {
+		$filename = "$output_file.$i.2.sorted";
+	} else {
+		($fh, $filename) = tempfile("$output_file.sorted.$i.2.XXXX", DIR => $tempdir, UNLINK => 1);
+	}
+	push @out2_sortedfiles, $filename;
 }
 
+# Divide fasta/fastq short reads into buckets for sorting.
+print "" . timestamp() . ": Dividing fasta/fastq file into buckets for sorting.\n";
 my $name = "";
 my $seq = "";
 my $seqlen = 0;
+
+open SEARCH_FH, "<", $short_read_archive;
 while (my $line = readline SEARCH_FH) {
 	chomp $line;
 	if ($line =~ /^[@>](.*?)([\s\/])([12])/) {
@@ -86,33 +105,33 @@ if ($name =~ /\/1/) {
 	print {$out2_fhs[(hash_to_bucket($name))]} ">$name,$seq\n";
 }
 close SEARCH_FH;
+my @pids = ();
 
 for (my $i=0; $i<$numlibraries; $i++) {
 	close $out1_fhs[$i];
 	close $out2_fhs[$i];
+	if ($half == 0) {
+		print "" . timestamp() . ": sorting @out1_bucketfiles[$i] into @out1_sortedfiles[$i].\n";
+		push @pids, fork_cmd("sort -t',' -k 1 -T $tempdir @out1_bucketfiles[$i] > @out1_sortedfiles[$i]");
+	}
 }
+wait_for_forks(\@pids);
 
 for (my $i=0; $i<$numlibraries; $i++) {
-	if ($half == 0) {
-		print "" . timestamp() . ": sorting $output_file.partial.$i.1 into $output_file.sorted.$i.1.\n";
-		system ("sort -t',' -k 1 -T $tempdir $output_file.partial.$i.1 > $output_file.sorted.$i.1");
-		system ("rm $output_file.partial.$i.1");
-	}
-	print "" . timestamp() . ": sorting $output_file.partial.$i.2 into $output_file.sorted.$i.2.\n";
-	system ("sort -t',' -k 1 -T $tempdir $output_file.partial.$i.2 > $output_file.sorted.$i.2");
-	print "" . timestamp() . ": sorted.\n";
-	if (-z "$output_file.sorted.$i.2") {
-		exit_with_msg ("Sort failed. Are you sure $short_read_archive exists?");
-	}
+	print "" . timestamp() . ": sorting @out2_bucketfiles[$i] into @out2_sortedfiles[$i].\n";
+    push @pids, fork_cmd("sort -t',' -k 1 -T $tempdir @out2_bucketfiles[$i] > @out2_sortedfiles[$i]");
 }
+wait_for_forks(\@pids);
+print "" . timestamp() . ": sorted.\n";
 
 for (my $i=0; $i<$numlibraries; $i++) {
 	print "" . timestamp() . ": Making $output_file.$i.1.fasta.\n";
 	my $infile;
 	if ($half == 0) {
-		$infile = "$output_file.sorted.$i.1";
+		$infile = "@out1_sortedfiles[$i]";
 	} else {
-		$infile = "$output_file.partial.$i.1";
+		$infile = "@out1_bucketfiles[$i]";
+		push @tempfiles, "$output_file.$i.1.fasta";
 	}
 	open my $in_fh, "<", $infile or exit_with_msg ("couldn't read $infile");
 	open my $out_fh, ">", "$output_file.$i.1.fasta" or exit_with_msg ("couldn't create $output_file.$i.1.fasta");
@@ -123,11 +142,10 @@ for (my $i=0; $i<$numlibraries; $i++) {
 	}
 	close $in_fh;
 	close $out_fh;
-	system ("rm $infile");
 
 	if ($half == 0) {
 		print "" . timestamp() . ": Making $output_file.$i.2.fasta.\n";
-		open my $in_fh, "<", "$output_file.sorted.$i.2" or exit_with_msg ("couldn't read $output_file.sorted.$i.2");
+		open my $in_fh, "<", "@out2_sortedfiles[$i]" or exit_with_msg ("couldn't read @out2_sortedfiles[$i]");
 		open my $out_fh, ">", "$output_file.$i.2.fasta" or exit_with_msg ("couldn't create $output_file.$i.2.fasta");
 		while (my $line = readline $in_fh) {
 			chomp $line;
@@ -136,19 +154,23 @@ for (my $i=0; $i<$numlibraries; $i++) {
 		}
 		close $in_fh;
 		close $out_fh;
-		system ("rm $output_file.sorted.$i.2");
 	}
+}
 
+for (my $i=0; $i<$numlibraries; $i++) {
 	# make the blast db from the first of the paired end files
 	print "" . timestamp() . ": Making blastdb from $output_file.$i.1.fasta.\n";
-	system ("makeblastdb -in $output_file.$i.1.fasta -dbtype nucl -out $output_file.$i.db");
-# 	system ("rm $output_file.$i.1.fasta");
+	push @pids, fork_cmd("makeblastdb -in $output_file.$i.1.fasta -dbtype nucl -out $output_file.$i.db");
 }
 
+wait_for_forks(\@pids);
+
+cleanup();
+foreach my $tempfile (@tempfiles) {
+	print "" . timestamp() . ": removing $tempfile\n";
+	system ("rm $tempfile");
+}
 print "" . timestamp() . ": Finished\n";
-
-
-}
 
 sub hash_to_bucket {
 	my $key = shift;
