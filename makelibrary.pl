@@ -16,11 +16,9 @@ my $short_read_archive = "";
 my $output_file = "";
 my $numlibraries = 16;
 my $help = 0;
-my $half = 0;
 
 GetOptions ('input=s' => \$short_read_archive,
             'output=s' => \$output_file,
-            'half' => \$half,
             'help|?' => \$help) or pod2usage(-msg => "GetOptions failed.", -exitval => 2);
 
 if ($help) {
@@ -58,11 +56,7 @@ for (my $i=0; $i<$numlibraries; $i++) {
 	($fh, $filename) = tempfile("$output_file.sorted.$i.1.XXXX", UNLINK => 1);
 	push @out1_sortedfiles, $filename;
 
-	if ($half) {
-		$filename = "$output_file.$i.2.sorted";
-	} else {
-		($fh, $filename) = tempfile("$output_file.sorted.$i.2.XXXX", UNLINK => 1);
-	}
+	($fh, $filename) = tempfile("$output_file.sorted.$i.2.XXXX", UNLINK => 1);
 	push @out2_sortedfiles, $filename;
 }
 
@@ -110,9 +104,7 @@ print "" . timestamp() . ": starting sort.\n";
 for (my $i=0; $i<$numlibraries; $i++) {
 	close $out1_fhs[$i];
 	close $out2_fhs[$i];
-	if ($half == 0) {
-		push @pids, fork_cmd("sort -t',' -k 1 -T $tempdir @out1_bucketfiles[$i] > @out1_sortedfiles[$i]");
-	}
+	push @pids, fork_cmd("sort -t',' -k 1 -T $tempdir @out1_bucketfiles[$i] > @out1_sortedfiles[$i]");
 	if (@pids > 3) {
 		# don't spawn off too many threads at once.
 		wait_for_forks(\@pids);
@@ -132,14 +124,7 @@ print "" . timestamp() . ": sorted.\n";
 
 for (my $i=0; $i<$numlibraries; $i++) {
 	print "" . timestamp() . ": Making $output_file.$i.1.fasta.\n";
-	my $infile;
-	if ($half == 0) {
-		$infile = "@out1_sortedfiles[$i]";
-	} else {
-		$infile = "@out1_bucketfiles[$i]";
-		push @tempfiles, "$output_file.$i.1.fasta";
-	}
-	open my $in_fh, "<", $infile or exit_with_msg ("couldn't read $infile");
+	open my $in_fh, "<", "@out1_sortedfiles[$i]" or exit_with_msg ("couldn't read @out1_sortedfiles[$i]");
 	open my $out_fh, ">", "$output_file.$i.1.fasta" or exit_with_msg ("couldn't create $output_file.$i.1.fasta");
 	while (my $line = readline $in_fh) {
 		chomp $line;
@@ -149,18 +134,16 @@ for (my $i=0; $i<$numlibraries; $i++) {
 	close $in_fh;
 	close $out_fh;
 
-	if ($half == 0) {
-		print "" . timestamp() . ": Making $output_file.$i.2.fasta.\n";
-		open my $in_fh, "<", "@out2_sortedfiles[$i]" or exit_with_msg ("couldn't read @out2_sortedfiles[$i]");
-		open my $out_fh, ">", "$output_file.$i.2.fasta" or exit_with_msg ("couldn't create $output_file.$i.2.fasta");
-		while (my $line = readline $in_fh) {
-			chomp $line;
-			my ($name, $seq) = split(/,/,$line);
-			print $out_fh "$name\n$seq\n";
-		}
-		close $in_fh;
-		close $out_fh;
+	print "" . timestamp() . ": Making $output_file.$i.2.fasta.\n";
+	open my $in_fh, "<", "@out2_sortedfiles[$i]" or exit_with_msg ("couldn't read @out2_sortedfiles[$i]");
+	open my $out_fh, ">", "$output_file.$i.2.fasta" or exit_with_msg ("couldn't create $output_file.$i.2.fasta");
+	while (my $line = readline $in_fh) {
+		chomp $line;
+		my ($name, $seq) = split(/,/,$line);
+		print $out_fh "$name\n$seq\n";
 	}
+	close $in_fh;
+	close $out_fh;
 }
 
 print "" . timestamp() . ": Making blastdbs.\n";
