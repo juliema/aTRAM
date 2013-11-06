@@ -21,6 +21,9 @@ sub exit_with_msg {
 
 sub fork_cmd {
 	my $cmd = shift;
+	my $log_fh = shift;
+
+	print $log_fh ("\t$cmd\n");
     my $child_pid = fork();
     unless ($child_pid) { #child process
 		exec ($cmd);
@@ -39,6 +42,8 @@ sub wait_for_forks {
 
 sub system_call {
 	my $cmd = shift;
+	my $log_fh = shift;
+
 	print $log_fh ("\t$cmd\n");
 	my ($saveout, $saveerr);
 	if ($debug == 0) {

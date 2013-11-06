@@ -195,9 +195,9 @@ foreach my $line (@target_seqs) {
 # make a database from the target so that we can compare contigs to the target.
 my (undef, $targetdb) = tempfile(UNLINK => 1);
 if ($protein == 1) {
-	system_call ("makeblastdb -in $target_fasta -dbtype prot -out $targetdb.db -input_type fasta");
+	system_call ("makeblastdb -in $target_fasta -dbtype prot -out $targetdb.db -input_type fasta", $log_fh);
 } else {
-	system_call ("makeblastdb -in $target_fasta -dbtype nucl -out $targetdb.db -input_type fasta");
+	system_call ("makeblastdb -in $target_fasta -dbtype nucl -out $targetdb.db -input_type fasta", $log_fh);
 }
 
 if ($start_iter > 1) {
@@ -232,9 +232,9 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 			# 1. blast to find any short reads that match the target.
 			print "\tblasting short reads...\n";
 			if (($protein == 1) && ($i == 1)) {
-				push @pids, fork_cmd ("tblastn -max_target_seqs $max_target_seqs -db $sra.db -query $search_fasta -outfmt '6 sseqid' -num_threads 8 -out $current_partial_file");
+				push @pids, fork_cmd ("tblastn -max_target_seqs $max_target_seqs -db $sra.db -query $search_fasta -outfmt '6 sseqid' -num_threads 8 -out $current_partial_file", $log_fh);
 			} else {
-				push @pids, fork_cmd ("blastn -task blastn -evalue $evalue -max_target_seqs $max_target_seqs -db $sra.db -query $search_fasta -outfmt '6 sseqid' -num_threads 8 -out $current_partial_file");
+				push @pids, fork_cmd ("blastn -task blastn -evalue $evalue -max_target_seqs $max_target_seqs -db $sra.db -query $search_fasta -outfmt '6 sseqid' -num_threads 8 -out $current_partial_file", $log_fh);
 			}
 		}
 		wait_for_forks(\@pids);
@@ -244,19 +244,18 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 			$current_partial_file = "$output_file.blast.$i.$p";
 			# 2 and 3. find the paired end of all of the blast hits.
 			print "\tgetting paired ends...\n";
-# 			push @pids, fork_cmd ("perl $executing_path/lib/pairedsequenceretrieval.pl $sra.#.fasta $current_partial_file $current_partial_file.fasta");
 			push @pids, fork_pair_retrieval("$sra.#.fasta", "$current_partial_file", "$current_partial_file.fasta");
 		}
 		wait_for_forks(\@pids);
 
 		# now we need to piece all of the partial files back together.
 		my $fastafiles = join (" ", map {$_ . ".fasta"} @partialfiles);
-		system_call("cat $fastafiles > $output_file.blast.$i.fasta");
-		system_call("rm $fastafiles");
+		system_call ("cat $fastafiles > $output_file.blast.$i.fasta", $log_fh);
+		system_call ("rm $fastafiles", $log_fh);
 
 		# remove intermediate blast results
 		my $readfiles = join (" ", @partialfiles);
-		system_call("rm $readfiles");
+		system_call ("rm $readfiles", $log_fh);
 
 		# did we not find any reads? Go ahead and quit.
 		if ((-s "$output_file.blast.$i.fasta") == 0) {
@@ -267,8 +266,8 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 
 	# 4. assemble the reads using velvet
 	print "\tassembling with Velvet...\n";
-	system_call("velveth $output_file.velvet 31 -fasta -shortPaired $output_file.blast.$i.fasta");
-	system_call("velvetg $output_file.velvet -ins_length $ins_length -exp_cov $exp_cov -min_contig_lgth 200");
+	system_call ("velveth $output_file.velvet 31 -fasta -shortPaired $output_file.blast.$i.fasta", $log_fh);
+	system_call ("velvetg $output_file.velvet -ins_length $ins_length -exp_cov $exp_cov -min_contig_lgth 200", $log_fh);
 
 	# 5. now we filter out the contigs to look for just the best ones.
 	print "\tfiltering contigs...\n";
@@ -281,9 +280,9 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 	}
 
 	if ($protein == 1) {
-		system_call ("blastx -db $targetdb.db -query $output_file.velvet/contigs.fa -out $blast_file -outfmt '6 qseqid sseqid bitscore qstart qend sstart send qlen'");
+		system_call ("blastx -db $targetdb.db -query $output_file.velvet/contigs.fa -out $blast_file -outfmt '6 qseqid sseqid bitscore qstart qend sstart send qlen'", $log_fh);
 	} else {
-		system_call ("tblastx -db $targetdb.db -query $output_file.velvet/contigs.fa -out $blast_file -outfmt '6 qseqid sseqid bitscore qstart qend sstart send qlen'");
+		system_call ("tblastx -db $targetdb.db -query $output_file.velvet/contigs.fa -out $blast_file -outfmt '6 qseqid sseqid bitscore qstart qend sstart send qlen'", $log_fh);
 	}
 	# 6. we want to keep the contigs that have a bitscore higher than $bitscore.
 	open BLAST_FH, "<", $blast_file;
@@ -349,7 +348,7 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 	# we'll use the resulting contigs as the query for the next iteration.
 	$search_fasta = "$output_file.$i.contigs.fa";
 
-	system_call("perl $executing_path/lib/findsequences.pl $output_file.velvet/contigs.fa $sort_results $search_fasta");
+	system_call ("perl $executing_path/lib/findsequences.pl $output_file.velvet/contigs.fa $sort_results $search_fasta", $log_fh);
 
 	# revcomping contigs with negative strand directions:
 	my @contigs = ();
@@ -414,7 +413,7 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 
 	# if we flagged to use just the ends of the contigs, clean that up.
 	if ($use_ends != 0) {
-		system_call("bash $executing_path/lib/sort_contigs.sh $search_fasta");
+		system_call ("bash $executing_path/lib/sort_contigs.sh $search_fasta", $log_fh);
 
 		open FH, "<", "$search_fasta.sorted.tab";
 		my @contigs = <FH>;
