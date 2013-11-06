@@ -37,6 +37,32 @@ sub wait_for_forks {
     return;
 }
 
+sub system_call {
+	my $cmd = shift;
+	print $log_fh ("\t$cmd\n");
+	my ($saveout, $saveerr);
+	if ($debug == 0) {
+		open $saveout, ">&STDOUT";
+		open $saveerr, ">&STDERR";
+		open STDOUT, '>', File::Spec->devnull();
+		open STDERR, '>', File::Spec->devnull();
+	}
+	my $exit_val = eval {
+		system ($cmd);
+	};
+
+	if ($debug == 0) {
+		open STDOUT, ">&", $saveout;
+		open STDERR, ">&", $saveerr;
+	}
+
+	if ($exit_val != 0) {
+		print "System call \"$cmd\" exited with $exit_val\n";
+		exit;
+	}
+	return $exit_val;
+}
+
 sub debug {
 	my $debug = shift;
 	my $msg = shift;
