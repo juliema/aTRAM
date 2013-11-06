@@ -7,7 +7,7 @@ use File::Temp qw/ tempfile tempdir /;
 use FindBin;
 use lib "$FindBin::Bin/lib";
 require Subfunctions;
-require pairedsequenceretrival;
+require pairedsequenceretrieval;
 
 my $debug = 0;
 if (@ARGV == 0) {
