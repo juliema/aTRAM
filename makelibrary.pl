@@ -16,9 +16,11 @@ my $short_read_archive = "";
 my $output_file = "";
 my $numlibraries = 16;
 my $help = 0;
+my $debug = 0;
 
 GetOptions ('input=s' => \$short_read_archive,
             'output=s' => \$output_file,
+            'debug' => \$debug,
             'help|?' => \$help) or pod2usage(-msg => "GetOptions failed.", -exitval => 2);
 
 if ($help) {

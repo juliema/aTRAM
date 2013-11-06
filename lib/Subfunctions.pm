@@ -37,6 +37,13 @@ sub wait_for_forks {
     return;
 }
 
+sub debug {
+	my $debug = shift;
+	my $msg = shift;
+	if ($debug) {
+		print STDOUT "$msg";
+	}
+}
 
 
 return 1;
