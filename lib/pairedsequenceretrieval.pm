@@ -3,17 +3,32 @@
 use strict;
 use File::Temp qw/ tempfile /;
 
+sub fork_pair_retrieval {
+	my $fastafile = shift;
+	my $sequencelist = shift;
+	my $outfile = shift;
+
+    my $child_pid = fork();
+    unless ($child_pid) { #child process
+		return pairedsequenceretrieval ($fastafile, $sequencelist, $outfile);
+    } else { #parent process
+        return $child_pid;
+    }
+}
+
 sub pairedsequenceretrieval {
 	my $fastafile = shift;
 	my $sequencelist = shift;
 	my $outfile = shift;
 
 	if ($fastafile !~ /#/) {
-		die "fasta file must have '#' in name, to be replaced by 1 or 2 for the paired end files.\n";
+		print "fasta file must have '#' in name, to be replaced by 1 or 2 for the paired end files.\n";
+		return 0;
 	}
 
 	unless (-e $sequencelist) {
-		die "File $sequencelist does not exist.\n";
+		print "File $sequencelist does not exist.\n";
+		return 0;
 	}
 
 	my $fastafile_1 = "$fastafile";
@@ -22,7 +37,8 @@ sub pairedsequenceretrieval {
 	$fastafile_2 =~ s/#/2/;
 
 	unless (-e $fastafile_2) {
-		die "Files $fastafile_1 and $fastafile_2 do not exist.\n";
+		print "Files $fastafile_1 and $fastafile_2 do not exist.\n";
+		return 0;
 	}
 
 
@@ -55,5 +71,7 @@ sub pairedsequenceretrieval {
 	close FA1_FH;
 	close FA2_FH;
 	close OUT_FH;
+	return 1;
 }
+
 return 1;

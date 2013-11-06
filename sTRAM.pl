@@ -7,6 +7,7 @@ use File::Temp qw/ tempfile tempdir /;
 use FindBin;
 use lib "$FindBin::Bin/lib";
 require Subfunctions;
+require pairedsequenceretrival;
 
 my $debug = 0;
 if (@ARGV == 0) {
@@ -231,9 +232,9 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 			# 1. blast to find any short reads that match the target.
 			print "\tblasting short reads...\n";
 			if (($protein == 1) && ($i == 1)) {
-				push @pids, fork_cmd ("tblastn -max_target_seqs $max_target_seqs -db $sra.db -query $search_fasta -outfmt '6 qseqid sseqid sseq evalue bitscore' -num_threads 8 -out $current_partial_file");
+				push @pids, fork_cmd ("tblastn -max_target_seqs $max_target_seqs -db $sra.db -query $search_fasta -outfmt '6 sseqid' -num_threads 8 -out $current_partial_file");
 			} else {
-				push @pids, fork_cmd ("blastn -task blastn -evalue $evalue -max_target_seqs $max_target_seqs -db $sra.db -query $search_fasta -outfmt '6 qseqid sseqid sseq evalue bitscore' -num_threads 8 -out $current_partial_file");
+				push @pids, fork_cmd ("blastn -task blastn -evalue $evalue -max_target_seqs $max_target_seqs -db $sra.db -query $search_fasta -outfmt '6 sseqid' -num_threads 8 -out $current_partial_file");
 			}
 		}
 		wait_for_forks(\@pids);
@@ -243,7 +244,8 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 			$current_partial_file = "$output_file.blast.$i.$p";
 			# 2 and 3. find the paired end of all of the blast hits.
 			print "\tgetting paired ends...\n";
-			push @pids, fork_cmd ("perl $executing_path/lib/pairedsequenceretrieval.pl $sra.#.fasta $current_partial_file $current_partial_file.fasta");
+# 			push @pids, fork_cmd ("perl $executing_path/lib/pairedsequenceretrieval.pl $sra.#.fasta $current_partial_file $current_partial_file.fasta");
+			push @pids, fork_pair_retrieval("$sra.#.fasta", "$current_partial_file", "$current_partial_file.fasta");
 		}
 		wait_for_forks(\@pids);
 
