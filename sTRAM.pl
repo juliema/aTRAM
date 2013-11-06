@@ -4,6 +4,9 @@ use Getopt::Long;
 use Pod::Usage;
 use File::Basename;
 use File::Temp qw/ tempfile tempdir /;
+use FindBin;
+use lib "$FindBin::Bin/lib";
+require Subfunctions;
 
 my $debug = 0;
 if (@ARGV == 0) {
@@ -449,38 +452,6 @@ print $log_fh "Contig coverage in $output_file.results.txt\n";
 print $log_fh "\nContigs containing the entire target sequence:\n\t" . join("\n\t", @complete_contigs) . "\n";
 
 close $log_fh;
-
-sub exit_with_msg {
-	my $msg = shift;
-	print STDERR "$msg\n";
-	exit 1;
-}
-
-sub system_call {
-	my $cmd = shift;
-	print $log_fh ("\t$cmd\n");
-	my ($saveout, $saveerr);
-	if ($debug == 0) {
-		open $saveout, ">&STDOUT";
-		open $saveerr, ">&STDERR";
-		open STDOUT, '>', File::Spec->devnull();
-		open STDERR, '>', File::Spec->devnull();
-	}
-	my $exit_val = eval {
-		system ($cmd);
-	};
-
-	if ($debug == 0) {
-		open STDOUT, ">&", $saveout;
-		open STDERR, ">&", $saveerr;
-	}
-
-	if ($exit_val != 0) {
-		print "System call \"$cmd\" exited with $exit_val\n";
-		exit;
-	}
-	return $exit_val;
-}
 
 sub reverse_complement {
 	my $charstr = shift;
