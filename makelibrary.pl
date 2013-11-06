@@ -14,13 +14,12 @@ if (@ARGV == 0) {
 
 my $short_read_archive = "";
 my $output_file = "";
-my $numlibraries = 8;
+my $numlibraries = 16;
 my $help = 0;
 my $half = 0;
 
 GetOptions ('input=s' => \$short_read_archive,
             'output=s' => \$output_file,
-            'number=i' => \$numlibraries,
             'half' => \$half,
             'help|?' => \$help) or pod2usage(-msg => "GetOptions failed.", -exitval => 2);
 
@@ -209,7 +208,6 @@ Takes a fasta or fastq file of paired-end short reads and prepares it for sTRAM.
 
  -input:   short read archive.
  -output:  optional: prefix of output library (default is the same as -input).
- -number:  optional: the number of partitioned libraries to make.
 
 =cut
 
