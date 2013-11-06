@@ -114,11 +114,19 @@ for (my $i=0; $i<$numlibraries; $i++) {
 	if ($half == 0) {
 		push @pids, fork_cmd("sort -t',' -k 1 -T $tempdir @out1_bucketfiles[$i] > @out1_sortedfiles[$i]");
 	}
+	if (@pids > 3) {
+		# don't spawn off too many threads at once.
+		wait_for_forks(\@pids);
+	}
 }
 wait_for_forks(\@pids);
 
 for (my $i=0; $i<$numlibraries; $i++) {
     push @pids, fork_cmd("sort -t',' -k 1 -T $tempdir @out2_bucketfiles[$i] > @out2_sortedfiles[$i]");
+	if (@pids > 3) {
+		# don't spawn off too many threads at once.
+		wait_for_forks(\@pids);
+	}
 }
 wait_for_forks(\@pids);
 print "" . timestamp() . ": sorted.\n";
