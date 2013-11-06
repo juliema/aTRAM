@@ -221,45 +221,32 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 		my $sra = "$short_read_archive";
 		my $current_partial_file = "$output_file.blast.$i";
 		my @partialfiles = ();
-		if ($processes == 0) {
-			# we're not multithreading:
+		my @pids = ();
+
+		# we are multithreading:
+		for (my $p=0; $p<$processes; $p++) {
+			$sra = "$short_read_archive.$p";
+			$current_partial_file = "$output_file.blast.$i.$p";
 			push @partialfiles, $current_partial_file;
 			# 1. blast to find any short reads that match the target.
 			print "\tblasting short reads...\n";
 			if (($protein == 1) && ($i == 1)) {
-				system_call ("tblastn -max_target_seqs $max_target_seqs -db $sra.db -query $search_fasta -outfmt '6 qseqid sseqid evalue bitscore' -num_threads 8 -out $current_partial_file");
+				push @pids, fork_cmd ("tblastn -max_target_seqs $max_target_seqs -db $sra.db -query $search_fasta -outfmt '6 qseqid sseqid sseq evalue bitscore' -num_threads 8 -out $current_partial_file");
 			} else {
-				system_call ("blastn -task blastn -evalue $evalue -max_target_seqs $max_target_seqs -db $sra.db -query $search_fasta -outfmt '6 qseqid sseqid evalue bitscore' -num_threads 8 -out $current_partial_file");
+				push @pids, fork_cmd ("blastn -task blastn -evalue $evalue -max_target_seqs $max_target_seqs -db $sra.db -query $search_fasta -outfmt '6 qseqid sseqid sseq evalue bitscore' -num_threads 8 -out $current_partial_file");
 			}
+		}
+		wait_for_forks(\@pids);
 
+		for (my $p=0; $p<$processes; $p++) {
+			$sra = "$short_read_archive.$p";
+			$current_partial_file = "$output_file.blast.$i.$p";
 			# 2 and 3. find the paired end of all of the blast hits.
 			print "\tgetting paired ends...\n";
-			system_call("perl $executing_path/lib/pairedsequenceretrieval.pl $sra.#.fasta $current_partial_file $current_partial_file.fasta");
-		} else {
-			# we are multithreading:
-			my @pids = ();
-			for (my $p=1; $p<=$processes; $p++) {
-				$sra = "$short_read_archive.$p";
-				$current_partial_file = "$output_file.blast.$i.$p";
-				push @partialfiles, $current_partial_file;
-				# 1. blast to find any short reads that match the target.
-				print "\tblasting short reads...\n";
-				if (($protein == 1) && ($i == 1)) {
-					push @pids, fork_cmd ("tblastn -max_target_seqs $max_target_seqs -db $sra.db -query $search_fasta -outfmt '6 qseqid sseqid sseq evalue bitscore' -num_threads 8 -out $current_partial_file");
-				} else {
-					push @pids, fork_cmd ("blastn -task blastn -evalue $evalue -max_target_seqs $max_target_seqs -db $sra.db -query $search_fasta -outfmt '6 qseqid sseqid sseq evalue bitscore' -num_threads 8 -out $current_partial_file");
-				}
-			}
-			wait_for_forks(\@pids);
-			for (my $p=1; $p<=$processes; $p++) {
-				$sra = "$short_read_archive.$p";
-				$current_partial_file = "$output_file.blast.$i.$p";
-				# 2 and 3. find the paired end of all of the blast hits.
-				print "\tgetting paired ends...\n";
-				push @pids, fork_cmd ("perl $executing_path/lib/pairedsequenceretrieval.pl $sra.#.fasta $current_partial_file $current_partial_file.fasta");
-			}
-			wait_for_forks(\@pids);
+			push @pids, fork_cmd ("perl $executing_path/lib/pairedsequenceretrieval.pl $sra.#.fasta $current_partial_file $current_partial_file.fasta");
 		}
+		wait_for_forks(\@pids);
+
 		# now we need to piece all of the partial files back together.
 		my $fastafiles = join (" ", map {$_ . ".fasta"} @partialfiles);
 		system_call("cat $fastafiles > $output_file.blast.$i.fasta");
