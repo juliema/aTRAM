@@ -36,8 +36,8 @@ unless ($output_file) {
 }
 
 my $tempdir = dirname ("$output_file");
-my $log_fh;
-open $log_fh, ">", "$output_file.log" or die "couldn't open $log_file\n";
+my $log_file = "$output_file.log";
+open my $log_fh, ">", $log_file or die "couldn't open $log_file\n";
 
 my @tempfiles = ();
 
