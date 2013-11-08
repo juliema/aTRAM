@@ -80,5 +80,32 @@ sub debug {
 	}
 }
 
+sub make_hit_matrix {
+	my $blast_file = shift;
+	my $hit_matrix = shift;
+
+	open BLAST_FH, "<", $blast_file;
+	while (my $line = readline BLAST_FH) {
+		my ($contig, $baitseq, $score, $qstart, $qend, $sstart, $send, $qlen, undef) = split(/\s+/,$line);
+		my $strand = 1;
+		if ($qend > $qstart) {
+			$strand = -1;
+		}
+		my $currscore = $hit_matrix->{$contig}->{$baitseq};
+		if ($score =~ /(\d+\.\d\d)/) {
+			$score = $1;
+		}
+		$hit_matrix->{$contig}->{"length"} = $qlen;
+		if ($currscore == undef) {
+			$hit_matrix->{$contig}->{$baitseq} = $strand * $score;
+		} else {
+			if ($currscore < $score) {
+			$hit_matrix->{$contig}->{$baitseq} = $strand * $score;
+			}
+		}
+	}
+	close BLAST_FH;
+
+}
 
 return 1;

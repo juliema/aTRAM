@@ -291,27 +291,8 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 		system_call ("tblastx -db $targetdb.db -query $output_file.velvet/contigs.fa -out $blast_file -outfmt '6 qseqid sseqid bitscore qstart qend sstart send qlen'", $log_fh);
 	}
 	# 6. we want to keep the contigs that have a bitscore higher than $bitscore.
-	open BLAST_FH, "<", $blast_file;
-	while (my $line = readline BLAST_FH) {
-		my ($contig, $baitseq, $score, $qstart, $qend, $sstart, $send, $qlen, undef) = split(/\s+/,$line);
-		my $strand = 1;
-		if ($qend > $qstart) {
-			$strand = -1;
-		}
-		my $currscore = $hit_matrix->{$contig}->{$baitseq};
-		if ($score =~ /(\d+\.\d\d)/) {
-			$score = $1;
-		}
-		$hit_matrix->{$contig}->{"length"} = $qlen;
-		if ($currscore == undef) {
-			$hit_matrix->{$contig}->{$baitseq} = $strand * $score;
-		} else {
-			if ($currscore < $score) {
-			$hit_matrix->{$contig}->{$baitseq} = $strand * $score;
-			}
-		}
-	}
-	close BLAST_FH;
+	make_hit_matrix ($blast_file, $hit_matrix);
+
 	my $high_score = 0;
 
 	my $new_matrix = {};
