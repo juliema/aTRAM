@@ -212,8 +212,8 @@ close RESULTS_FH;
 
 # STARTING ITERATIONS:
 for (my $i=$start_iter; $i<=$iterations; $i++) {
-	print ("interation $i starting...\n");
-	print $log_fh ("interation $i starting...\n");
+	print ("iteration $i starting...\n");
+	print $log_fh ("iteration $i starting...\n");
 
 	my $hit_matrix = {};
 	push @hit_matrices, \$hit_matrix;
@@ -225,12 +225,12 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 		my @pids = ();
 
 		# we are multithreading:
+		print "\tblasting short reads...\n";
 		for (my $p=0; $p<$processes; $p++) {
 			$sra = "$short_read_archive.$p";
 			$current_partial_file = "$output_file.blast.$i.$p";
 			push @partialfiles, $current_partial_file;
 			# 1. blast to find any short reads that match the target.
-			print "\tblasting short reads...\n";
 			if (($protein == 1) && ($i == 1)) {
 				push @pids, fork_cmd ("tblastn -max_target_seqs $max_target_seqs -db $sra.db -query $search_fasta -outfmt '6 sseqid' -num_threads 8 -out $current_partial_file", $log_fh);
 			} else {
@@ -239,11 +239,11 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 		}
 		wait_for_forks(\@pids);
 
+		print "\tgetting paired ends...\n";
 		for (my $p=0; $p<$processes; $p++) {
 			$sra = "$short_read_archive.$p";
 			$current_partial_file = "$output_file.blast.$i.$p";
 			# 2 and 3. find the paired end of all of the blast hits.
-			print "\tgetting paired ends...\n";
 			push @pids, fork_pair_retrieval("$sra.#.fasta", "$current_partial_file", "$current_partial_file.fasta");
 		}
 		wait_for_forks(\@pids);
