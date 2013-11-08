@@ -7,7 +7,7 @@ use File::Temp qw/ tempfile tempdir /;
 use FindBin;
 use lib "$FindBin::Bin/lib";
 require Subfunctions;
-require pairedsequenceretrieval;
+require Sequenceretrieval;
 
 my $debug = 0;
 if (@ARGV == 0) {
@@ -354,7 +354,7 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 	# we'll use the resulting contigs as the query for the next iteration.
 	$search_fasta = "$output_file.$i.contigs.fa";
 
-	system_call ("perl $executing_path/lib/findsequences.pl $output_file.velvet/contigs.fa $sort_results $search_fasta", $log_fh);
+	findsequences ("$output_file.velvet/contigs.fa", $sort_results, $search_fasta);
 
 	# revcomping contigs with negative strand directions:
 	my @contigs = ();

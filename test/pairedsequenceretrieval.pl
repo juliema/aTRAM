@@ -5,7 +5,7 @@
 use strict;
 use FindBin;
 use lib "$FindBin::Bin/../lib";
-require pairedsequenceretrieval;
+require Sequenceretrieval;
 
 if (@ARGV < 3) {
 	die "Usage: 2.5-pairedsequenceretrieval.pl shortreads.#.fasta sequencelist outfile\n";
