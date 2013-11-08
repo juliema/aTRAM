@@ -73,11 +73,12 @@ unless($short_read_archive and $search_fasta) {
 }
 
 # check to make sure that the specified short read archive exists:
+my $max_partial = $processes - 1;
 if ($processes > 0) {
 	unless ((-e "$short_read_archive.1.1.fasta") && (-e "$short_read_archive.1.2.fasta")) {
 		pod2usage(-msg => "Short read archive does not seem to be in the format made by makelibrary.pl. Did you specify the name correctly?");
 	}
-	unless ((-e "$short_read_archive.$processes.1.fasta") && (-e "$short_read_archive.$processes.2.fasta")) {
+	unless ((-e "$short_read_archive.$max_partial.1.fasta") && (-e "$short_read_archive.$max_partial.2.fasta")) {
 		pod2usage(-msg => "Short read archives were not prepared to handle $processes processes. Try a smaller value for -processes.");
 	}
 } else {
