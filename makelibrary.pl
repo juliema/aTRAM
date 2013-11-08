@@ -1,12 +1,12 @@
 #!/usr/bin/perl
 use strict;
 use File::Basename;
+use File::Temp qw(tempfile cleanup);
 use Getopt::Long;
 use Pod::Usage;
 use FindBin;
 use lib "$FindBin::Bin/lib";
 require Subfunctions;
-
 
 if (@ARGV == 0) {
     pod2usage(-verbose => 1);
@@ -14,12 +14,13 @@ if (@ARGV == 0) {
 
 my $short_read_archive = "";
 my $output_file = "";
-my $numlibraries = 1;
+my $numlibraries = 16;
 my $help = 0;
+my $debug = 0;
 
 GetOptions ('input=s' => \$short_read_archive,
             'output=s' => \$output_file,
-            'number=i' => \$numlibraries,
+            'debug' => \$debug,
             'help|?' => \$help) or pod2usage(-msg => "GetOptions failed.", -exitval => 2);
 
 if ($help) {
@@ -27,115 +28,163 @@ if ($help) {
 }
 
 unless($short_read_archive) {
-    pod2usage(-msg => "Must specify a short read archive (that has already been prepared with makelibrary.pl) and a target gene in fasta form.");
+    pod2usage(-msg => "Must specify a short read archive in fasta or fastq form.");
 }
 
 unless ($output_file) {
     $output_file = $short_read_archive;
 }
 
-my $executing_path = dirname(__FILE__);
+my $tempdir = dirname ("$output_file");
+my $log_file = "$output_file.log";
+open my $log_fh, ">", $log_file or die "couldn't open $log_file\n";
 
-my $fastq_input = 0;
+my @tempfiles = ();
 
-# if the sra is a fastq file, make it fasta.
-if ($short_read_archive =~ /\.f.*q$/) { # if it's a fastq file:
-	print "fastq file inputted...converting to fasta.\n";
-	$fastq_input = 1;
-	# un-interleave fastq file into fasta:
-	open FH, "<", $short_read_archive or exit_with_msg("couldn't open fasta file");
+my @out1_fhs = ();
+my @out2_fhs = ();
+my @out1_bucketfiles = ();
+my @out2_bucketfiles = ();
+my @out1_sortedfiles = ();
+my @out2_sortedfiles = ();
 
-	open OUT_FH, ">", "$short_read_archive.fasta" or exit_with_msg ("couldn't create result file");
+# setting up tempfiles for sorting:
+for (my $i=0; $i<$numlibraries; $i++) {
+	my ($fh, $filename) = tempfile("$output_file.bucket.$i.1.XXXX", UNLINK => 1);
+	push @out1_bucketfiles, $filename;
+	push @out1_fhs, $fh;
 
-	my $fs = readline FH;
-	while ($fs) {
-		$fs =~ /@(.*?)([\s\/])([12])/;
-		print OUT_FH ">$1\/$3\n";
-		$fs = readline FH;
-		print OUT_FH $fs;
-		$fs = readline FH;
-		# toss quality lines
-		if ($fs !~ /^\+/) {
-			print "$fs";
-			exit_with_msg ("$short_read_archive is not a properly-formed fastq file: line ". $. ." is problematic.");
+	($fh, $filename) = tempfile("$output_file.bucket.$i.2.XXXX", UNLINK => 1);
+	push @out2_bucketfiles, $filename;
+	push @out2_fhs, $fh;
+
+	($fh, $filename) = tempfile("$output_file.sorted.$i.1.XXXX", UNLINK => 1);
+	push @out1_sortedfiles, $filename;
+
+	($fh, $filename) = tempfile("$output_file.sorted.$i.2.XXXX", UNLINK => 1);
+	push @out2_sortedfiles, $filename;
+}
+
+# Divide fasta/fastq short reads into buckets for sorting.
+print "" . timestamp() . ": Dividing fasta/fastq file into buckets for sorting.\n";
+my $name = "";
+my $seq = "";
+my $seqlen = 0;
+
+open SEARCH_FH, "<", $short_read_archive;
+while (my $line = readline SEARCH_FH) {
+	chomp $line;
+	if ($line =~ /^[@>](.*?)([\s\/])([12])/) {
+		if ($name ne "") {
+			if ($name =~ /\/1/) {
+				print {$out1_fhs[(hash_to_bucket($name))]} ">$name,$seq\n";
+			} elsif ($name =~ /\/2/) {
+				print {$out2_fhs[(hash_to_bucket($name))]} ">$name,$seq\n";
+			}
 		}
-		$fs = readline FH;
-		$fs = readline FH;
-	}
-
-	close FH;
-	close OUT1_FH;
-
-}
-
-# now we're working with a fasta file for sure.
-my $working_sra = $short_read_archive;
-if ($fastq_input == 1) {
-	$working_sra = "$short_read_archive.fasta";
-}
-
-# sort fasta short-read file
-print "sorting fasta file.\n";
-system ("bash $executing_path/lib/sort_fasta.sh $working_sra") == 0 or exit_with_msg ("Couldn't find sort_fasta.sh. This script needs to be in the same directory as the rest of TRAM");
-
-if (-z "$working_sra.sorted.fasta") {
-	exit_with_msg ("Sort failed. Are you sure $working_sra exists?");
-}
-# un-interleave fasta file into two paired files:
-print "un-interleaving $working_sra.sorted.fasta into paired files.\n";
-open FH, "<", "$working_sra.sorted.fasta" or exit_with_msg ("couldn't open fasta file");
-
-open OUT1_FH, ">", "$working_sra.1.fasta" or exit_with_msg ("couldn't create result file");
-open OUT2_FH, ">", "$working_sra.2.fasta" or exit_with_msg ("couldn't create result file");
-
-while (1) {
-	my $name1 = readline FH;
-	my $seq1 = readline FH;
-	chomp $name1;
-	chomp $seq1;
-	if (($name1 eq "") || ($seq1 eq "")) { last; }
-	if ($name1 =~ />(.*?)\/1/) {
-		my $seqname = $1;
-		my $name2 = readline FH;
-		my $seq2 = readline FH;
-		chomp $name2;
-		chomp $seq2;
-		if (($name2 eq "") || ($seq2 eq "")) { last; }
-		if ($name2 =~ /$seqname\/2/) {
-# 			print "$name1 and $name2 are a pair\n";
-			print OUT1_FH "$name1\n$seq1\n";
-			print OUT2_FH "$name2\n$seq2\n";
-		} else {
-# 			print "$name2 wasn't the pair of $name1\n";
-			next;
+		$name = "$1\/$3";
+		$seq = "";
+	} elsif ($line =~ /^\+/){
+		# is this a fastq quality line? eat chars to the length of the full sequence.
+		while ($seqlen > 0) {
+			$line = readline SEARCH_FH;
+			chomp $line;
+			$seqlen = $seqlen - length($line);
 		}
 	} else {
-		# print "$name1 doesn't seem to be a paired read.";
-		next;
+		$seq .= $line;
+		$seqlen = length ($seq);
 	}
 }
 
+if ($name =~ /\/1/) {
+	print {$out1_fhs[(hash_to_bucket($name))]} ">$name,$seq\n";
+} elsif ($name =~ /\/2/) {
+	print {$out2_fhs[(hash_to_bucket($name))]} ">$name,$seq\n";
+}
+close SEARCH_FH;
+my @pids = ();
+print "" . timestamp() . ": starting sort.\n";
 
-close FH;
-close OUT1_FH;
-close OUT2_FH;
+for (my $i=0; $i<$numlibraries; $i++) {
+	close $out1_fhs[$i];
+	close $out2_fhs[$i];
+	push @pids, fork_cmd ("sort -t',' -k 1 -T $tempdir @out1_bucketfiles[$i] > @out1_sortedfiles[$i]", $log_fh);
+	if (@pids > 3) {
+		# don't spawn off too many threads at once.
+		wait_for_forks(\@pids);
+	}
+}
+wait_for_forks(\@pids);
 
-# make the blast db from the first of the paired end files
-print "Making blastdb from first of paired fasta files.\n";
-system ("makeblastdb -in $working_sra.1.fasta -dbtype nucl -out $working_sra.db");
+for (my $i=0; $i<$numlibraries; $i++) {
+    push @pids, fork_cmd ("sort -t',' -k 1 -T $tempdir @out2_bucketfiles[$i] > @out2_sortedfiles[$i]", $log_fh);
+	if (@pids > 3) {
+		# don't spawn off too many threads at once.
+		wait_for_forks(\@pids);
+	}
+}
+wait_for_forks(\@pids);
+print "" . timestamp() . ": sorted.\n";
 
-if (((-s "$working_sra.1.fasta") + (-s "$working_sra.2.fasta")) == (-s "$working_sra")) {
-	print "Files prepared successfully, cleaning up.\n";
-	system ("rm $working_sra.sorted.fasta; rm $working_sra;");
-} else {
-	exit_with_msg ("Something went wrong; leaving intermediate files alone.\n");
+for (my $i=0; $i<$numlibraries; $i++) {
+	print "" . timestamp() . ": Making $output_file.$i.1.fasta.\n";
+	open my $in_fh, "<", "@out1_sortedfiles[$i]" or exit_with_msg ("couldn't read @out1_sortedfiles[$i]");
+	open my $out_fh, ">", "$output_file.$i.1.fasta" or exit_with_msg ("couldn't create $output_file.$i.1.fasta");
+	while (my $line = readline $in_fh) {
+		chomp $line;
+		my ($name, $seq) = split(/,/,$line);
+		print $out_fh "$name\n$seq\n";
+	}
+	close $in_fh;
+	close $out_fh;
+
+	print "" . timestamp() . ": Making $output_file.$i.2.fasta.\n";
+	open my $in_fh, "<", "@out2_sortedfiles[$i]" or exit_with_msg ("couldn't read @out2_sortedfiles[$i]");
+	open my $out_fh, ">", "$output_file.$i.2.fasta" or exit_with_msg ("couldn't create $output_file.$i.2.fasta");
+	while (my $line = readline $in_fh) {
+		chomp $line;
+		my ($name, $seq) = split(/,/,$line);
+		print $out_fh "$name\n$seq\n";
+	}
+	close $in_fh;
+	close $out_fh;
+}
+
+print "" . timestamp() . ": Making blastdbs.\n";
+for (my $i=0; $i<$numlibraries; $i++) {
+	# make the blast db from the first of the paired end files
+	push @pids, fork_cmd ("makeblastdb -in $output_file.$i.1.fasta -dbtype nucl -out $output_file.$i.db", $log_fh);
+}
+
+wait_for_forks(\@pids);
+
+cleanup();
+foreach my $tempfile (@tempfiles) {
+	print "" . timestamp() . ": removing $tempfile\n";
+	system ("rm $tempfile");
+}
+print "" . timestamp() . ": Finished\n";
+
+sub hash_to_bucket {
+	my $key = shift;
+	my $bucket;
+
+	if ($key =~ /(.+)\/\d/) {
+		$key = $1;
+	}
+	$key =~ s/\D//g;
+	$key =~ s/.*(.{3})$/$1/;
+
+	$bucket = $key % $numlibraries;
+	return $bucket;
 }
 
 __END__
 
 =head1 NAME
 
-sTRAM.pl
+makelibrary.pl
 
 =head1 SYNOPSIS
 
@@ -147,7 +196,6 @@ Takes a fasta or fastq file of paired-end short reads and prepares it for sTRAM.
 
  -input:   short read archive.
  -output:  optional: prefix of output library (default is the same as -input).
- -number:  optional: the number of partitioned libraries to make.
 
 =cut
 

@@ -4,6 +4,10 @@ use Getopt::Long;
 use Pod::Usage;
 use File::Basename;
 use File::Temp qw/ tempfile tempdir /;
+use FindBin;
+use lib "$FindBin::Bin/lib";
+require Subfunctions;
+require pairedsequenceretrieval;
 
 my $debug = 0;
 if (@ARGV == 0) {
@@ -18,8 +22,10 @@ my $search_fasta = 0;
 
 #optional parameters:
 my $help = 0;
-my $log_file = 0;
+my $log_file = "";
+my $output_file = "";
 my $use_ends = 0;
+my $processes = 0;
 my $type = "";
 my $blast_name = 0;
 my $complete = 0;
@@ -29,7 +35,6 @@ my $bitscore = 70;
 my $contiglength = 100;
 
 #parameters with modifiable default values
-my $output_file = 0;
 my $ins_length = 300;
 my $iterations = 5;
 my $start_iter = 1;
@@ -40,18 +45,19 @@ my $max_target_seqs = 100000000;
 GetOptions ('reads=s' => \$short_read_archive,
             'target=s' => \$search_fasta,
             'start_iteration=i' => \$start_iter,
+            'iterations=i' => \$iterations,
+            'processes=i' => \$processes,
             'log_file=s' => \$log_file,
-            'use_ends' => \$use_ends,
             'output=s' => \$output_file,
             'type=s' => \$type,
             'protein' => \$protflag,
             'blast=s' => \$blast_name,
+            'use_ends' => \$use_ends,
             'debug' => \$debug,
             'velvet' => \$velvet,
             'complete' => \$complete,
             'insert_length|ins_length=i' => \$ins_length,
             'exp_coverage|expected_coverage=i' => \$exp_cov,
-            'iterations=i' => \$iterations,
             'bitscore=i' => \$bitscore,
             'max_target_seqs=i' => \$max_target_seqs,
             'evalue=f' => \$evalue,
@@ -67,27 +73,36 @@ unless($short_read_archive and $search_fasta) {
 }
 
 # check to make sure that the specified short read archive exists:
-unless ((-e "$short_read_archive.1.fasta") && (-e "$short_read_archive.2.fasta")) {
-    pod2usage(-msg => "Short read archive does not seem to be in the format made by makelibrary.pl. Did you specify the name correctly?");
+my $max_partial = $processes - 1;
+if ($processes > 0) {
+	unless ((-e "$short_read_archive.1.1.fasta") && (-e "$short_read_archive.1.2.fasta")) {
+		pod2usage(-msg => "Short read archive does not seem to be in the format made by makelibrary.pl. Did you specify the name correctly?");
+	}
+	unless ((-e "$short_read_archive.$max_partial.1.fasta") && (-e "$short_read_archive.$max_partial.2.fasta")) {
+		pod2usage(-msg => "Short read archives were not prepared to handle $processes processes. Try a smaller value for -processes.");
+	}
+} else {
+	unless ((-e "$short_read_archive.1.fasta") && (-e "$short_read_archive.2.fasta")) {
+		pod2usage(-msg => "Short read archive does not seem to be in the format made by makelibrary.pl. Did you specify the name correctly?");
+	}
 }
 
+if ($output_file eq "") {
+    $output_file = $short_read_archive;
+}
+if ($log_file eq "") {
+	$log_file = "$output_file.log";
+}
+
+my $log_fh;
+open $log_fh, ">", $log_file or die "couldn't open $log_file\n";
+
 print $runline;
+print $log_fh $runline;
 
 my $executing_path = dirname(__FILE__);
 my $cmd;
 
-my $log_fh;
-if ($log_file) {
-	open $log_fh, ">", $log_file or die "couldn't open $log_file\n";
-} else {
-	open $log_fh, ">", "$output_file.log" or die "couldn't open $output_file.log\n";
-}
-
-print $log_fh $runline;
-
-unless ($output_file) {
-    $output_file = $short_read_archive;
-}
 
 open CONTIGS_FH, ">", "$output_file.all.fasta";
 truncate CONTIGS_FH, 0;
@@ -106,16 +121,15 @@ my $name = "";
 my $seq = "";
 my $fullseq = "";
 while (my $line=readline SEARCH_FH) {
+	chomp $line;
 	if ($line =~ />(.*)/) {
 		if ($name ne "") {
 			push @target_seqs, "$name,$seq";
 		}
 		$name = $1;
-		chomp $name;
 		$seq = "";
 	} else {
 		$seq .= $line;
-		chomp $seq;
 		$fullseq .= $seq;
 	}
 }
@@ -182,15 +196,14 @@ foreach my $line (@target_seqs) {
 # make a database from the target so that we can compare contigs to the target.
 my (undef, $targetdb) = tempfile(UNLINK => 1);
 if ($protein == 1) {
-	$cmd = "makeblastdb -in $target_fasta -dbtype prot -out $targetdb.db -input_type fasta";
+	system_call ("makeblastdb -in $target_fasta -dbtype prot -out $targetdb.db -input_type fasta", $log_fh);
 } else {
-	$cmd = "makeblastdb -in $target_fasta -dbtype nucl -out $targetdb.db -input_type fasta";
+	system_call ("makeblastdb -in $target_fasta -dbtype nucl -out $targetdb.db -input_type fasta", $log_fh);
 }
-system_call ($cmd);
 
 if ($start_iter > 1) {
 	my $x = $start_iter-1;
-	$search_fasta = "$output_file.$x.contigs.fa";
+	$search_fasta = "$output_file.".($start_iter-1).".contigs.fa";
 }
 
 # writing the header line for the results file
@@ -200,35 +213,67 @@ close RESULTS_FH;
 
 # STARTING ITERATIONS:
 for (my $i=$start_iter; $i<=$iterations; $i++) {
-	print ("interation $i starting...\n");
-	print $log_fh ("interation $i starting...\n");
+	print ("iteration $i starting...\n");
+	print $log_fh ("iteration $i starting...\n");
 
 	my $hit_matrix = {};
 	push @hit_matrices, \$hit_matrix;
 
 	if ($velvet==0) {
-	# 1. blast to find any short reads that match the target.
-	print "\tblasting short reads...\n";
-		if (($protein == 1) && ($i == 1)) {
-			system_call ("tblastn -max_target_seqs $max_target_seqs -db $short_read_archive.db -query $search_fasta -outfmt 6 -num_threads 8 -out $output_file.blast.$i");
-		} else {
-			system_call ("blastn -task blastn -evalue $evalue -max_target_seqs $max_target_seqs -db $short_read_archive.db -query $search_fasta -outfmt 6 -num_threads 8 -out $output_file.blast.$i");
+		my $sra = "$short_read_archive";
+		my $current_partial_file = "$output_file.blast.$i";
+		my @partialfiles = ();
+		my @pids = ();
+
+		# we are multithreading:
+		print "\tblasting short reads...\n";
+		for (my $p=0; $p<$processes; $p++) {
+			$sra = "$short_read_archive.$p";
+			$current_partial_file = "$output_file.blast.$i.$p";
+			push @partialfiles, $current_partial_file;
+			# 1. blast to find any short reads that match the target.
+			if (($protein == 1) && ($i == 1)) {
+				push @pids, fork_cmd ("tblastn -max_target_seqs $max_target_seqs -db $sra.db -query $search_fasta -outfmt '6 sseqid' -num_threads 8 -out $current_partial_file", $log_fh);
+			} else {
+				push @pids, fork_cmd ("blastn -task blastn -evalue $evalue -max_target_seqs $max_target_seqs -db $sra.db -query $search_fasta -outfmt '6 sseqid' -num_threads 8 -out $current_partial_file", $log_fh);
+			}
 		}
+		wait_for_forks(\@pids);
+
+		print "\tgetting paired ends...\n";
+		for (my $p=0; $p<$processes; $p++) {
+			$sra = "$short_read_archive.$p";
+			$current_partial_file = "$output_file.blast.$i.$p";
+			# 2 and 3. find the paired end of all of the blast hits.
+			push @pids, fork_pair_retrieval("$sra.#.fasta", "$current_partial_file", "$current_partial_file.fasta");
+		}
+		wait_for_forks(\@pids);
+
+		# now we need to piece all of the partial files back together.
+		my $fastafiles = join (" ", map {$_ . ".fasta"} @partialfiles);
+		system_call ("cat $fastafiles > $output_file.blast.$i.fasta", $log_fh);
+		system_call ("rm $fastafiles", $log_fh);
+
+		# remove intermediate blast results
+		my $readfiles = join (" ", @partialfiles);
+		system_call ("rm $readfiles", $log_fh);
 
 		# did we not find any reads? Go ahead and quit.
-		if ((-s "$output_file.blast.$i") == 0) {
+		if ((-s "$output_file.blast.$i.fasta") == 0) {
 			print "No similar reads were found.\n";
 			last;
 		}
-
-		# 2 and 3. find the paired end of all of the blast hits.
-		print "\tgetting paired ends...\n";
-		system_call("perl $executing_path/lib/pairedsequenceretrieval.pl $short_read_archive.#.fasta $output_file.blast.$i $output_file.blast.$i.fasta");
 	}
+
 	# 4. assemble the reads using velvet
 	print "\tassembling with Velvet...\n";
-	system_call("velveth $output_file.velvet 31 -fasta -shortPaired $output_file.blast.$i.fasta");
-	system_call("velvetg $output_file.velvet -ins_length $ins_length -exp_cov $exp_cov -min_contig_lgth 200");
+	if ($i == 1) {
+		system_call ("velveth $output_file.velvet 31 -fasta -shortPaired $output_file.blast.$i.fasta", $log_fh);
+	} else {
+		# for iterations after the first one, we can use previous contigs to seed the assembly.
+		system_call ("velveth $output_file.velvet 31 -fasta -shortPaired $output_file.blast.$i.fasta -long $search_fasta", $log_fh);
+	}
+	system_call ("velvetg $output_file.velvet -ins_length $ins_length -exp_cov $exp_cov -min_contig_lgth 200", $log_fh);
 
 	# 5. now we filter out the contigs to look for just the best ones.
 	print "\tfiltering contigs...\n";
@@ -241,9 +286,9 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 	}
 
 	if ($protein == 1) {
-		system_call ("blastx -db $targetdb.db -query $output_file.velvet/contigs.fa -out $blast_file -outfmt '6 qseqid sseqid bitscore qstart qend sstart send qlen'");
+		system_call ("blastx -db $targetdb.db -query $output_file.velvet/contigs.fa -out $blast_file -outfmt '6 qseqid sseqid bitscore qstart qend sstart send qlen'", $log_fh);
 	} else {
-		system_call ("tblastx -db $targetdb.db -query $output_file.velvet/contigs.fa -out $blast_file -outfmt '6 qseqid sseqid bitscore qstart qend sstart send qlen'");
+		system_call ("tblastx -db $targetdb.db -query $output_file.velvet/contigs.fa -out $blast_file -outfmt '6 qseqid sseqid bitscore qstart qend sstart send qlen'", $log_fh);
 	}
 	# 6. we want to keep the contigs that have a bitscore higher than $bitscore.
 	open BLAST_FH, "<", $blast_file;
@@ -309,7 +354,7 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 	# we'll use the resulting contigs as the query for the next iteration.
 	$search_fasta = "$output_file.$i.contigs.fa";
 
-	system_call("perl $executing_path/lib/findsequences.pl $output_file.velvet/contigs.fa $sort_results $search_fasta");
+	system_call ("perl $executing_path/lib/findsequences.pl $output_file.velvet/contigs.fa $sort_results $search_fasta", $log_fh);
 
 	# revcomping contigs with negative strand directions:
 	my @contigs = ();
@@ -374,7 +419,7 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 
 	# if we flagged to use just the ends of the contigs, clean that up.
 	if ($use_ends != 0) {
-		system_call("bash $executing_path/lib/sort_contigs.sh $search_fasta");
+		system_call ("bash $executing_path/lib/sort_contigs.sh $search_fasta", $log_fh);
 
 		open FH, "<", "$search_fasta.sorted.tab";
 		my @contigs = <FH>;
@@ -414,38 +459,6 @@ print $log_fh "Contig coverage in $output_file.results.txt\n";
 print $log_fh "\nContigs containing the entire target sequence:\n\t" . join("\n\t", @complete_contigs) . "\n";
 
 close $log_fh;
-
-sub exit_with_msg {
-	my $msg = shift;
-	print STDERR "$msg\n";
-	exit 1;
-}
-
-sub system_call {
-	my $cmd = shift;
-	print $log_fh ("\t$cmd\n");
-	my ($saveout, $saveerr);
-	if ($debug == 0) {
-		open $saveout, ">&STDOUT";
-		open $saveerr, ">&STDERR";
-		open STDOUT, '>', File::Spec->devnull();
-		open STDERR, '>', File::Spec->devnull();
-	}
-	my $exit_val = eval {
-		system ($cmd);
-	};
-
-	if ($debug == 0) {
-		open STDOUT, ">&", $saveout;
-		open STDERR, ">&", $saveerr;
-	}
-
-	if ($exit_val != 0) {
-		print "System call \"$cmd\" exited with $exit_val\n";
-		exit;
-	}
-	return $exit_val;
-}
 
 sub reverse_complement {
 	my $charstr = shift;
