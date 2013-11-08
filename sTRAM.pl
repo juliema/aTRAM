@@ -267,7 +267,12 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 
 	# 4. assemble the reads using velvet
 	print "\tassembling with Velvet...\n";
-	system_call ("velveth $output_file.velvet 31 -fasta -shortPaired $output_file.blast.$i.fasta", $log_fh);
+	if ($i == 1) {
+		system_call ("velveth $output_file.velvet 31 -fasta -shortPaired $output_file.blast.$i.fasta", $log_fh);
+	} else {
+		# for iterations after the first one, we can use previous contigs to seed the assembly.
+		system_call ("velveth $output_file.velvet 31 -fasta -shortPaired $output_file.blast.$i.fasta -long $search_fasta", $log_fh);
+	}
 	system_call ("velvetg $output_file.velvet -ins_length $ins_length -exp_cov $exp_cov -min_contig_lgth 200", $log_fh);
 
 	# 5. now we filter out the contigs to look for just the best ones.
