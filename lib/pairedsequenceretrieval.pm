@@ -10,7 +10,8 @@ sub fork_pair_retrieval {
 
     my $child_pid = fork();
     unless ($child_pid) { #child process
-		return pairedsequenceretrieval ($fastafile, $sequencelist, $outfile);
+		pairedsequenceretrieval ($fastafile, $sequencelist, $outfile);
+		exit;
     } else { #parent process
         return $child_pid;
     }
