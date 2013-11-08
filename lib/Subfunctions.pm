@@ -44,6 +44,10 @@ sub system_call {
 	my $cmd = shift;
 	my $log_fh = shift;
 
+	unless ($log_fh) {
+		$log_fh = STDOUT;
+	}
+
 	print $log_fh ("\t$cmd\n");
 	my ($saveout, $saveerr);
 	if ($debug == 0) {
