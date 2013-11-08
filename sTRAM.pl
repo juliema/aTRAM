@@ -161,7 +161,7 @@ my $firstseq = shift @target_seqs;
 if ($firstseq =~ /(.*),(.{$len})(.*)/) {
 	# split into two smaller seqs:
 	$start_seq = "sTRAM_target_start";
-	unshift @target_seqs, "$1,$3";
+	unshift @target_seqs, $firstseq;
 	unshift @target_seqs, "$start_seq,$2";
 } else {
 	# it's short enough to just go as-is
@@ -175,7 +175,7 @@ my $lastseq = pop @target_seqs;
 if ($lastseq =~ /(.*),(.*)(.{$len})/) {
 	# split into two smaller seqs:
 	$end_seq = "sTRAM_target_end";
-	push @target_seqs, "$1,$2";
+	push @target_seqs, $lastseq;
 	push @target_seqs, "$end_seq,$3";
 } else {
 	# it's short enough to just go as-is
