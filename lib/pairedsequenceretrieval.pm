@@ -52,20 +52,46 @@ sub pairedsequenceretrieval {
 	open FA2_FH, "<", "$fastafile_2";
 	open OUT_FH, ">", "$outfile";
 
-	my $curr_name = readline LIST_FH;
-
-	while ($curr_name) {
-		chomp $curr_name;
-		my $fa_seq1 = (readline FA1_FH) . (readline FA1_FH);
-		my $fa_seq2 = (readline FA2_FH) . (readline FA2_FH);
-
+	my ($fa_seq1, $fa_seq2, $line) = "";
+	$line = readline LIST_FH;
+	$fa_seq1 = (readline FA1_FH) . (readline FA1_FH);
+	$fa_seq2 = (readline FA2_FH) . (readline FA2_FH);
+	while (1) {
+		$line =~ /(.*?)\/1/;
+		my $curr_name = $1;
+		$fa_seq1 =~ />(.*?)\/1/;
+		my $name1 = $1;
+		$fa_seq2 =~ />(.*?)\/2/;
+		my $name2 = $1;
+		if ($name1 =~ /$curr_name/) {
+			# we've gotten to the corresponding entry in fa1.
+			# check the entry in fa2:
+			if (($name2 cmp $curr_name) < 0) {
+				# is it smaller? (fa2 has more entries than fa1)
+				# then we need to move to the next fa2 entry and loop.
+				$fa_seq2 = (readline FA2_FH) . (readline FA2_FH);
+				next;
+			} elsif (($name2 cmp $curr_name) == 0) {
+				# if they're equal, print them all out to OUT_FH, advance iterators, and loop.
+				print OUT_FH "$fa_seq1$fa_seq2";
+				$line = readline LIST_FH;
+				$fa_seq1 = (readline FA1_FH) . (readline FA1_FH);
+				$fa_seq2 = (readline FA2_FH) . (readline FA2_FH);
+				next;
+			} else {
+				# if $name2 is bigger and we didn't find $curr_name, that means that $name2 doesn't exist.
+				# advance the first two and loop.
+				$line = readline LIST_FH;
+				$fa_seq1 = (readline FA1_FH) . (readline FA1_FH);
+				next;
+			}
+		}
+		$fa_seq1 = (readline FA1_FH) . (readline FA1_FH);
+		# break if any of these files are done.
 		if ($fa_seq1 eq "") { last; }
 		if ($fa_seq2 eq "") { last; }
+		if ($line eq "") { last; }
 
-		if ($fa_seq1 =~ /$curr_name/) {
-			print OUT_FH "$fa_seq1$fa_seq2";
-			$curr_name = readline LIST_FH;
-		}
 	}
 
 	close LIST_FH;
