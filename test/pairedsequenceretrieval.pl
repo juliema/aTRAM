@@ -4,7 +4,7 @@
 #!/usr/bin/perl
 use strict;
 use FindBin;
-use lib "$FindBin::Bin";
+use lib "$FindBin::Bin/../lib";
 require pairedsequenceretrieval;
 
 if (@ARGV < 3) {
