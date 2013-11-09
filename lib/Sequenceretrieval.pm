@@ -2,6 +2,7 @@
 #!/usr/bin/perl
 use strict;
 use File::Temp qw/ tempfile /;
+require Subfunctions;
 
 sub fork_pair_retrieval {
 	my $fastafile = shift;
@@ -150,19 +151,6 @@ sub findsequences {
 	close LIST_FH;
 	close FA_FH;
 	close OUT_FH;
-}
-
-sub sortfasta {
-	my $fastafile = shift;
-	my $outfile = shift;
-	my $separator = shift;
-
-	unless ($separator) {
-		$separator = '\n';
-	}
-
-	my (undef, $tempfile) = tempfile(UNLINK => 1);
-	system ("gawk '{if (NF==0) next; s = \"\"; for (i=2;i<=NF;i++) s = s\$i; print \$1\",\"s}' RS=\">\" $fastafile | sort -t',' -k 1 | gawk '{print \">\" \$1 \"$separator\" \$2}' FS=\",\" > $outfile");
 }
 
 return 1;
