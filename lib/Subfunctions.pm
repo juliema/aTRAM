@@ -99,7 +99,7 @@ sub make_hit_matrix {
 		if ($currscore == undef) {
 			$hit_matrix->{$contig}->{$baitseq} = $strand * $score;
 		} else {
-			if ($currscore < $score) {
+			if (abs($currscore) < $score) {
 			$hit_matrix->{$contig}->{$baitseq} = $strand * $score;
 			}
 		}
