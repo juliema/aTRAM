@@ -384,7 +384,7 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 		}
 		my $total = $hit_matrix->{$contig}->{"total"};
 		print RESULTS_FH "$total\n";
-		if ((abs($hit_matrix->{$contig}->{$start_seq}) > 30) && (abs($hit_matrix->{$contig}->{$end_seq}) > 30) && ($hit_matrix->{$contig}->{"total"} > $bitscore)) {
+		if ((abs($hit_matrix->{$contig}->{$start_seq}) > 20) && (abs($hit_matrix->{$contig}->{$end_seq}) > 20) && ($hit_matrix->{$contig}->{"total"} > $bitscore)) {
 			push @complete_contigs, $contigname;
 		}
 	}
