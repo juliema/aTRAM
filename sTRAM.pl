@@ -7,6 +7,7 @@ use File::Temp qw/ tempfile tempdir /;
 use FindBin;
 use lib "$FindBin::Bin/lib";
 require Subfunctions;
+use Module::Load;
 require Sequenceretrieval;
 
 my $debug = 0;
@@ -287,8 +288,8 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 		# for iterations after the first one, we can use previous contigs to seed the assembly.
 		$assembly_params->{'longreads'} = $search_fasta;
 	}
-
-	my $assembled_contig_file = Velvet::assembler ("$output_file.blast.$i.fasta", $assembly_params, $log_fh);
+	load "Velvet";
+	my $assembled_contig_file = Velvet->assembler ("$output_file.blast.$i.fasta", $assembly_params, $log_fh);
 
 	# 5. now we filter out the contigs to look for just the best ones.
 	print "\tfiltering contigs...\n";
