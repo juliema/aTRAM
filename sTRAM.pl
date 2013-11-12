@@ -268,15 +268,27 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 		}
 	}
 
-	# 4. assemble the reads using velvet
-	print "\tassembling with Velvet...\n";
-	if ($i == 1) {
-		system_call ("velveth $output_file.velvet 31 -fasta -shortPaired $output_file.blast.$i.fasta", $log_fh);
-	} else {
+	# 4. assemble the reads...
+	# Assembler modules need to know:
+	 	# where to find the short reads (pass this in as a file name)
+	 	# where the possible previous contigs are (pass this in as a file name)
+	 	# what the assembly parameters are. (pass this in as a hash)
+	# Assembler modules should return a file name for the resulting contigs.
+
+	my $assembly_dir = "$output_file.velvet";
+	my $assembly_params = { 'kmer' => 31,
+							'tempdir' => "$assembly_dir",
+							'ins_length' => $ins_length,
+							'exp_cov' => $exp_cov,
+							'min_contig_len' => 200,
+						  };
+
+	if ($i > 1) {
 		# for iterations after the first one, we can use previous contigs to seed the assembly.
-		system_call ("velveth $output_file.velvet 31 -fasta -shortPaired $output_file.blast.$i.fasta -long $search_fasta", $log_fh);
+		$assembly_params->{'longreads'} = $search_fasta;
 	}
-	system_call ("velvetg $output_file.velvet -ins_length $ins_length -exp_cov $exp_cov -min_contig_lgth 200", $log_fh);
+
+	my $assembled_contig_file = Velvet::assembler ("$output_file.blast.$i.fasta", $assembly_params, $log_fh);
 
 	# 5. now we filter out the contigs to look for just the best ones.
 	print "\tfiltering contigs...\n";
@@ -289,9 +301,9 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 	}
 
 	if ($protein == 1) {
-		system_call ("blastx -db $targetdb.db -query $output_file.velvet/contigs.fa -out $blast_file -outfmt '6 qseqid sseqid bitscore qstart qend sstart send qlen'", $log_fh);
+		system_call ("blastx -db $targetdb.db -query $assembled_contig_file -out $blast_file -outfmt '6 qseqid sseqid bitscore qstart qend sstart send qlen'", $log_fh);
 	} else {
-		system_call ("tblastx -db $targetdb.db -query $output_file.velvet/contigs.fa -out $blast_file -outfmt '6 qseqid sseqid bitscore qstart qend sstart send qlen'", $log_fh);
+		system_call ("tblastx -db $targetdb.db -query $assembled_contig_file -out $blast_file -outfmt '6 qseqid sseqid bitscore qstart qend sstart send qlen'", $log_fh);
 	}
 
 	# 6. we want to keep the contigs that have a bitscore higher than $bitscore.
@@ -332,7 +344,7 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 	$hit_matrix = $new_matrix;
 
 	my @hits = keys $hit_matrix;
-	my $sequences = findsequences ("$output_file.velvet/contigs.fa", \@hits);
+	my $sequences = findsequences ("$assembled_contig_file", \@hits);
 
 	my @contigs = ();
 
