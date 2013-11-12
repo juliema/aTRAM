@@ -338,7 +338,8 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 		push @contigs, ">$i"."_$hits[$j]\n@$sequences[$j]";
 	}
 
-	$search_fasta = "$output_file.$i.contigs.fa";
+	(undef, $search_fasta) = tempfile(UNLINK => 1);
+
 	open OUT_FH, ">", $search_fasta;
 	print OUT_FH join("\n",@contigs) . "\n";
 	close OUT_FH;
