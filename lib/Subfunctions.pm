@@ -1,3 +1,9 @@
+use strict;
+
+package Subfunctions;
+
+our $debug = 0;
+
 sub timestamp {
     my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime(time);
     $mon++;
@@ -14,12 +20,14 @@ sub timestamp {
 }
 
 sub exit_with_msg {
+	my $self = shift;
 	my $msg = shift;
 	print STDERR "$msg\n";
 	exit 1;
 }
 
 sub fork_cmd {
+	my $self = shift;
 	my $cmd = shift;
 	my $log_fh = shift;
 
@@ -33,6 +41,7 @@ sub fork_cmd {
 }
 
 sub wait_for_forks {
+	my $self = shift;
     while (@{@_[0]} > 0) {
     	my $item = pop @_[0];
         waitpid $item, 0;
@@ -41,11 +50,12 @@ sub wait_for_forks {
 }
 
 sub system_call {
+	my $self = shift;
 	my $cmd = shift;
 	my $log_fh = shift;
 
 	unless ($log_fh) {
-		$log_fh = STDOUT;
+		$log_fh = &STDOUT;
 	}
 
 	print $log_fh ("\t$cmd\n");
@@ -73,14 +83,22 @@ sub system_call {
 }
 
 sub debug {
-	my $debug = shift;
+	my $self = shift;
 	my $msg = shift;
+
 	if ($debug) {
 		print STDOUT "$msg";
 	}
 }
 
+sub set_debug {
+	my $self = shift;
+	my $debug_new = shift;
+	$debug = $debug_new;
+}
+
 sub sortfasta {
+	my $self = shift;
 	my $fastafile = shift;
 	my $outfile = shift;
 	my $separator = shift;
@@ -94,6 +112,7 @@ sub sortfasta {
 }
 
 sub make_hit_matrix {
+	my $self = shift;
 	my $blast_file = shift;
 	my $hit_matrix = shift;
 
@@ -122,6 +141,7 @@ sub make_hit_matrix {
 }
 
 sub count_partial_libraries {
+	my $self = shift;
 	my $libname = shift;
 
 	my $num = 0;

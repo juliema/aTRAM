@@ -2,7 +2,7 @@
 use strict;
 use FindBin;
 use lib "$FindBin::Bin/../lib";
-# use Subfunctions "system_call";
+use Subfunctions;
 
 	# Assembler modules need to know:
 	 	# where to find the short reads (pass this in as a file name)

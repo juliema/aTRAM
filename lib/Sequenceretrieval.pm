@@ -2,7 +2,7 @@
 #!/usr/bin/perl
 use strict;
 use File::Temp qw/ tempfile /;
-require Subfunctions;
+use Subfunctions;
 
 sub fork_pair_retrieval {
 	my $fastafile = shift;
