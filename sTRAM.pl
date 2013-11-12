@@ -26,6 +26,7 @@ my $log_file = "";
 my $output_file = "";
 my $use_ends = 0;
 my $processes = 0;
+my $fraclibs = 1;
 my $type = "";
 my $blast_name = 0;
 my $complete = 0;
@@ -46,7 +47,8 @@ GetOptions ('reads=s' => \$short_read_archive,
             'target=s' => \$search_fasta,
             'start_iteration=i' => \$start_iter,
             'iterations=i' => \$iterations,
-            'processes=i' => \$processes,
+#             'processes=i' => \$processes,
+			'fraction=f' => \$fraclibs,
             'log_file=s' => \$log_file,
             'output=s' => \$output_file,
             'type=s' => \$type,
@@ -73,19 +75,10 @@ unless($short_read_archive and $search_fasta) {
 }
 
 # check to make sure that the specified short read archive exists:
-my $max_partial = $processes - 1;
-if ($processes > 0) {
-	unless ((-e "$short_read_archive.1.1.fasta") && (-e "$short_read_archive.1.2.fasta")) {
-		pod2usage(-msg => "Short read archive does not seem to be in the format made by makelibrary.pl. Did you specify the name correctly?");
-	}
-	unless ((-e "$short_read_archive.$max_partial.1.fasta") && (-e "$short_read_archive.$max_partial.2.fasta")) {
-		pod2usage(-msg => "Short read archives were not prepared to handle $processes processes. Try a smaller value for -processes.");
-	}
-} else {
-	unless ((-e "$short_read_archive.1.fasta") && (-e "$short_read_archive.2.fasta")) {
-		pod2usage(-msg => "Short read archive does not seem to be in the format made by makelibrary.pl. Did you specify the name correctly?");
-	}
+unless ((-e "$short_read_archive.1.1.fasta") && (-e "$short_read_archive.1.2.fasta")) {
+	pod2usage(-msg => "Short read archive does not seem to be in the format made by makelibrary.pl. Did you specify the name correctly?");
 }
+
 
 if ($output_file eq "") {
     $output_file = $short_read_archive;
@@ -103,6 +96,16 @@ print $log_fh $runline;
 my $executing_path = dirname(__FILE__);
 my $cmd;
 
+# set up the number of partial libraries we'll be using.
+my $numlibs = count_partial_libraries("$short_read_archive");
+my $max_partial = $numlibs - 1;
+$processes = int ($numlibs * $fraclibs);
+unless ((-e "$short_read_archive.$max_partial.1.fasta") && (-e "$short_read_archive.$max_partial.2.fasta")) {
+	pod2usage(-msg => "Short read archives were not prepared to handle $numlibs processes.");
+}
+
+print "Using $processes of $numlibs total partial libraries.\n";
+print $log_fh "Using $processes of $numlibs total partial libraries.\n";
 
 open CONTIGS_FH, ">", "$output_file.all.fasta";
 truncate CONTIGS_FH, 0;
