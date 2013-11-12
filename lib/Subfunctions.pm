@@ -121,4 +121,14 @@ sub make_hit_matrix {
 
 }
 
+sub count_partial_libraries {
+	my $libname = shift;
+
+	my $num = 0;
+	while (-e "$libname.$num.1.fasta") {
+		$num++;
+	}
+	return $num;
+}
+
 return 1;
