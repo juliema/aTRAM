@@ -104,53 +104,45 @@ sub pairedsequenceretrieval {
 
 sub findsequences {
 	my $fastafile = shift;
-	my $sequencelist = shift;
-	my $outfile = shift;
-
-	unless (-e $sequencelist) {
-		die "File $sequencelist does not exist.\n";
-	}
+	my $names = shift;
 
 	unless (-e $fastafile) {
 		die "File $fastafile does not exist.\n";
 	}
 
-	my (undef, $seq_names) = tempfile(UNLINK => 1);
+	my $hashed_seqs = {};
+	my @sorted_names = sort @$names;
+
 	my (undef, $fasta_sort) = tempfile(UNLINK => 1);
-	system ("sort $sequencelist | uniq -u > $seq_names");
 	sortfasta ($fastafile, $fasta_sort, "#");
 
-	open LIST_FH, "<", "$seq_names";
-	open FA1_FH, "<", "$fasta_sort";
-	open OUT_FH, ">", "$outfile";
-
-	my ($fa_seq1, $fa_seq2, $line) = "";
-	$line = readline LIST_FH;
-	$fa_seq1 = (readline FA1_FH);
+	open FA_FH, "<", "$fasta_sort";
+	my $curr_name = shift @sorted_names;
+	my $fa_seq = readline FA_FH;
 	while (1) {
-		$line =~ /(.*?)$/;
-		my $curr_name = $1;
-		$fa_seq1 =~ />(.*?)#(.*)/;
-		my $name1 = $1;
-		my $seq1 = $2;
-		if ($name1 =~ /$curr_name/) {
-			# fa_seq1 is the seq we're looking for.
-			# we've gotten to the corresponding entry in fa1.
-			print OUT_FH ">$name1\n$seq1\n";
-			$line = readline LIST_FH;
+		$fa_seq =~ />(.*?)#(.*)/;
+		my $name = $1;
+		my $seq = $2;
+		if ($name =~ /$curr_name/) {
+			# fa_seq is the seq we're looking for.
+			$hashed_seqs->{$curr_name} = $seq;
+			$curr_name = shift @sorted_names;
 		} else {
 			# we need to go on to the next seq.
-			$fa_seq1 = (readline FA1_FH);
+			$fa_seq = readline FA_FH;
 		}
 		# break if any of these files are done.
-		if ($fa_seq1 eq "") { last; }
-		if ($line eq "") { last; }
-
+		if ($fa_seq eq "") { last; }
+		if ($curr_name eq undef) { last; }
 	}
 
-	close LIST_FH;
 	close FA_FH;
-	close OUT_FH;
+
+	my @sequences = ();
+	foreach my $name (@$names) {
+		push @sequences, $hashed_seqs->{$name};
+	}
+	return \@sequences;
 }
 
 return 1;

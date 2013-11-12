@@ -290,7 +290,9 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 	} else {
 		system_call ("tblastx -db $targetdb.db -query $output_file.velvet/contigs.fa -out $blast_file -outfmt '6 qseqid sseqid bitscore qstart qend sstart send qlen'", $log_fh);
 	}
+
 	# 6. we want to keep the contigs that have a bitscore higher than $bitscore.
+	print "\tsaving best-scoring contigs...\n";
 	make_hit_matrix ($blast_file, $hit_matrix);
 
 	my $high_score = 0;
@@ -326,44 +328,29 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 	}
 	$hit_matrix = $new_matrix;
 
-	my ($SORT_FH, $sort_results) = tempfile(UNLINK => 1);
-	foreach my $contig (keys $hit_matrix ) {
-		print $SORT_FH $contig . "\n";
-	}
-	close $SORT_FH;
+	my @hits = keys $hit_matrix;
+	my $sequences = findsequences ("$output_file.velvet/contigs.fa", \@hits);
 
-	# we'll use the resulting contigs as the query for the next iteration.
-	$search_fasta = "$output_file.$i.contigs.fa";
-
-	findsequences ("$output_file.velvet/contigs.fa", $sort_results, $search_fasta);
-
-	# revcomping contigs with negative strand directions:
 	my @contigs = ();
 
-	open SEARCH_FH, "<", $search_fasta;
-	my $name = "";
-	my $seq = "";
-	while (my $line=readline SEARCH_FH) {
-		if ($line =~ />(.*)/) {
-			if ($name ne "") {
-				if ($hit_matrix->{$name}->{"strand"} < 0) {
-					$seq = reverse_complement($seq);
-				}
-				push @contigs, ">$i"."_$name\n$seq";
-			}
-			$name = $1;
-			chomp $name;
-			$seq = "";
-		} else {
-			$seq .= $line;
-			chomp $seq;
+	# we'll use the resulting contigs as the query for the next iteration.
+	for (my $j=0; $j<@hits; $j++) {
+		push @contigs, ">$i"."_$hits[$j]\n@$sequences[$j]";
+	}
+
+	$search_fasta = "$output_file.$i.contigs.fa";
+	open OUT_FH, ">", $search_fasta;
+	print OUT_FH join("\n",@contigs) . "\n";
+	close OUT_FH;
+
+	# revcomping contigs with negative strand directions:
+	for (my $j=0; $j<@contigs; $j++) {
+		my $seq = @$sequences[$j];
+		if ($hit_matrix->{$hits[$j]}->{"strand"} < 0) {
+			$seq = reverse_complement($seq);
 		}
+		$contigs[$j] = ">$i"."_$contigs[$j]\n$seq";
 	}
-	if ($hit_matrix->{$name}->{"strand"} < 0) {
-		$seq = reverse_complement($seq);
-	}
-	push @contigs, ">$i"."_$name\n$seq";
-	close SEARCH_FH;
 
 	# save off these resulting contigs to the ongoing contigs file.
 	open CONTIGS_FH, ">>", "$output_file.all.fasta";
@@ -397,6 +384,7 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 			last;
 		}
 	}
+
 
 	# if we flagged to use just the ends of the contigs, clean that up.
 	if ($use_ends != 0) {

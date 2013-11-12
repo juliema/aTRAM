@@ -12,4 +12,24 @@ my $fastafile = shift;
 my $sequencelist = shift;
 my $outfile = shift;
 
-findsequences ($fastafile, $sequencelist, $outfile);
+unless (-e $sequencelist) {
+	die "File $sequencelist does not exist.\n";
+}
+
+open FH, "<", $sequencelist;
+my @sequences = ();
+while (my $line = readline FH) {
+	chomp $line;
+	push @sequences, $line;
+}
+close FH;
+
+my $results = findsequences ($fastafile, \@sequences);
+
+open OUT_FH, ">", $outfile;
+
+for (my $i=0; $i<@sequences; $i++) {
+	print OUT_FH ">$sequences[$i]\n@$results[$i]\n";
+}
+
+close OUT_FH;
