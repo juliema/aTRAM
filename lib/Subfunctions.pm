@@ -1,3 +1,7 @@
+use strict;
+
+our $debug = 0;
+
 sub timestamp {
     my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime(time);
     $mon++;
@@ -45,7 +49,7 @@ sub system_call {
 	my $log_fh = shift;
 
 	unless ($log_fh) {
-		$log_fh = STDOUT;
+		$log_fh = &STDOUT;
 	}
 
 	print $log_fh ("\t$cmd\n");
@@ -73,11 +77,15 @@ sub system_call {
 }
 
 sub debug {
-	my $debug = shift;
 	my $msg = shift;
 	if ($debug) {
-		print STDOUT "$msg";
+		print "$msg";
 	}
+}
+
+sub set_debug {
+	my $debug_new = shift;
+	$debug = $debug_new;
 }
 
 sub sortfasta {
