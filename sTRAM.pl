@@ -362,7 +362,7 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 		if ($hit_matrix->{$hits[$j]}->{"strand"} < 0) {
 			$seq = reverse_complement($seq);
 		}
-		$contigs[$j] = ">$i"."_$contigs[$j]\n$seq";
+		$contigs[$j] = ">$i"."_$hits[$j]\n$seq";
 	}
 
 	# save off these resulting contigs to the ongoing contigs file.
