@@ -6,7 +6,7 @@ use File::Basename;
 use File::Temp qw/ tempfile tempdir /;
 use FindBin;
 use lib "$FindBin::Bin/lib";
-use Subfunctions;
+require Subfunctions;
 use Module::Load;
 require Sequenceretrieval;
 

@@ -1,8 +1,7 @@
 #!/usr/bin/perl
 use strict;
-use FindBin;
-use lib "$FindBin::Bin/../lib";
-use Subfunctions;
+use File::Temp qw/ tempfile /;
+require Subfunctions;
 
 	# Assembler modules need to know:
 	 	# where to find the short reads (pass this in as a file name)
