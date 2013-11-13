@@ -109,7 +109,7 @@ sub make_hit_matrix {
 	while (my $line = readline BLAST_FH) {
 		my ($contig, $baitseq, $score, $qstart, $qend, $sstart, $send, $qlen, undef) = split(/\s+/,$line);
 		my $strand = 1;
-		if ($qend > $qstart) {
+		if ((($qend-$qstart) / ($send-$sstart)) < 0) {
 			$strand = -1;
 		}
 		my $currscore = $hit_matrix->{$contig}->{$baitseq};

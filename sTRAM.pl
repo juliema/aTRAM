@@ -316,12 +316,17 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 		my $total = 0;
 		$hit_matrix->{$contig}->{"strand"} = 1;
 		foreach my $baitseq (@targets) {
-			my $score = abs($hit_matrix->{$contig}->{$baitseq});
-			$total += $score;
-			if ($score > $contig_high_score) {
-				$contig_high_score = $score;
-				$hit_matrix->{$contig}->{"strand"} = ($hit_matrix->{$contig}->{$baitseq})/$score;
-				$hit_matrix->{$contig}->{$baitseq} = $score;
+			my $partscore = abs($hit_matrix->{$contig}->{$baitseq});
+			if ($partscore > 0) {
+				# separate out the score and the strand for this part:
+				my $partstrand = ($hit_matrix->{$contig}->{$baitseq})/$partscore;
+				$hit_matrix->{$contig}->{$baitseq} = $partscore;
+				$total += $partscore;
+				if ($partscore > $contig_high_score) {
+					# if this is the best score for the contig, set the contig_high_score and set the strand to this strand.
+					$contig_high_score = $partscore;
+					$hit_matrix->{$contig}->{"strand"} = $partstrand;
+				}
 			}
 		}
 		$hit_matrix->{$contig}->{"total"} = $total;
@@ -378,8 +383,7 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 			if ($hit_matrix->{$contig}->{$target} == undef) {
 				print RESULTS_FH "-\t";
 			} else {
-				my $score = abs($hit_matrix->{$contig}->{$target});
-				print RESULTS_FH "$score\t";
+				print RESULTS_FH ($hit_matrix->{$contig}->{$target}) . "\t";
 			}
 		}
 		my $total = $hit_matrix->{$contig}->{"total"};
