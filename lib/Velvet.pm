@@ -49,4 +49,33 @@ sub assembler {
 	return "$tempdir/contigs.fa";
 }
 
+sub system_call {
+	my $cmd = shift;
+	my $log_fh = shift;
+
+	unless ($log_fh) {
+		$log_fh = &STDOUT;
+	}
+
+	print $log_fh ("\t$cmd\n");
+	my ($saveout, $saveerr);
+	open $saveout, ">&STDOUT";
+	open $saveerr, ">&STDERR";
+	open STDOUT, '>', File::Spec->devnull();
+	open STDERR, '>', File::Spec->devnull();
+	my $exit_val = eval {
+		system ($cmd);
+	};
+
+	open STDOUT, ">&", $saveout;
+	open STDERR, ">&", $saveerr;
+
+	if ($exit_val != 0) {
+		print "System call \"$cmd\" exited with $exit_val\n";
+		exit;
+	}
+	return $exit_val;
+}
+
+
 return 1;
