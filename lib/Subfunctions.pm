@@ -83,7 +83,7 @@ sub debug {
 	}
 }
 
-my set_debug {
+sub set_debug {
 	my $debug_new = shift;
 	$debug = $debug_new;
 }
