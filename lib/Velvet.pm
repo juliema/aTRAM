@@ -3,10 +3,10 @@ use strict;
 use File::Temp qw/ tempfile /;
 require Subfunctions;
 
-	# Assembler modules need to know:
-	 	# where to find the short reads (pass this in as a file name)
-	 	# what the assembly parameters are. (pass this in as a hash)
-	# Assembler modules should return a file name for the resulting contigs.
+# Assembler modules need to know:
+	# where to find the short reads (pass this in as a file name)
+	# what the assembly parameters are. (pass this in as a hash)
+# Assembler modules should return a file name for the resulting contigs.
 
 package Velvet;
 
@@ -15,6 +15,12 @@ sub assembler {
 	my $short_read_file = shift;
 	my $params = shift;
 	my $log_fh = shift;
+
+	my ($saveout, $saveerr);
+	open $saveout, ">&STDOUT";
+	open $saveerr, ">&STDERR";
+	open STDOUT, '>', File::Spec->devnull();
+	open STDERR, '>', File::Spec->devnull();
 
 	my ($kmer, $tempdir, $longreads, $ins_length, $exp_cov, $min_contig_len) = 0;
 	if ((ref $params) =~ /HASH/) {
@@ -46,6 +52,9 @@ sub assembler {
 	}
 	system_call ("velvetg $tempdir -ins_length $ins_length -exp_cov $exp_cov -min_contig_lgth $min_contig_len", $log_fh);
 
+	open STDOUT, ">&", $saveout;
+	open STDERR, ">&", $saveerr;
+
 	return "$tempdir/contigs.fa";
 }
 
@@ -58,22 +67,15 @@ sub system_call {
 	}
 
 	print $log_fh ("\t$cmd\n");
-	my ($saveout, $saveerr);
-	open $saveout, ">&STDOUT";
-	open $saveerr, ">&STDERR";
-	open STDOUT, '>', File::Spec->devnull();
-	open STDERR, '>', File::Spec->devnull();
 	my $exit_val = eval {
 		system ($cmd);
 	};
-
-	open STDOUT, ">&", $saveout;
-	open STDERR, ">&", $saveerr;
 
 	if ($exit_val != 0) {
 		print "System call \"$cmd\" exited with $exit_val\n";
 		exit;
 	}
+
 	return $exit_val;
 }
 
