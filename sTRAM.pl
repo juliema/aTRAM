@@ -270,15 +270,11 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 	}
 
 	# 4. assemble the reads...
-	# Assembler modules need to know:
-	 	# where to find the short reads (pass this in as a file name)
-	 	# where the possible previous contigs are (pass this in as a file name)
-	 	# what the assembly parameters are. (pass this in as a hash)
-	# Assembler modules should return a file name for the resulting contigs.
+	# for now, the only assembler available is Velvet.
+	load "Velvet";
 
-	my $assembly_dir = "$output_file.velvet";
 	my $assembly_params = { 'kmer' => 31,
-							'tempdir' => "$assembly_dir",
+							'tempdir' => "$output_file.velvet",
 							'ins_length' => $ins_length,
 							'exp_cov' => $exp_cov,
 							'min_contig_len' => 200,
@@ -288,7 +284,7 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 		# for iterations after the first one, we can use previous contigs to seed the assembly.
 		$assembly_params->{'longreads'} = $search_fasta;
 	}
-	load "Velvet";
+
 	my $assembled_contig_file = Velvet->assembler ("$output_file.blast.$i.fasta", $assembly_params, $log_fh);
 
 	# 5. now we filter out the contigs to look for just the best ones.
