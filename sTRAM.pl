@@ -25,7 +25,6 @@ my $search_fasta = 0;
 my $help = 0;
 my $log_file = "";
 my $output_file = "";
-my $use_ends = 0;
 my $processes = 0;
 my $fraclibs = 1;
 my $type = "";
@@ -48,14 +47,12 @@ GetOptions ('reads=s' => \$short_read_archive,
             'target=s' => \$search_fasta,
             'start_iteration=i' => \$start_iter,
             'iterations=i' => \$iterations,
-#             'processes=i' => \$processes,
 			'fraction=f' => \$fraclibs,
             'log_file=s' => \$log_file,
             'output=s' => \$output_file,
             'type=s' => \$type,
             'protein' => \$protflag,
             'blast=s' => \$blast_name,
-            'use_ends' => \$use_ends,
             'debug' => \$debug,
             'velvet' => \$velvet,
             'complete' => \$complete,
@@ -403,38 +400,6 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 	}
 
 
-	# if we flagged to use just the ends of the contigs, clean that up.
-	if ($use_ends != 0) {
-		system_call ("bash $executing_path/lib/sort_contigs.sh $search_fasta", $log_fh);
-
-		open FH, "<", "$search_fasta.sorted.tab";
-		my @contigs = <FH>;
-		close FH;
-		my @new_contigs = ();
-
-		for (my $j=0; $j<@contigs; $j++) {
-			my ($len,$name,$seq) = split (/\t/,$contigs[$j]);
-			if ($len > ($ins_length * 5)) {
-				my $name_start = $name. "_start";
-				my $name_end = $name . "_end";
-				$seq =~ /^(.{$ins_length}).*(.{$ins_length})$/;
-				my $seq_start = $1;
-				my $seq_end = $2;
-				push @new_contigs, "$ins_length\t$name_start\t$seq_start";
-				push @new_contigs, "$ins_length\t$name_end\t$seq_end";
-			} else {
-				push @new_contigs, $contigs[$j];
-			}
-		}
-
-		open FH, ">", "$search_fasta";
-		foreach my $line (@new_contigs) {
-			chomp $line;
-			$line =~ /(.*?)\t(.*?)\t(.*)/;
-			print FH ">$2\n$3\n";
-		}
-		close FH;
-	}
 }
 
 print "\n\nContigs by target coverage:\n";
@@ -474,7 +439,7 @@ sTRAM.pl
 
 =head1 SYNOPSIS
 
-sTRAM.pl -reads shortreadfile -target target.fasta [-iterations int] [-start_iteration int] [-log_file filename] [-use_ends] [-output filename] -options
+sTRAM.pl -reads shortreadfile -target target.fasta [-iterations int] [-start_iteration int] [-log_file filename] [-output filename] -options
 
 sTRAM does targeted denovo assembly of short reads to find homologs or paralogs of a target sequence.
 
@@ -494,7 +459,6 @@ sTRAM does targeted denovo assembly of short reads to find homologs or paralogs 
   -type:            one of the following values: dna, nucl, aa, protein.
 
   optional parameters:
-  -use_ends:        if this flag is present, use the first and last $ins_length of long contigs in the search.
   -velvet:          if specified, skips the blast steps and performs only velvet assembly on previously-generated intermediate files.
   -complete:        if specified, automatically quits when a complete homolog is recovered.
 
