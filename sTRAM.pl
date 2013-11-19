@@ -283,6 +283,7 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 	}
 
 	my $assembled_contig_file = Velvet->assembler ("$output_file.blast.$i.fasta", $assembly_params, $log_fh);
+	Velvet->rename_contigs($assembled_contig_file, "check.fasta");
 
 	# 5. now we filter out the contigs to look for just the best ones.
 	print "\tfiltering contigs...\n";
