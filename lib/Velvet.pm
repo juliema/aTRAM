@@ -68,7 +68,7 @@ sub rename_contigs {
 	while (my $line = readline FH) {
 		if ($line =~ /^>/) {
 			#NODE_41_length_2668_cov_4.901050
-			$line =~ s/^>NODE_(\d+)_length_(\d+)_cov_(.+)$/>$1_len_$2_cov_$3/;
+			$line =~ s/^>NODE_(\d+)_length_(\d+)_cov_(\d+\.\d).*$/>$1_len_$2_cov_$3/;
 		}
 		print OUTFH $line;
 	}
