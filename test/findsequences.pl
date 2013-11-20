@@ -29,7 +29,7 @@ my $results = findsequences ($fastafile, \@sequences);
 open OUT_FH, ">", $outfile;
 
 for (my $i=0; $i<@sequences; $i++) {
-	print OUT_FH ">$sequences[$i]\n@$results[$i]\n";
+	print OUT_FH ">$sequences[$i]\n$results->{$sequences[$i]}\n";
 }
 
 close OUT_FH;

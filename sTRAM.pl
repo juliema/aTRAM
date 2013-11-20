@@ -344,51 +344,46 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 		last;
 	}
 
-	my @hits = keys $hit_matrix;
-	my $sequences = findsequences ("$assembled_contig_file", \@hits);
 
-	my @contigs = ();
+	# we've finished the work of the iteration. Now we do post-processing to save results to files.
+	my @contig_names = keys $hit_matrix;
+	my $contig_seqs = findsequences ("$assembled_contig_file", \@contig_names);
 
 	# we'll use the resulting contigs as the query for the next iteration.
-	for (my $j=0; $j<@hits; $j++) {
-		push @contigs, ">$hits[$j]\n@$sequences[$j]";
-	}
-
 	(undef, $search_fasta) = tempfile(UNLINK => 1);
-
-	open OUT_FH, ">", $search_fasta;
-	print OUT_FH join("\n",@contigs) . "\n";
-	close OUT_FH;
-
-	# revcomping contigs with negative strand directions:
-	for (my $j=0; $j<@contigs; $j++) {
-		my $seq = @$sequences[$j];
-		if ($hit_matrix->{$hits[$j]}->{"strand"} < 0) {
-			$seq = reverse_complement($seq);
-		}
-		$contigs[$j] = ">$hits[$j]\n$seq";
+	open SEARCH_FH, ">", $search_fasta;
+	foreach my $contig_name (@contig_names) {
+		print SEARCH_FH ">$contig_name\n$contig_seqs->{$contig_name}\n";
 	}
+	close SEARCH_FH;
 
 	# save off these resulting contigs to the ongoing contigs file.
 	open CONTIGS_FH, ">>", "$output_file.all.fasta";
-	print CONTIGS_FH join("\n",@contigs) . "\n";
+	foreach my $contig_name (@contig_names) {
+		my $seq = $contig_seqs->{$contig_name};
+		# revcomping contigs with negative strand directions:
+		if ($hit_matrix->{$contig_name}->{"strand"} < 0) {
+			$seq = reverse_complement($seq);
+		}
+		print CONTIGS_FH ">$contig_name\n$seq\n";
+		$hit_matrix->{$contig_name}->{"seq"} = $seq;
+	}
 	close CONTIGS_FH;
 
 	open RESULTS_FH, ">>", "$output_file.results.txt";
-	foreach my $contig (keys $hit_matrix) {
-		my $contigname = "$contig";
-		print RESULTS_FH "$contigname\t";
+	foreach my $contig_name (@contig_names) {
+		print RESULTS_FH "$contig_name\t";
 		foreach my $target (@targets) {
-			if ($hit_matrix->{$contig}->{$target} == undef) {
+			if ($hit_matrix->{$contig_name}->{$target} == undef) {
 				print RESULTS_FH "-\t";
 			} else {
-				print RESULTS_FH ($hit_matrix->{$contig}->{$target}) . "\t";
+				print RESULTS_FH ($hit_matrix->{$contig_name}->{$target}) . "\t";
 			}
 		}
-		my $total = $hit_matrix->{$contig}->{"total"};
+		my $total = $hit_matrix->{$contig_name}->{"total"};
 		print RESULTS_FH "$total\n";
-		if ((abs($hit_matrix->{$contig}->{$start_seq}) > 20) && (abs($hit_matrix->{$contig}->{$end_seq}) > 20) && ($hit_matrix->{$contig}->{"total"} > $bitscore)) {
-			push @complete_contigs, $contigname;
+		if ((abs($hit_matrix->{$contig_name}->{$start_seq}) > 20) && (abs($hit_matrix->{$contig_name}->{$end_seq}) > 20) && ($hit_matrix->{$contig_name}->{"total"} > $bitscore)) {
+			push @complete_contigs, $contig_name;
 		}
 	}
 	close RESULTS_FH;
@@ -400,8 +395,6 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 			last;
 		}
 	}
-
-
 }
 
 print "\n\nContigs by target coverage:\n";
