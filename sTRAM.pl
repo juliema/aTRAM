@@ -305,45 +305,44 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 
 	# 6. we want to keep the contigs that have a bitscore higher than $bitscore.
 	print "\tsaving best-scoring contigs...\n";
-	make_hit_matrix ($blast_file, $hit_matrix);
+	my $raw_hit_matrix = {};
+	make_hit_matrix ($blast_file, $raw_hit_matrix);
 
 	my $high_score = 0;
 
-	my $new_matrix = {};
-
-	foreach my $contig (keys $hit_matrix) {
+	# clean up the hit matrix: only keep hits that meet the bitscore threshold.
+	foreach my $contig (keys $raw_hit_matrix) {
 		my $contig_high_score = 0;
 		my $total = 0;
-		$hit_matrix->{$contig}->{"strand"} = 1;
+		$raw_hit_matrix->{$contig}->{"strand"} = 1;
 		foreach my $baitseq (@targets) {
-			my $partscore = abs($hit_matrix->{$contig}->{$baitseq});
+			my $partscore = abs($raw_hit_matrix->{$contig}->{$baitseq});
 			if ($partscore > 0) {
 				# separate out the score and the strand for this part:
-				my $partstrand = ($hit_matrix->{$contig}->{$baitseq})/$partscore;
-				$hit_matrix->{$contig}->{$baitseq} = $partscore;
+				my $partstrand = ($raw_hit_matrix->{$contig}->{$baitseq})/$partscore;
+				$raw_hit_matrix->{$contig}->{$baitseq} = $partscore;
 				$total += $partscore;
 				if ($partscore > $contig_high_score) {
 					# if this is the best score for the contig, set the contig_high_score and set the strand to this strand.
 					$contig_high_score = $partscore;
-					$hit_matrix->{$contig}->{"strand"} = $partstrand;
+					$raw_hit_matrix->{$contig}->{"strand"} = $partstrand;
 				}
 			}
 		}
-		$hit_matrix->{$contig}->{"total"} = $total;
+		$raw_hit_matrix->{$contig}->{"total"} = $total;
 		if ($total > $high_score) {
 			$high_score = $total;
 		}
-		if (($total >= $bitscore) && ($hit_matrix->{$contig}->{"length"} >= $contiglength)) {
-			$new_matrix->{$contig} = $hit_matrix->{$contig};
+		if (($total >= $bitscore) && ($raw_hit_matrix->{$contig}->{"length"} >= $contiglength)) {
+			$hit_matrix->{$contig} = $raw_hit_matrix->{$contig};
 		}
 	}
 
 	# SHUTDOWN CHECK:
-	if ((keys $new_matrix) == 0) {
+	if ((keys $hit_matrix) == 0) {
 		print ("No contigs had a bitscore greater than $bitscore and longer than $contiglength in iteration $i: the highest bitscore this time was $high_score.\n");
 		last;
 	}
-	$hit_matrix = $new_matrix;
 
 	my @hits = keys $hit_matrix;
 	my $sequences = findsequences ("$assembled_contig_file", \@hits);
