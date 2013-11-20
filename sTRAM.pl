@@ -111,7 +111,7 @@ close CONTIGS_FH;
 
 my $start_seq = "";
 my $end_seq = "";
-my @hit_matrices = ();
+my $hit_matrix = {};
 my @complete_contigs = ();
 
 # process the target sequence file to look for the start seq and end seq.
@@ -217,9 +217,6 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 	print ("iteration $i starting...\n");
 	print $log_fh ("iteration $i starting...\n");
 
-	my $hit_matrix = {};
-	push @hit_matrices, \$hit_matrix;
-
 	if ($velvet==0) {
 		my $sra = "$short_read_archive";
 		my $current_partial_file = "$output_file.blast.$i";
@@ -309,7 +306,7 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 	make_hit_matrix ($blast_file, $raw_hit_matrix);
 
 	my $high_score = 0;
-
+	my @contig_names = ();
 	# clean up the hit matrix: only keep hits that meet the bitscore threshold.
 	foreach my $contig (keys $raw_hit_matrix) {
 		my $contig_high_score = 0;
@@ -335,18 +332,17 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 		}
 		if (($total >= $bitscore) && ($raw_hit_matrix->{$contig}->{"length"} >= $contiglength)) {
 			$hit_matrix->{$contig} = $raw_hit_matrix->{$contig};
+			push @contig_names, $contig;
 		}
 	}
 
 	# SHUTDOWN CHECK:
-	if ((keys $hit_matrix) == 0) {
+	if (@contig_names == 0) {
 		print ("No contigs had a bitscore greater than $bitscore and longer than $contiglength in iteration $i: the highest bitscore this time was $high_score.\n");
 		last;
 	}
 
-
 	# we've finished the work of the iteration. Now we do post-processing to save results to files.
-	my @contig_names = keys $hit_matrix;
 	my $contig_seqs = findsequences ("$assembled_contig_file", \@contig_names);
 
 	# we'll use the resulting contigs as the query for the next iteration.
@@ -405,6 +401,8 @@ print $log_fh "Contig coverage in $output_file.results.txt\n";
 print $log_fh "\nContigs containing the entire target sequence:\n\t" . join("\n\t", @complete_contigs) . "\n";
 
 close $log_fh;
+
+print "there are " . (keys $hit_matrix) . " keys: " . join (", ", keys $hit_matrix)."\n";
 
 sub reverse_complement {
 	my $charstr = shift;
