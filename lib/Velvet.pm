@@ -62,13 +62,20 @@ sub rename_contigs {
 	my $self = shift;
 	my $contigfile = shift;
 	my $renamefile = shift;
+	my $prefix = shift;
+
+	if ($prefix) {
+		$prefix = "$prefix.";
+	} else {
+		$prefix = "";
+	}
 
 	open FH, "<", $contigfile;
 	open OUTFH, ">", $renamefile;
 	while (my $line = readline FH) {
 		if ($line =~ /^>/) {
 			#NODE_41_length_2668_cov_4.901050
-			$line =~ s/^>NODE_(\d+)_length_(\d+)_cov_(\d+\.\d).*$/>$1_len_$2_cov_$3/;
+			$line =~ s/^>NODE_(\d+)_length_(\d+)_cov_(\d+\.\d).*$/>$prefix$1_len_$2_cov_$3/;
 		}
 		print OUTFH $line;
 	}
