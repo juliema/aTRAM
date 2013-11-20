@@ -402,6 +402,12 @@ print $log_fh "\nContigs containing the entire target sequence:\n\t" . join("\n\
 
 close $log_fh;
 
+open COMPLETE_FH, ">", "$output_file.complete.fasta";
+foreach my $contig_name (@complete_contigs) {
+	print COMPLETE_FH ">$contig_name\n$hit_matrix->{$contig_name}->{'seq'}\n";
+}
+close COMPLETE_FH;
+
 sub reverse_complement {
 	my $charstr = shift;
 
