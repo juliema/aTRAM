@@ -402,8 +402,6 @@ print $log_fh "\nContigs containing the entire target sequence:\n\t" . join("\n\
 
 close $log_fh;
 
-print "there are " . (keys $hit_matrix) . " keys: " . join (", ", keys $hit_matrix)."\n";
-
 sub reverse_complement {
 	my $charstr = shift;
 
