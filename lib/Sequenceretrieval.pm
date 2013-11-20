@@ -138,11 +138,7 @@ sub findsequences {
 
 	close FA_FH;
 
-	my @sequences = ();
-	foreach my $name (@$names) {
-		push @sequences, $hashed_seqs->{$name};
-	}
-	return \@sequences;
+	return $hashed_seqs;
 }
 
 return 1;

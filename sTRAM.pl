@@ -111,7 +111,7 @@ close CONTIGS_FH;
 
 my $start_seq = "";
 my $end_seq = "";
-my @hit_matrices = ();
+my $hit_matrix = {};
 my @complete_contigs = ();
 
 # process the target sequence file to look for the start seq and end seq.
@@ -217,9 +217,6 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 	print ("iteration $i starting...\n");
 	print $log_fh ("iteration $i starting...\n");
 
-	my $hit_matrix = {};
-	push @hit_matrices, \$hit_matrix;
-
 	if ($velvet==0) {
 		my $sra = "$short_read_archive";
 		my $current_partial_file = "$output_file.blast.$i";
@@ -305,91 +302,84 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 
 	# 6. we want to keep the contigs that have a bitscore higher than $bitscore.
 	print "\tsaving best-scoring contigs...\n";
-	make_hit_matrix ($blast_file, $hit_matrix);
+	my $raw_hit_matrix = {};
+	make_hit_matrix ($blast_file, $raw_hit_matrix);
 
 	my $high_score = 0;
-
-	my $new_matrix = {};
-
-	foreach my $contig (keys $hit_matrix) {
+	my @contig_names = ();
+	# clean up the hit matrix: only keep hits that meet the bitscore threshold.
+	foreach my $contig (keys $raw_hit_matrix) {
 		my $contig_high_score = 0;
 		my $total = 0;
-		$hit_matrix->{$contig}->{"strand"} = 1;
+		$raw_hit_matrix->{$contig}->{"strand"} = 1;
 		foreach my $baitseq (@targets) {
-			my $partscore = abs($hit_matrix->{$contig}->{$baitseq});
+			my $partscore = abs($raw_hit_matrix->{$contig}->{$baitseq});
 			if ($partscore > 0) {
 				# separate out the score and the strand for this part:
-				my $partstrand = ($hit_matrix->{$contig}->{$baitseq})/$partscore;
-				$hit_matrix->{$contig}->{$baitseq} = $partscore;
+				my $partstrand = ($raw_hit_matrix->{$contig}->{$baitseq})/$partscore;
+				$raw_hit_matrix->{$contig}->{$baitseq} = $partscore;
 				$total += $partscore;
 				if ($partscore > $contig_high_score) {
 					# if this is the best score for the contig, set the contig_high_score and set the strand to this strand.
 					$contig_high_score = $partscore;
-					$hit_matrix->{$contig}->{"strand"} = $partstrand;
+					$raw_hit_matrix->{$contig}->{"strand"} = $partstrand;
 				}
 			}
 		}
-		$hit_matrix->{$contig}->{"total"} = $total;
+		$raw_hit_matrix->{$contig}->{"total"} = $total;
 		if ($total > $high_score) {
 			$high_score = $total;
 		}
-		if (($total >= $bitscore) && ($hit_matrix->{$contig}->{"length"} >= $contiglength)) {
-			$new_matrix->{$contig} = $hit_matrix->{$contig};
+		if (($total >= $bitscore) && ($raw_hit_matrix->{$contig}->{"length"} >= $contiglength)) {
+			$hit_matrix->{$contig} = $raw_hit_matrix->{$contig};
+			push @contig_names, $contig;
 		}
 	}
 
 	# SHUTDOWN CHECK:
-	if ((keys $new_matrix) == 0) {
+	if (@contig_names == 0) {
 		print ("No contigs had a bitscore greater than $bitscore and longer than $contiglength in iteration $i: the highest bitscore this time was $high_score.\n");
 		last;
 	}
-	$hit_matrix = $new_matrix;
 
-	my @hits = keys $hit_matrix;
-	my $sequences = findsequences ("$assembled_contig_file", \@hits);
-
-	my @contigs = ();
+	# we've finished the work of the iteration. Now we do post-processing to save results to files.
+	my $contig_seqs = findsequences ("$assembled_contig_file", \@contig_names);
 
 	# we'll use the resulting contigs as the query for the next iteration.
-	for (my $j=0; $j<@hits; $j++) {
-		push @contigs, ">$hits[$j]\n@$sequences[$j]";
-	}
-
 	(undef, $search_fasta) = tempfile(UNLINK => 1);
-
-	open OUT_FH, ">", $search_fasta;
-	print OUT_FH join("\n",@contigs) . "\n";
-	close OUT_FH;
-
-	# revcomping contigs with negative strand directions:
-	for (my $j=0; $j<@contigs; $j++) {
-		my $seq = @$sequences[$j];
-		if ($hit_matrix->{$hits[$j]}->{"strand"} < 0) {
-			$seq = reverse_complement($seq);
-		}
-		$contigs[$j] = ">$hits[$j]\n$seq";
+	open SEARCH_FH, ">", $search_fasta;
+	foreach my $contig_name (@contig_names) {
+		print SEARCH_FH ">$contig_name\n$contig_seqs->{$contig_name}\n";
 	}
+	close SEARCH_FH;
 
 	# save off these resulting contigs to the ongoing contigs file.
 	open CONTIGS_FH, ">>", "$output_file.all.fasta";
-	print CONTIGS_FH join("\n",@contigs) . "\n";
+	foreach my $contig_name (@contig_names) {
+		my $seq = $contig_seqs->{$contig_name};
+		# revcomping contigs with negative strand directions:
+		if ($hit_matrix->{$contig_name}->{"strand"} < 0) {
+			$seq = reverse_complement($seq);
+		}
+		print CONTIGS_FH ">$contig_name\n$seq\n";
+		$hit_matrix->{$contig_name}->{"seq"} = $seq;
+	}
 	close CONTIGS_FH;
 
 	open RESULTS_FH, ">>", "$output_file.results.txt";
-	foreach my $contig (keys $hit_matrix) {
-		my $contigname = "$contig";
-		print RESULTS_FH "$contigname\t";
+	foreach my $contig_name (@contig_names) {
+		print RESULTS_FH "$contig_name\t";
 		foreach my $target (@targets) {
-			if ($hit_matrix->{$contig}->{$target} == undef) {
+			if ($hit_matrix->{$contig_name}->{$target} == undef) {
 				print RESULTS_FH "-\t";
 			} else {
-				print RESULTS_FH ($hit_matrix->{$contig}->{$target}) . "\t";
+				print RESULTS_FH ($hit_matrix->{$contig_name}->{$target}) . "\t";
 			}
 		}
-		my $total = $hit_matrix->{$contig}->{"total"};
+		my $total = $hit_matrix->{$contig_name}->{"total"};
 		print RESULTS_FH "$total\n";
-		if ((abs($hit_matrix->{$contig}->{$start_seq}) > 20) && (abs($hit_matrix->{$contig}->{$end_seq}) > 20) && ($hit_matrix->{$contig}->{"total"} > $bitscore)) {
-			push @complete_contigs, $contigname;
+		if ((abs($hit_matrix->{$contig_name}->{$start_seq}) > 20) && (abs($hit_matrix->{$contig_name}->{$end_seq}) > 20) && ($hit_matrix->{$contig_name}->{"total"} > $bitscore)) {
+			push @complete_contigs, $contig_name;
 		}
 	}
 	close RESULTS_FH;
@@ -401,8 +391,6 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 			last;
 		}
 	}
-
-
 }
 
 print "\n\nContigs by target coverage:\n";
