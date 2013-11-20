@@ -212,6 +212,8 @@ open RESULTS_FH, ">", "$output_file.results.txt";
 print RESULTS_FH "contig\t" . join ("\t",@targets) . "\ttotal score\n";
 close RESULTS_FH;
 
+my $best_score = 0;
+
 # STARTING ITERATIONS:
 for (my $i=$start_iter; $i<=$iterations; $i++) {
 	print ("iteration $i starting...\n");
@@ -329,6 +331,9 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 		$raw_hit_matrix->{$contig}->{"total"} = $total;
 		if ($total > $high_score) {
 			$high_score = $total;
+			if ($total > $best_score) {
+				$best_score = $total;
+			}
 		}
 		if (($total >= $bitscore) && ($raw_hit_matrix->{$contig}->{"length"} >= $contiglength)) {
 			$hit_matrix->{$contig} = $raw_hit_matrix->{$contig};
@@ -378,7 +383,7 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 		}
 		my $total = $hit_matrix->{$contig_name}->{"total"};
 		print RESULTS_FH "$total\n";
-		if ((abs($hit_matrix->{$contig_name}->{$start_seq}) > 20) && (abs($hit_matrix->{$contig_name}->{$end_seq}) > 20) && ($hit_matrix->{$contig_name}->{"total"} > $bitscore)) {
+		if ((abs($hit_matrix->{$contig_name}->{$start_seq}) > 20) && (abs($hit_matrix->{$contig_name}->{$end_seq}) > 20)) {
 			push @complete_contigs, $contig_name;
 		}
 	}
@@ -401,6 +406,26 @@ print $log_fh "Contig coverage in $output_file.results.txt\n";
 print $log_fh "\nContigs containing the entire target sequence:\n\t" . join("\n\t", @complete_contigs) . "\n";
 
 close $log_fh;
+
+open COMPLETE_FH, ">", "$output_file.complete.fasta";
+foreach my $contig_name (@complete_contigs) {
+	print COMPLETE_FH ">$contig_name\n$hit_matrix->{$contig_name}->{'seq'}\n";
+}
+close COMPLETE_FH;
+
+my @best_contigs = ();
+foreach my $contig_name (keys $hit_matrix) {
+	if ($hit_matrix->{$contig_name}->{"total"} > ($best_score / 2)) {
+		push @best_contigs, $contig_name;
+	}
+}
+
+open BEST_FH, ">", "$output_file.best.fasta";
+foreach my $contig_name (@best_contigs) {
+	print BEST_FH ">$contig_name\n$hit_matrix->{$contig_name}->{'seq'}\n";
+}
+close BEST_FH;
+
 
 sub reverse_complement {
 	my $charstr = shift;
