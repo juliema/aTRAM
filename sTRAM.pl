@@ -352,7 +352,7 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 
 	# we'll use the resulting contigs as the query for the next iteration.
 	for (my $j=0; $j<@hits; $j++) {
-		push @contigs, ">$i"."_$hits[$j]\n@$sequences[$j]";
+		push @contigs, ">$hits[$j]\n@$sequences[$j]";
 	}
 
 	(undef, $search_fasta) = tempfile(UNLINK => 1);
@@ -367,7 +367,7 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 		if ($hit_matrix->{$hits[$j]}->{"strand"} < 0) {
 			$seq = reverse_complement($seq);
 		}
-		$contigs[$j] = ">$i"."_$hits[$j]\n$seq";
+		$contigs[$j] = ">$hits[$j]\n$seq";
 	}
 
 	# save off these resulting contigs to the ongoing contigs file.
@@ -377,7 +377,7 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 
 	open RESULTS_FH, ">>", "$output_file.results.txt";
 	foreach my $contig (keys $hit_matrix) {
-		my $contigname = "".($i)."_$contig";
+		my $contigname = "$contig";
 		print RESULTS_FH "$contigname\t";
 		foreach my $target (@targets) {
 			if ($hit_matrix->{$contig}->{$target} == undef) {
