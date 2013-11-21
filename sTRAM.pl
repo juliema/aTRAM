@@ -258,15 +258,15 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 
 		# now we need to piece all of the partial files back together.
 		my $fastafiles = join (" ", map {$_ . ".fasta"} @partialfiles);
-		system_call ("cat $fastafiles > $intermediate.blast.$i.fasta", $log_fh);
+		system_call ("cat $fastafiles > $intermediate.$i.blast.fasta", $log_fh);
 		system_call ("rm $fastafiles", $log_fh);
 
 		# remove intermediate blast results
 		my $readfiles = join (" ", @partialfiles);
 		system_call ("rm $readfiles", $log_fh);
 
-		# did we not find any reads? Go ahead and quit.
-		if ((-s "$intermediate.blast.$i.fasta") == 0) {
+		# SHUTDOWN CHECK: did we not find any reads? Go ahead and quit.
+		if ((-s "$intermediate.$i.blast.fasta") == 0) {
 			print "No similar reads were found.\n";
 			last;
 		}
@@ -288,7 +288,7 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 		$assembly_params->{'longreads'} = $search_fasta;
 	}
 
-	my $assembled_contig_file = Velvet->assembler ("$intermediate.blast.$i.fasta", $assembly_params, $log_fh);
+	my $assembled_contig_file = Velvet->assembler ("$intermediate.$i.blast.fasta", $assembly_params, $log_fh);
 	my (undef, $contigs_file) = tempfile(UNLINK => 1);
 	Velvet->rename_contigs($assembled_contig_file, $contigs_file, $i);
 	$assembled_contig_file = $contigs_file;
