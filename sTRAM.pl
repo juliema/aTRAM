@@ -298,7 +298,7 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 
 	my $blast_file = "";
 	if ($save_temp) {
-		$blast_file = "$intermediate.$i";
+		$blast_file = "$intermediate.$i.blast";
 	} else {
 		(undef, $blast_file) = tempfile(UNLINK => 1);
 	}
