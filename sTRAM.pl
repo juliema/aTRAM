@@ -31,7 +31,7 @@ my $type = "";
 my $intermediate = 0;
 my $save_temp = 0;
 my $complete = 0;
-my $velvet = 0;
+my $use_temps = 0;
 my $protflag = 0;
 my $bitscore = 70;
 my $contiglength = 100;
@@ -55,7 +55,7 @@ GetOptions ('reads=s' => \$short_read_archive,
             'protein' => \$protflag,
             'tempfiles=s' => \$save_temp,
             'debug' => \$debug,
-            'velvet' => \$velvet,
+            'use_temps' => \$use_temps,
             'complete' => \$complete,
             'insert_length|ins_length=i' => \$ins_length,
             'exp_coverage|expected_coverage=i' => \$exp_cov,
@@ -226,7 +226,8 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 	print ("iteration $i starting...\n");
 	print $log_fh ("iteration $i starting...\n");
 
-	if ($velvet==0) {
+	# only do this if the use_temps flag is off.
+	if ($use_temps==0) {
 		my $sra = "$short_read_archive";
 		my $current_partial_file = "$intermediate.blast.$i";
 		my @partialfiles = ();
@@ -272,26 +273,33 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 		}
 	}
 
-	# 4. assemble the reads...
-	# for now, the only assembler available is Velvet.
-	load "Velvet";
-
-	my $assembly_params = { 'kmer' => 31,
-							'tempdir' => "$intermediate.velvet",
-							'ins_length' => $ins_length,
-							'exp_cov' => $exp_cov,
-							'min_contig_len' => 200,
-						  };
-
-	if ($i > 1) {
-		# for iterations after the first one, we can use previous contigs to seed the assembly.
-		$assembly_params->{'longreads'} = $search_fasta;
+	if ($save_temp) {
+		$contigs_file = "$intermediate.$i.contigs.fasta";
+	} else {
+		my (undef, $contigs_file) = tempfile(UNLINK => 1);
 	}
 
-	my $assembled_contig_file = Velvet->assembler ("$intermediate.$i.blast.fasta", $assembly_params, $log_fh);
-	my (undef, $contigs_file) = tempfile(UNLINK => 1);
-	Velvet->rename_contigs($assembled_contig_file, $contigs_file, $i);
-	$assembled_contig_file = $contigs_file;
+	if ($use_temps == 0) {
+		# 4. assemble the reads...
+		# for now, the only assembler available is Velvet.
+		load "Velvet";
+
+		my $assembly_params = { 'kmer' => 31,
+								'tempdir' => "$intermediate.velvet",
+								'ins_length' => $ins_length,
+								'exp_cov' => $exp_cov,
+								'min_contig_len' => 200,
+							  };
+
+		if ($i > 1) {
+			# for iterations after the first one, we can use previous contigs to seed the assembly.
+			$assembly_params->{'longreads'} = $search_fasta;
+		}
+
+		my $assembled_contig_file = Velvet->assembler ("$intermediate.$i.blast.fasta", $assembly_params, $log_fh);
+		Velvet->rename_contigs($assembled_contig_file, $contigs_file, $i);
+	}
+
 
 	# 5. now we filter out the contigs to look for just the best ones.
 	print "\tfiltering contigs...\n";
@@ -304,9 +312,9 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 	}
 
 	if ($protein == 1) {
-		system_call ("blastx -db $targetdb.db -query $assembled_contig_file -out $blast_file -outfmt '6 qseqid sseqid bitscore qstart qend sstart send qlen'", $log_fh);
+		system_call ("blastx -db $targetdb.db -query $contigs_file -out $blast_file -outfmt '6 qseqid sseqid bitscore qstart qend sstart send qlen'", $log_fh);
 	} else {
-		system_call ("tblastx -db $targetdb.db -query $assembled_contig_file -out $blast_file -outfmt '6 qseqid sseqid bitscore qstart qend sstart send qlen'", $log_fh);
+		system_call ("tblastx -db $targetdb.db -query $contigs_file -out $blast_file -outfmt '6 qseqid sseqid bitscore qstart qend sstart send qlen'", $log_fh);
 	}
 
 	# 6. we want to keep the contigs that have a bitscore higher than $bitscore.
@@ -355,7 +363,7 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 	}
 
 	# we've finished the work of the iteration. Now we do post-processing to save results to files.
-	my $contig_seqs = findsequences ("$assembled_contig_file", \@contig_names);
+	my $contig_seqs = findsequences ("$contigs_file", \@contig_names);
 
 	# we'll use the resulting contigs as the query for the next iteration.
 	if ($save_temp) {
