@@ -28,7 +28,7 @@ my $output_file = "";
 my $processes = 0;
 my $fraclibs = 1;
 my $type = "";
-my $blast_name = 0;
+my $temp_name = 0;
 my $complete = 0;
 my $velvet = 0;
 my $protflag = 0;
@@ -52,7 +52,7 @@ GetOptions ('reads=s' => \$short_read_archive,
             'output=s' => \$output_file,
             'type=s' => \$type,
             'protein' => \$protflag,
-            'blast=s' => \$blast_name,
+            'tempfiles=s' => \$temp_name,
             'debug' => \$debug,
             'velvet' => \$velvet,
             'complete' => \$complete,
@@ -83,6 +83,9 @@ if ($output_file eq "") {
 }
 if ($log_file eq "") {
 	$log_file = "$output_file.log";
+}
+if ($temp_name eq "") {
+    $temp_name = $output_file;
 }
 
 my $log_fh;
@@ -205,7 +208,7 @@ if ($protein == 1) {
 
 if ($start_iter > 1) {
 	my $x = $start_iter-1;
-	$search_fasta = "$output_file.".($start_iter-1).".contigs.fa";
+	$search_fasta = "$temp_name.".($start_iter-1).".contigs.fa";
 }
 
 # writing the header line for the results file
@@ -222,7 +225,7 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 
 	if ($velvet==0) {
 		my $sra = "$short_read_archive";
-		my $current_partial_file = "$output_file.blast.$i";
+		my $current_partial_file = "$temp_name.blast.$i";
 		my @partialfiles = ();
 		my @pids = ();
 
@@ -230,7 +233,7 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 		print "\tblasting short reads...\n";
 		for (my $p=0; $p<$processes; $p++) {
 			$sra = "$short_read_archive.$p";
-			$current_partial_file = "$output_file.blast.$i.$p";
+			$current_partial_file = "$temp_name.blast.$i.$p";
 			push @partialfiles, $current_partial_file;
 			# 1. blast to find any short reads that match the target.
 			if (($protein == 1) && ($i == 1)) {
@@ -244,7 +247,7 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 		print "\tgetting paired ends...\n";
 		for (my $p=0; $p<$processes; $p++) {
 			$sra = "$short_read_archive.$p";
-			$current_partial_file = "$output_file.blast.$i.$p";
+			$current_partial_file = "$temp_name.blast.$i.$p";
 			# 2 and 3. find the paired end of all of the blast hits.
 			push @pids, fork_pair_retrieval("$sra.#.fasta", "$current_partial_file", "$current_partial_file.fasta");
 		}
@@ -252,7 +255,7 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 
 		# now we need to piece all of the partial files back together.
 		my $fastafiles = join (" ", map {$_ . ".fasta"} @partialfiles);
-		system_call ("cat $fastafiles > $output_file.blast.$i.fasta", $log_fh);
+		system_call ("cat $fastafiles > $temp_name.blast.$i.fasta", $log_fh);
 		system_call ("rm $fastafiles", $log_fh);
 
 		# remove intermediate blast results
@@ -260,7 +263,7 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 		system_call ("rm $readfiles", $log_fh);
 
 		# did we not find any reads? Go ahead and quit.
-		if ((-s "$output_file.blast.$i.fasta") == 0) {
+		if ((-s "$temp_name.blast.$i.fasta") == 0) {
 			print "No similar reads were found.\n";
 			last;
 		}
@@ -271,7 +274,7 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 	load "Velvet";
 
 	my $assembly_params = { 'kmer' => 31,
-							'tempdir' => "$output_file.velvet",
+							'tempdir' => "$temp_name.velvet",
 							'ins_length' => $ins_length,
 							'exp_cov' => $exp_cov,
 							'min_contig_len' => 200,
@@ -282,7 +285,7 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 		$assembly_params->{'longreads'} = $search_fasta;
 	}
 
-	my $assembled_contig_file = Velvet->assembler ("$output_file.blast.$i.fasta", $assembly_params, $log_fh);
+	my $assembled_contig_file = Velvet->assembler ("$temp_name.blast.$i.fasta", $assembly_params, $log_fh);
 	my (undef, $contigs_file) = tempfile(UNLINK => 1);
 	Velvet->rename_contigs($assembled_contig_file, $contigs_file, $i);
 	$assembled_contig_file = $contigs_file;
@@ -291,10 +294,10 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 	print "\tfiltering contigs...\n";
 
 	my $blast_file = "";
-	unless ($blast_name) {
+	unless ($temp_name) {
 		(undef, $blast_file) = tempfile(UNLINK => 1);
 	} else {
-		$blast_file = "$blast_name.$i";
+		$blast_file = "$temp_name.$i";
 	}
 
 	if ($protein == 1) {
