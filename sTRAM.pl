@@ -28,7 +28,8 @@ my $output_file = "";
 my $processes = 0;
 my $fraclibs = 1;
 my $type = "";
-my $temp_name = 0;
+my $intermediate = 0;
+my $save_temp = 0;
 my $complete = 0;
 my $velvet = 0;
 my $protflag = 0;
@@ -52,7 +53,7 @@ GetOptions ('reads=s' => \$short_read_archive,
             'output=s' => \$output_file,
             'type=s' => \$type,
             'protein' => \$protflag,
-            'tempfiles=s' => \$temp_name,
+            'tempfiles=s' => \$save_temp,
             'debug' => \$debug,
             'velvet' => \$velvet,
             'complete' => \$complete,
@@ -84,8 +85,10 @@ if ($output_file eq "") {
 if ($log_file eq "") {
 	$log_file = "$output_file.log";
 }
-if ($temp_name eq "") {
-    $temp_name = $output_file;
+if ($save_temp eq "") {
+    $intermediate = $output_file;
+} else {
+    $intermediate = $save_temp;
 }
 
 my $log_fh;
@@ -208,7 +211,7 @@ if ($protein == 1) {
 
 if ($start_iter > 1) {
 	my $x = $start_iter-1;
-	$search_fasta = "$temp_name.".($start_iter-1).".contigs.fa";
+	$search_fasta = "$intermediate.".($start_iter-1).".contigs.fa";
 }
 
 # writing the header line for the results file
@@ -225,7 +228,7 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 
 	if ($velvet==0) {
 		my $sra = "$short_read_archive";
-		my $current_partial_file = "$temp_name.blast.$i";
+		my $current_partial_file = "$intermediate.blast.$i";
 		my @partialfiles = ();
 		my @pids = ();
 
@@ -233,7 +236,7 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 		print "\tblasting short reads...\n";
 		for (my $p=0; $p<$processes; $p++) {
 			$sra = "$short_read_archive.$p";
-			$current_partial_file = "$temp_name.blast.$i.$p";
+			$current_partial_file = "$intermediate.blast.$i.$p";
 			push @partialfiles, $current_partial_file;
 			# 1. blast to find any short reads that match the target.
 			if (($protein == 1) && ($i == 1)) {
@@ -247,7 +250,7 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 		print "\tgetting paired ends...\n";
 		for (my $p=0; $p<$processes; $p++) {
 			$sra = "$short_read_archive.$p";
-			$current_partial_file = "$temp_name.blast.$i.$p";
+			$current_partial_file = "$intermediate.blast.$i.$p";
 			# 2 and 3. find the paired end of all of the blast hits.
 			push @pids, fork_pair_retrieval("$sra.#.fasta", "$current_partial_file", "$current_partial_file.fasta");
 		}
@@ -255,7 +258,7 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 
 		# now we need to piece all of the partial files back together.
 		my $fastafiles = join (" ", map {$_ . ".fasta"} @partialfiles);
-		system_call ("cat $fastafiles > $temp_name.blast.$i.fasta", $log_fh);
+		system_call ("cat $fastafiles > $intermediate.blast.$i.fasta", $log_fh);
 		system_call ("rm $fastafiles", $log_fh);
 
 		# remove intermediate blast results
@@ -263,7 +266,7 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 		system_call ("rm $readfiles", $log_fh);
 
 		# did we not find any reads? Go ahead and quit.
-		if ((-s "$temp_name.blast.$i.fasta") == 0) {
+		if ((-s "$intermediate.blast.$i.fasta") == 0) {
 			print "No similar reads were found.\n";
 			last;
 		}
@@ -274,7 +277,7 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 	load "Velvet";
 
 	my $assembly_params = { 'kmer' => 31,
-							'tempdir' => "$temp_name.velvet",
+							'tempdir' => "$intermediate.velvet",
 							'ins_length' => $ins_length,
 							'exp_cov' => $exp_cov,
 							'min_contig_len' => 200,
@@ -285,7 +288,7 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 		$assembly_params->{'longreads'} = $search_fasta;
 	}
 
-	my $assembled_contig_file = Velvet->assembler ("$temp_name.blast.$i.fasta", $assembly_params, $log_fh);
+	my $assembled_contig_file = Velvet->assembler ("$intermediate.blast.$i.fasta", $assembly_params, $log_fh);
 	my (undef, $contigs_file) = tempfile(UNLINK => 1);
 	Velvet->rename_contigs($assembled_contig_file, $contigs_file, $i);
 	$assembled_contig_file = $contigs_file;
@@ -294,10 +297,10 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 	print "\tfiltering contigs...\n";
 
 	my $blast_file = "";
-	unless ($temp_name) {
-		(undef, $blast_file) = tempfile(UNLINK => 1);
+	if ($save_temp) {
+		$blast_file = "$intermediate.$i";
 	} else {
-		$blast_file = "$temp_name.$i";
+		(undef, $blast_file) = tempfile(UNLINK => 1);
 	}
 
 	if ($protein == 1) {
@@ -355,7 +358,11 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 	my $contig_seqs = findsequences ("$assembled_contig_file", \@contig_names);
 
 	# we'll use the resulting contigs as the query for the next iteration.
-	(undef, $search_fasta) = tempfile(UNLINK => 1);
+	if ($save_temp) {
+		$search_fasta = "$intermediate.$i.contigs.fasta";
+	} else {
+		(undef, $search_fasta) = tempfile(UNLINK => 1);
+	}
 	open SEARCH_FH, ">", $search_fasta;
 	foreach my $contig_name (@contig_names) {
 		print SEARCH_FH ">$contig_name\n$contig_seqs->{$contig_name}\n";
