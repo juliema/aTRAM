@@ -31,7 +31,8 @@ my $type = "";
 my $intermediate = 0;
 my $save_temp = 0;
 my $complete = 0;
-my $use_temps = 0;
+my $noblast = 0;
+my $noassemble = 0;
 my $protflag = 0;
 my $bitscore = 70;
 my $contiglength = 100;
@@ -55,7 +56,8 @@ GetOptions ('reads=s' => \$short_read_archive,
             'protein' => \$protflag,
             'tempfiles=s' => \$save_temp,
             'debug' => \$debug,
-            'use_temps' => \$use_temps,
+			'noblast' => \$noblast,
+			'noassemble' => \$noassemble,
             'complete' => \$complete,
             'insert_length|ins_length=i' => \$ins_length,
             'exp_coverage|expected_coverage=i' => \$exp_cov,
@@ -226,8 +228,7 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 	print ("iteration $i starting...\n");
 	print $log_fh ("iteration $i starting...\n");
 
-	# only do this if the use_temps flag is off.
-	if ($use_temps==0) {
+	if ($noblast==0) {
 		my $sra = "$short_read_archive";
 		my $current_partial_file = "$intermediate.blast.$i";
 		my @partialfiles = ();
@@ -279,7 +280,7 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 		(undef, $contigs_file) = tempfile(UNLINK => 1);
 	}
 
-	if ($use_temps == 0) {
+	if ($noassemble == 0) {
 		# 4. assemble the reads...
 		# for now, the only assembler available is Velvet.
 		load "Velvet";
