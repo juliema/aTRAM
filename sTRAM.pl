@@ -272,11 +272,11 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 			last;
 		}
 	}
-
+	my $contigs_file = "";
 	if ($save_temp) {
 		$contigs_file = "$intermediate.$i.contigs.fasta";
 	} else {
-		my (undef, $contigs_file) = tempfile(UNLINK => 1);
+		(undef, $contigs_file) = tempfile(UNLINK => 1);
 	}
 
 	if ($use_temps == 0) {
