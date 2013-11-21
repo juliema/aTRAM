@@ -19,7 +19,7 @@ my $runline = "running " . basename($0) . " " . join (" ", @ARGV) . "\n";
 
 #required: input file names
 my $short_read_archive = 0;
-my $search_fasta = 0;
+my $target_fasta = 0;
 
 #optional parameters:
 my $help = 0;
@@ -44,7 +44,7 @@ my $evalue = 10e-10;
 my $max_target_seqs = 100000000;
 
 GetOptions ('reads=s' => \$short_read_archive,
-            'target=s' => \$search_fasta,
+            'target=s' => \$target_fasta,
             'start_iteration=i' => \$start_iter,
             'iterations=i' => \$iterations,
 			'fraction=f' => \$fraclibs,
@@ -68,7 +68,7 @@ if ($help) {
     pod2usage(-verbose => 1);
 }
 
-unless($short_read_archive and $search_fasta) {
+unless($short_read_archive and $target_fasta) {
     pod2usage(-msg => "Must specify a short read archive (that has already been prepared with makelibrary.pl) and a target gene in fasta form.");
 }
 
@@ -115,6 +115,7 @@ my $hit_matrix = {};
 my @complete_contigs = ();
 
 # process the target sequence file to look for the start seq and end seq.
+my $search_fasta = $target_fasta;
 my @target_seqs = ();
 
 open SEARCH_FH, "<", $search_fasta;
@@ -425,7 +426,6 @@ foreach my $contig_name (@best_contigs) {
 	print BEST_FH ">$contig_name\n$hit_matrix->{$contig_name}->{'seq'}\n";
 }
 close BEST_FH;
-
 
 sub reverse_complement {
 	my $charstr = shift;
