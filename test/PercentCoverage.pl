@@ -1,144 +1,89 @@
 #!usr/bin/perl
 
 use strict;
-use warnings;
+use FindBin;
+use lib "$FindBin::Bin/../lib";
+require Subfunctions;
+use File::Temp qw/ tempfile /;
 
-my $name;
-my $seq;
-my $totalseq;
-my $flag;
-my @location;
-my $humlength;
-my $nuc;
-my @array;
-my $total;
-my $position;
-my $percent;
-my %percenthash;
-my %totalhash;
-my @namearray;
-my $gene;
-my %humanhash;
-my $totalref;
-my $file;
-
-system "ls -l TRAM.*.Best.fasta >filenames";
-open NAMES, "<filenames";
+my (undef, $filenames) = tempfile(UNLINK => 1);
+system ("ls -l TRAM.*.best.fasta > $filenames");
+open NAMES, "<", $filenames;
 while (<NAMES>)
 {
     if (/(TRAM.(\S+).phum\S+.fasta)/)
-    {
-	$file=$1;
-	$gene=$2;
-	open TABLE, ">$gene.Table.txt";
-	open EXON, ">$gene.exons.fasta";
-###### cat files
-	system "cat $gene.phum.fasta $file >$gene.TRAMOUT.fasta";
-##### muscle alignment
-	system "./muscle3.8.31_i86darwin64 -in $gene.TRAMOUT.fasta -out $gene.TRAMOUT.muscle.fasta";
-#### edit FASTA 
-	open FH, "<$gene.TRAMOUT.fasta";
-	open ED, ">$gene.TRAMOUT.ed.fasta";
-	while (<FH>)
 	{
-	    if (/^>/)
-	    {
-		$name=$_;
-		print ED "$totalseq\n$name";
-		$totalseq=();
-	    }
-	    elsif (/(\S+)/)
-	    {
-		$seq=$1;
-		$totalseq=$totalseq . $seq;
-	    }
+		my $file=$1;
+		my $gene=$2;
+		percentcoverage ("$gene.phum.fasta", "$file", "$gene");
 	}
-	print ED "$totalseq\n";
-	close ED;
-	close FH;
-######################################
-#### calculate Percentage ###########
-#####################################
+}
 
-### Get Length of Reference 
-############################
-	open FH1, "<$gene.TRAMOUT.ed.fasta";
-	while (<FH1>)
-	{
-	    if ($flag == 1)
-	    {
-		$totalref=();
-		@location =();
-		$humlength=0;
-		$seq=$_;
-		$flag++;
-		@array = split(//,$seq);
-		for $nuc (@array)
-		{
-		    if ($nuc ne '-')
-		    {
-			push @location, ($humlength);
-			$totalref++;
-		    }
-		    $humlength++;
+sub percentcoverage {
+	my $reffile = shift;
+	my $contigfile = shift;
+	my $gene = shift;
+
+	###### cat files
+	my (undef, $catfile) = tempfile(UNLINK => 1);
+	system ("cat $reffile $contigfile > $catfile");
+	##### muscle alignment
+	system ("muscle -in $catfile -out $gene.muscle.fasta");
+
+	my (undef, $fastafile) = tempfile(UNLINK => 1);
+	flattenfasta("$gene.muscle.fasta", $fastafile, ",");
+
+	# parse the output file: save the reference as a separate sequence, put the others into an array.
+	my $refseq = "";
+	my $contigs = {};
+	open FH, "<", $fastafile;
+	while (my $line = readline FH) {
+		$line =~ />(.*?),(.*)$/;
+		my $name = $1;
+		my $seq = $2;
+		if ($name =~ /$gene/) {
+			$refseq = $seq;
+		} else {
+			$contigs->{$name} = $seq;
 		}
-		print  "$gene human $totalref\n";
-	    }
-	    if (/phum/)
-	    {
-		$name=$_;
-		chomp $name;
-		$flag=1;
-	    }
 	}
-	$humanhash{$gene}=$totalref;
 	close FH1;
-####### Calculate lengths of all sequences 
-####### Print out EXON file
-####### Print OUT Table
-###########################################
-	open FH2, "<$gene.TRAMOUT.ed.fasta";
-	while (<FH2>)
-	{
-	    if (/^>(\S+)/)
-	    {
-		$name=$1;
-		print EXON ">$name\n";
-		push @namearray, $name;
-		print "The name is $name\n";
-	    }
-	    elsif (/(\S+)/)
-	    {
-		$total=();
-		$seq=$1;
-		@array = split(//,$seq);
-		for $position (@location)
-		{
-		    $nuc = $array[$position];
-		    print EXON "$nuc";
-		    if ($nuc ne "N")
-		    {
-			if ($nuc ne "-")
-			{
-			    $total++;
-			}
-		    }
+
+	# as long as there are still gaps in the reference sequence, keep removing the corresponding positions from the contigs.
+	while ($refseq =~ /(\w*)(-+)(.*)/) {
+		my $left = $1;
+		my $gap = $2;
+		my $remainder = $3;
+		my $leftlength = length $left;
+		my $gaplength = length $gap;
+
+		foreach my $contig (keys $contigs) {
+			$contigs->{$contig} =~ /(.{$leftlength})(.{$gaplength})(.*)/;
+			$contigs->{$contig} = "$1$3";
 		}
-		print EXON "\n";
-	    }
-	    $percent = $total/$totalref;
-	    $percenthash{$name}=$percent;
-	    $totalhash{$name}=$total;
+
+		$refseq = "$left$remainder";
 	}
-	for $name(@namearray)
-	{
-	    print  "$name\t$totalhash{$name}\t$percenthash{$name}\n";
-	    print TABLE "$name\t$totalhash{$name}\t$percenthash{$name}\n";
-	}		
-    }
-}    
 
+	####### Print out EXON file
+	####### Print OUT Table
 
+	open TABLE_FH, ">", "$gene.Table.txt";
+	open EXON_FH, ">", "$gene.exons.fasta";
 
+	print EXON_FH ">$gene\n$refseq\n";
+	print "contig\ttotal\tpercent\n";
+	print TABLE_FH "contig\ttotal\tpercent\n";
+	my $total_length = length $refseq;
+	foreach my $contig (keys $contigs) {
+		print EXON_FH ">$contig\n$contigs->{$contig}\n";
+		my $gaps = ($contigs->{$contig} =~ tr/N-//);
+		my $total = $total_length - $gaps;
+		my $percent = $total / $total_length;
+		print "$contig\t$total\t$percent\n";
+		print TABLE_FH "$contig\t$total\t$percent\n";
+	}
 
-
+	close TABLE_FH;
+	close EXON_FH;
+}
