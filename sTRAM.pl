@@ -85,7 +85,7 @@ if ($output_file eq "") {
 if ($log_file eq "") {
 	$log_file = "$output_file.log";
 }
-if ($save_temp eq "") {
+if ($save_temp == 0) {
     $intermediate = $output_file;
 } else {
     $intermediate = $save_temp;
