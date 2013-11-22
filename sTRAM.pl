@@ -309,6 +309,7 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 	make_hit_matrix ($blast_file, $raw_hit_matrix);
 	my @contig_names = ();
 	my $high_score = process_hit_matrix ($raw_hit_matrix, \@contig_names, \@targets, $bitscore, $contiglength, $hit_matrix);
+	print "there are ".@contig_names." contigs\n";
 # 	my $high_score = 0;
 # 	# clean up the hit matrix: only keep hits that meet the bitscore threshold.
 # 	foreach my $contig (keys $raw_hit_matrix) {
