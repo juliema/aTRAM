@@ -145,7 +145,8 @@ sub make_hit_matrix {
 
 sub process_hit_matrix {
 	my $raw_hit_matrix = shift;
-	my @contig_names = @{shift @_};
+	my $arg2 = shift;
+	my @contig_names = @$arg2;
 	my @targets = @{shift @_};
 	my $bitscore = shift;
 	my $contiglength = shift;
