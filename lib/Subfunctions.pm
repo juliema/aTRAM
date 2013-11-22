@@ -145,9 +145,8 @@ sub make_hit_matrix {
 
 sub process_hit_matrix {
 	my $raw_hit_matrix = shift;
-	my $arg2 = shift;
-	my @contig_names = @$arg2;
-	my @targets = @{shift @_};
+	my $contig_names = shift;
+	my $targets = shift;
 	my $bitscore = shift;
 	my $contiglength = shift;
 	my $hit_matrix = shift;
@@ -157,7 +156,7 @@ sub process_hit_matrix {
 		my $contig_high_score = 0;
 		my $total = 0;
 		$raw_hit_matrix->{$contig}->{"strand"} = 1;
-		foreach my $baitseq (@targets) {
+		foreach my $baitseq (@$targets) {
 			my $partscore = abs($raw_hit_matrix->{$contig}->{$baitseq});
 			if ($partscore > 0) {
 				# separate out the score and the strand for this part:
@@ -177,11 +176,11 @@ sub process_hit_matrix {
 		}
 		if (($total >= $bitscore) && ($raw_hit_matrix->{$contig}->{"length"} >= $contiglength)) {
 			$hit_matrix->{$contig} = $raw_hit_matrix->{$contig};
-			push @contig_names, $contig;
+			push @$contig_names, $contig;
 		}
 	}
 
-	print "I found ".@contig_names . " contigs\n";
+	print "I found ".@$contig_names . " contigs\n";
 	return $high_score;
 }
 
