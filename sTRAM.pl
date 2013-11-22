@@ -308,7 +308,7 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 	my $raw_hit_matrix = {};
 	make_hit_matrix ($blast_file, $raw_hit_matrix);
 	my @contig_names = ();
-	my $high_score = process_hit_matrix ($raw_hit_matrix, \@contig_names);
+	my $high_score = process_hit_matrix ($raw_hit_matrix, \@contig_names, \@targets, $bitscore, $contiglength, $hit_matrix);
 # 	my $high_score = 0;
 # 	# clean up the hit matrix: only keep hits that meet the bitscore threshold.
 # 	foreach my $contig (keys $raw_hit_matrix) {
@@ -341,6 +341,9 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 # 			push @contig_names, $contig;
 # 		}
 # 	}
+	if ($high_score > $best_score) {
+		$best_score = $high_score;
+	}
 
 	# SHUTDOWN CHECK:
 	if (@contig_names == 0) {

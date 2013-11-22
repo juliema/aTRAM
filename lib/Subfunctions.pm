@@ -146,6 +146,10 @@ sub make_hit_matrix {
 sub process_hit_matrix {
 	my $raw_hit_matrix = shift;
 	my @contig_names = @{shift @_};
+	my @targets = @{shift @_};
+	my $bitscore = shift;
+	my $contiglength = shift;
+	my $hit_matrix = shift;
 
 	my $high_score = 0;
 	# clean up the hit matrix: only keep hits that meet the bitscore threshold.
@@ -170,9 +174,6 @@ sub process_hit_matrix {
 		$raw_hit_matrix->{$contig}->{"total"} = $total;
 		if ($total > $high_score) {
 			$high_score = $total;
-			if ($total > $best_score) {
-				$best_score = $total;
-			}
 		}
 		if (($total >= $bitscore) && ($raw_hit_matrix->{$contig}->{"length"} >= $contiglength)) {
 			$hit_matrix->{$contig} = $raw_hit_matrix->{$contig};
