@@ -179,6 +179,7 @@ sub process_hit_matrix {
 			push @contig_names, $contig;
 		}
 	}
+	return $high_score;
 }
 
 sub count_partial_libraries {
