@@ -150,7 +150,6 @@ sub process_hit_matrix {
 	my $bitscore = shift;
 	my $contiglength = shift;
 	my $hit_matrix = shift;
-
 	my $high_score = 0;
 	# clean up the hit matrix: only keep hits that meet the bitscore threshold.
 	foreach my $contig (keys $raw_hit_matrix) {
@@ -180,6 +179,8 @@ sub process_hit_matrix {
 			push @contig_names, $contig;
 		}
 	}
+
+	print "I found ".@contig_names . " contigs\n";
 	return $high_score;
 }
 
