@@ -307,39 +307,11 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 	print "\tsaving best-scoring contigs...\n";
 	my $raw_hit_matrix = {};
 	make_hit_matrix ($blast_file, $raw_hit_matrix);
-
-	my $high_score = 0;
 	my @contig_names = ();
-	# clean up the hit matrix: only keep hits that meet the bitscore threshold.
-	foreach my $contig (keys $raw_hit_matrix) {
-		my $contig_high_score = 0;
-		my $total = 0;
-		$raw_hit_matrix->{$contig}->{"strand"} = 1;
-		foreach my $baitseq (@targets) {
-			my $partscore = abs($raw_hit_matrix->{$contig}->{$baitseq});
-			if ($partscore > 0) {
-				# separate out the score and the strand for this part:
-				my $partstrand = ($raw_hit_matrix->{$contig}->{$baitseq})/$partscore;
-				$raw_hit_matrix->{$contig}->{$baitseq} = $partscore;
-				$total += $partscore;
-				if ($partscore > $contig_high_score) {
-					# if this is the best score for the contig, set the contig_high_score and set the strand to this strand.
-					$contig_high_score = $partscore;
-					$raw_hit_matrix->{$contig}->{"strand"} = $partstrand;
-				}
-			}
-		}
-		$raw_hit_matrix->{$contig}->{"total"} = $total;
-		if ($total > $high_score) {
-			$high_score = $total;
-			if ($total > $best_score) {
-				$best_score = $total;
-			}
-		}
-		if (($total >= $bitscore) && ($raw_hit_matrix->{$contig}->{"length"} >= $contiglength)) {
-			$hit_matrix->{$contig} = $raw_hit_matrix->{$contig};
-			push @contig_names, $contig;
-		}
+	my $high_score = process_hit_matrix ($raw_hit_matrix, \@contig_names, \@targets, $bitscore, $contiglength, $hit_matrix);
+
+	if ($high_score > $best_score) {
+		$best_score = $high_score;
 	}
 
 	# SHUTDOWN CHECK:
@@ -361,13 +333,18 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 
 	# save off these resulting contigs to the ongoing contigs file.
 	open CONTIGS_FH, ">>", "$output_file.all.fasta";
+	print $log_fh "\twriting contigs to $output_file.all.fasta:\n";
 	foreach my $contig_name (@contig_names) {
 		my $seq = $contig_seqs->{$contig_name};
 		# revcomping contigs with negative strand directions:
 		if ($hit_matrix->{$contig_name}->{"strand"} < 0) {
+			print $log_fh "\t\twriting out reverse-complement of $contig_name\n";
 			$seq = reverse_complement($seq);
+			print CONTIGS_FH ">$contig_name\n$seq\n";
+		} else {
+			print $log_fh "\t\twriting out $contig_name\n";
+			print CONTIGS_FH ">$contig_name\n$seq\n";
 		}
-		print CONTIGS_FH ">$contig_name\n$seq\n";
 		$hit_matrix->{$contig_name}->{"seq"} = $seq;
 	}
 	close CONTIGS_FH;
