@@ -191,7 +191,10 @@ sub printlog {
 	$msg = timestamp() . ": " . $msg . "\n";
 	print $msg;
 	if ($log_fh) {
+        select($log_fh);
+        $|++;
 		print $log_fh $msg;
+		select(STDOUT);
 	}
 }
 
