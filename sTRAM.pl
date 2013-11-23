@@ -337,6 +337,7 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 		my $seq = $contig_seqs->{$contig_name};
 		# revcomping contigs with negative strand directions:
 		if ($hit_matrix->{$contig_name}->{"strand"} < 0) {
+			print "flipping $contig_name\n";
 			$seq = reverse_complement($seq);
 		}
 		print CONTIGS_FH ">$contig_name\n$seq\n";

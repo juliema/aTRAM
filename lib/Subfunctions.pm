@@ -133,14 +133,15 @@ sub make_hit_matrix {
 		$hit_matrix->{$contig}->{"length"} = $qlen;
 		if ($currscore == undef) {
 			$hit_matrix->{$contig}->{$baitseq} = $strand * $score;
+			print "first pass: $contig, $baitseq, score $score, strand $strand\n";
 		} else {
 			if (abs($currscore) < $score) {
-			$hit_matrix->{$contig}->{$baitseq} = $strand * $score;
+				$hit_matrix->{$contig}->{$baitseq} = $strand * $score;
+				print "assigning: $contig, $baitseq, score $score, strand $strand\n";
 			}
 		}
 	}
 	close BLAST_FH;
-
 }
 
 sub process_hit_matrix {
@@ -159,9 +160,10 @@ sub process_hit_matrix {
 		$raw_hit_matrix->{$contig}->{"strand"} = 1;
 		foreach my $baitseq (@$targets) {
 			my $partscore = abs($raw_hit_matrix->{$contig}->{$baitseq});
+			my $partstrand = ($raw_hit_matrix->{$contig}->{$baitseq})/$partscore;
+			print "looking at $contig, $baitseq, score is $partscore, strand is $partstrand\n";
 			if ($partscore > 0) {
 				# separate out the score and the strand for this part:
-				my $partstrand = ($raw_hit_matrix->{$contig}->{$baitseq})/$partscore;
 				$raw_hit_matrix->{$contig}->{$baitseq} = $partscore;
 				$total += $partscore;
 				if ($partscore > $contig_high_score) {
@@ -171,6 +173,7 @@ sub process_hit_matrix {
 				}
 			}
 		}
+		print "strand is $raw_hit_matrix->{$contig}->{'strand'}\n";
 		$raw_hit_matrix->{$contig}->{"total"} = $total;
 		if ($total > $high_score) {
 			$high_score = $total;

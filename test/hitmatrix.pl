@@ -12,7 +12,7 @@ my ($TARGET_FH, $target_fasta) = tempfile(UNLINK => 1);
 flattenfasta($target_file, $target_fasta, ",");
 my @targets = ();
 while (my $line = readline $TARGET_FH) {
-	$line =~ /(.*),(.*)/;
+	$line =~ />(.*),(.*)/;
 	push @targets, $1;
 }
 
@@ -22,3 +22,4 @@ my $hit_matrix = {};
 make_hit_matrix ($blast_file, $raw_hit_matrix);
 my @contig_names = ();
 my $high_score = process_hit_matrix ($raw_hit_matrix, \@contig_names, \@targets, 300, 200, $hit_matrix);
+
