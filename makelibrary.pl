@@ -14,7 +14,6 @@ if (@ARGV == 0) {
 
 my $short_read_archive = "";
 my $output_file = "";
-my $numlibraries = 16;
 my $help = 0;
 my $debug = 0;
 
@@ -38,6 +37,11 @@ unless ($output_file) {
 my $tempdir = dirname ("$output_file");
 my $log_file = "$output_file.log";
 open my $log_fh, ">", $log_file or die "couldn't open $log_file\n";
+
+my $libsize = (-s $short_read_archive);
+my $numlibraries = int($libsize / 1e9);
+
+printlog ("$short_read_archive is $libsize bytes; we will make $numlibraries libraries.", $log_fh);
 
 my @tempfiles = ();
 
@@ -66,7 +70,7 @@ for (my $i=0; $i<$numlibraries; $i++) {
 }
 
 # Divide fasta/fastq short reads into buckets for sorting.
-print "" . timestamp() . ": Dividing fasta/fastq file into buckets for sorting.\n";
+printlog ("Dividing fasta/fastq file into buckets for sorting.", $log_fh);
 my $name = "";
 my $seq = "";
 my $seqlen = 0;
@@ -104,7 +108,7 @@ if ($name =~ /\/1/) {
 }
 close SEARCH_FH;
 my @pids = ();
-print "" . timestamp() . ": starting sort.\n";
+printlog ("starting sort.", $log_fh);
 
 for (my $i=0; $i<$numlibraries; $i++) {
 	close $out1_fhs[$i];
@@ -125,10 +129,10 @@ for (my $i=0; $i<$numlibraries; $i++) {
 	}
 }
 wait_for_forks(\@pids);
-print "" . timestamp() . ": sorted.\n";
+printlog ("sorted.", $log_fh);
 
 for (my $i=0; $i<$numlibraries; $i++) {
-	print "" . timestamp() . ": Making $output_file.$i.1.fasta.\n";
+	printlog ("Making $output_file.$i.1.fasta.", $log_fh);
 	open my $in_fh, "<", "@out1_sortedfiles[$i]" or exit_with_msg ("couldn't read @out1_sortedfiles[$i]");
 	open my $out_fh, ">", "$output_file.$i.1.fasta" or exit_with_msg ("couldn't create $output_file.$i.1.fasta");
 	while (my $line = readline $in_fh) {
@@ -139,7 +143,7 @@ for (my $i=0; $i<$numlibraries; $i++) {
 	close $in_fh;
 	close $out_fh;
 
-	print "" . timestamp() . ": Making $output_file.$i.2.fasta.\n";
+	printlog ("Making $output_file.$i.2.fasta.", $log_fh);
 	open my $in_fh, "<", "@out2_sortedfiles[$i]" or exit_with_msg ("couldn't read @out2_sortedfiles[$i]");
 	open my $out_fh, ">", "$output_file.$i.2.fasta" or exit_with_msg ("couldn't create $output_file.$i.2.fasta");
 	while (my $line = readline $in_fh) {
@@ -151,7 +155,7 @@ for (my $i=0; $i<$numlibraries; $i++) {
 	close $out_fh;
 }
 
-print "" . timestamp() . ": Making blastdbs.\n";
+printlog ("Making blastdbs.", $log_fh);
 for (my $i=0; $i<$numlibraries; $i++) {
 	# make the blast db from the first of the paired end files
 	push @pids, fork_cmd ("makeblastdb -in $output_file.$i.1.fasta -dbtype nucl -out $output_file.$i.db", $log_fh);
@@ -161,10 +165,10 @@ wait_for_forks(\@pids);
 
 cleanup();
 foreach my $tempfile (@tempfiles) {
-	print "" . timestamp() . ": removing $tempfile\n";
+	printlog ("removing $tempfile", $log_fh);
 	system ("rm $tempfile");
 }
-print "" . timestamp() . ": Finished\n";
+printlog ("Finished", $log_fh);
 
 sub hash_to_bucket {
 	my $key = shift;
@@ -178,6 +182,20 @@ sub hash_to_bucket {
 
 	$bucket = $key % $numlibraries;
 	return $bucket;
+}
+
+sub printlog {
+	my $msg = shift;
+	my $log_fh = shift;
+
+	$msg = timestamp() . ": " . $msg . "\n";
+	print $msg;
+	if ($log_fh) {
+        select($log_fh);
+        $|++;
+		print $log_fh $msg;
+		select(STDOUT);
+	}
 }
 
 __END__
