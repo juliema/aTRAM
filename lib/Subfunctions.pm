@@ -133,11 +133,9 @@ sub make_hit_matrix {
 		$hit_matrix->{$contig}->{"length"} = $qlen;
 		if ($currscore == undef) {
 			$hit_matrix->{$contig}->{$baitseq} = $strand * $score;
-			print "first pass: $contig, $baitseq, score $score, strand $strand\n";
 		} else {
 			if (abs($currscore) < $score) {
 				$hit_matrix->{$contig}->{$baitseq} = $strand * $score;
-				print "assigning: $contig, $baitseq, score $score, strand $strand\n";
 			}
 		}
 	}
