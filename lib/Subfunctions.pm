@@ -144,11 +144,11 @@ sub make_hit_matrix {
 
 sub process_hit_matrix {
 	my $raw_hit_matrix = shift;
-	my $contig_names = shift;
 	my $targets = shift;
 	my $bitscore = shift;
 	my $contiglength = shift;
 	my $hit_matrix = shift;
+	my $contig_names = shift;
 
 	my $high_score = 0;
 	# clean up the hit matrix: only keep hits that meet the bitscore threshold.
