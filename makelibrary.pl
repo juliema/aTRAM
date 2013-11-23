@@ -14,7 +14,6 @@ if (@ARGV == 0) {
 
 my $short_read_archive = "";
 my $output_file = "";
-my $numlibraries = 16;
 my $help = 0;
 my $debug = 0;
 
@@ -40,7 +39,9 @@ my $log_file = "$output_file.log";
 open my $log_fh, ">", $log_file or die "couldn't open $log_file\n";
 
 my $libsize = (-s $short_read_archive);
-print "$short_read_archive is $libsize bytes; we should make ". ($libsize / 1e9) ." libraries.\n";
+my $numlibraries = int($libsize / 1e9);
+
+print "" . timestamp() . "$short_read_archive is $libsize bytes; we will make $numlibraries libraries.\n";
 
 my @tempfiles = ();
 
