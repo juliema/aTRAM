@@ -40,7 +40,7 @@ my $log_file = "$output_file.log";
 open my $log_fh, ">", $log_file or die "couldn't open $log_file\n";
 
 my $libsize = (-s $short_read_archive);
-print "$short_read_archive is $libsize bytes; we should make ". ($libsize / 5e8) ." libraries.\n";
+print "$short_read_archive is $libsize bytes; we should make ". ($libsize / 1e9) ." libraries.\n";
 
 my @tempfiles = ();
 
