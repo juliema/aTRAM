@@ -39,6 +39,8 @@ my $tempdir = dirname ("$output_file");
 my $log_file = "$output_file.log";
 open my $log_fh, ">", $log_file or die "couldn't open $log_file\n";
 
+print "$short_read_archive is " . (-s $short_read_archive) . " bytes.\n";
+
 my @tempfiles = ();
 
 my @out1_fhs = ();
