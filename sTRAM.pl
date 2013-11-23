@@ -333,14 +333,16 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 
 	# save off these resulting contigs to the ongoing contigs file.
 	open CONTIGS_FH, ">>", "$output_file.all.fasta";
+	print $log_fh "\twriting contigs to $output_file.all.fasta:\n";
 	foreach my $contig_name (@contig_names) {
 		my $seq = $contig_seqs->{$contig_name};
 		# revcomping contigs with negative strand directions:
 		if ($hit_matrix->{$contig_name}->{"strand"} < 0) {
-			print $log_fh "flipping $contig_name\n";
+			print $log_fh "\t\twriting out reverse-complement of $contig_name\n";
 			$seq = reverse_complement($seq);
-			print CONTIGS_FH ">$contig_name (rc)\n$seq\n";
+			print CONTIGS_FH ">$contig_name\n$seq\n";
 		} else {
+			print $log_fh "\t\twriting out $contig_name\n";
 			print CONTIGS_FH ">$contig_name\n$seq\n";
 		}
 		$hit_matrix->{$contig_name}->{"seq"} = $seq;

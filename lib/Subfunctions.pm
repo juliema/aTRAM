@@ -159,7 +159,6 @@ sub process_hit_matrix {
 		foreach my $baitseq (@$targets) {
 			my $partscore = abs($raw_hit_matrix->{$contig}->{$baitseq});
 			my $partstrand = ($raw_hit_matrix->{$contig}->{$baitseq})/$partscore;
-			print "looking at $contig, $baitseq, score is $partscore, strand is $partstrand\n";
 			if ($partscore > 0) {
 				# separate out the score and the strand for this part:
 				$raw_hit_matrix->{$contig}->{$baitseq} = $partscore;
@@ -171,7 +170,6 @@ sub process_hit_matrix {
 				}
 			}
 		}
-		print "strand is $raw_hit_matrix->{$contig}->{'strand'}\n";
 		$raw_hit_matrix->{$contig}->{"total"} = $total;
 		if ($total > $high_score) {
 			$high_score = $total;
