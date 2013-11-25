@@ -151,27 +151,26 @@ sub process_hit_matrix {
 	my $contig_names = shift;
 
 	my $high_score = 0;
+
 	# clean up the hit matrix: only keep hits that meet the bitscore threshold.
+
 	foreach my $contig (keys $raw_hit_matrix) {
 		my $contig_high_score = 0;
 		my $total = 0;
 		$raw_hit_matrix->{$contig}->{"strand"} = 1;
 		foreach my $baitseq (@$targets) {
 			my $partscore = abs($raw_hit_matrix->{$contig}->{$baitseq});
-			print "looking at $baitseq for $contig\n";
-			foreach my $k (keys $raw_hit_matrix->{$contig}) {
-				print "\t$k has value $raw_hit_matrix->{$contig}->{$k}\n";
-			}
-			print "it has keys ".join (",", (keys $raw_hit_matrix->{$contig})). " and values ".join (",", (values $raw_hit_matrix->{$contig})). "\n";
-			my $partstrand = ($raw_hit_matrix->{$contig}->{$baitseq})/$partscore;
-			if ($partscore > 0) {
-				# separate out the score and the strand for this part:
-				$raw_hit_matrix->{$contig}->{$baitseq} = $partscore;
-				$total += $partscore;
-				if ($partscore > $contig_high_score) {
-					# if this is the best score for the contig, set the contig_high_score and set the strand to this strand.
-					$contig_high_score = $partscore;
-					$raw_hit_matrix->{$contig}->{"strand"} = $partstrand;
+			if ($partscore) {
+				my $partstrand = ($raw_hit_matrix->{$contig}->{$baitseq})/$partscore;
+				if ($partscore > 0) {
+					# separate out the score and the strand for this part:
+					$raw_hit_matrix->{$contig}->{$baitseq} = $partscore;
+					$total += $partscore;
+					if ($partscore > $contig_high_score) {
+						# if this is the best score for the contig, set the contig_high_score and set the strand to this strand.
+						$contig_high_score = $partscore;
+						$raw_hit_matrix->{$contig}->{"strand"} = $partstrand;
+					}
 				}
 			}
 		}
@@ -184,7 +183,6 @@ sub process_hit_matrix {
 			push @$contig_names, $contig;
 		}
 	}
-
 	return $high_score;
 }
 

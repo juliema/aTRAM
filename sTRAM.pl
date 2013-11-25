@@ -372,10 +372,11 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 	foreach my $contig_name (@contig_names) {
 		print RESULTS_FH "$contig_name\t";
 		foreach my $target (@targets) {
-			if ($hit_matrix->{$contig_name}->{$target} == undef) {
+			my $score = $hit_matrix->{$contig_name}->{$target};
+			if ($score == undef) {
 				print RESULTS_FH "-\t";
 			} else {
-				print RESULTS_FH ($hit_matrix->{$contig_name}->{$target}) . "\t";
+				print RESULTS_FH "$score\t";
 			}
 		}
 		my $total = $hit_matrix->{$contig_name}->{"total"};
