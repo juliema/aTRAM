@@ -28,11 +28,9 @@ my $output_file = "";
 my $processes = 0;
 my $fraclibs = 1;
 my $type = "";
-my $intermediate = 0;
-my $save_temp = 0;
+my $blast_name = 0;
 my $complete = 0;
-my $noblast = 0;
-my $noassemble = 0;
+my $velvet = 0;
 my $protflag = 0;
 my $bitscore = 70;
 my $contiglength = 100;
@@ -54,10 +52,9 @@ GetOptions ('reads=s' => \$short_read_archive,
             'output=s' => \$output_file,
             'type=s' => \$type,
             'protein' => \$protflag,
-            'tempfiles=s' => \$save_temp,
+            'blast=s' => \$blast_name,
             'debug' => \$debug,
-			'noblast' => \$noblast,
-			'noassemble' => \$noassemble,
+            'velvet' => \$velvet,
             'complete' => \$complete,
             'insert_length|ins_length=i' => \$ins_length,
             'exp_coverage|expected_coverage=i' => \$exp_cov,
@@ -86,11 +83,6 @@ if ($output_file eq "") {
 }
 if ($log_file eq "") {
 	$log_file = "$output_file.log";
-}
-if ($save_temp == 0) {
-    $intermediate = $output_file;
-} else {
-    $intermediate = $save_temp;
 }
 
 my $log_fh;
@@ -213,7 +205,7 @@ if ($protein == 1) {
 
 if ($start_iter > 1) {
 	my $x = $start_iter-1;
-	$search_fasta = "$intermediate.".($start_iter-1).".contigs.fa";
+	$search_fasta = "$output_file.".($start_iter-1).".contigs.fa";
 }
 
 # writing the header line for the results file
@@ -228,9 +220,9 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 	print ("iteration $i starting...\n");
 	print $log_fh ("iteration $i starting...\n");
 
-	if ($noblast==0) {
+	if ($velvet==0) {
 		my $sra = "$short_read_archive";
-		my $current_partial_file = "$intermediate.blast.$i";
+		my $current_partial_file = "$output_file.blast.$i";
 		my @partialfiles = ();
 		my @pids = ();
 
@@ -238,7 +230,7 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 		print "\tblasting short reads...\n";
 		for (my $p=0; $p<$processes; $p++) {
 			$sra = "$short_read_archive.$p";
-			$current_partial_file = "$intermediate.blast.$i.$p";
+			$current_partial_file = "$output_file.blast.$i.$p";
 			push @partialfiles, $current_partial_file;
 			# 1. blast to find any short reads that match the target.
 			if (($protein == 1) && ($i == 1)) {
@@ -252,7 +244,7 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 		print "\tgetting paired ends...\n";
 		for (my $p=0; $p<$processes; $p++) {
 			$sra = "$short_read_archive.$p";
-			$current_partial_file = "$intermediate.blast.$i.$p";
+			$current_partial_file = "$output_file.blast.$i.$p";
 			# 2 and 3. find the paired end of all of the blast hits.
 			push @pids, fork_pair_retrieval("$sra.#.fasta", "$current_partial_file", "$current_partial_file.fasta");
 		}
@@ -260,73 +252,94 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 
 		# now we need to piece all of the partial files back together.
 		my $fastafiles = join (" ", map {$_ . ".fasta"} @partialfiles);
-		system_call ("cat $fastafiles > $intermediate.$i.blast.fasta", $log_fh);
+		system_call ("cat $fastafiles > $output_file.blast.$i.fasta", $log_fh);
 		system_call ("rm $fastafiles", $log_fh);
 
 		# remove intermediate blast results
 		my $readfiles = join (" ", @partialfiles);
 		system_call ("rm $readfiles", $log_fh);
 
-		# SHUTDOWN CHECK: did we not find any reads? Go ahead and quit.
-		if ((-s "$intermediate.$i.blast.fasta") == 0) {
+		# did we not find any reads? Go ahead and quit.
+		if ((-s "$output_file.blast.$i.fasta") == 0) {
 			print "No similar reads were found.\n";
 			last;
 		}
 	}
-	my $contigs_file = "";
-	if ($save_temp) {
-		$contigs_file = "$intermediate.$i.contigs.fasta";
-	} else {
-		(undef, $contigs_file) = tempfile(UNLINK => 1);
+
+	# 4. assemble the reads...
+	# for now, the only assembler available is Velvet.
+	load "Velvet";
+
+	my $assembly_params = { 'kmer' => 31,
+							'tempdir' => "$output_file.velvet",
+							'ins_length' => $ins_length,
+							'exp_cov' => $exp_cov,
+							'min_contig_len' => 200,
+						  };
+
+	if ($i > 1) {
+		# for iterations after the first one, we can use previous contigs to seed the assembly.
+		$assembly_params->{'longreads'} = $search_fasta;
 	}
 
-	if ($noassemble == 0) {
-		# 4. assemble the reads...
-		# for now, the only assembler available is Velvet.
-		load "Velvet";
-
-		my $assembly_params = { 'kmer' => 31,
-								'tempdir' => "$intermediate.velvet",
-								'ins_length' => $ins_length,
-								'exp_cov' => $exp_cov,
-								'min_contig_len' => 200,
-							  };
-
-		if ($i > 1) {
-			# for iterations after the first one, we can use previous contigs to seed the assembly.
-			$assembly_params->{'longreads'} = $search_fasta;
-		}
-
-		my $assembled_contig_file = Velvet->assembler ("$intermediate.$i.blast.fasta", $assembly_params, $log_fh);
-		Velvet->rename_contigs($assembled_contig_file, $contigs_file, $i);
-	}
-
+	my $assembled_contig_file = Velvet->assembler ("$output_file.blast.$i.fasta", $assembly_params, $log_fh);
+	my (undef, $contigs_file) = tempfile(UNLINK => 1);
+	Velvet->rename_contigs($assembled_contig_file, $contigs_file, $i);
+	$assembled_contig_file = $contigs_file;
 
 	# 5. now we filter out the contigs to look for just the best ones.
 	print "\tfiltering contigs...\n";
 
 	my $blast_file = "";
-	if ($save_temp) {
-		$blast_file = "$intermediate.$i.blast";
-	} else {
+	unless ($blast_name) {
 		(undef, $blast_file) = tempfile(UNLINK => 1);
+	} else {
+		$blast_file = "$blast_name.$i";
 	}
 
 	if ($protein == 1) {
-		system_call ("blastx -db $targetdb.db -query $contigs_file -out $blast_file -outfmt '6 qseqid sseqid bitscore qstart qend sstart send qlen'", $log_fh);
+		system_call ("blastx -db $targetdb.db -query $assembled_contig_file -out $blast_file -outfmt '6 qseqid sseqid bitscore qstart qend sstart send qlen'", $log_fh);
 	} else {
-		system_call ("tblastx -db $targetdb.db -query $contigs_file -out $blast_file -outfmt '6 qseqid sseqid bitscore qstart qend sstart send qlen'", $log_fh);
+		system_call ("tblastx -db $targetdb.db -query $assembled_contig_file -out $blast_file -outfmt '6 qseqid sseqid bitscore qstart qend sstart send qlen'", $log_fh);
 	}
 
 	# 6. we want to keep the contigs that have a bitscore higher than $bitscore.
 	print "\tsaving best-scoring contigs...\n";
 	my $raw_hit_matrix = {};
 	make_hit_matrix ($blast_file, $raw_hit_matrix);
-	my @contig_names = ();
-	my $high_score = process_hit_matrix ($raw_hit_matrix, \@targets, $bitscore, $contiglength, $hit_matrix, \@contig_names);
 
-	if ($high_score > $best_score) {
-		$best_score = $high_score;
+	my $high_score = 0;
+	my @contig_names = ();
+	# clean up the hit matrix: only keep hits that meet the bitscore threshold.
+	foreach my $contig (keys $raw_hit_matrix) {
+		my $contig_high_score = 0;
+		my $total = 0;
+		$raw_hit_matrix->{$contig}->{"strand"} = 1;
+		foreach my $baitseq (@targets) {
+			my $partscore = abs($raw_hit_matrix->{$contig}->{$baitseq});
+			if ($partscore > 0) {
+				# separate out the score and the strand for this part:
+				my $partstrand = ($raw_hit_matrix->{$contig}->{$baitseq})/$partscore;
+				$raw_hit_matrix->{$contig}->{$baitseq} = $partscore;
+				$total += $partscore;
+				if ($partscore > $contig_high_score) {
+					# if this is the best score for the contig, set the contig_high_score and set the strand to this strand.
+					$contig_high_score = $partscore;
+					$raw_hit_matrix->{$contig}->{"strand"} = $partstrand;
+				}
+			}
+		}
+		$raw_hit_matrix->{$contig}->{"total"} = $total;
+		if ($total > $high_score) {
+			$high_score = $total;
+			if ($total > $best_score) {
+				$best_score = $total;
+			}
+		}
+		if (($total >= $bitscore) && ($raw_hit_matrix->{$contig}->{"length"} >= $contiglength)) {
+			$hit_matrix->{$contig} = $raw_hit_matrix->{$contig};
+			push @contig_names, $contig;
+		}
 	}
 
 	# SHUTDOWN CHECK:
@@ -336,14 +349,10 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 	}
 
 	# we've finished the work of the iteration. Now we do post-processing to save results to files.
-	my $contig_seqs = findsequences ("$contigs_file", \@contig_names);
+	my $contig_seqs = findsequences ("$assembled_contig_file", \@contig_names);
 
 	# we'll use the resulting contigs as the query for the next iteration.
-	if ($save_temp) {
-		$search_fasta = "$intermediate.$i.contigs.fasta";
-	} else {
-		(undef, $search_fasta) = tempfile(UNLINK => 1);
-	}
+	(undef, $search_fasta) = tempfile(UNLINK => 1);
 	open SEARCH_FH, ">", $search_fasta;
 	foreach my $contig_name (@contig_names) {
 		print SEARCH_FH ">$contig_name\n$contig_seqs->{$contig_name}\n";
@@ -352,18 +361,13 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 
 	# save off these resulting contigs to the ongoing contigs file.
 	open CONTIGS_FH, ">>", "$output_file.all.fasta";
-	print $log_fh "\twriting contigs to $output_file.all.fasta:\n";
 	foreach my $contig_name (@contig_names) {
 		my $seq = $contig_seqs->{$contig_name};
 		# revcomping contigs with negative strand directions:
 		if ($hit_matrix->{$contig_name}->{"strand"} < 0) {
-			print $log_fh "\t\twriting out reverse-complement of $contig_name\n";
 			$seq = reverse_complement($seq);
-			print CONTIGS_FH ">$contig_name\n$seq\n";
-		} else {
-			print $log_fh "\t\twriting out $contig_name\n";
-			print CONTIGS_FH ">$contig_name\n$seq\n";
 		}
+		print CONTIGS_FH ">$contig_name\n$seq\n";
 		$hit_matrix->{$contig_name}->{"seq"} = $seq;
 	}
 	close CONTIGS_FH;

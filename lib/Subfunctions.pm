@@ -135,7 +135,7 @@ sub make_hit_matrix {
 			$hit_matrix->{$contig}->{$baitseq} = $strand * $score;
 		} else {
 			if (abs($currscore) < $score) {
-				$hit_matrix->{$contig}->{$baitseq} = $strand * $score;
+			$hit_matrix->{$contig}->{$baitseq} = $strand * $score;
 			}
 		}
 	}
