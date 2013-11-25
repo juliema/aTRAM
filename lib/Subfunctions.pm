@@ -140,7 +140,50 @@ sub make_hit_matrix {
 		}
 	}
 	close BLAST_FH;
+}
 
+sub process_hit_matrix {
+	my $raw_hit_matrix = shift;
+	my $targets = shift;
+	my $bitscore = shift;
+	my $contiglength = shift;
+	my $hit_matrix = shift;
+	my $contig_names = shift;
+
+	my $high_score = 0;
+
+	# clean up the hit matrix: only keep hits that meet the bitscore threshold.
+
+	foreach my $contig (keys $raw_hit_matrix) {
+		my $contig_high_score = 0;
+		my $total = 0;
+		$raw_hit_matrix->{$contig}->{"strand"} = 1;
+		foreach my $baitseq (@$targets) {
+			my $partscore = abs($raw_hit_matrix->{$contig}->{$baitseq});
+			if ($partscore) {
+				my $partstrand = ($raw_hit_matrix->{$contig}->{$baitseq})/$partscore;
+				if ($partscore > 0) {
+					# separate out the score and the strand for this part:
+					$raw_hit_matrix->{$contig}->{$baitseq} = $partscore;
+					$total += $partscore;
+					if ($partscore > $contig_high_score) {
+						# if this is the best score for the contig, set the contig_high_score and set the strand to this strand.
+						$contig_high_score = $partscore;
+						$raw_hit_matrix->{$contig}->{"strand"} = $partstrand;
+					}
+				}
+			}
+		}
+		$raw_hit_matrix->{$contig}->{"total"} = $total;
+		if ($total > $high_score) {
+			$high_score = $total;
+		}
+		if (($total >= $bitscore) && ($raw_hit_matrix->{$contig}->{"length"} >= $contiglength)) {
+			$hit_matrix->{$contig} = $raw_hit_matrix->{$contig};
+			push @$contig_names, $contig;
+		}
+	}
+	return $high_score;
 }
 
 sub count_partial_libraries {
