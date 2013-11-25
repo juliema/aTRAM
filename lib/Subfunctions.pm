@@ -158,6 +158,7 @@ sub process_hit_matrix {
 		$raw_hit_matrix->{$contig}->{"strand"} = 1;
 		foreach my $baitseq (@$targets) {
 			my $partscore = abs($raw_hit_matrix->{$contig}->{$baitseq});
+			print "looking at $baitseq for $contig\n";
 			my $partstrand = ($raw_hit_matrix->{$contig}->{$baitseq})/$partscore;
 			if ($partscore > 0) {
 				# separate out the score and the strand for this part:
