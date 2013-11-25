@@ -159,6 +159,7 @@ sub process_hit_matrix {
 		foreach my $baitseq (@$targets) {
 			my $partscore = abs($raw_hit_matrix->{$contig}->{$baitseq});
 			print "looking at $baitseq for $contig\n";
+			print "it has keys ".join (",", (keys $raw_hit_matrix->{$contig})). " and values ".join (",", (values $raw_hit_matrix->{$contig})). "\n";
 			my $partstrand = ($raw_hit_matrix->{$contig}->{$baitseq})/$partscore;
 			if ($partscore > 0) {
 				# separate out the score and the strand for this part:
