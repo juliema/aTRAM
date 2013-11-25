@@ -281,6 +281,7 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 	}
 
 	if ($noassemble == 0) {
+		print "\tassembling pairs...\n";
 		# 4. assemble the reads...
 		# for now, the only assembler available is Velvet.
 		load "Velvet";
