@@ -196,6 +196,15 @@ sub count_partial_libraries {
 	return $num;
 }
 
+sub is_protein {
+	my $sequence = shift;
+	if ($sequence =~ /[EFILPQ]/) {
+		return 1;
+	} else {
+		return 0;
+	}
+}
+
 sub percentcoverage {
 	my $reffile = shift;
 	my $contigfile = shift;

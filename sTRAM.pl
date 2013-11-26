@@ -436,14 +436,6 @@ sub reverse_complement {
 	return $revcomp;
 }
 
-sub is_protein {
-	my $sequence = shift;
-	if ($sequence =~ /[EFILPQ]/) {
-		return 1;
-	} else {
-		return 0;
-	}
-}
 
 __END__
 
