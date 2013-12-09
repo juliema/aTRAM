@@ -1,7 +1,8 @@
 #!/usr/bin/perl
 use strict;
 use File::Temp qw/ tempfile /;
-require Subfunctions;
+use Module::Load;
+load Assembler;
 
 # Assembler modules need to know:
 	# where to find the short reads (pass this in as a file name)
@@ -21,6 +22,9 @@ sub assembler {
 	open $saveerr, ">&STDERR";
 	open STDOUT, '>', File::Spec->devnull();
 	open STDERR, '>', File::Spec->devnull();
+
+	my $velveth = Assembler->find_bin("velveth");
+	my $velvetg = Assembler->find_bin("velvetg");
 
 	my ($kmer, $tempdir, $longreads, $ins_length, $exp_cov, $min_contig_len) = 0;
 	if ((ref $params) =~ /HASH/) {
@@ -46,11 +50,11 @@ sub assembler {
 	# using velvet
 	print "\tassembling with Velvet...\n";
 	if ($longreads != 0) {
-		system_call ("velveth $tempdir $kmer -fasta -shortPaired $short_read_file -long $longreads", $log_fh);
+		Assembler->system_call ("$velveth $tempdir $kmer -fasta -shortPaired $short_read_file -long $longreads", $log_fh);
 	} else {
-		system_call ("velveth $tempdir $kmer -fasta -shortPaired $short_read_file", $log_fh);
+		Assembler->system_call ("$velveth $tempdir $kmer -fasta -shortPaired $short_read_file", $log_fh);
 	}
-	system_call ("velvetg $tempdir -ins_length $ins_length -exp_cov $exp_cov -min_contig_lgth $min_contig_len", $log_fh);
+	Assembler->system_call ("$velvetg $tempdir -ins_length $ins_length -exp_cov $exp_cov -min_contig_lgth $min_contig_len", $log_fh);
 
 	open STDOUT, ">&", $saveout;
 	open STDERR, ">&", $saveerr;
@@ -79,27 +83,6 @@ sub rename_contigs {
 		}
 		print OUTFH $line;
 	}
-}
-
-sub system_call {
-	my $cmd = shift;
-	my $log_fh = shift;
-
-	unless ($log_fh) {
-		$log_fh = &STDOUT;
-	}
-
-	print $log_fh ("\t$cmd\n");
-	my $exit_val = eval {
-		system ($cmd);
-	};
-
-	if ($exit_val != 0) {
-		print "System call \"$cmd\" exited with $exit_val\n";
-		exit;
-	}
-
-	return $exit_val;
 }
 
 
