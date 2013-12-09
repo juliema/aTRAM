@@ -26,6 +26,10 @@ sub assembler {
 	my $velveth = Assembler->find_bin("velveth");
 	my $velvetg = Assembler->find_bin("velvetg");
 
+	if (($velvetg == "") || ($velveth == "")) {
+		die "couldn't find binaries for velvet ";
+	}
+
 	my ($kmer, $tempdir, $longreads, $ins_length, $exp_cov, $min_contig_len) = 0;
 	if ((ref $params) =~ /HASH/) {
         if (exists $params->{"kmer"}) {

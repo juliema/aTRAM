@@ -26,6 +26,9 @@ sub assembler {
 	open STDERR, '>', File::Spec->devnull();
 
 	my $path = Assembler->find_bin("Trinity.pl");
+	if ($path eq "") {
+		die "couldn't find Trinity.pl ";
+	}
 
 	my ($kmer, $tempdir, $longreads, $ins_length, $exp_cov, $min_contig_len) = 0;
 	if ((ref $params) =~ /HASH/) {

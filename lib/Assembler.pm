@@ -27,6 +27,7 @@ sub find_bin {
 	if (exists $assemblers{$cmd}) {
 		return "$assemblers{$cmd}";
 	}
+	return "";
 }
 
 sub system_call {
