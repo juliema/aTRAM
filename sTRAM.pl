@@ -10,6 +10,9 @@ require Subfunctions;
 use Module::Load;
 require Sequenceretrieval;
 
+load Assembler;
+Assembler->parse_config();
+
 my $debug = 0;
 if (@ARGV == 0) {
     pod2usage(-verbose => 1);
@@ -44,9 +47,11 @@ my $start_iter = 1;
 my $exp_cov = 30;
 my $evalue = 10e-10;
 my $max_target_seqs = 100000000;
+my $assembler = "Velvet";
 
 GetOptions ('reads=s' => \$short_read_archive,
             'target=s' => \$target_fasta,
+            'assembler=s' => \$assembler,
             'start_iteration=i' => \$start_iter,
             'iterations=i' => \$iterations,
 			'fraction=f' => \$fraclibs,
@@ -281,13 +286,12 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 	}
 
 	if ($noassemble == 0) {
-		print "\tassembling pairs...\n";
+		print "\tassembling pairs with $assembler...\n";
 		# 4. assemble the reads...
-		# for now, the only assembler available is Velvet.
-		load "Velvet";
+		load "$assembler";
 
 		my $assembly_params = { 'kmer' => 31,
-								'tempdir' => "$intermediate.velvet",
+								'tempdir' => "$intermediate.$assembler",
 								'ins_length' => $ins_length,
 								'exp_cov' => $exp_cov,
 								'min_contig_len' => 200,
@@ -298,8 +302,10 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 			$assembly_params->{'longreads'} = $search_fasta;
 		}
 
-		my $assembled_contig_file = Velvet->assembler ("$intermediate.$i.blast.fasta", $assembly_params, $log_fh);
-		Velvet->rename_contigs($assembled_contig_file, $contigs_file, $i);
+# 		my $assembled_contig_file = Velvet->assembler ("$intermediate.$i.blast.fasta", $assembly_params, $log_fh);
+# 		Velvet->rename_contigs($assembled_contig_file, $contigs_file, $i);
+		my $assembled_contig_file = "$assembler"->assembler ("$intermediate.$i.blast.fasta", $assembly_params, $log_fh);
+		"$assembler"->rename_contigs($assembled_contig_file, $contigs_file, $i);
 	}
 
 
@@ -436,14 +442,6 @@ sub reverse_complement {
 	return $revcomp;
 }
 
-sub is_protein {
-	my $sequence = shift;
-	if ($sequence =~ /[EFILPQ]/) {
-		return 1;
-	} else {
-		return 0;
-	}
-}
 
 __END__
 
