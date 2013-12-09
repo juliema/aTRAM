@@ -22,7 +22,7 @@ sub parse_config {
 
 sub find_bin {
 	my $cmd = shift;
-
+	print "hi\n";
 	if (exists $assemblers{$cmd}) {
 		print "found $cmd: at $assemblers{$cmd}\n";
 	}
