@@ -286,12 +286,12 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 	}
 
 	if ($noassemble == 0) {
-		print "\tassembling pairs...\n";
+		print "\tassembling pairs with $assembler...\n";
 		# 4. assemble the reads...
 		load "$assembler";
 
 		my $assembly_params = { 'kmer' => 31,
-								'tempdir' => "$intermediate.velvet",
+								'tempdir' => "$intermediate.$assembler",
 								'ins_length' => $ins_length,
 								'exp_cov' => $exp_cov,
 								'min_contig_len' => 200,
