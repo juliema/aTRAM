@@ -8,6 +8,7 @@ our %assemblers = {};
 package Assembler;
 
 sub parse_config {
+	my $self = shift;
 	open FH, "<", "$FindBin::Bin/config.txt";
 	foreach my $line (<FH>) {
 		$line =~ s/(#.*)$//;
@@ -20,6 +21,7 @@ sub parse_config {
 }
 
 sub find_bin {
+	my $self = shift;
 	my $cmd = shift;
 
 	print "there are " . (keys %assemblers) . " assemblers available: " . join (", ", (keys %assemblers)) . "\n";
