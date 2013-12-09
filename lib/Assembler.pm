@@ -22,8 +22,8 @@ sub parse_config {
 sub find_bin {
 	my $cmd = shift;
 
-
-	print "there are " . (keys %assemblers) . " assemblers available\n";
+	print "there are " . (keys %assemblers) . " assemblers available: " . join (", ", (keys %assemblers)) . "\n";
+	print "looking for $cmd...\n";
 	if (exists $assemblers{$cmd}) {
 		print "found $cmd: at $assemblers{$cmd}\n";
 	}
