@@ -3,7 +3,6 @@ use File::Temp qw/ tempfile /;
 use FindBin;
 use lib "$FindBin::Bin/lib";
 
-our $debug = 0;
 our %assemblers = {};
 
 package Assembler;
@@ -22,7 +21,9 @@ sub parse_config {
 
 sub find_bin {
 	my $cmd = shift;
-	print "hi\n";
+
+
+	print "there are " . (keys %assemblers) . " assemblers available\n";
 	if (exists $assemblers{$cmd}) {
 		print "found $cmd: at $assemblers{$cmd}\n";
 	}

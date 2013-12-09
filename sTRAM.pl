@@ -10,7 +10,8 @@ require Subfunctions;
 use Module::Load;
 require Sequenceretrieval;
 
-parse_config();
+load Assembler;
+Assembler->parse_config();
 
 my $debug = 0;
 if (@ARGV == 0) {
