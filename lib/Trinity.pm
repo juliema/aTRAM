@@ -1,7 +1,8 @@
 #!/usr/bin/perl
 use strict;
 use File::Temp qw/ tempfile /;
-require Subfunctions;
+use Module::Load;
+load Assembler;
 
 # Assembler modules need to know:
 	# where to find the short reads (pass this in as a file name)
@@ -19,7 +20,7 @@ sub assembler {
 
 	my ($saveout, $saveerr);
 
-	print find_bin("Trinity.pl");
+	print Assembler->find_bin("Trinity.pl");
 	open $saveout, ">&STDOUT";
 	open $saveerr, ">&STDERR";
 	open STDOUT, '>', File::Spec->devnull();
@@ -40,11 +41,11 @@ sub assembler {
 	# using Trinity.pl
 	print "\tassembling with Trinity...\n";
 	if ($longreads != 0) {
-		system_call ("velveth $tempdir $kmer -fasta -shortPaired $short_read_file -long $longreads", $log_fh);
+		Assembler->system_call ("velveth $tempdir $kmer -fasta -shortPaired $short_read_file -long $longreads", $log_fh);
 	} else {
-		system_call ("velveth $tempdir $kmer -fasta -shortPaired $short_read_file", $log_fh);
+		Assembler->system_call ("velveth $tempdir $kmer -fasta -shortPaired $short_read_file", $log_fh);
 	}
-	system_call ("velvetg $tempdir -ins_length $ins_length -exp_cov $exp_cov -min_contig_lgth $min_contig_len", $log_fh);
+	Assembler->system_call ("velvetg $tempdir -ins_length $ins_length -exp_cov $exp_cov -min_contig_lgth $min_contig_len", $log_fh);
 
 	open STDOUT, ">&", $saveout;
 	open STDERR, ">&", $saveerr;
