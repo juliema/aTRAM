@@ -14,6 +14,7 @@ sub parse_config {
 		$line =~ s/(#.*)$//;
 		if ($line =~ /(.*)=(.*)$/) {
 			my $name = $1;
+			print "pushed $name to assemblers\n";
 			my $path = $2;
 			$assemblers{$name} = "$path";
 		}
@@ -24,10 +25,8 @@ sub find_bin {
 	my $self = shift;
 	my $cmd = shift;
 
-	print "there are " . (keys %assemblers) . " assemblers available: " . join (", ", (keys %assemblers)) . "\n";
-	print "looking for $cmd...\n";
 	if (exists $assemblers{$cmd}) {
-		print "found $cmd: at $assemblers{$cmd}\n";
+		return "$assemblers{$cmd}";
 	}
 }
 

@@ -20,7 +20,7 @@ sub assembler {
 
 	my ($saveout, $saveerr);
 
-	print Assembler->find_bin("Trinity.pl");
+	print "hey, I found " . Assembler->find_bin("Trinity.pl");
 	open $saveout, ">&STDOUT";
 	open $saveerr, ">&STDERR";
 	open STDOUT, '>', File::Spec->devnull();
