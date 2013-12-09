@@ -11,16 +11,17 @@ load Assembler;
 
 package Trinity;
 
-# perl ~/packages/trinityrnaseq_r20131110/Trinity.pl --seqType fa --single Pop_delt_psbA_atpA.1.blast.fasta --run_as_paired --JM 10G
 sub assembler {
 	my $self = shift;
 	my $short_read_file = shift;
 	my $params = shift;
 	my $log_fh = shift;
 
+	my $jm = "1G";
+
 	my ($saveout, $saveerr);
 
-	print "hey, I found " . Assembler->find_bin("Trinity.pl");
+	my $path = Assembler->find_bin("Trinity.pl");
 	open $saveout, ">&STDOUT";
 	open $saveerr, ">&STDERR";
 	open STDOUT, '>', File::Spec->devnull();
@@ -29,7 +30,7 @@ sub assembler {
 	my ($kmer, $tempdir, $longreads, $ins_length, $exp_cov, $min_contig_len) = 0;
 	if ((ref $params) =~ /HASH/) {
         if (exists $params->{"jm"}) {
-			$kmer = $params->{"jm"};
+			$jm = $params->{"jm"};
 		}
 		if (exists $params->{"tempdir"}) {
 			$tempdir = $params->{"tempdir"};
@@ -40,12 +41,8 @@ sub assembler {
 	}
 	# using Trinity.pl
 	print "\tassembling with Trinity...\n";
-	if ($longreads != 0) {
-		Assembler->system_call ("velveth $tempdir $kmer -fasta -shortPaired $short_read_file -long $longreads", $log_fh);
-	} else {
-		Assembler->system_call ("velveth $tempdir $kmer -fasta -shortPaired $short_read_file", $log_fh);
-	}
-	Assembler->system_call ("velvetg $tempdir -ins_length $ins_length -exp_cov $exp_cov -min_contig_lgth $min_contig_len", $log_fh);
+# perl ~/packages/trinityrnaseq_r20131110/Trinity.pl --seqType fa --single Pop_delt_psbA_atpA.1.blast.fasta --run_as_paired --JM 10G
+	Assembler->system_call ("$path --seqType fa --single $short_read_file --run_as_paired --JM $jm", $log_fh);
 
 	open STDOUT, ">&", $saveout;
 	open STDERR, ">&", $saveerr;
