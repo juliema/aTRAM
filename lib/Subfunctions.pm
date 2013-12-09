@@ -1,7 +1,30 @@
 use strict;
 use File::Temp qw/ tempfile /;
+use FindBin;
+use lib "$FindBin::Bin/lib";
 
 our $debug = 0;
+our %assemblers = {};
+
+sub parse_config {
+	open FH, "<", "$FindBin::Bin/config.txt";
+	foreach my $line (<FH>) {
+		$line =~ s/(#.*)$//;
+		if ($line =~ /(.*)=(.*)$/) {
+			my $name = $1;
+			my $path = $2;
+			$assemblers{$name} = "$path";
+		}
+	}
+}
+
+sub find_bin {
+	my $cmd = shift;
+	print "looking for $cmd...\n";
+	if (exists $assemblers{$cmd}) {
+		print "found $cmd: at $assemblers{$cmd}\n";
+	}
+}
 
 sub timestamp {
     my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime(time);
