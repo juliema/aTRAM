@@ -31,9 +31,10 @@ sub find_bin {
 }
 
 sub system_call {
+	my $self = shift;
 	my $cmd = shift;
 	my $log_fh = shift;
-	print "hi\n";
+
 	unless ($log_fh) {
 		$log_fh = &STDOUT;
 	}
