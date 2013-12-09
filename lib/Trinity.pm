@@ -42,12 +42,12 @@ sub assembler {
 	# using Trinity.pl
 	print "\tassembling with Trinity...\n";
 # perl ~/packages/trinityrnaseq_r20131110/Trinity.pl --seqType fa --single Pop_delt_psbA_atpA.1.blast.fasta --run_as_paired --JM 10G
-	Assembler->system_call ("$path --seqType fa --single $short_read_file --run_as_paired --JM $jm", $log_fh);
+	Assembler->system_call ("$path --seqType fa --single $short_read_file --run_as_paired --JM $jm --output $tempdir", $log_fh);
 
 	open STDOUT, ">&", $saveout;
 	open STDERR, ">&", $saveerr;
 
-	return "$tempdir/contigs.fa";
+	return "$tempdir/Trinity.fasta";
 }
 
 sub rename_contigs {
