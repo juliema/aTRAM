@@ -14,7 +14,6 @@ sub parse_config {
 		$line =~ s/(#.*)$//;
 		if ($line =~ /(.*)=(.*)$/) {
 			my $name = $1;
-			print "pushed $name to assemblers\n";
 			my $path = $2;
 			$assemblers{$name} = "$path";
 		}
