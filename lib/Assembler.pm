@@ -24,6 +24,7 @@ sub find_bin {
 	my $self = shift;
 	my $cmd = shift;
 
+	print "possible paths: " . join("\n",(values %assemblers)). "\n";
 	if (exists $assemblers{$cmd}) {
 		return "$assemblers{$cmd}";
 	}
