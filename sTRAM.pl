@@ -297,7 +297,7 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 		load "$assembler";
 
 		my $assembly_params = { 'kmer' => 31,
-								'tempdir' => "$intermediate.$assembler",
+								'tempdir' => "$intermediate.$i.$assembler",
 								'ins_length' => $ins_length,
 								'exp_cov' => $exp_cov,
 								'min_contig_len' => 200,
