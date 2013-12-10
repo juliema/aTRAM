@@ -111,6 +111,12 @@ my $cmd;
 my $numlibs = count_partial_libraries("$short_read_archive");
 my $max_partial = $numlibs - 1;
 $processes = int ($numlibs * $fraclibs);
+
+# obviously we need to use at least one library.
+if ($processes == 0) {
+	$processes = 1;
+}
+
 unless ((-e "$short_read_archive.$max_partial.1.fasta") && (-e "$short_read_archive.$max_partial.2.fasta")) {
 	pod2usage(-msg => "Short read archives were not prepared to handle $numlibs processes.");
 }
