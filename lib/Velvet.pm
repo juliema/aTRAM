@@ -17,18 +17,18 @@ sub assembler {
 	my $params = shift;
 	my $log_fh = shift;
 
-	my ($saveout, $saveerr);
-	open $saveout, ">&STDOUT";
-	open $saveerr, ">&STDERR";
-	open STDOUT, '>', File::Spec->devnull();
-	open STDERR, '>', File::Spec->devnull();
-
 	my $velveth = Assembler->find_bin("velveth");
 	my $velvetg = Assembler->find_bin("velvetg");
 
 	if (($velvetg == "") || ($velveth == "")) {
 		die "couldn't find binaries for velvet ";
 	}
+
+	my ($saveout, $saveerr);
+	open $saveout, ">&STDOUT";
+	open $saveerr, ">&STDERR";
+	open STDOUT, '>', File::Spec->devnull();
+	open STDERR, '>', File::Spec->devnull();
 
 	my ($kmer, $tempdir, $longreads, $ins_length, $exp_cov, $min_contig_len) = 0;
 	if ((ref $params) =~ /HASH/) {
@@ -52,7 +52,6 @@ sub assembler {
 		}
 	}
 	# using velvet
-	print "\tassembling with Velvet...\n";
 	if ($longreads != 0) {
 		Assembler->system_call ("$velveth $tempdir $kmer -fasta -shortPaired $short_read_file -long $longreads", $log_fh);
 	} else {
