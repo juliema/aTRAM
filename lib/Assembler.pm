@@ -25,7 +25,6 @@ sub find_bin {
 	my $cmd = shift;
 
 	if (exists $assemblers{$cmd}) {
-		print "found $assemblers{$cmd}\n";
 		return "$assemblers{$cmd}";
 	}
 	return "";

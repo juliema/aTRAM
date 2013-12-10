@@ -20,7 +20,7 @@ sub assembler {
 	my $velveth = Assembler->find_bin("velveth");
 	my $velvetg = Assembler->find_bin("velvetg");
 
-	if (($velvetg == "") || ($velveth == "")) {
+	if (($velvetg eq "") || ($velveth eq "")) {
 		die "couldn't find binaries for velvet ";
 	}
 
