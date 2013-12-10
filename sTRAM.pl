@@ -224,7 +224,7 @@ if ($protein == 1) {
 
 if ($start_iter > 1) {
 	my $x = $start_iter-1;
-	$search_fasta = "$intermediate.".($start_iter-1).".contigs.fa";
+	$search_fasta = "$intermediate.".($start_iter-1).".contigs.fasta";
 }
 
 # writing the header line for the results file
@@ -297,7 +297,7 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 		load "$assembler";
 
 		my $assembly_params = { 'kmer' => 31,
-								'tempdir' => "$intermediate.$i.$assembler",
+								'tempdir' => "$intermediate.$assembler",
 								'ins_length' => $ins_length,
 								'exp_cov' => $exp_cov,
 								'min_contig_len' => 200,
