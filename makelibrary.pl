@@ -42,7 +42,7 @@ open my $log_fh, ">", $log_file or die "couldn't open $log_file\n";
 
 my $libsize = (-s $short_read_archive);
 if ($numlibraries == 0) {
-	$numlibraries = int($libsize / 1e9);
+	$numlibraries = int($libsize / 5e10);
 	if (($numlibraries % 2) == 0) {
 		$numlibraries++;
 	}
