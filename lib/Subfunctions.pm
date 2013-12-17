@@ -141,6 +141,7 @@ sub flattenfasta {
 sub make_hit_matrix {
 	my $blast_file = shift;
 	my $hit_matrix = shift;
+	my $iter = shift;
 
 	open BLAST_FH, "<", $blast_file;
 	while (my $line = readline BLAST_FH) {
@@ -154,6 +155,7 @@ sub make_hit_matrix {
 			$score = $1;
 		}
 		$hit_matrix->{$contig}->{"length"} = $qlen;
+		$hit_matrix->{$contig}->{"iteration"} = $iter;
 		if ($currscore == undef) {
 			$hit_matrix->{$contig}->{$baitseq} = $strand * $score;
 		} else {
@@ -202,6 +204,14 @@ sub process_hit_matrix {
 			$high_score = $total;
 		}
 		if (($total >= $bitscore) && ($raw_hit_matrix->{$contig}->{"length"} >= $contiglength)) {
+			# check to see if this contig is already in the hit_matrix:
+			if (exists $hit_matrix->{$contig}) {
+				if (($hit_matrix->{$contig}->{"length"} == $raw_hit_matrix->{$contig}->{"length"}) && ($hit_matrix->{$contig}->{"total"} == $raw_hit_matrix->{$contig}->{"total"})) {
+					# it's the same, don't add it.
+					print "found same contig again ($contig)\n";
+					next;
+				}
+			}
 			$hit_matrix->{$contig} = $raw_hit_matrix->{$contig};
 			push @$contig_names, $contig;
 		}
