@@ -43,6 +43,9 @@ open my $log_fh, ">", $log_file or die "couldn't open $log_file\n";
 my $libsize = (-s $short_read_archive);
 if ($numlibraries == 0) {
 	$numlibraries = int($libsize / 1e9);
+	if (($numlibraries % 2) == 0) {
+		$numlibraries++;
+	}
 	printlog ("$short_read_archive is $libsize bytes; we will make $numlibraries libraries.", $log_fh);
 } else {
 	printlog ("making $numlibraries libraries.", $log_fh);
@@ -176,18 +179,17 @@ foreach my $tempfile (@tempfiles) {
 }
 printlog ("Finished", $log_fh);
 
+
 sub hash_to_bucket {
 	my $key = shift;
-	my $bucket;
-
-	if ($key =~ /(.+)\/\d/) {
-		$key = $1;
-	}
-	$key =~ s/\D//g;
-	$key =~ s/.*(.{3})$/$1/;
-
-	$bucket = $key % $numlibraries;
-	return $bucket;
+	$key =~ s/\/\d//;
+	$key =~ s/#.+$//;
+	$key =~ tr/0-9//dc;
+	$key =~ tr/://d;
+	$key =~ /.*(\d{8})$/;
+	$key = $1;
+	my $hash = $key % $numlibraries;
+	return $hash;
 }
 
 sub printlog {
