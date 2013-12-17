@@ -41,7 +41,7 @@ my $log_file = "$output_file.log";
 open my $log_fh, ">", $log_file or die "couldn't open $log_file\n";
 
 my $libsize = (-s $short_read_archive);
-if ($numlibraries != 0) {
+if ($numlibraries == 0) {
 	$numlibraries = int($libsize / 1e9);
 	printlog ("$short_read_archive is $libsize bytes; we will make $numlibraries libraries.", $log_fh);
 } else {
