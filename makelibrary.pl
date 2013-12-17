@@ -16,9 +16,11 @@ my $short_read_archive = "";
 my $output_file = "";
 my $help = 0;
 my $debug = 0;
+my $numlibraries = 0;
 
 GetOptions ('input=s' => \$short_read_archive,
             'output=s' => \$output_file,
+            'numlibraries=i' => \$numlibraries,
             'debug' => \$debug,
             'help|?' => \$help) or pod2usage(-msg => "GetOptions failed.", -exitval => 2);
 
@@ -39,9 +41,13 @@ my $log_file = "$output_file.log";
 open my $log_fh, ">", $log_file or die "couldn't open $log_file\n";
 
 my $libsize = (-s $short_read_archive);
-my $numlibraries = int($libsize / 1e9);
+if ($numlibraries != 0) {
+	$numlibraries = int($libsize / 1e9);
+	printlog ("$short_read_archive is $libsize bytes; we will make $numlibraries libraries.", $log_fh);
+} else {
+	printlog ("making $numlibraries libraries.", $log_fh);
+}
 
-printlog ("$short_read_archive is $libsize bytes; we will make $numlibraries libraries.", $log_fh);
 
 my @tempfiles = ();
 
