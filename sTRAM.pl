@@ -446,14 +446,14 @@ close BEST_FH;
 
 sub sort_contigs {
 	if ($hit_matrix->{$a}->{"total"} < $hit_matrix->{$b}->{"total"}) {
-		return -1;
-	} elsif ($hit_matrix->{$a}->{"total"} > $hit_matrix->{$b}->{"total"}) {
 		return 1;
+	} elsif ($hit_matrix->{$a}->{"total"} > $hit_matrix->{$b}->{"total"}) {
+		return -1;
 	} else {
 		if (length($hit_matrix->{$a}->{"seq"}) < length($hit_matrix->{$b}->{"seq"})) {
-			return -1;
-		} elsif (length($hit_matrix->{$a}->{"seq"}) > length($hit_matrix->{$b}->{"seq"})) {
 			return 1;
+		} elsif (length($hit_matrix->{$a}->{"seq"}) > length($hit_matrix->{$b}->{"seq"})) {
+			return -1;
 		}
 	}
 	return 0;
