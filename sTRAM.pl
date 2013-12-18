@@ -432,7 +432,7 @@ close COMPLETE_FH;
 
 my @best_unsorted = ();
 foreach my $contig_name (keys $hit_matrix) {
-	if ($hit_matrix->{$contig_name}->{"total"} > ($best_score / 2)) {
+	if ($hit_matrix->{$contig_name}->{"total"} > ($best_score - 100)) {
 		push @best_unsorted, $contig_name;
 	}
 }
