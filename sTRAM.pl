@@ -308,10 +308,8 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 			$assembly_params->{'longreads'} = $search_fasta;
 		}
 
-# 		my $assembled_contig_file = Velvet->assembler ("$intermediate.$i.blast.fasta", $assembly_params, $log_fh);
-# 		Velvet->rename_contigs($assembled_contig_file, $contigs_file, $i);
 		my $assembled_contig_file = "$assembler"->assembler ("$intermediate.$i.blast.fasta", $assembly_params, $log_fh);
-		"$assembler"->rename_contigs($assembled_contig_file, $contigs_file, $i);
+		"$assembler"->rename_contigs($assembled_contig_file, $contigs_file);
 	}
 
 
@@ -334,12 +332,19 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 	# 6. we want to keep the contigs that have a bitscore higher than $bitscore.
 	print "\tsaving best-scoring contigs...\n";
 	my $raw_hit_matrix = {};
-	make_hit_matrix ($blast_file, $raw_hit_matrix);
+	make_hit_matrix ($blast_file, $raw_hit_matrix, $i);
 	my @contig_names = ();
+	my $old_matrix_size = (keys $hit_matrix);
 	my $high_score = process_hit_matrix ($raw_hit_matrix, \@targets, $bitscore, $contiglength, $hit_matrix, \@contig_names);
 
 	if ($high_score > $best_score) {
 		$best_score = $high_score;
+	}
+
+	# SHUTDOWN CHECK:
+	if ((keys $hit_matrix) == $old_matrix_size) {
+		print ("No new contigs were found.\n");
+		last;
 	}
 
 	# SHUTDOWN CHECK:
@@ -349,7 +354,7 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 	}
 
 	# we've finished the work of the iteration. Now we do post-processing to save results to files.
-	my $contig_seqs = findsequences ("$contigs_file", \@contig_names);
+	my $contig_seqs = findsequences ($contigs_file, \@contig_names);
 
 	# we'll use the resulting contigs as the query for the next iteration.
 	if ($save_temp) {
@@ -372,10 +377,10 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 		if ($hit_matrix->{$contig_name}->{"strand"} < 0) {
 			print $log_fh "\t\twriting out reverse-complement of $contig_name\n";
 			$seq = reverse_complement($seq);
-			print CONTIGS_FH ">$contig_name\n$seq\n";
+			print CONTIGS_FH ">$i.$contig_name\n$seq\n";
 		} else {
 			print $log_fh "\t\twriting out $contig_name\n";
-			print CONTIGS_FH ">$contig_name\n$seq\n";
+			print CONTIGS_FH ">$i.$contig_name\n$seq\n";
 		}
 		$hit_matrix->{$contig_name}->{"seq"} = $seq;
 	}
@@ -383,7 +388,7 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 
 	open RESULTS_FH, ">>", "$output_file.results.txt";
 	foreach my $contig_name (@contig_names) {
-		print RESULTS_FH "$contig_name\t";
+		print RESULTS_FH "$i.$contig_name\t";
 		foreach my $target (@targets) {
 			my $score = $hit_matrix->{$contig_name}->{$target};
 			if ($score == undef) {
@@ -395,7 +400,7 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 		my $total = $hit_matrix->{$contig_name}->{"total"};
 		print RESULTS_FH "$total\n";
 		if ((abs($hit_matrix->{$contig_name}->{$start_seq}) > 20) && (abs($hit_matrix->{$contig_name}->{$end_seq}) > 20)) {
-			push @complete_contigs, $contig_name;
+			push @complete_contigs, "$i.$contig_name";
 		}
 	}
 	close RESULTS_FH;
@@ -420,7 +425,8 @@ close $log_fh;
 
 open COMPLETE_FH, ">", "$output_file.complete.fasta";
 foreach my $contig_name (@complete_contigs) {
-	print COMPLETE_FH ">$contig_name\n$hit_matrix->{$contig_name}->{'seq'}\n";
+	$contig_name =~ /(\d+)\.(.+)/;
+	print COMPLETE_FH ">$contig_name\n$hit_matrix->{$2}->{'seq'}\n";
 }
 close COMPLETE_FH;
 
@@ -433,7 +439,7 @@ foreach my $contig_name (keys $hit_matrix) {
 
 open BEST_FH, ">", "$output_file.best.fasta";
 foreach my $contig_name (@best_contigs) {
-	print BEST_FH ">$contig_name\n$hit_matrix->{$contig_name}->{'seq'}\n";
+	print BEST_FH ">$hit_matrix->{$contig_name}->{'iteration'}.$contig_name\n$hit_matrix->{$contig_name}->{'seq'}\n";
 }
 close BEST_FH;
 
