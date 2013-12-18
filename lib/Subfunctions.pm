@@ -208,7 +208,6 @@ sub process_hit_matrix {
 			if (exists $hit_matrix->{$contig}) {
 				if (($hit_matrix->{$contig}->{"length"} == $raw_hit_matrix->{$contig}->{"length"}) && ($hit_matrix->{$contig}->{"total"} == $raw_hit_matrix->{$contig}->{"total"})) {
 					# it's the same, don't add it.
-					print "found same contig again ($contig)\n";
 					next;
 				}
 			}

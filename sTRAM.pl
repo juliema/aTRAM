@@ -342,13 +342,14 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 	}
 
 	# SHUTDOWN CHECK:
-	if (@contig_names == 0) {
-		print ("No contigs had a bitscore greater than $bitscore and longer than $contiglength in iteration $i: the highest bitscore this time was $high_score.\n");
-		last;
-	}
-	# SHUTDOWN CHECK:
 	if ((keys $hit_matrix) == $old_matrix_size) {
 		print ("No new contigs were found.\n");
+		last;
+	}
+
+	# SHUTDOWN CHECK:
+	if (@contig_names == 0) {
+		print ("No contigs had a bitscore greater than $bitscore and longer than $contiglength in iteration $i: the highest bitscore this time was $high_score.\n");
 		last;
 	}
 
