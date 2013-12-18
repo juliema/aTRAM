@@ -445,9 +445,9 @@ foreach my $contig_name (@best_contigs) {
 close BEST_FH;
 
 sub sort_contigs {
-	if ($hit_matrix->{$a} < $hit_matrix->{$b}) {
+	if ($hit_matrix->{$a}->{"total"} < $hit_matrix->{$b}->{"total"}) {
 		return -1;
-	} elsif ($hit_matrix->{$a} > $hit_matrix->{$b}) {
+	} elsif ($hit_matrix->{$a}->{"total"} > $hit_matrix->{$b}->{"total"}) {
 		return 1;
 	} else {
 		if (length($hit_matrix->{$a}->{"seq"}) < length($hit_matrix->{$b}->{"seq"})) {
