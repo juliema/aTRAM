@@ -430,18 +430,34 @@ foreach my $contig_name (@complete_contigs) {
 }
 close COMPLETE_FH;
 
-my @best_contigs = ();
+my @best_unsorted = ();
 foreach my $contig_name (keys $hit_matrix) {
 	if ($hit_matrix->{$contig_name}->{"total"} > ($best_score / 2)) {
-		push @best_contigs, $contig_name;
+		push @best_unsorted, $contig_name;
 	}
 }
 
+my @best_contigs = sort sort_contigs @best_unsorted;
 open BEST_FH, ">", "$output_file.best.fasta";
 foreach my $contig_name (@best_contigs) {
 	print BEST_FH ">$hit_matrix->{$contig_name}->{'iteration'}.$contig_name\n$hit_matrix->{$contig_name}->{'seq'}\n";
 }
 close BEST_FH;
+
+sub sort_contigs {
+	if ($hit_matrix->{$a} < $hit_matrix->{$b}) {
+		return -1;
+	} elsif ($hit_matrix->{$a} > $hit_matrix->{$b}) {
+		return 1;
+	} else {
+		if (length($hit_matrix->{$a}->{"seq"}) < length($hit_matrix->{$b}->{"seq"})) {
+			return -1;
+		} elsif (length($hit_matrix->{$a}->{"seq"}) > length($hit_matrix->{$b}->{"seq"})) {
+			return 1;
+		}
+	}
+	return 0;
+}
 
 sub reverse_complement {
 	my $charstr = shift;
