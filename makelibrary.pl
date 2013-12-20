@@ -51,6 +51,8 @@ if ($numlibraries == 0) {
 	printlog ("making $numlibraries libraries.", $log_fh);
 }
 
+my @primes = (3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97, 101, 103, 107, 109, 113, 127, 131, 137, 139, 149, 151);
+my $multiplier = $primes[$libsize % (@primes)];
 
 my @tempfiles = ();
 
@@ -185,9 +187,8 @@ sub hash_to_bucket {
 	$key =~ s/\/\d//;
 	$key =~ s/#.+$//;
 	$key =~ tr/0-9//dc;
-	$key =~ tr/://d;
 	$key =~ /.*(\d{8})$/;
-	$key = $1;
+	$key = $1 * $multiplier;
 	my $hash = $key % $numlibraries;
 	return $hash;
 }
