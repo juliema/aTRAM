@@ -240,16 +240,22 @@ sub is_protein {
 sub percentcoverage {
 	my $reffile = shift;
 	my $contigfile = shift;
-	my $gene = shift;
+	my $outname = shift;
 
 	###### cat files
 	my (undef, $catfile) = tempfile(UNLINK => 1);
 	system ("cat $reffile $contigfile > $catfile");
 	##### muscle alignment
-	system ("muscle -in $catfile -out $gene.muscle.fasta");
+	system ("muscle -in $catfile -out $outname.muscle.fasta");
 
 	my (undef, $fastafile) = tempfile(UNLINK => 1);
-	flattenfasta("$gene.muscle.fasta", $fastafile, ",");
+	flattenfasta("$outname.muscle.fasta", $fastafile, ",");
+
+	open REF_FH, "<", $reffile;
+	my $ref = readline REF_FH;
+	$ref =~ />(.+)$/;
+	my $refname = $1;
+	close REF_FH;
 
 	# parse the output file: save the reference as a separate sequence, put the others into an array.
 	my $refseq = "";
@@ -259,7 +265,7 @@ sub percentcoverage {
 		$line =~ />(.*?),(.*)$/;
 		my $name = $1;
 		my $seq = $2;
-		if ($name =~ /$gene/) {
+		if ($name =~ /$refname/) {
 			$refseq = $seq;
 		} else {
 			$contigs->{$name} = $seq;
@@ -282,26 +288,8 @@ sub percentcoverage {
 
 		$refseq = "$left$remainder";
 	}
-
-	####### Print out EXON file
-	####### Print OUT Table
-
-	open TABLE_FH, ">", "$gene.Table.txt";
-	open EXON_FH, ">", "$gene.exons.fasta";
-
-	print EXON_FH ">$gene\n$refseq\n";
-	print TABLE_FH "contig\ttotal\tpercent\n";
-	my $total_length = length $refseq;
-	foreach my $contig (keys $contigs) {
-		print EXON_FH ">$contig\n$contigs->{$contig}\n";
-		my $gaps = ($contigs->{$contig} =~ tr/N-//);
-		my $total = $total_length - $gaps;
-		my $percent = $total / $total_length;
-		print TABLE_FH "$contig\t$total\t$percent\n";
-	}
-
-	close TABLE_FH;
-	close EXON_FH;
+	$contigs->{"reference"} = $refseq;
+	return $contigs;
 }
 
 
