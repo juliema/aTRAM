@@ -12,8 +12,6 @@ my $gene_name = shift @ARGV;
 my $contigs = percentcoverage ($ref_file, $contigs_file, $gene_name);
 
 my $refseq = delete $contigs->{reference};
-####### Print out EXON file
-####### Print OUT Table
 
 open TABLE_FH, ">", "$gene_name.Table.txt";
 open EXON_FH, ">", "$gene_name.exons.fasta";
