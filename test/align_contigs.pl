@@ -16,6 +16,9 @@ GetOptions ('reference=s' => \$ref_file,
             'input|contigs=s' => \$contigs_file,
             'output=s' => \$output_name,
             'help|?' => \$help) or pod2usage(-msg => "GetOptions failed.", -exitval => 2);
+if (($ref_file == 0) || ($contigs_file == 0) || ($output_name == 0)) {
+    pod2usage(-verbose => 1);
+}
 
 if ($help) {
     pod2usage(-verbose => 1);
@@ -38,3 +41,27 @@ foreach my $contig (keys $contigs) {
 }
 
 close EXON_FH;
+
+
+
+__END__
+
+=head1 NAME
+
+meld
+
+=head1 SYNOPSIS
+
+align_contigs -reference ref_file -input contig_file -output outfile
+
+=head1 OPTIONS
+
+    -contigs|input:   file with aTRAM contigs
+    -output:          name of output file
+    -reference:       reference fasta file
+
+=head1 DESCRIPTION
+
+=cut
+
+
