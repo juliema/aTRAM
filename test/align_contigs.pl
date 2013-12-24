@@ -16,7 +16,8 @@ GetOptions ('reference=s' => \$ref_file,
             'input|contigs=s' => \$contigs_file,
             'output=s' => \$output_name,
             'help|?' => \$help) or pod2usage(-msg => "GetOptions failed.", -exitval => 2);
-if (($ref_file == 0) || ($contigs_file == 0) || ($output_name == 0)) {
+
+if (($ref_file eq "") || ($contigs_file eq "") || ($output_name eq "")) {
     pod2usage(-verbose => 1);
 }
 
