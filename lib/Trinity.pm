@@ -9,7 +9,7 @@ load Assembler;
 	# what the assembly parameters are. (pass this in as a hash)
 # Assembler modules should return a file name for the resulting contigs.
 
-package Velvet;
+package Trinity;
 
 sub assembler {
 	my $self = shift;
@@ -17,11 +17,11 @@ sub assembler {
 	my $params = shift;
 	my $log_fh = shift;
 
-	my $velveth = Assembler->find_bin("velveth");
-	my $velvetg = Assembler->find_bin("velvetg");
+	my $jm = "1G";
 
-	if (($velvetg eq "") || ($velveth eq "")) {
-		die "couldn't find binaries for velvet ";
+	my $path = Assembler->find_bin("Trinity.pl");
+	if ($path eq "") {
+		die "couldn't find Trinity.pl ";
 	}
 
 	my ($saveout, $saveerr);
@@ -32,8 +32,8 @@ sub assembler {
 
 	my ($kmer, $tempdir, $longreads, $ins_length, $exp_cov, $min_contig_len) = 0;
 	if ((ref $params) =~ /HASH/) {
-        if (exists $params->{"kmer"}) {
-			$kmer = $params->{"kmer"};
+        if (exists $params->{"jm"}) {
+			$jm = $params->{"jm"};
 		}
 		if (exists $params->{"tempdir"}) {
 			$tempdir = $params->{"tempdir"};
@@ -41,28 +41,16 @@ sub assembler {
 		if (exists $params->{"longreads"}) {
 			$longreads = $params->{"longreads"};
 		}
-		if (exists $params->{"ins_length"}) {
-			$ins_length = $params->{"ins_length"};
-		}
-		if (exists $params->{"exp_cov"}) {
-			$exp_cov = $params->{"exp_cov"};
-		}
-		if (exists $params->{"min_contig_len"}) {
-			$min_contig_len = $params->{"min_contig_len"};
-		}
 	}
-	# using velvet
-	if ($longreads != 0) {
-		Assembler->system_call ("$velveth $tempdir $kmer -fasta -shortPaired $short_read_file -long $longreads", $log_fh);
-	} else {
-		Assembler->system_call ("$velveth $tempdir $kmer -fasta -shortPaired $short_read_file", $log_fh);
-	}
-	Assembler->system_call ("$velvetg $tempdir -ins_length $ins_length -exp_cov $exp_cov -min_contig_lgth $min_contig_len", $log_fh);
+	# using Trinity.pl
+	print "\tassembling with Trinity...\n";
+# perl ~/packages/trinityrnaseq_r20131110/Trinity.pl --seqType fa --single Pop_delt_psbA_atpA.1.blast.fasta --run_as_paired --JM 10G
+	Assembler->system_call ("$path --seqType fa --single $short_read_file --run_as_paired --JM $jm --output $tempdir", $log_fh);
 
 	open STDOUT, ">&", $saveout;
 	open STDERR, ">&", $saveerr;
 
-	return "$tempdir/contigs.fa";
+	return "$tempdir/Trinity.fasta";
 }
 
 sub rename_contigs {
@@ -81,12 +69,14 @@ sub rename_contigs {
 	open OUTFH, ">", $renamefile;
 	while (my $line = readline FH) {
 		if ($line =~ /^>/) {
-			#NODE_41_length_2668_cov_4.901050
-			$line =~ s/^>NODE_(\d+)_length_(\d+)_cov_(\d+\.\d).*$/>$prefix$1_len_$2_cov_$3/;
+			# >comp0_c0_seq1 len=716 path=[1070:0-715]
+			# >comp0_c1_seq1 len=3433 path=[4485:0-3432]
+			# >comp1_c0_seq1 len=1572 path=[2936:0-1571]
+			# >comp2_c0_seq1 len=4637 path=[7895:0-4636]
+			$line =~ s/^>comp(\d+)_(c\d+)_seq. len=(\d+).*$/>$prefix$1$2_len_$3/;
 		}
 		print OUTFH $line;
 	}
 }
-
 
 return 1;

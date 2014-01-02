@@ -1,6 +1,30 @@
 use strict;
+use File::Temp qw/ tempfile /;
+use FindBin;
+use lib "$FindBin::Bin/lib";
 
 our $debug = 0;
+our %assemblers = {};
+
+sub parse_config {
+	open FH, "<", "$FindBin::Bin/config.txt";
+	foreach my $line (<FH>) {
+		$line =~ s/(#.*)$//;
+		if ($line =~ /(.*)=(.*)$/) {
+			my $name = $1;
+			my $path = $2;
+			$assemblers{$name} = "$path";
+		}
+	}
+}
+
+sub find_bin {
+	my $cmd = shift;
+
+	if (exists $assemblers{$cmd}) {
+		print "found $cmd: at $assemblers{$cmd}\n";
+	}
+}
 
 sub timestamp {
     my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime(time);
@@ -101,9 +125,23 @@ sub sortfasta {
 	system ("gawk '{if (NF==0) next; s = \"\"; for (i=2;i<=NF;i++) s = s\$i; print \$1\",\"s}' RS=\">\" $fastafile | sort -t',' -k 1 | gawk '{print \">\" \$1 \"$separator\" \$2}' FS=\",\" > $outfile");
 }
 
+sub flattenfasta {
+	my $fastafile = shift;
+	my $outfile = shift;
+	my $separator = shift;
+
+	unless ($separator) {
+		$separator = '\n';
+	}
+
+	my (undef, $tempfile) = tempfile(UNLINK => 1);
+	system ("gawk '{if (NF==0) next; s = \"\"; for (i=2;i<=NF;i++) s = s\$i; print \$1\",\"s}' RS=\">\" $fastafile | gawk '{print \">\" \$1 \"$separator\" \$2}' FS=\",\" > $outfile");
+}
+
 sub make_hit_matrix {
 	my $blast_file = shift;
 	my $hit_matrix = shift;
+	my $iter = shift;
 
 	open BLAST_FH, "<", $blast_file;
 	while (my $line = readline BLAST_FH) {
@@ -117,6 +155,7 @@ sub make_hit_matrix {
 			$score = $1;
 		}
 		$hit_matrix->{$contig}->{"length"} = $qlen;
+		$hit_matrix->{$contig}->{"iteration"} = $iter;
 		if ($currscore == undef) {
 			$hit_matrix->{$contig}->{$baitseq} = $strand * $score;
 		} else {
@@ -126,7 +165,57 @@ sub make_hit_matrix {
 		}
 	}
 	close BLAST_FH;
+}
 
+sub process_hit_matrix {
+	my $raw_hit_matrix = shift;
+	my $targets = shift;
+	my $bitscore = shift;
+	my $contiglength = shift;
+	my $hit_matrix = shift;
+	my $contig_names = shift;
+
+	my $high_score = 0;
+
+	# clean up the hit matrix: only keep hits that meet the bitscore threshold.
+
+	foreach my $contig (keys $raw_hit_matrix) {
+		my $contig_high_score = 0;
+		my $total = 0;
+		$raw_hit_matrix->{$contig}->{"strand"} = 1;
+		foreach my $baitseq (@$targets) {
+			my $partscore = abs($raw_hit_matrix->{$contig}->{$baitseq});
+			if ($partscore) {
+				my $partstrand = ($raw_hit_matrix->{$contig}->{$baitseq})/$partscore;
+				if ($partscore > 0) {
+					# separate out the score and the strand for this part:
+					$raw_hit_matrix->{$contig}->{$baitseq} = $partscore;
+					$total += $partscore;
+					if ($partscore > $contig_high_score) {
+						# if this is the best score for the contig, set the contig_high_score and set the strand to this strand.
+						$contig_high_score = $partscore;
+						$raw_hit_matrix->{$contig}->{"strand"} = $partstrand;
+					}
+				}
+			}
+		}
+		$raw_hit_matrix->{$contig}->{"total"} = $total;
+		if ($total > $high_score) {
+			$high_score = $total;
+		}
+		if (($total >= $bitscore) && ($raw_hit_matrix->{$contig}->{"length"} >= $contiglength)) {
+			# check to see if this contig is already in the hit_matrix:
+			if (exists $hit_matrix->{$contig}) {
+				if (($hit_matrix->{$contig}->{"length"} == $raw_hit_matrix->{$contig}->{"length"}) && ($hit_matrix->{$contig}->{"total"} == $raw_hit_matrix->{$contig}->{"total"})) {
+					# it's the same, don't add it.
+					next;
+				}
+			}
+			$hit_matrix->{$contig} = $raw_hit_matrix->{$contig};
+			push @$contig_names, $contig;
+		}
+	}
+	return $high_score;
 }
 
 sub count_partial_libraries {
@@ -138,5 +227,70 @@ sub count_partial_libraries {
 	}
 	return $num;
 }
+
+sub is_protein {
+	my $sequence = shift;
+	if ($sequence =~ /[EFILPQ]/) {
+		return 1;
+	} else {
+		return 0;
+	}
+}
+
+sub percentcoverage {
+	my $reffile = shift;
+	my $contigfile = shift;
+	my $outname = shift;
+
+	###### cat files
+	my (undef, $catfile) = tempfile(UNLINK => 1);
+	system ("cat $reffile $contigfile > $catfile");
+	##### muscle alignment
+	system ("muscle -in $catfile -out $outname.muscle.fasta");
+
+	my (undef, $fastafile) = tempfile(UNLINK => 1);
+	flattenfasta("$outname.muscle.fasta", $fastafile, ",");
+
+	open REF_FH, "<", $reffile;
+	my $ref = readline REF_FH;
+	$ref =~ />(.+)$/;
+	my $refname = $1;
+	close REF_FH;
+
+	# parse the output file: save the reference as a separate sequence, put the others into an array.
+	my $refseq = "";
+	my $contigs = {};
+	open FH, "<", $fastafile;
+	while (my $line = readline FH) {
+		$line =~ />(.*?),(.*)$/;
+		my $name = $1;
+		my $seq = $2;
+		if ($name =~ /$refname/) {
+			$refseq = $seq;
+		} else {
+			$contigs->{$name} = $seq;
+		}
+	}
+	close FH1;
+
+	# as long as there are still gaps in the reference sequence, keep removing the corresponding positions from the contigs.
+	while ($refseq =~ /(\w*)(-+)(.*)/) {
+		my $left = $1;
+		my $gap = $2;
+		my $remainder = $3;
+		my $leftlength = length $left;
+		my $gaplength = length $gap;
+
+		foreach my $contig (keys $contigs) {
+			$contigs->{$contig} =~ /(.{$leftlength})(.{$gaplength})(.*)/;
+			$contigs->{$contig} = "$1$3";
+		}
+
+		$refseq = "$left$remainder";
+	}
+	$contigs->{"reference"} = $refseq;
+	return $contigs;
+}
+
 
 return 1;
