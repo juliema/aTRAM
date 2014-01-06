@@ -21,7 +21,7 @@ sub assembler {
 	my $velvetg = Assembler->find_bin("velvetg");
 
 	if (($velvetg eq "") || ($velveth eq "")) {
-		die "couldn't find binaries for velvet ";
+		die "couldn't find binaries for velvet (velvetg at $velvetg, velveth at $velveth)";
 	}
 
 	my ($saveout, $saveerr);
