@@ -112,6 +112,30 @@ sub set_debug {
 	$debug = $debug_new;
 }
 
+sub parsefasta {
+	my $fastafile = shift;
+
+	my $taxa = {};
+	my @taxanames = ();
+	open fileIN, "<", "$fastafile";
+	my $input = readline fileIN;
+	my $taxonlabel = "";
+	my $sequence = "";
+	while ($input !~ /^\s*$/) {
+		if ($input =~ /^>(.+)\s*$/) {
+			$taxonlabel = $1;
+			push @taxanames, $taxonlabel;
+		} else {
+			$input =~ /^\s*(.+)\s*$/;
+			$taxa->{$taxonlabel} .= $1;
+		}
+		$input = readline fileIN;
+	}
+
+	close (fileIN);
+	return $taxa, \@taxanames;
+}
+
 sub sortfasta {
 	my $fastafile = shift;
 	my $outfile = shift;
@@ -121,8 +145,12 @@ sub sortfasta {
 		$separator = '\n';
 	}
 
-	my (undef, $tempfile) = tempfile(UNLINK => 1);
-	system ("gawk '{if (NF==0) next; s = \"\"; for (i=2;i<=NF;i++) s = s\$i; print \$1\",\"s}' RS=\">\" $fastafile | sort -t',' -k 1 | gawk '{print \">\" \$1 \"$separator\" \$2}' FS=\",\" > $outfile");
+	my ($taxa, $taxanames) = parsefasta ($fastafile);
+	my @sortedtaxa = sort @$taxanames;
+	open fileOUT, ">", "$outfile";
+	foreach my $taxon (@sortedtaxa) {
+		print fileOUT ">$taxon$separator$taxa->{$taxon}\n";
+	}
 }
 
 sub flattenfasta {
@@ -134,8 +162,11 @@ sub flattenfasta {
 		$separator = '\n';
 	}
 
-	my (undef, $tempfile) = tempfile(UNLINK => 1);
-	system ("gawk '{if (NF==0) next; s = \"\"; for (i=2;i<=NF;i++) s = s\$i; print \$1\",\"s}' RS=\">\" $fastafile | gawk '{print \">\" \$1 \"$separator\" \$2}' FS=\",\" > $outfile");
+	my ($taxa, $taxanames) = parsefasta ($fastafile);
+	open fileOUT, ">", "$outfile";
+	foreach my $taxon (@$taxanames) {
+		print fileOUT ">$taxon$separator$taxa->{$taxon}\n";
+	}
 }
 
 sub make_hit_matrix {
