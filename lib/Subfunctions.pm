@@ -279,9 +279,6 @@ sub percentcoverage {
 	##### muscle alignment
 	system ("muscle -in $catfile -out $outname.muscle.fasta");
 
-	my (undef, $fastafile) = tempfile(UNLINK => 1);
-	flattenfasta("$outname.muscle.fasta", $fastafile, ",");
-
 	open REF_FH, "<", $reffile;
 	my $ref = readline REF_FH;
 	$ref =~ />(.+)$/;
@@ -289,20 +286,8 @@ sub percentcoverage {
 	close REF_FH;
 
 	# parse the output file: save the reference as a separate sequence, put the others into an array.
-	my $refseq = "";
-	my $contigs = {};
-	open FH, "<", $fastafile;
-	while (my $line = readline FH) {
-		$line =~ />(.*?),(.*)$/;
-		my $name = $1;
-		my $seq = $2;
-		if ($name =~ /$refname/) {
-			$refseq = $seq;
-		} else {
-			$contigs->{$name} = $seq;
-		}
-	}
-	close FH1;
+	my ($contigs, $taxa) = parsefasta ("$outname.muscle.fasta");
+	my $refseq = delete $contigs->{"$refname"};
 
 	# as long as there are still gaps in the reference sequence, keep removing the corresponding positions from the contigs.
 	while ($refseq =~ /(\w*)(-+)(.*)/) {
