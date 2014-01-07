@@ -111,33 +111,13 @@ sub findsequences {
 	}
 
 	my $hashed_seqs = {};
-	my @sorted_names = sort @$names;
+	my ($taxa, $taxanames) = parsefasta ($fastafile);
 
-	my (undef, $fasta_sort) = tempfile(UNLINK => 1);
-	sortfasta ($fastafile, $fasta_sort, "#");
-
-	open FA_FH, "<", "$fasta_sort";
-	my $curr_name = shift @sorted_names;
-	my $fa_seq = readline FA_FH;
-	while (1) {
-		$fa_seq =~ />(.*?)#(.*)/;
-		my $name = $1;
-		my $seq = $2;
-		if ($name =~ /$curr_name/) {
-			# fa_seq is the seq we're looking for.
-			$hashed_seqs->{$curr_name} = $seq;
-			$curr_name = shift @sorted_names;
-		} else {
-			# we need to go on to the next seq.
-			$fa_seq = readline FA_FH;
+	foreach my $name (@$names) {
+		if (exists $taxa->{$name}) {
+			$hashed_seqs->{$name} = $taxa->{$name};
 		}
-		# break if any of these files are done.
-		if ($fa_seq eq "") { last; }
-		if ($curr_name eq undef) { last; }
 	}
-
-	close FA_FH;
-
 	return $hashed_seqs;
 }
 
