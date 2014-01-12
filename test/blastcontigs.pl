@@ -9,6 +9,12 @@ my $contigs_fasta = shift;
 my $target_fasta = shift;
 my $blast_file = shift;
 
+if ($gene_name eq "") {
+	print "Usage: blastcontigs.pl contigs_fasta target_fasta blast_file\n";
+	exit;
+}
+
+
 my $blast_asn = "$blast_file.asn";
 
 # make a database from the target so that we can compare contigs to the target.
