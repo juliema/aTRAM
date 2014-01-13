@@ -272,12 +272,16 @@ sub percentcoverage {
 	my $reffile = shift;
 	my $contigfile = shift;
 	my $outname = shift;
+	my $aligner = shift;
 
-	###### cat files
 	my (undef, $catfile) = tempfile(UNLINK => 1);
 	system ("cat $reffile $contigfile > $catfile");
-	##### muscle alignment
-	system ("muscle -in $catfile -out $outname.muscle.fasta");
+
+	if ($aligner eq "mafft") {
+		system ("mafft  $catfile > $outname.align.fasta");
+	} else {
+		system ("muscle -in $catfile -out $outname.align.fasta");
+	}
 
 	open REF_FH, "<", $reffile;
 	my $ref = readline REF_FH;
@@ -286,7 +290,7 @@ sub percentcoverage {
 	close REF_FH;
 
 	# parse the output file: save the reference as a separate sequence, put the others into an array.
-	my ($contigs, $taxa) = parsefasta ("$outname.muscle.fasta");
+	my ($contigs, $taxa) = parsefasta ("$outname.align.fasta");
 	my $refseq = delete $contigs->{"$refname"};
 
 	# as long as there are still gaps in the reference sequence, keep removing the corresponding positions from the contigs.
