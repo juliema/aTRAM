@@ -311,6 +311,17 @@ sub percentcoverage {
 
 		$refseq = "$left$remainder";
 	}
+	# align the ends of the contig seqs
+	foreach my $contig (keys $contigs) {
+		if ((length $contigs->{$contig}) > (length $refseq)) {
+			# if the contig seq is longer than the refseq, truncate it
+			$contigs->{$contig} = substr($contigs ->{$contig}, 0, length $refseq);
+		} else {
+			# if the contig seq is shorter than the refseq, pad it with gaps.
+			$contigs->{$contig} .= "-" x ((length $contigs->{$contig}) - (length $refseq));
+		}
+	}
+
 	$contigs->{"reference"} = $refseq;
 	return $contigs;
 }
