@@ -124,6 +124,7 @@ sub parsefasta {
 	while ($input !~ /^\s*$/) {
 		if ($input =~ /^>(.+)\s*$/) {
 			$taxonlabel = $1;
+			$taxonlabel =~ s/\s+/_/g;
 			push @taxanames, $taxonlabel;
 		} else {
 			$input =~ /^\s*(.+)\s*$/;
