@@ -124,6 +124,7 @@ sub parsefasta {
 	while ($input !~ /^\s*$/) {
 		if ($input =~ /^>(.+)\s*$/) {
 			$taxonlabel = $1;
+			$taxonlabel =~ s/\s+/_/g;
 			push @taxanames, $taxonlabel;
 		} else {
 			$input =~ /^\s*(.+)\s*$/;
@@ -272,12 +273,16 @@ sub percentcoverage {
 	my $reffile = shift;
 	my $contigfile = shift;
 	my $outname = shift;
+	my $aligner = shift;
 
-	###### cat files
 	my (undef, $catfile) = tempfile(UNLINK => 1);
 	system ("cat $reffile $contigfile > $catfile");
-	##### muscle alignment
-	system ("muscle -in $catfile -out $outname.muscle.fasta");
+
+	if ($aligner eq "mafft") {
+		system ("mafft  $catfile > $outname.align.fasta");
+	} else {
+		system ("muscle -in $catfile -out $outname.align.fasta");
+	}
 
 	open REF_FH, "<", $reffile;
 	my $ref = readline REF_FH;
@@ -286,7 +291,7 @@ sub percentcoverage {
 	close REF_FH;
 
 	# parse the output file: save the reference as a separate sequence, put the others into an array.
-	my ($contigs, $taxa) = parsefasta ("$outname.muscle.fasta");
+	my ($contigs, $taxa) = parsefasta ("$outname.align.fasta");
 	my $refseq = delete $contigs->{"$refname"};
 
 	# as long as there are still gaps in the reference sequence, keep removing the corresponding positions from the contigs.
@@ -298,14 +303,72 @@ sub percentcoverage {
 		my $gaplength = length $gap;
 
 		foreach my $contig (keys $contigs) {
-			$contigs->{$contig} =~ /(.{$leftlength})(.{$gaplength})(.*)/;
-			$contigs->{$contig} = "$1$3";
+			my $end = $leftlength + $gaplength;
+			my $start = $leftlength + 1;
+			my ($startseq, $regionseq, $endseq) = split_seq ($contigs->{$contig}, $start, $end);
+			contigs->{$contig} = "$startseq$endseq";
 		}
 
 		$refseq = "$left$remainder";
 	}
+	# align the ends of the contig seqs
+	foreach my $contig (keys $contigs) {
+		if ((length $contigs->{$contig}) > (length $refseq)) {
+			# if the contig seq is longer than the refseq, truncate it
+			$contigs->{$contig} = substr($contigs ->{$contig}, 0, length $refseq);
+		} else {
+			# if the contig seq is shorter than the refseq, pad it with gaps.
+			$contigs->{$contig} .= "-" x ((length $contigs->{$contig}) - (length $refseq));
+		}
+	}
+
 	$contigs->{"reference"} = $refseq;
 	return $contigs;
+}
+
+
+sub split_seq {
+    my $seq = shift;
+    my $start = shift;
+    my $end = shift;
+    my $max = 30000;
+        my $seqlen = length ($seq);
+        my $startseq = "";
+        my $regionseq = "";
+        my $endseq = "";
+
+        my $currstart = $start-1;
+        my $currend = $end;
+        while ($currstart > $max) {
+                $seq =~ /^(.{$max})(.*)$/;
+                $startseq .= $1;
+                $seq = $2;
+                $currstart -= $max;
+                $currend -= $max;
+        }
+        if ($currstart > 0) {
+                $seq =~ /^(.{$currstart})(.*)$/;
+                $startseq .= $1;
+                $seq = $2;
+                $currstart = 1;
+                $currend = $end - (length ($startseq));
+        }
+
+        my $regionsize = $end - $start + 1;
+        while ($regionsize > $max) {
+                $seq =~ /^(.{$max})(.*)$/;
+                $regionseq .= $1;
+                $seq = $2;
+                $currstart -= $max;
+                $currend -= $max;
+                $regionsize -= $max;
+        }
+        if ($regionsize > 0) {
+                $seq =~ /^(.{$regionsize})(.*)$/;
+                $regionseq .= $1;
+                $endseq = $2;
+        }
+        return ($startseq, $regionseq, $endseq);
 }
 
 

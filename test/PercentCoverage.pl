@@ -8,13 +8,14 @@ require Subfunctions;
 my $ref_file = shift @ARGV;
 my $contigs_file = shift @ARGV;
 my $gene_name = shift @ARGV;
+my $aligner = shift @ARGV;
 
 if ($gene_name eq "") {
-	print "Usage: PercentCoverage.pl ref_file contig_file gene_name\n";
+	print "Usage: PercentCoverage.pl ref_file contig_file gene_name aligner\n";
 	exit;
 }
 
-my $contigs = percentcoverage ($ref_file, $contigs_file, $gene_name);
+my $contigs = percentcoverage ($ref_file, $contigs_file, $gene_name, $aligner);
 
 my $refseq = delete $contigs->{reference};
 
