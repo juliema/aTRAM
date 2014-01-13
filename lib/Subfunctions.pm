@@ -309,4 +309,49 @@ sub percentcoverage {
 }
 
 
+sub split_seq {
+    my $seq = shift;
+    my $start = shift;
+    my $end = shift;
+    my $max = 30000;
+        my $seqlen = length ($seq);
+        my $startseq = "";
+        my $regionseq = "";
+        my $endseq = "";
+
+        my $currstart = $start-1;
+        my $currend = $end;
+        while ($currstart > $max) {
+                $seq =~ /^(.{$max})(.*)$/;
+                $startseq .= $1;
+                $seq = $2;
+                $currstart -= $max;
+                $currend -= $max;
+        }
+        if ($currstart > 0) {
+                $seq =~ /^(.{$currstart})(.*)$/;
+                $startseq .= $1;
+                $seq = $2;
+                $currstart = 1;
+                $currend = $end - (length ($startseq));
+        }
+
+        my $regionsize = $end - $start + 1;
+        while ($regionsize > $max) {
+                $seq =~ /^(.{$max})(.*)$/;
+                $regionseq .= $1;
+                $seq = $2;
+                $currstart -= $max;
+                $currend -= $max;
+                $regionsize -= $max;
+        }
+        if ($regionsize > 0) {
+                $seq =~ /^(.{$regionsize})(.*)$/;
+                $regionseq .= $1;
+                $endseq = $2;
+        }
+        return ($startseq, $regionseq, $endseq);
+}
+
+
 return 1;
