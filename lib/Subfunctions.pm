@@ -306,7 +306,7 @@ sub percentcoverage {
 			my $end = $leftlength + $gaplength;
 			my $start = $leftlength + 1;
 			my ($startseq, $regionseq, $endseq) = split_seq ($contigs->{$contig}, $start, $end);
-			contigs->{$contig} = "$startseq$endseq";
+			$contigs->{$contig} = "$startseq$endseq";
 		}
 
 		$refseq = "$left$remainder";
