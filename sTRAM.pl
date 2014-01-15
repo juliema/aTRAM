@@ -14,6 +14,11 @@ load Assembler;
 Assembler->parse_config();
 
 my $debug = 0;
+
+my $hit_matrix = {};
+$hit_matrix->{test} = 1;
+delete $hit_matrix->{test};
+
 if (@ARGV == 0) {
     pod2usage(-verbose => 1);
 }
@@ -130,7 +135,6 @@ close CONTIGS_FH;
 
 my $start_seq = "";
 my $end_seq = "";
-my $hit_matrix = {};
 my @complete_contigs = ();
 
 # process the target sequence file to look for the start seq and end seq.
