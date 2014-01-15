@@ -33,12 +33,9 @@ my $log_file = "";
 my $output_file = "";
 my $processes = 0;
 my $fraclibs = 1;
-my $type = "";
 my $intermediate = 0;
 my $save_temp = 0;
 my $complete = 0;
-my $noblast = 0;
-my $noassemble = 0;
 my $protflag = 0;
 my $bitscore = 70;
 my $contiglength = 100;
@@ -60,17 +57,13 @@ GetOptions ('reads=s' => \$short_read_archive,
 			'fraction=f' => \$fraclibs,
             'log_file=s' => \$log_file,
             'output=s' => \$output_file,
-            'type=s' => \$type,
             'protein' => \$protflag,
             'tempfiles=s' => \$save_temp,
             'debug' => \$debug,
-			'noblast' => \$noblast,
-			'noassemble' => \$noassemble,
             'complete' => \$complete,
             'insert_length|ins_length=i' => \$ins_length,
             'exp_coverage|expected_coverage=i' => \$exp_cov,
             'bitscore=i' => \$bitscore,
-            'max_target_seqs=i' => \$max_target_seqs,
             'evalue=f' => \$evalue,
             'length=i' => \$contiglength,
             'help|?' => \$help) or pod2usage(-msg => "GetOptions failed.", -exitval => 2);
@@ -164,14 +157,7 @@ my $protein = 0;
 if ($protflag != 0) {
 	$protein = 1;
 } else {
-	# if the type of target isn't specified, let's figure it out.
-	if ($type ne "") {
-		if ($type !~ /nucl|dna/i) {
-			$protein = 1;
-		}
-	} else {
-		$protein = is_protein($fullseq);
-	}
+	$protein = is_protein($fullseq);
 }
 
 my $len = 100;
@@ -241,50 +227,48 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 	print ("iteration $i starting...\n");
 	print $log_fh ("iteration $i starting...\n");
 
-	if ($noblast==0) {
-		my $sra = "$short_read_archive";
-		my $current_partial_file = "$intermediate.blast.$i";
-		my @partialfiles = ();
-		my @pids = ();
+	my $sra = "$short_read_archive";
+	my $current_partial_file = "$intermediate.blast.$i";
+	my @partialfiles = ();
+	my @pids = ();
 
-		# we are multithreading:
-		print "\tblasting short reads...\n";
-		for (my $p=0; $p<$processes; $p++) {
-			$sra = "$short_read_archive.$p";
-			$current_partial_file = "$intermediate.blast.$i.$p";
-			push @partialfiles, $current_partial_file;
-			# 1. blast to find any short reads that match the target.
-			if (($protein == 1) && ($i == 1)) {
-				push @pids, fork_cmd ("tblastn -max_target_seqs $max_target_seqs -db $sra.db -query $search_fasta -outfmt '6 sseqid' -out $current_partial_file", $log_fh);
-			} else {
-				push @pids, fork_cmd ("blastn -task blastn -evalue $evalue -max_target_seqs $max_target_seqs -db $sra.db -query $search_fasta -outfmt '6 sseqid' -out $current_partial_file", $log_fh);
-			}
+	# we are multithreading:
+	print "\tblasting short reads...\n";
+	for (my $p=0; $p<$processes; $p++) {
+		$sra = "$short_read_archive.$p";
+		$current_partial_file = "$intermediate.blast.$i.$p";
+		push @partialfiles, $current_partial_file;
+		# 1. blast to find any short reads that match the target.
+		if (($protein == 1) && ($i == 1)) {
+			push @pids, fork_cmd ("tblastn -max_target_seqs $max_target_seqs -db $sra.db -query $search_fasta -outfmt '6 sseqid' -out $current_partial_file", $log_fh);
+		} else {
+			push @pids, fork_cmd ("blastn -task blastn -evalue $evalue -max_target_seqs $max_target_seqs -db $sra.db -query $search_fasta -outfmt '6 sseqid' -out $current_partial_file", $log_fh);
 		}
-		wait_for_forks(\@pids);
+	}
+	wait_for_forks(\@pids);
 
-		print "\tgetting paired ends...\n";
-		for (my $p=0; $p<$processes; $p++) {
-			$sra = "$short_read_archive.$p";
-			$current_partial_file = "$intermediate.blast.$i.$p";
-			# 2 and 3. find the paired end of all of the blast hits.
-			push @pids, fork_pair_retrieval("$sra.#.fasta", "$current_partial_file", "$current_partial_file.fasta");
-		}
-		wait_for_forks(\@pids);
+	print "\tgetting paired ends...\n";
+	for (my $p=0; $p<$processes; $p++) {
+		$sra = "$short_read_archive.$p";
+		$current_partial_file = "$intermediate.blast.$i.$p";
+		# 2 and 3. find the paired end of all of the blast hits.
+		push @pids, fork_pair_retrieval("$sra.#.fasta", "$current_partial_file", "$current_partial_file.fasta");
+	}
+	wait_for_forks(\@pids);
 
-		# now we need to piece all of the partial files back together.
-		my $fastafiles = join (" ", map {$_ . ".fasta"} @partialfiles);
-		system_call ("cat $fastafiles > $intermediate.$i.blast.fasta", $log_fh);
-		system_call ("rm $fastafiles", $log_fh);
+	# now we need to piece all of the partial files back together.
+	my $fastafiles = join (" ", map {$_ . ".fasta"} @partialfiles);
+	system_call ("cat $fastafiles > $intermediate.$i.blast.fasta", $log_fh);
+	system_call ("rm $fastafiles", $log_fh);
 
-		# remove intermediate blast results
-		my $readfiles = join (" ", @partialfiles);
-		system_call ("rm $readfiles", $log_fh);
+	# remove intermediate blast results
+	my $readfiles = join (" ", @partialfiles);
+	system_call ("rm $readfiles", $log_fh);
 
-		# SHUTDOWN CHECK: did we not find any reads? Go ahead and quit.
-		if ((-s "$intermediate.$i.blast.fasta") == 0) {
-			print "No similar reads were found.\n";
-			last;
-		}
+	# SHUTDOWN CHECK: did we not find any reads? Go ahead and quit.
+	if ((-s "$intermediate.$i.blast.fasta") == 0) {
+		print "No similar reads were found.\n";
+		last;
 	}
 	my $contigs_file = "";
 	if ($save_temp) {
@@ -293,26 +277,24 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 		(undef, $contigs_file) = tempfile(UNLINK => 1);
 	}
 
-	if ($noassemble == 0) {
-		print "\tassembling pairs with $assembler...\n";
-		# 4. assemble the reads...
-		load "$assembler";
+	print "\tassembling pairs with $assembler...\n";
+	# 4. assemble the reads...
+	load "$assembler";
 
-		my $assembly_params = { 'kmer' => 31,
-								'tempdir' => "$intermediate.$assembler",
-								'ins_length' => $ins_length,
-								'exp_cov' => $exp_cov,
-								'min_contig_len' => 200,
-							  };
+	my $assembly_params = { 'kmer' => 31,
+							'tempdir' => "$intermediate.$assembler",
+							'ins_length' => $ins_length,
+							'exp_cov' => $exp_cov,
+							'min_contig_len' => 200,
+						  };
 
-		if ($i > 1) {
-			# for iterations after the first one, we can use previous contigs to seed the assembly.
-			$assembly_params->{'longreads'} = $search_fasta;
-		}
-
-		my $assembled_contig_file = "$assembler"->assembler ("$intermediate.$i.blast.fasta", $assembly_params, $log_fh);
-		"$assembler"->rename_contigs($assembled_contig_file, $contigs_file);
+	if ($i > 1) {
+		# for iterations after the first one, we can use previous contigs to seed the assembly.
+		$assembly_params->{'longreads'} = $search_fasta;
 	}
+
+	my $assembled_contig_file = "$assembler"->assembler ("$intermediate.$i.blast.fasta", $assembly_params, $log_fh);
+	"$assembler"->rename_contigs($assembled_contig_file, $contigs_file);
 
 
 	# 5. now we filter out the contigs to look for just the best ones.
