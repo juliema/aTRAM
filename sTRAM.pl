@@ -16,8 +16,6 @@ Assembler->parse_config();
 my $debug = 0;
 
 my $hit_matrix = {};
-$hit_matrix->{test} = 1;
-delete $hit_matrix->{test};
 
 if (@ARGV == 0) {
     pod2usage(-verbose => 1);
@@ -338,7 +336,7 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 	my $raw_hit_matrix = {};
 	make_hit_matrix ($blast_file, $raw_hit_matrix, $i);
 	my @contig_names = ();
-	my $old_matrix_size = (keys $hit_matrix);
+	my $old_matrix_size = (keys %$hit_matrix);
 	my $high_score = process_hit_matrix ($raw_hit_matrix, \@targets, $bitscore, $contiglength, $hit_matrix, \@contig_names);
 
 	if ($high_score > $best_score) {
@@ -346,7 +344,7 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 	}
 
 	# SHUTDOWN CHECK:
-	if ((keys $hit_matrix) == $old_matrix_size) {
+	if ((keys %$hit_matrix) == $old_matrix_size) {
 		print ("No new contigs were found.\n");
 		last;
 	}
@@ -435,7 +433,7 @@ foreach my $contig_name (@complete_contigs) {
 close COMPLETE_FH;
 
 my @best_unsorted = ();
-foreach my $contig_name (keys $hit_matrix) {
+foreach my $contig_name (keys %$hit_matrix) {
 	if ($hit_matrix->{$contig_name}->{"total"} > ($best_score - 100)) {
 		push @best_unsorted, $contig_name;
 	}
