@@ -62,7 +62,7 @@ sub fork_cmd {
 
 sub wait_for_forks {
     while (@{@_[0]} > 0) {
-    	my $item = pop @_[0];
+    	my $item = pop @{@_[0]};
         waitpid $item, 0;
     }
     return;
@@ -211,7 +211,7 @@ sub process_hit_matrix {
 
 	# clean up the hit matrix: only keep hits that meet the bitscore threshold.
 
-	foreach my $contig (keys $raw_hit_matrix) {
+	foreach my $contig (keys %$raw_hit_matrix) {
 		my $contig_high_score = 0;
 		my $total = 0;
 		$raw_hit_matrix->{$contig}->{"strand"} = 1;
@@ -302,7 +302,7 @@ sub percentcoverage {
 		my $leftlength = length $left;
 		my $gaplength = length $gap;
 
-		foreach my $contig (keys $contigs) {
+		foreach my $contig (keys %$contigs) {
 			my $end = $leftlength + $gaplength;
 			my $start = $leftlength + 1;
 			my ($startseq, $regionseq, $endseq) = split_seq ($contigs->{$contig}, $start, $end);
@@ -312,7 +312,7 @@ sub percentcoverage {
 		$refseq = "$left$remainder";
 	}
 	# align the ends of the contig seqs
-	foreach my $contig (keys $contigs) {
+	foreach my $contig (keys %$contigs) {
 		if ((length $contigs->{$contig}) > (length $refseq)) {
 			# if the contig seq is longer than the refseq, truncate it
 			$contigs->{$contig} = substr($contigs ->{$contig}, 0, length $refseq);
