@@ -252,10 +252,10 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 		}
 		if (($max_processes > 0) && (@pids >= ($max_processes - 1))) {
 			# don't spawn off too many threads at once.
-			wait_for_forks(\@pids, $log_fh);
+			wait_for_forks(\@pids);
 		}
 	}
-	wait_for_forks(\@pids, $log_fh);
+	wait_for_forks(\@pids);
 
 	print "\tgetting paired ends...\n";
 	for (my $p=0; $p<$processes; $p++) {
@@ -265,10 +265,10 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 		push @pids, fork_pair_retrieval("$sra.#.fasta", "$current_partial_file", "$current_partial_file.fasta");
 		if (($max_processes > 0) && (@pids >= ($max_processes - 1))) {
 			# don't spawn off too many threads at once.
-			wait_for_forks(\@pids, $log_fh);
+			wait_for_forks(\@pids);
 		}
 	}
-	wait_for_forks(\@pids, $log_fh);
+	wait_for_forks(\@pids);
 
 	# now we need to piece all of the partial files back together.
 	my $fastafiles = join (" ", map {$_ . ".fasta"} @partialfiles);

@@ -6,7 +6,6 @@ use lib "$FindBin::Bin/lib";
 
 our $debug = 0;
 our %assemblers = {};
-our $log_fh_handle = 0;
 
 sub parse_config {
 	open FH, "<", "$FindBin::Bin/config.txt";
@@ -63,9 +62,8 @@ sub fork_cmd {
 }
 
 sub wait_for_forks {
-	my $log_fh = shift;
     while (@{@_[0]} > 0) {
-     	debug ("waiting for " . join(", ", @{@_[0]}) . "\n", $log_fh);
+     	debug ("waiting for " . join(", ", @{@_[0]}) . "\n");
 		my $item = pop @{@_[0]};
         waitpid $item, 0;
     }
@@ -106,10 +104,8 @@ sub system_call {
 
 sub debug {
 	my $msg = shift;
-	my $log_fh = shift;
 	if ($debug) {
 		print "$msg";
-		print $log_fh "msg";
 	}
 }
 
