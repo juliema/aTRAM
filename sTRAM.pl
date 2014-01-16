@@ -250,7 +250,7 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 		} else {
 			push @pids, fork_cmd ("blastn -task blastn -evalue $evalue -max_target_seqs $max_target_seqs -db $sra.db -query $search_fasta -outfmt '6 sseqid' -out $current_partial_file", $log_fh);
 		}
-		if (($max_processes > 0) && ($max_processes > @pids)) {
+		if (($max_processes > 0) && ($max_processes < @pids)) {
 			# don't spawn off too many threads at once.
 			debug (@pids." > $max_processes: waiting for forks\n");
 			wait_for_forks(\@pids);
@@ -265,7 +265,7 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 		$current_partial_file = "$intermediate.blast.$i.$p";
 		# 2 and 3. find the paired end of all of the blast hits.
 		push @pids, fork_pair_retrieval("$sra.#.fasta", "$current_partial_file", "$current_partial_file.fasta");
-		if (($max_processes > 0) && ($max_processes > @pids)) {
+		if (($max_processes > 0) && ($max_processes < @pids)) {
 			# don't spawn off too many threads at once.
 			debug ("waiting for forks\n");
 			wait_for_forks(\@pids);
