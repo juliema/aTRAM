@@ -63,8 +63,8 @@ sub fork_cmd {
 
 sub wait_for_forks {
     while (@{@_[0]} > 0) {
-    	my $item = pop @{@_[0]};
-    	debug ("waiting for " . join(", ", @{@_[0]}) . "\n");
+     	debug ("waiting for " . join(", ", @{@_[0]}) . "\n");
+		my $item = pop @{@_[0]};
         waitpid $item, 0;
     }
     return;
