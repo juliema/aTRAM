@@ -39,6 +39,7 @@ my $complete = 0;
 my $protflag = 0;
 my $bitscore = 70;
 my $contiglength = 100;
+my $max_processes = 0;
 
 #parameters with modifiable default values
 my $ins_length = 300;
@@ -58,6 +59,7 @@ GetOptions ('reads=s' => \$short_read_archive,
             'log_file=s' => \$log_file,
             'output=s' => \$output_file,
             'protein' => \$protflag,
+            'max_processes|processes=i' => \$max_processes,
             'tempfiles=s' => \$save_temp,
             'debug' => \$debug,
             'complete' => \$complete,
@@ -245,6 +247,10 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 			push @pids, fork_cmd ("blastn -task blastn -evalue $evalue -max_target_seqs $max_target_seqs -db $sra.db -query $search_fasta -outfmt '6 sseqid' -out $current_partial_file", $log_fh);
 		}
 	}
+	if (($max_processes > 0) && (@pids > $max_processes)) {
+		# don't spawn off too many threads at once.
+		wait_for_forks(\@pids);
+	}
 	wait_for_forks(\@pids);
 
 	print "\tgetting paired ends...\n";
@@ -253,6 +259,10 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 		$current_partial_file = "$intermediate.blast.$i.$p";
 		# 2 and 3. find the paired end of all of the blast hits.
 		push @pids, fork_pair_retrieval("$sra.#.fasta", "$current_partial_file", "$current_partial_file.fasta");
+	}
+	if (($max_processes > 0) && (@pids > $max_processes)) {
+		# don't spawn off too many threads at once.
+		wait_for_forks(\@pids);
 	}
 	wait_for_forks(\@pids);
 
