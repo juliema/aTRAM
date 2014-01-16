@@ -253,7 +253,7 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 	}
 	if (($max_processes > 0) && (@pids > $max_processes)) {
 		# don't spawn off too many threads at once.
-		debug ("waiting for forks\n");
+		debug ("@pids > $max_processes: waiting for forks\n");
 		wait_for_forks(\@pids);
 	}
 	wait_for_forks(\@pids);
