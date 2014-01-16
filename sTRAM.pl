@@ -265,7 +265,6 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 		push @pids, fork_pair_retrieval("$sra.#.fasta", "$current_partial_file", "$current_partial_file.fasta");
 		if (($max_processes > 0) && (@pids >= ($max_processes - 1))) {
 			# don't spawn off too many threads at once.
-			debug ("waiting for forks\n");
 			wait_for_forks(\@pids);
 		}
 	}
