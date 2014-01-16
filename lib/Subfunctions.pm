@@ -6,6 +6,7 @@ use lib "$FindBin::Bin/lib";
 
 our $debug = 0;
 our %assemblers = {};
+our $log_fh = 0;
 
 sub parse_config {
 	open FH, "<", "$FindBin::Bin/config.txt";
@@ -50,7 +51,6 @@ sub exit_with_msg {
 
 sub fork_cmd {
 	my $cmd = shift;
-	my $log_fh = shift;
 
 	print $log_fh ("\t$cmd\n");
     my $child_pid = fork();
@@ -72,7 +72,6 @@ sub wait_for_forks {
 
 sub system_call {
 	my $cmd = shift;
-	my $log_fh = shift;
 
 	unless ($log_fh) {
 		$log_fh = &STDOUT;
@@ -106,12 +105,18 @@ sub debug {
 	my $msg = shift;
 	if ($debug) {
 		print "$msg";
+		print $log_fh ("DEBUG: $msg");
 	}
 }
 
 sub set_debug {
 	my $debug_new = shift;
 	$debug = $debug_new;
+}
+
+sub set_log {
+	my $log_new = shift;
+	$log_fh = $log_new;
 }
 
 sub parsefasta {

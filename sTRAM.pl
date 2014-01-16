@@ -102,6 +102,7 @@ if ($save_temp == 0) {
 
 my $log_fh;
 open $log_fh, ">", $log_file or die "couldn't open $log_file\n";
+set_log($log_fh);
 
 print $runline;
 print $log_fh $runline;
