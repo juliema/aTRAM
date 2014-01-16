@@ -1,3 +1,4 @@
+#!/usr/bin/env perl
 use strict;
 use File::Temp qw/ tempfile /;
 use FindBin;

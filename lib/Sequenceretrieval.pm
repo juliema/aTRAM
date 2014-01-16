@@ -1,5 +1,4 @@
-# given two fasta files corresponding to paired ends of short reads, find the specified sequences and then output them into a single output file.
-#!/usr/bin/perl
+#!/usr/bin/env perl
 use strict;
 use File::Temp qw/ tempfile /;
 require Subfunctions;
