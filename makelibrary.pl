@@ -127,7 +127,7 @@ for (my $i=0; $i<$numlibraries; $i++) {
 	close $out1_fhs[$i];
 	close $out2_fhs[$i];
 	push @pids, fork_cmd ("sort -t',' -k 1 -T $tempdir @out1_bucketfiles[$i] > @out1_sortedfiles[$i]", $log_fh);
-	if (@pids > $max_processes) {
+	if (@pids >= ($max_processes - 1)) {
 		# don't spawn off too many threads at once.
 		wait_for_forks(\@pids);
 	}
@@ -136,7 +136,7 @@ wait_for_forks(\@pids);
 
 for (my $i=0; $i<$numlibraries; $i++) {
     push @pids, fork_cmd ("sort -t',' -k 1 -T $tempdir @out2_bucketfiles[$i] > @out2_sortedfiles[$i]", $log_fh);
-	if (@pids > $max_processes) {
+	if (@pids >= ($max_processes - 1)) {
 		# don't spawn off too many threads at once.
 		wait_for_forks(\@pids);
 	}
