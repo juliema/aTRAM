@@ -407,12 +407,14 @@ print $log_fh "\nContigs containing the entire target sequence:\n\t" . join("\n\
 
 close $log_fh;
 
-open COMPLETE_FH, ">", "$output_file.complete.fasta";
-foreach my $contig_name (@complete_contigs) {
-	$contig_name =~ /(\d+)\.(.+)/;
-	print COMPLETE_FH ">$contig_name\n$hit_matrix->{$2}->{'seq'}\n";
+if (@complete_contigs > 0) {
+	open COMPLETE_FH, ">", "$output_file.complete.fasta";
+	foreach my $contig_name (@complete_contigs) {
+		$contig_name =~ /(\d+)\.(.+)/;
+		print COMPLETE_FH ">$contig_name\n$hit_matrix->{$2}->{'seq'}\n";
+	}
+	close COMPLETE_FH;
 }
-close COMPLETE_FH;
 
 my @best_unsorted = ();
 foreach my $contig_name (keys %$hit_matrix) {
@@ -421,12 +423,14 @@ foreach my $contig_name (keys %$hit_matrix) {
 	}
 }
 
-my @best_contigs = sort sort_contigs @best_unsorted;
-open BEST_FH, ">", "$output_file.best.fasta";
-foreach my $contig_name (@best_contigs) {
-	print BEST_FH ">$hit_matrix->{$contig_name}->{'iteration'}.$contig_name\n$hit_matrix->{$contig_name}->{'seq'}\n";
+if (@best_unsorted > 0) {
+	my @best_contigs = sort sort_contigs @best_unsorted;
+	open BEST_FH, ">", "$output_file.best.fasta";
+	foreach my $contig_name (@best_contigs) {
+		print BEST_FH ">$hit_matrix->{$contig_name}->{'iteration'}.$contig_name\n$hit_matrix->{$contig_name}->{'seq'}\n";
+	}
+	close BEST_FH;
 }
-close BEST_FH;
 
 sub sort_contigs {
 	if ($hit_matrix->{$a}->{"total"} < $hit_matrix->{$b}->{"total"}) {
