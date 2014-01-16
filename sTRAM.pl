@@ -74,6 +74,10 @@ if ($help) {
     pod2usage(-verbose => 1);
 }
 
+if ($debug) {
+	set_debug(1);
+}
+
 unless($short_read_archive and $target_fasta) {
     pod2usage(-msg => "Must specify a short read archive (that has already been prepared with makelibrary.pl) and a target gene in fasta form.");
 }
