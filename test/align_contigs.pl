@@ -12,6 +12,11 @@ my $contigs_file = 0;
 my $output_name = 0;
 my $help = 0;
 
+if (@ARGV == 0) {
+    pod2usage(-verbose => 1);
+}
+
+
 GetOptions ('reference=s' => \$ref_file,
             'input|contigs=s' => \$contigs_file,
             'output=s' => \$output_name,
