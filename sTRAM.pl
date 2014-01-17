@@ -247,9 +247,9 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 		push @partialfiles, $current_partial_file;
 		# 1. blast to find any short reads that match the target.
 		if (($protein == 1) && ($i == 1)) {
-			push @pids, fork_cmd ("tblastn -max_target_seqs $max_target_seqs -db $sra.db -query $search_fasta -outfmt '6 sseqid' -out $current_partial_file", $log_fh);
+			push @pids, fork_cmd ("tblastn -max_target_seqs $max_target_seqs -db $sra.db -query $search_fasta -outfmt '6 sseqid' -out $current_partial_file");
 		} else {
-			push @pids, fork_cmd ("blastn -task blastn -evalue $evalue -max_target_seqs $max_target_seqs -db $sra.db -query $search_fasta -outfmt '6 sseqid' -out $current_partial_file", $log_fh);
+			push @pids, fork_cmd ("blastn -task blastn -evalue $evalue -max_target_seqs $max_target_seqs -db $sra.db -query $search_fasta -outfmt '6 sseqid' -out $current_partial_file");
 		}
 		if (($max_processes > 0) && (@pids >= ($max_processes - 1))) {
 			# don't spawn off too many threads at once.
