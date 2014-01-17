@@ -41,6 +41,7 @@ unless ($output_file) {
 my $tempdir = dirname ("$output_file");
 my $log_file = "$output_file.log";
 open my $log_fh, ">", $log_file or die "couldn't open $log_file\n";
+set_log ($log_fh);
 
 my $libsize = (-s $short_read_archive);
 if ($numlibraries == 0) {
