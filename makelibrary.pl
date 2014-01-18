@@ -17,7 +17,7 @@ my $output_file = "";
 my $help = 0;
 my $debug = 0;
 my $numlibraries = 0;
-my $max_processes = 3;
+my $max_processes = 4;
 
 GetOptions ('input=s' => \$short_read_archive,
             'output=s' => \$output_file,
