@@ -22,7 +22,7 @@ my $refseq = delete $contigs->{reference};
 open TABLE_FH, ">", "$gene_name.Table.txt";
 open EXON_FH, ">", "$gene_name.exons.fasta";
 
-print EXON_FH ">$gene_name\n$refseq\n";
+print EXON_FH ">reference\n$refseq\n";
 print TABLE_FH "contig\ttotal\tpercent\n";
 my $total_length = length $refseq;
 foreach my $contig (keys $contigs) {
