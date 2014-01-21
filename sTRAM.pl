@@ -210,9 +210,9 @@ foreach my $line (@target_seqs) {
 # make a database from the target so that we can compare contigs to the target.
 my (undef, $targetdb) = tempfile(UNLINK => 1);
 if ($protein == 1) {
-	system_call ("makeblastdb -in $target_fasta -dbtype prot -out $targetdb.db -input_type fasta", $log_fh);
+	system_call ("makeblastdb -in $target_fasta -dbtype prot -out $targetdb.db -input_type fasta");
 } else {
-	system_call ("makeblastdb -in $target_fasta -dbtype nucl -out $targetdb.db -input_type fasta", $log_fh);
+	system_call ("makeblastdb -in $target_fasta -dbtype nucl -out $targetdb.db -input_type fasta");
 }
 
 if ($start_iter > 1) {
@@ -263,12 +263,12 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 
 	# now we need to piece all of the partial files back together.
 	my $fastafiles = join (" ", map {$_ . ".fasta"} @partialfiles);
-	system_call ("cat $fastafiles > $intermediate.$i.blast.fasta", $log_fh);
-	system_call ("rm $fastafiles", $log_fh);
+	system_call ("cat $fastafiles > $intermediate.$i.blast.fasta");
+	system_call ("rm $fastafiles");
 
 	# remove intermediate blast results
 	my $readfiles = join (" ", @partialfiles);
-	system_call ("rm $readfiles", $log_fh);
+	system_call ("rm $readfiles");
 
 	# SHUTDOWN CHECK: did we not find any reads? Go ahead and quit.
 	if ((-s "$intermediate.$i.blast.fasta") == 0) {
@@ -313,9 +313,9 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 	}
 
 	if ($protein == 1) {
-		system_call ("blastx -db $targetdb.db -query $contigs_file -out $blast_file -outfmt '6 qseqid sseqid bitscore qstart qend sstart send qlen'", $log_fh);
+		system_call ("blastx -db $targetdb.db -query $contigs_file -out $blast_file -outfmt '6 qseqid sseqid bitscore qstart qend sstart send qlen'");
 	} else {
-		system_call ("tblastx -db $targetdb.db -query $contigs_file -out $blast_file -outfmt '6 qseqid sseqid bitscore qstart qend sstart send qlen'", $log_fh);
+		system_call ("tblastx -db $targetdb.db -query $contigs_file -out $blast_file -outfmt '6 qseqid sseqid bitscore qstart qend sstart send qlen'");
 	}
 
 	# 6. we want to keep the contigs that have a bitscore higher than $bitscore.
