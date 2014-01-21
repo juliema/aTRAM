@@ -17,11 +17,13 @@ my $output_file = "";
 my $help = 0;
 my $debug = 0;
 my $numlibraries = 0;
+my $max_processes = 4;
 
 GetOptions ('input=s' => \$short_read_archive,
             'output=s' => \$output_file,
             'numlibraries=i' => \$numlibraries,
             'debug' => \$debug,
+			'max_processes|processes=i' => \$max_processes,
             'help|?' => \$help) or pod2usage(-msg => "GetOptions failed.", -exitval => 2);
 
 if ($help) {
@@ -125,8 +127,8 @@ printlog ("starting sort.", $log_fh);
 for (my $i=0; $i<$numlibraries; $i++) {
 	close $out1_fhs[$i];
 	close $out2_fhs[$i];
-	if (@pids > 3) {
 	push @pids, fork_cmd ("sort -t',' -k 1 -T $tempdir @out1_bucketfiles[$i] > @out1_sortedfiles[$i]");
+	if (@pids >= ($max_processes - 1)) {
 		# don't spawn off too many threads at once.
 		wait_for_forks(\@pids);
 	}
@@ -134,8 +136,8 @@ for (my $i=0; $i<$numlibraries; $i++) {
 wait_for_forks(\@pids);
 
 for (my $i=0; $i<$numlibraries; $i++) {
-	if (@pids > 3) {
     push @pids, fork_cmd ("sort -t',' -k 1 -T $tempdir @out2_bucketfiles[$i] > @out2_sortedfiles[$i]");
+	if (@pids >= ($max_processes - 1)) {
 		# don't spawn off too many threads at once.
 		wait_for_forks(\@pids);
 	}
