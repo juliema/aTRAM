@@ -72,6 +72,10 @@ if ($help) {
     pod2usage(-verbose => 1);
 }
 
+if ($debug) {
+	set_debug(1);
+}
+
 unless($short_read_archive and $target_fasta) {
     pod2usage(-msg => "Must specify a short read archive (that has already been prepared with makelibrary.pl) and a target gene in fasta form.");
 }
@@ -96,6 +100,7 @@ if ($save_temp == 0) {
 
 my $log_fh;
 open $log_fh, ">", $log_file or die "couldn't open $log_file\n";
+set_log($log_fh);
 
 print $runline;
 print $log_fh $runline;
@@ -240,9 +245,9 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 		push @partialfiles, $current_partial_file;
 		# 1. blast to find any short reads that match the target.
 		if (($protein == 1) && ($i == 1)) {
-			push @pids, fork_cmd ("tblastn -max_target_seqs $max_target_seqs -db $sra.db -query $search_fasta -outfmt '6 sseqid' -out $current_partial_file", $log_fh);
+			push @pids, fork_cmd ("tblastn -max_target_seqs $max_target_seqs -db $sra.db -query $search_fasta -outfmt '6 sseqid' -out $current_partial_file");
 		} else {
-			push @pids, fork_cmd ("blastn -task blastn -evalue $evalue -max_target_seqs $max_target_seqs -db $sra.db -query $search_fasta -outfmt '6 sseqid' -out $current_partial_file", $log_fh);
+			push @pids, fork_cmd ("blastn -task blastn -evalue $evalue -max_target_seqs $max_target_seqs -db $sra.db -query $search_fasta -outfmt '6 sseqid' -out $current_partial_file");
 		}
 	}
 	wait_for_forks(\@pids);
