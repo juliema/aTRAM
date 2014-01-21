@@ -48,6 +48,7 @@ my $exp_cov = 30;
 my $evalue = 10e-10;
 my $max_target_seqs = 100000000;
 my $assembler = "Velvet";
+my $kmer = 31;
 
 GetOptions ('reads=s' => \$short_read_archive,
             'target=s' => \$target_fasta,
@@ -63,6 +64,7 @@ GetOptions ('reads=s' => \$short_read_archive,
             'complete' => \$complete,
             'insert_length|ins_length=i' => \$ins_length,
             'exp_coverage|expected_coverage=i' => \$exp_cov,
+            'kmer=i' => \$kmer,
             'bitscore=i' => \$bitscore,
             'evalue=f' => \$evalue,
             'length=i' => \$contiglength,
@@ -286,7 +288,7 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 	# 4. assemble the reads...
 	load "$assembler";
 
-	my $assembly_params = { 'kmer' => 31,
+	my $assembly_params = { 'kmer' => $kmer,
 							'tempdir' => "$intermediate.$assembler",
 							'ins_length' => $ins_length,
 							'exp_cov' => $exp_cov,
