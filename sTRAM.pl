@@ -178,7 +178,7 @@ if ($protein==1) {
 my $firstseq = shift @target_seqs;
 if ($firstseq =~ /(.*),(.{$len})(.*)/) {
 	# split into two smaller seqs:
-	$start_seq = "sTRAM_target_start";
+	$start_seq = "aTRAM_target_start";
 	unshift @target_seqs, $firstseq;
 	unshift @target_seqs, "$start_seq,$2";
 } else {
@@ -192,7 +192,7 @@ if ($firstseq =~ /(.*),(.{$len})(.*)/) {
 my $lastseq = pop @target_seqs;
 if ($lastseq =~ /(.*),(.*)(.{$len})/) {
 	# split into two smaller seqs:
-	$end_seq = "sTRAM_target_end";
+	$end_seq = "aTRAM_target_end";
 	push @target_seqs, $lastseq;
 	push @target_seqs, "$end_seq,$3";
 } else {
@@ -480,13 +480,13 @@ __END__
 
 =head1 NAME
 
-sTRAM.pl
+aTRAM.pl
 
 =head1 SYNOPSIS
 
-sTRAM.pl -reads shortreadfile -target target.fasta [-iterations int] [-start_iteration int] [-log_file filename] [-output filename] -options
+aTRAM.pl -reads shortreadfile -target target.fasta [-iterations int] [-start_iteration int] [-log_file filename] [-output filename] -options
 
-sTRAM does targeted denovo assembly of short reads to find homologs or paralogs of a target sequence.
+aTRAM does targeted denovo assembly of short reads to find homologs or paralogs of a target sequence.
 
 =head1 OPTIONS
   pipeline parameters:
@@ -498,7 +498,7 @@ sTRAM does targeted denovo assembly of short reads to find homologs or paralogs 
   -start_iteration: optional: if resuming from previous run, which iteration number to start from (default 0).
   -blast:			optional: saves the blast hits for the raw read library to the specified file.
 
-  target fasta type: sTRAM, by default, tries to guess the type of fasta file specified with -target (either protein or dna).
+  target fasta type: aTRAM, by default, tries to guess the type of fasta file specified with -target (either protein or dna).
   override options:
   -protein:         if the target sequence is a protein fasta file.
   -type:            one of the following values: dna, nucl, aa, protein.

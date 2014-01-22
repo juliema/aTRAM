@@ -5,7 +5,7 @@ use File::Spec;
 
 
 my $i = 1;
-print "==== sTRAM checklist ====\n\n";
+print "==== aTRAM checklist ====\n\n";
 
 print $i++ .". Checking for required software...\n";
 my @req_software = qw(blastn makeblastdb gawk);
@@ -28,7 +28,7 @@ foreach my $sw (@req_software) {
 }
 
 if ($sw_ready == 0) {
-	print "You need to install some software before you can run sTRAM. \n";
+	print "You need to install some software before you can run aTRAM. \n";
 	print "If software is installed but not included in PATH, edit the appropriate line in config.txt.\n";
 	print "\nContinue checks? [Y/n]\n";
 	my $userpath = <STDIN>;
@@ -87,7 +87,7 @@ if ($result == 0) {
 	exit;
 }
 
-print "Looks good! You are ready to sTRAM it up!\n";
+print "Looks good! You are ready to aTRAM it up!\n";
 system_call("rm $executing_path/test_inst.*");
 
 sub system_call {

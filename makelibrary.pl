@@ -220,7 +220,7 @@ makelibrary.pl
 
 makelibrary.pl -input short_read_archive [-output library_name] [-number int]
 
-Takes a fasta or fastq file of paired-end short reads and prepares it for sTRAM.
+Takes a fasta or fastq file of paired-end short reads and prepares it for aTRAM.
 
 =head1 OPTIONS
 
