@@ -88,6 +88,7 @@ printlog ("Dividing fasta/fastq file into buckets for sorting.", $log_fh);
 my $name = "";
 my $seq = "";
 my $seqlen = 0;
+my $mapkey = 0;
 
 open SEARCH_FH, "<", $short_read_archive;
 while (my $line = readline SEARCH_FH) {
@@ -95,12 +96,13 @@ while (my $line = readline SEARCH_FH) {
 	if ($line =~ /^[@>](.*?)([\s\/])([12])/) {
 		if ($name ne "") {
 			if ($name =~ /\/1/) {
-				print {$out1_fhs[(hash_to_bucket($name))]} ">$name,$seq\n";
+				print {$out1_fhs[$mapkey]} ">$name,$seq\n";
 			} elsif ($name =~ /\/2/) {
-				print {$out2_fhs[(hash_to_bucket($name))]} ">$name,$seq\n";
+				print {$out2_fhs[$mapkey]} ">$name,$seq\n";
 			}
 		}
 		$name = "$1\/$3";
+		$mapkey = get_mapkey($name);
 		$seq = "";
 	} elsif ($line =~ /^\+/){
 		# is this a fastq quality line? eat chars to the length of the full sequence.
@@ -116,9 +118,9 @@ while (my $line = readline SEARCH_FH) {
 }
 
 if ($name =~ /\/1/) {
-	print {$out1_fhs[(hash_to_bucket($name))]} ">$name,$seq\n";
+	print {$out1_fhs[$mapkey]} ">$name,$seq\n";
 } elsif ($name =~ /\/2/) {
-	print {$out2_fhs[(hash_to_bucket($name))]} ">$name,$seq\n";
+	print {$out2_fhs[$mapkey]} ">$name,$seq\n";
 }
 close SEARCH_FH;
 my @pids = ();
@@ -185,7 +187,7 @@ foreach my $tempfile (@tempfiles) {
 printlog ("Finished", $log_fh);
 
 
-sub hash_to_bucket {
+sub get_mapkey {
 	my $key = shift;
 	$key =~ s/\/\d//;
 	$key =~ s/#.+$//;
