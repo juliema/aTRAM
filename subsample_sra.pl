@@ -40,13 +40,21 @@ $numlibraries = int($libsize / ($libsize * $frac));
 if (($numlibraries % 2) == 0) {
 	$numlibraries++;
 }
-print "$short_read_archive is $libsize bytes and we want " . ($libsize * $frac) . " of it.\n";
+
+my $libsizeMB = $libsize / 1e6;
+$libsizeMB =~ s/(\d*)\.(\d{2}).*/\1.\2/;
+
+my $subsetMB = int($libsizeMB * $frac);
+
+if ($short_read_archive =~ /\.f.*q/) {
+	$subsetMB = $subsetMB/2;
+}
+
+print "$short_read_archive is $libsizeMB MB. $output_file.fasta should be ~$subsetMB MB.\n";
 
 my @primes = (3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97, 101, 103, 107, 109, 113, 127, 131, 137, 139, 149, 151);
 my $multiplier = $primes[$libsize % (@primes)];
 
-# Divide fasta/fastq short reads into buckets for sorting.
-print "Dividing fasta/fastq file into buckets for sorting.\n";
 my $name = "";
 my $seq = "";
 my $seqlen = 0;
@@ -93,7 +101,7 @@ if ($key == 0) {
 close SEARCH_FH;
 close OUT_FH;
 
-print "Finished!\n";
+print "Finished: $output_file.fasta is " . ((-s "$output_file.fasta") / 1e6) . " MB.\n";
 
 sub subsample {
 	my $key = shift;
