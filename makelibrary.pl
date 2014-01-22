@@ -49,9 +49,9 @@ if ($numlibraries == 0) {
 	if (($numlibraries % 2) == 0) {
 		$numlibraries++;
 	}
-	printlog ("$short_read_archive is $libsize bytes; we will make $numlibraries libraries.", $log_fh);
+	printlog ("$short_read_archive is $libsize bytes; we will make $numlibraries libraries.");
 } else {
-	printlog ("making $numlibraries libraries.", $log_fh);
+	printlog ("making $numlibraries libraries.");
 }
 
 my @primes = (3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97, 101, 103, 107, 109, 113, 127, 131, 137, 139, 149, 151);
@@ -84,7 +84,7 @@ for (my $i=0; $i<$numlibraries; $i++) {
 }
 
 # Divide fasta/fastq short reads into buckets for sorting.
-printlog ("Dividing fasta/fastq file into buckets for sorting.", $log_fh);
+printlog ("Dividing fasta/fastq file into buckets for sorting.");
 my $name = "";
 my $seq = "";
 my $seqlen = 0;
@@ -124,7 +124,7 @@ if ($name =~ /\/1/) {
 }
 close SEARCH_FH;
 my @pids = ();
-printlog ("starting sort.", $log_fh);
+printlog ("starting sort.");
 
 for (my $i=0; $i<$numlibraries; $i++) {
 	close $out1_fhs[$i];
@@ -145,10 +145,10 @@ for (my $i=0; $i<$numlibraries; $i++) {
 	}
 }
 wait_for_forks(\@pids);
-printlog ("sorted.", $log_fh);
+printlog ("sorted.");
 
 for (my $i=0; $i<$numlibraries; $i++) {
-	printlog ("Making $output_file.$i.1.fasta.", $log_fh);
+	printlog ("Making $output_file.$i.1.fasta.");
 	open my $in_fh, "<", "@out1_sortedfiles[$i]" or exit_with_msg ("couldn't read @out1_sortedfiles[$i]");
 	open my $out_fh, ">", "$output_file.$i.1.fasta" or exit_with_msg ("couldn't create $output_file.$i.1.fasta");
 	while (my $line = readline $in_fh) {
@@ -159,7 +159,7 @@ for (my $i=0; $i<$numlibraries; $i++) {
 	close $in_fh;
 	close $out_fh;
 
-	printlog ("Making $output_file.$i.2.fasta.", $log_fh);
+	printlog ("Making $output_file.$i.2.fasta.");
 	open my $in_fh, "<", "@out2_sortedfiles[$i]" or exit_with_msg ("couldn't read @out2_sortedfiles[$i]");
 	open my $out_fh, ">", "$output_file.$i.2.fasta" or exit_with_msg ("couldn't create $output_file.$i.2.fasta");
 	while (my $line = readline $in_fh) {
@@ -171,7 +171,7 @@ for (my $i=0; $i<$numlibraries; $i++) {
 	close $out_fh;
 }
 
-printlog ("Making blastdbs.", $log_fh);
+printlog ("Making blastdbs.");
 for (my $i=0; $i<$numlibraries; $i++) {
 	# make the blast db from the first of the paired end files
 	push @pids, fork_cmd ("makeblastdb -in $output_file.$i.1.fasta -dbtype nucl -out $output_file.$i.db");
@@ -181,10 +181,10 @@ wait_for_forks(\@pids);
 
 cleanup();
 foreach my $tempfile (@tempfiles) {
-	printlog ("removing $tempfile", $log_fh);
+	printlog ("removing $tempfile");
 	system ("rm $tempfile");
 }
-printlog ("Finished", $log_fh);
+printlog ("Finished");
 
 
 sub get_mapkey {
@@ -200,7 +200,6 @@ sub get_mapkey {
 
 sub printlog {
 	my $msg = shift;
-	my $log_fh = shift;
 
 	$msg = timestamp() . ": " . $msg . "\n";
 	print $msg;
