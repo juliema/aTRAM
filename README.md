@@ -1,4 +1,4 @@
-##	aTRAM: Simple Target Restricted Assembly Method
+##	aTRAM: Automated Target Restricted Assembly Method
 
 aTRAM consists of two scripts:
 
