@@ -198,19 +198,6 @@ sub get_mapkey {
 	return $hash;
 }
 
-sub printlog {
-	my $msg = shift;
-
-	$msg = timestamp() . ": " . $msg . "\n";
-	print $msg;
-	if ($log_fh) {
-        select($log_fh);
-        $|++;
-		print $log_fh $msg;
-		select(STDOUT);
-	}
-}
-
 __END__
 
 =head1 NAME

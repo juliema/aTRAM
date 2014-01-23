@@ -69,6 +69,19 @@ sub wait_for_forks {
     return;
 }
 
+sub printlog {
+	my $msg = shift;
+
+	$msg = timestamp() . ": " . $msg . "\n";
+	print $msg;
+	if ($log_fh) {
+        select($log_fh);
+        $|++;
+		print $log_fh $msg;
+		select(STDOUT);
+	}
+}
+
 sub system_call {
 	my $cmd = shift;
 
