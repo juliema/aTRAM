@@ -15,7 +15,7 @@ my $short_read_archive = "";
 my $output_file = "";
 my $help = 0;
 my $frac = 0;
-my $numlibraries = 0;
+my $numlibraries = 1000;
 
 GetOptions ('input=s' => \$short_read_archive,
             'output=s' => \$output_file,
@@ -36,10 +36,7 @@ unless ($output_file) {
 
 my $libsize = (-s $short_read_archive);
 
-$numlibraries = int($libsize / ($libsize * $frac));
-if (($numlibraries % 2) == 0) {
-	$numlibraries++;
-}
+my $maxlib = $numlibraries * $frac;
 
 my $libsizeMB = $libsize / 1e6;
 $libsizeMB =~ s/(\d*)\.(\d{2}).*/\1.\2/;
@@ -67,7 +64,7 @@ while (my $line = readline SEARCH_FH) {
 	chomp $line;
 	if ($line =~ /^[@>](.*?)([\s\/])([12])/) {
 		if ($name ne "") {
-			if ($key == 0) {
+			if ($key < $maxlib) {
 				if ($name =~ /\/1/) {
 					print OUT_FH ">$name\n$seq\n";
 				} elsif ($name =~ /\/2/) {
@@ -91,7 +88,7 @@ while (my $line = readline SEARCH_FH) {
 	}
 }
 
-if ($key == 0) {
+if ($key < $maxlib) {
 	if ($name =~ /\/1/) {
 		print OUT_FH ">$name\n$seq\n";
 	} elsif ($name =~ /\/2/) {
