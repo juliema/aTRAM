@@ -16,12 +16,12 @@ my $short_read_archive = "";
 my $output_file = "";
 my $help = 0;
 my $debug = 0;
-my $numlibraries = 0;
+my $numshards = 0;
 my $max_processes = 4;
 
 GetOptions ('input=s' => \$short_read_archive,
             'output=s' => \$output_file,
-            'numlibraries=i' => \$numlibraries,
+            'number=i' => \$numshards,
             'debug' => \$debug,
 			'max_processes|processes=i' => \$max_processes,
             'help|?' => \$help) or pod2usage(-msg => "GetOptions failed.", -exitval => 2);
@@ -43,19 +43,22 @@ my $log_file = "$output_file.log";
 open my $log_fh, ">", $log_file or die "couldn't open $log_file\n";
 set_log ($log_fh);
 
-my $libsize = (-s $short_read_archive);
-if ($numlibraries == 0) {
-	$numlibraries = int($libsize / 5e8);
-	if (($numlibraries % 2) == 0) {
-		$numlibraries++;
+my $srasize = (-s $short_read_archive);
+
+set_multiplier ($srasize);
+
+if ($numshards == 0) {
+	$numshards = int($srasize / 5e8);
+	if (($numshards % 2) == 0) {
+		$numshards++;
 	}
-	printlog ("$short_read_archive is $libsize bytes; we will make $numlibraries libraries.");
+	printlog ("$short_read_archive is $srasize bytes; we will make $numshards shards.");
 } else {
-	printlog ("making $numlibraries libraries.");
+	printlog ("making $numshards shards.");
 }
 
-my @primes = (3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97, 101, 103, 107, 109, 113, 127, 131, 137, 139, 149, 151);
-my $multiplier = $primes[$libsize % (@primes)];
+set_num_shards ($numshards);
+my $max_shard = get_max_shard($output_file);
 
 my @tempfiles = ();
 
@@ -67,7 +70,7 @@ my @out1_sortedfiles = ();
 my @out2_sortedfiles = ();
 
 # setting up tempfiles for sorting:
-for (my $i=0; $i<$numlibraries; $i++) {
+for (my $i=0; $i<$numshards; $i++) {
 	my ($fh, $filename) = tempfile("$output_file.bucket.$i.1.XXXX", UNLINK => 1);
 	push @out1_bucketfiles, $filename;
 	push @out1_fhs, $fh;
@@ -88,7 +91,7 @@ printlog ("Dividing fasta/fastq file into buckets for sorting.");
 my $name = "";
 my $seq = "";
 my $seqlen = 0;
-my $mapkey = 0;
+my $shard = 0;
 
 open SEARCH_FH, "<", $short_read_archive;
 while (my $line = readline SEARCH_FH) {
@@ -96,13 +99,13 @@ while (my $line = readline SEARCH_FH) {
 	if ($line =~ /^[@>](.*?)([\s\/])([12])/) {
 		if ($name ne "") {
 			if ($name =~ /\/1/) {
-				print {$out1_fhs[$mapkey]} ">$name,$seq\n";
+				print {$out1_fhs[$shard]} ">$name,$seq\n";
 			} elsif ($name =~ /\/2/) {
-				print {$out2_fhs[$mapkey]} ">$name,$seq\n";
+				print {$out2_fhs[$shard]} ">$name,$seq\n";
 			}
 		}
 		$name = "$1\/$3";
-		$mapkey = get_mapkey($name);
+		$shard = map_to_shard($name);
 		$seq = "";
 	} elsif ($line =~ /^\+/){
 		# is this a fastq quality line? eat chars to the length of the full sequence.
@@ -118,15 +121,15 @@ while (my $line = readline SEARCH_FH) {
 }
 
 if ($name =~ /\/1/) {
-	print {$out1_fhs[$mapkey]} ">$name,$seq\n";
+	print {$out1_fhs[$shard]} ">$name,$seq\n";
 } elsif ($name =~ /\/2/) {
-	print {$out2_fhs[$mapkey]} ">$name,$seq\n";
+	print {$out2_fhs[$shard]} ">$name,$seq\n";
 }
 close SEARCH_FH;
 my @pids = ();
 printlog ("starting sort.");
 
-for (my $i=0; $i<$numlibraries; $i++) {
+for (my $i=0; $i<$numshards; $i++) {
 	close $out1_fhs[$i];
 	close $out2_fhs[$i];
 	push @pids, fork_cmd ("sort -t',' -k 1 -T $tempdir @out1_bucketfiles[$i] > @out1_sortedfiles[$i]");
@@ -137,7 +140,7 @@ for (my $i=0; $i<$numlibraries; $i++) {
 }
 wait_for_forks(\@pids);
 
-for (my $i=0; $i<$numlibraries; $i++) {
+for (my $i=0; $i<$numshards; $i++) {
     push @pids, fork_cmd ("sort -t',' -k 1 -T $tempdir @out2_bucketfiles[$i] > @out2_sortedfiles[$i]");
 	if (@pids >= ($max_processes - 1)) {
 		# don't spawn off too many threads at once.
@@ -147,7 +150,7 @@ for (my $i=0; $i<$numlibraries; $i++) {
 wait_for_forks(\@pids);
 printlog ("sorted.");
 
-for (my $i=0; $i<$numlibraries; $i++) {
+for (my $i=0; $i<$numshards; $i++) {
 	printlog ("Making $output_file.$i.1.fasta.");
 	open my $in_fh, "<", "@out1_sortedfiles[$i]" or exit_with_msg ("couldn't read @out1_sortedfiles[$i]");
 	open my $out_fh, ">", "$output_file.$i.1.fasta" or exit_with_msg ("couldn't create $output_file.$i.1.fasta");
@@ -172,7 +175,7 @@ for (my $i=0; $i<$numlibraries; $i++) {
 }
 
 printlog ("Making blastdbs.");
-for (my $i=0; $i<$numlibraries; $i++) {
+for (my $i=0; $i<$numshards; $i++) {
 	# make the blast db from the first of the paired end files
 	push @pids, fork_cmd ("makeblastdb -in $output_file.$i.1.fasta -dbtype nucl -out $output_file.$i.db");
 }
@@ -184,49 +187,26 @@ foreach my $tempfile (@tempfiles) {
 	printlog ("removing $tempfile");
 	system ("rm $tempfile");
 }
-printlog ("Finished");
 
+printlog ("Finished: aTRAM database $output_file has " . (get_max_shard($output_file) + 1) . " shards.");
 
-sub get_mapkey {
-	my $key = shift;
-	$key =~ s/\/\d//;
-	$key =~ s/#.+$//;
-	$key =~ tr/0-9//dc;
-	$key =~ /.*(\d{8})$/;
-	$key = $1 * $multiplier;
-	my $hash = $key % $numlibraries;
-	return $hash;
-}
-
-sub printlog {
-	my $msg = shift;
-
-	$msg = timestamp() . ": " . $msg . "\n";
-	print $msg;
-	if ($log_fh) {
-        select($log_fh);
-        $|++;
-		print $log_fh $msg;
-		select(STDOUT);
-	}
-}
 
 __END__
 
 =head1 NAME
 
-makelibrary.pl
+format_sra.pl
 
 =head1 SYNOPSIS
 
-makelibrary.pl -input short_read_archive [-output library_name] [-number int]
+format_sra.pl -input short_read_archive [-output aTRAM_db_name] [-number int]
 
-Takes a fasta or fastq file of paired-end short reads and prepares it for aTRAM.
+Takes a fasta or fastq file of paired-end short reads and creates an aTRAM database for use by aTRAM.pl.
 
 =head1 OPTIONS
 
  -input:   short read archive.
- -output:  optional: prefix of output library (default is the same as -input).
+ -output:  optional: prefix of aTRAM database (default is the same as -input).
 
 =cut
 
