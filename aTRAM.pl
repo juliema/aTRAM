@@ -106,16 +106,17 @@ my $log_fh;
 open $log_fh, ">", $log_file or die "couldn't open $log_file\n";
 set_log($log_fh);
 
-print $runline;
-print $log_fh $runline;
+printlog ($runline);
 
 my $executing_path = dirname(__FILE__);
 my $cmd;
 
 # set up the number of partial libraries we'll be using.
-my $numlibs = count_partial_libraries("$short_read_archive");
-my $max_partial = $numlibs - 1;
-$processes = int ($numlibs * $fraclibs);
+my $total_shards_available = get_total_shards("$short_read_archive");
+my $max_shard = get_max_shard();
+
+my $max_partial = $max_shard - 1;
+$processes = int ($max_shard * $fraclibs);
 
 # obviously we need to use at least one library.
 if ($processes == 0) {
@@ -123,11 +124,10 @@ if ($processes == 0) {
 }
 
 unless ((-e "$short_read_archive.$max_partial.1.fasta") && (-e "$short_read_archive.$max_partial.2.fasta")) {
-	pod2usage(-msg => "Short read archives were not prepared to handle $numlibs processes.");
+	pod2usage(-msg => "Short read archives were not prepared to handle $max_shard processes.");
 }
 
-print "Using $processes of $numlibs total partial libraries.\n";
-print $log_fh "Using $processes of $numlibs total partial libraries.\n";
+printlog ("Using $processes of $max_shard total shards.");
 
 open CONTIGS_FH, ">", "$output_file.all.fasta";
 truncate CONTIGS_FH, 0;
