@@ -7,7 +7,7 @@ use lib "$FindBin::Bin/lib";
 our $debug = 0;
 our %assemblers = {};
 our $log_fh = 0;
-our $num_shards = 0;
+our $total_shards = 0;
 our @primes = (3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97, 101, 103, 107, 109, 113, 127, 131, 137, 139, 149, 151);
 our $multiplier = 0;
 
@@ -297,25 +297,29 @@ sub map_to_shard {
 	$name =~ /.*(\d{8})$/;
 	$name = $1 * get_multiplier();
 
-	return $name % $num_shards;
+	return $name % $total_shards;
 }
 
-sub set_num_shards {
-	$num_shards = shift;
-	return $num_shards;
+sub set_total_shards {
+	$total_shards = shift;
+	return $total_shards;
 }
 
-sub get_max_shard {
+sub get_total_shards {
 	my $dbname = shift;
 
-	if ($num_shards == 0) {
+	if ($total_shards == 0) {
 		my $num = 0;
 		while (-e "$dbname.$num.1.fasta") {
 			$num++;
 		}
-		$num_shards = $num;
+		$total_shards = $num;
 	}
-	return $num_shards - 1;
+	return $total_shards;
+}
+
+sub get_max_shard {
+	return get_total_shards() - 1;
 }
 
 sub is_protein {
