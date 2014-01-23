@@ -498,35 +498,33 @@ aTRAM.pl
 
 =head1 SYNOPSIS
 
-aTRAM.pl -reads shortreadfile -target target.fasta [-iterations int] [-start_iteration int] [-log_file filename] [-output filename] -options
+aTRAM.pl -sra atram_db -target target.fasta [-output filename] [-iterations int] [-start_iteration int] [-log_file filename] -options
 
 aTRAM does targeted denovo assembly of short reads to find homologs or paralogs of a target sequence.
 
 =head1 OPTIONS
   pipeline parameters:
-  -reads:     		short read archive (already run through makelibrary.pl).
+  -sra|database|db: aTRAM database name (already run through format_sra.pl).
   -target:          fasta file with sequences of interest.
-  -output:	        optional: the prefix for the pipeline's output files (default name is the same as -reads).
+  -output:	        optional: the prefix for the pipeline's output files (default name is the same as -sra).
   -log_file:        optional: a file to store output of the pipeline.
+  -tempfiles:       optional: use this name to save the intermediate files from the run.
   -iterations:      optional: the number of pipeline iterations (default 5).
   -start_iteration: optional: if resuming from previous run, which iteration number to start from (default 0).
-  -blast:			optional: saves the blast hits for the raw read library to the specified file.
-
-  target fasta type: aTRAM, by default, tries to guess the type of fasta file specified with -target (either protein or dna).
-  override options:
-  -protein:         if the target sequence is a protein fasta file.
-  -type:            one of the following values: dna, nucl, aa, protein.
 
   optional parameters:
-  -velvet:          if specified, skips the blast steps and performs only velvet assembly on previously-generated intermediate files.
+  -protein:         if the target sequence is a protein fasta file (not mandatory, aTRAM will guess).
   -complete:        if specified, automatically quits when a complete homolog is recovered.
+  -fraction:        if specified, use only specified fraction of the aTRAM database.
+  -processes:       if specified, aTRAM will use no more than this number of processes for multiprocessing.
 
-  optional velvet assembly parameters:
+  optional assembly parameters:
+  -assembler:       software to be used for targeted assembly (default is Velvet).
   -ins_length:	    the size of the fragments used in the short-read library (default 300).
   -exp_coverage:    the expected coverage of the region for velvetg (default 30).
+  -kmer:            kmer size for assemblers that use it (default 31).
 
   optional values for searching short reads:
-  -max_target_seqs: default value is 10e8.
   -evalue:          default value is 10e-10.
 
   optional values for blast-filtering contigs:
