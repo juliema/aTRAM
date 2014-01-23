@@ -31,8 +31,8 @@ my $target_fasta = 0;
 my $help = 0;
 my $log_file = "";
 my $output_file = "";
-my $processes = 0;
-my $fraclibs = 1;
+my $shards = 0;
+my $fraction = 1;
 my $intermediate = 0;
 my $save_temp = 0;
 my $complete = 0;
@@ -56,7 +56,7 @@ GetOptions ('reads=s' => \$short_read_archive,
             'assembler=s' => \$assembler,
             'start_iteration=i' => \$start_iter,
             'iterations=i' => \$iterations,
-			'fraction=f' => \$fraclibs,
+			'fraction=f' => \$fraction,
             'log_file=s' => \$log_file,
             'output=s' => \$output_file,
             'protein' => \$protflag,
@@ -115,19 +115,18 @@ my $cmd;
 my $total_shards_available = get_total_shards("$short_read_archive");
 my $max_shard = get_max_shard();
 
-my $max_partial = $max_shard - 1;
-$processes = int ($max_shard * $fraclibs);
+$shards = int ($total_shards_available * $fraction);
 
-# obviously we need to use at least one library.
-if ($processes == 0) {
-	$processes = 1;
+# obviously we need to use at least one shard.
+if ($shards == 0) {
+	$shards = 1;
 }
 
-unless ((-e "$short_read_archive.$max_partial.1.fasta") && (-e "$short_read_archive.$max_partial.2.fasta")) {
-	pod2usage(-msg => "Short read archives were not prepared to handle $max_shard processes.");
+unless ((-e "$short_read_archive.$max_shard.1.fasta") && (-e "$short_read_archive.$max_shard.2.fasta")) {
+	pod2usage(-msg => "aTRAM database was improperly formatted.");
 }
 
-printlog ("Using $processes of $max_shard total shards.");
+printlog ("Using $shards of $total_shards_available total shards.");
 
 open CONTIGS_FH, ">", "$output_file.all.fasta";
 truncate CONTIGS_FH, 0;
@@ -243,7 +242,7 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 
 	# we are multithreading:
 	print "\tblasting short reads...\n";
-	for (my $p=0; $p<$processes; $p++) {
+	for (my $p=0; $p<$shards; $p++) {
 		$sra = "$short_read_archive.$p";
 		$current_partial_file = "$intermediate.blast.$i.$p";
 		push @partialfiles, $current_partial_file;
@@ -261,7 +260,7 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 	wait_for_forks(\@pids);
 
 	print "\tgetting paired ends...\n";
-	for (my $p=0; $p<$processes; $p++) {
+	for (my $p=0; $p<$shards; $p++) {
 		$sra = "$short_read_archive.$p";
 		$current_partial_file = "$intermediate.blast.$i.$p";
 		# 2 and 3. find the paired end of all of the blast hits.
