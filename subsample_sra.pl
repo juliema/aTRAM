@@ -3,9 +3,6 @@ use strict;
 use File::Basename;
 use Getopt::Long;
 use Pod::Usage;
-use FindBin;
-use lib "$FindBin::Bin/lib";
-require Subfunctions;
 
 if (@ARGV == 0) {
     pod2usage(-verbose => 1);
