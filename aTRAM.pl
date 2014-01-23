@@ -320,12 +320,15 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 	my $assembled_contig_file = "$assembler"->assembler ("$temp_name.$i.blast.fasta", $assembly_params, $log_fh);
 	"$assembler"->rename_contigs($assembled_contig_file, $contigs_file);
 
+	if ($save_temp == 0) {
+		system_call ("rm $temp_name.$i.blast.fasta");
+	}
 
 	# filter out the contigs to look for just the best ones:
 	print "\tfiltering contigs...\n";
 
 	my $blast_file = "";
-	if ($temp_name) {
+	if ($save_temp) {
 		$blast_file = "$temp_name.$i.blast";
 	} else {
 		(undef, $blast_file) = tempfile(UNLINK => 1);
@@ -341,6 +344,10 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 	print "\tsaving best-scoring contigs...\n";
 	my $raw_hit_matrix = {};
 	make_hit_matrix ($blast_file, $raw_hit_matrix, $i);
+
+	if ($save_temp == 0) {
+		system_call ("rm $blast_file");
+	}
 	my @contig_names = ();
 	my $old_matrix_size = (keys %$hit_matrix);
 	my $high_score = process_hit_matrix ($raw_hit_matrix, \@targets, $bitscore, $contiglength, $hit_matrix, \@contig_names);
