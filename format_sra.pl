@@ -52,9 +52,6 @@ set_multiplier ($srasize);
 # if the user didn't specify how many shards to make, we should make as many as we need so that they average 500MB each.
 if ($numshards == 0) {
 	$numshards = int($srasize / 5e8);
-	if (($numshards % 2) == 0) {
-		$numshards++;
-	}
 	printlog ("$short_read_archive is $srasizeMB MB; we will make $numshards shards.");
 } else {
 	printlog ("making $numshards shards.");
@@ -212,6 +209,7 @@ Takes a fasta or fastq file of paired-end short reads and creates an aTRAM datab
 
  -input:   short read archive.
  -output:  optional: prefix of aTRAM database (default is the same as -input).
+ -number:  optional: number of shards to create (default is however many are required for each to be ~500MB).
 
 =cut
 
