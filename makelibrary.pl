@@ -44,21 +44,25 @@ open my $log_fh, ">", $log_file or die "couldn't open $log_file\n";
 set_log ($log_fh);
 
 my $srasize = (-s $short_read_archive);
+my $srasizeMB = $srasize / 1e6;
+$srasizeMB =~ s/(\d*)\.(\d{2}).*/\1.\2/;
 
 set_multiplier ($srasize);
 
+# if the user didn't specify how many shards to make, we should make as many as we need so that they average 500MB each.
 if ($numshards == 0) {
 	$numshards = int($srasize / 5e8);
 	if (($numshards % 2) == 0) {
 		$numshards++;
 	}
-	printlog ("$short_read_archive is $srasize bytes; we will make $numshards shards.");
+	printlog ("$short_read_archive is $srasizeMB MB; we will make $numshards shards.");
 } else {
 	printlog ("making $numshards shards.");
 }
 
-set_num_shards ($numshards);
-my $max_shard = get_max_shard($output_file);
+# declare how many shards we'll be making.
+set_total_shards ($numshards);
+my $max_shard = get_max_shard();
 
 my @tempfiles = ();
 
@@ -188,7 +192,8 @@ foreach my $tempfile (@tempfiles) {
 	system ("rm $tempfile");
 }
 
-printlog ("Finished: aTRAM database $output_file has " . (get_max_shard($output_file) + 1) . " shards.");
+set_total_shards(0); # reset total shards to force a file count.
+printlog ("Finished: aTRAM database $output_file has " . (get_total_shards($output_file)) . " shards.");
 
 
 __END__
