@@ -19,7 +19,7 @@ my $contigs = percentcoverage ($ref_file, $contigs_file, $gene_name, $aligner);
 
 my $refseq = delete $contigs->{reference};
 
-open TABLE_FH, ">", "$gene_name.Table.txt";
+open TABLE_FH, ">", "$gene_name.results.txt";
 open EXON_FH, ">", "$gene_name.exons.fasta";
 
 print EXON_FH ">reference\n$refseq\n";
