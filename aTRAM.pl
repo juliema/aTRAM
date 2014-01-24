@@ -233,8 +233,7 @@ my $best_score = 0;
 
 # STARTING ITERATIONS:
 for (my $i=$start_iter; $i<=$iterations; $i++) {
-	print ("iteration $i starting...\n");
-	print $log_fh ("iteration $i starting...\n");
+	printlog ("iteration $i starting...");
 
 	my @shardfiles = ();
 	my @pids = ();
@@ -291,7 +290,7 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 
 	# SHUTDOWN CHECK: did we not find any reads? Go ahead and quit.
 	if ((-s "$temp_name.$i.blast.fasta") == 0) {
-		print "No similar reads were found.\n";
+		printlog ("No similar reads were found.");
 		last;
 	}
 	my $contigs_file = "";
@@ -340,7 +339,7 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 		system_call ("tblastx -db $targetdb.db -query $contigs_file -out $blast_file -outfmt '6 qseqid sseqid bitscore qstart qend sstart send qlen'");
 	}
 
-	# 6. we want to keep the contigs that have a bitscore higher than $bitscore.
+	# we want to keep the contigs that have a bitscore higher than $bitscore.
 	print "\tsaving best-scoring contigs...\n";
 	my $raw_hit_matrix = {};
 	make_hit_matrix ($blast_file, $raw_hit_matrix, $i);
@@ -358,13 +357,13 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 
 	# SHUTDOWN CHECK:
 	if ((keys %$hit_matrix) == $old_matrix_size) {
-		print ("No new contigs were found.\n");
+		printlog ("No new contigs were found.");
 		last;
 	}
 
 	# SHUTDOWN CHECK:
 	if (@contig_names == 0) {
-		print ("No contigs had a bitscore greater than $bitscore and longer than $contiglength in iteration $i: the highest bitscore this time was $high_score.\n");
+		printlog ("No contigs had a bitscore greater than $bitscore and longer than $contiglength in iteration $i: the highest bitscore this time was $high_score.");
 		last;
 	}
 
@@ -385,16 +384,16 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 
 	# save off these resulting contigs to the ongoing contigs file.
 	open CONTIGS_FH, ">>", "$output_file.all.fasta";
-	print $log_fh "\twriting contigs to $output_file.all.fasta:\n";
+	printlog ("\twriting contigs to $output_file.all.fasta:");
 	foreach my $contig_name (@contig_names) {
 		my $seq = $contig_seqs->{$contig_name};
 		# revcomping contigs with negative strand directions:
 		if ($hit_matrix->{$contig_name}->{"strand"} < 0) {
-			print $log_fh "\t\twriting out reverse-complement of $contig_name\n";
+			printlog ("\t\twriting out reverse-complement of $contig_name");
 			$seq = reverse_complement($seq);
 			print CONTIGS_FH ">$i.$contig_name\n$seq\n";
 		} else {
-			print $log_fh "\t\twriting out $contig_name\n";
+			printlog ("\t\twriting out $contig_name");
 			print CONTIGS_FH ">$i.$contig_name\n$seq\n";
 		}
 		$hit_matrix->{$contig_name}->{"seq"} = $seq;
@@ -423,7 +422,7 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 	# SHUTDOWN CHECK:
 	if ($complete == 1) {
 		if (@complete_contigs > 0) {
-			print ("Contigs that cover the entire target sequence were found; quitting at iteration $i.\n");
+			printlog ("Contigs that cover the entire target sequence were found; quitting at iteration $i.");
 			last;
 		}
 	}
@@ -432,9 +431,8 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 print "\n\nContigs by target coverage:\n";
 
 system ("cat $output_file.results.txt");
-print "\nContigs containing the entire target sequence:\n\t" . join("\n\t", @complete_contigs) . "\n";
-print $log_fh "Contig coverage in $output_file.results.txt\n";
-print $log_fh "\nContigs containing the entire target sequence:\n\t" . join("\n\t", @complete_contigs) . "\n";
+
+printlog ("Contigs containing the entire target sequence:\n\t" . join("\n\t", @complete_contigs) . "");
 
 close $log_fh;
 
