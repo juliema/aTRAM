@@ -4,7 +4,7 @@ use strict;
 use Getopt::Long;
 use Pod::Usage;
 use FindBin;
-use lib "$FindBin::Bin/lib";
+use lib "$FindBin::Bin/../lib";
 require Subfunctions;
 
 if (@ARGV == 0) {
