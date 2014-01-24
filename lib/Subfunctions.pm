@@ -7,6 +7,9 @@ use lib "$FindBin::Bin/lib";
 our $debug = 0;
 our %assemblers = {};
 our $log_fh = 0;
+our $total_shards = 0;
+our @primes = (3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97, 101, 103, 107, 109, 113, 127, 131, 137, 139, 149, 151);
+our $multiplier = 0;
 
 sub parse_config {
 	open FH, "<", "$FindBin::Bin/config.txt";
@@ -269,14 +272,54 @@ sub process_hit_matrix {
 	return $high_score;
 }
 
-sub count_partial_libraries {
-	my $libname = shift;
+#### MAPREDUCE FUNCTIONS
 
-	my $num = 0;
-	while (-e "$libname.$num.1.fasta") {
-		$num++;
+sub set_multiplier {
+	my $factor = shift;
+	$multiplier = $primes[$factor % (@primes)];
+	return $multiplier;
+}
+
+sub get_multiplier {
+	if ($multiplier != 0) {
+		$multiplier = $primes[0];
 	}
-	return $num;
+	return $multiplier;
+}
+
+sub map_to_shard {
+	my $name = shift;
+
+	$name =~ s/\/\d//;
+	$name =~ s/#.+$//;
+	$name =~ tr/0-9//dc;
+
+	$name =~ /.*(\d{8})$/;
+	$name = $1 * get_multiplier();
+
+	return $name % $total_shards;
+}
+
+sub set_total_shards {
+	$total_shards = shift;
+	return $total_shards;
+}
+
+sub get_total_shards {
+	my $dbname = shift;
+
+	if ($total_shards == 0) {
+		my $num = 0;
+		while (-e "$dbname.$num.1.fasta") {
+			$num++;
+		}
+		$total_shards = $num;
+	}
+	return $total_shards;
+}
+
+sub get_max_shard {
+	return get_total_shards() - 1;
 }
 
 sub is_protein {
