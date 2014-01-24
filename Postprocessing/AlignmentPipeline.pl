@@ -80,7 +80,7 @@ foreach my $target (@targetnames) {
 	# for each sample:
 	foreach my $sample (@samplenames) {
 		my $outname = "$outfile.$target.$sample";
-		print_log ("$target $sample");
+		printlog ("$target $sample");
 		system_call ("perl ~/TRAM/aTRAM.pl -reads $samples->{$sample} -target $targets->{$target} -iter $iter -ins_length $ins_length -frac $frac -assemble Velvet -out $outname -kmer $kmer -complete");
 		system_call ("rm -r $outname.Velvet");
 		# run percentcoverage to get the contigs nicely aligned
@@ -128,13 +128,13 @@ foreach my $target (@targetnames) {
 			my ($taxa, $taxanames) = parse_fasta ("$outname.exons.fasta");
 			# write this contig out to the target.fasta file, named by sample.
 			open FH, ">>", "$outfile.$target.exons.fasta";
-			print_log ("adding $contig to $target.exons.fasta");
+			printlog ("adding $contig to $target.exons.fasta");
 			print FH ">$sample\n$taxa->{$contig}\n";
 			close FH;
 			($taxa, $taxanames) = parse_fasta ("$outname.best.fasta");
 			# write this contig out to the target.fasta file, named by sample.
 			open FH, ">>", "$outfile.$target.full.fasta";
-			print_log ("adding $contig from $outname.best.fasta to $target.full.fasta");
+			printlog ("adding $contig from $outname.best.fasta to $target.full.fasta");
 			print FH ">$sample\n$taxa->{$contig}\n";
 			close FH;
 		}
