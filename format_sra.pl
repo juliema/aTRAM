@@ -51,6 +51,10 @@ set_multiplier ($srasize);
 
 # if the user didn't specify how many shards to make, we should make as many as we need so that they average 500MB each.
 if ($numshards == 0) {
+	# if it's a fastq file, the file is twice the size that it would be if it were a fasta.
+	if ($short_read_archive =~ /\.f.*q/) {
+		$srasize = $srasize/2;
+	}
 	$numshards = int($srasize / 5e8);
 	printlog ("$short_read_archive is $srasizeMB MB; we will make $numshards shards.");
 } else {
