@@ -37,11 +37,13 @@ if ($outfile eq "") {
 	$outfile = "result";
 }
 
-
 if (($targetfile eq "") || ($samplefile eq "")) {
     pod2usage(-msg => "Must specify a list of aTRAM databases and a list of target sequences.", -verbose => 1);
 	exit;
 }
+
+open my $log_fh, ">", "$outfile.log";
+set_log($log_fh);
 
 my $samples = {};
 my @samplenames = ();
@@ -65,8 +67,8 @@ foreach my $line (<FH>) {
 }
 close FH;
 
-open LOG_FH, ">", "$outfile.log";
-print LOG_FH "target\tsample\tcontig\tbitscore\tpercentcoverage\n";
+open TABLE_FH, ">", "$outfile.results.txt";
+print TABLE_FH "target\tsample\tcontig\tbitscore\tpercentcoverage\n";
 foreach my $target (@targetnames) {
 	open FH, ">", "$outfile.$target.exons.fasta";
 	truncate FH, 0;
@@ -120,7 +122,7 @@ foreach my $target (@targetnames) {
 		close FH;
 
 		$percent =~ s/^(\d+\.\d{2}).*$/\1/;
-		print LOG_FH "$target\t$sample\t$contig\t$score\t$percent\n";
+		print TABLE_FH "$target\t$sample\t$contig\t$score\t$percent\n";
 		if ($contig ne "") {
 			# pick this contig from the fasta file
 			my ($taxa, $taxanames) = parse_fasta ("$outname.exons.fasta");
@@ -139,7 +141,7 @@ foreach my $target (@targetnames) {
 	}
 }
 
-close LOG_FH;
+close TABLE_FH;
 
 
 
