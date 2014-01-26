@@ -11,6 +11,7 @@ if (@ARGV == 0) {
     pod2usage(-verbose => 1);
 }
 
+my $atrampath = "$FindBin::Bin/../";
 my $help = 0;
 my $samplefile = "";
 my $targetfile = "";
@@ -81,10 +82,10 @@ foreach my $target (@targetnames) {
 	foreach my $sample (@samplenames) {
 		my $outname = "$outfile.$target.$sample";
 		printlog ("$target $sample");
-		system_call ("perl ~/TRAM/aTRAM.pl -reads $samples->{$sample} -target $targets->{$target} -iter $iter -ins_length $ins_length -frac $frac -assemble Velvet -out $outname -kmer $kmer -complete");
-		system_call ("rm -r $outname.Velvet");
+		system ("perl $atrampath/aTRAM.pl -reads $samples->{$sample} -target $targets->{$target} -iter $iter -ins_length $ins_length -frac $frac -assemble Velvet -out $outname -kmer $kmer -complete");
+# 		system_call ("rm -r $outname.Velvet");
 		# run percentcoverage to get the contigs nicely aligned
-		system_call ("perl ~/TRAM/test/PercentCoverage.pl $targets->{$target} $outname.best.fasta $outname");
+		system_call ("perl $atrampath/Postprocessing/PercentCoverage.pl $targets->{$target} $outname.best.fasta $outname");
 
 		# find the one best contig (one with fewest gaps)
 		system_call ("blastn -task blastn -query $outname.exons.fasta -subject $targets->{$target} -outfmt '6 qseqid bitscore' -out $outname.blast");
