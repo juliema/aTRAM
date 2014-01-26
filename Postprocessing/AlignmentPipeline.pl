@@ -126,7 +126,7 @@ foreach my $target (@targetnames) {
 		print TABLE_FH "$target\t$sample\t$contig\t$score\t$percent\n";
 		if ($contig ne "") {
 			# pick this contig from the fasta file
-			my ($taxa, $taxanames) = parse_fasta ("$outname.exons.fasta");
+			my ($taxa, $taxanames) = parsefasta ("$outname.exons.fasta");
 			# write this contig out to the target.fasta file, named by sample.
 			open FH, ">>", "$outfile.$target.exons.fasta";
 			printlog ("adding $contig to $target.exons.fasta");
