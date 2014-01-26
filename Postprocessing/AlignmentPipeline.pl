@@ -132,7 +132,7 @@ foreach my $target (@targetnames) {
 			printlog ("adding $contig to $target.exons.fasta");
 			print FH ">$sample\n$taxa->{$contig}\n";
 			close FH;
-			($taxa, $taxanames) = parse_fasta ("$outname.best.fasta");
+			($taxa, $taxanames) = parsefasta ("$outname.best.fasta");
 			# write this contig out to the target.fasta file, named by sample.
 			open FH, ">>", "$outfile.$target.full.fasta";
 			printlog ("adding $contig from $outname.best.fasta to $target.full.fasta");
