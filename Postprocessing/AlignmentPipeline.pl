@@ -83,7 +83,7 @@ foreach my $target (@targetnames) {
 		my $outname = "$outfile.$target.$sample";
 		printlog ("$target $sample");
 		system ("perl $atrampath/aTRAM.pl -reads $samples->{$sample} -target $targets->{$target} -iter $iter -ins_length $ins_length -frac $frac -assemble Velvet -out $outname -kmer $kmer -complete");
-# 		system_call ("rm -r $outname.Velvet");
+		system_call ("rm -r $outname.Velvet");
 		# run percentcoverage to get the contigs nicely aligned
 		system_call ("perl $atrampath/Postprocessing/PercentCoverage.pl $targets->{$target} $outname.best.fasta $outname");
 
@@ -106,7 +106,7 @@ foreach my $target (@targetnames) {
 		close FH;
 		system_call ("rm $outname.blast");
 
-		open FH, "<", "$outname.Table.txt";
+		open FH, "<", "$outname.results.txt";
 		$contig = "";
 		my $percent = 0;
 		foreach my $line (<FH>) {
