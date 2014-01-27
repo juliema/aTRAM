@@ -1,15 +1,26 @@
 #!/usr/bin/env perl
+package Assembler;
 use strict;
 use File::Temp qw/ tempfile /;
 use FindBin;
 use lib "$FindBin::Bin/lib";
 
+BEGIN {
+	require Exporter;
+	# set the version for version checking
+	our $VERSION     = 1.00;
+	# Inherit from Exporter to export functions and variables
+	our @ISA         = qw(Exporter);
+	# Functions and variables which are exported by default
+	our @EXPORT      = qw( parse_config find_bin );
+	# Functions and variables which can be optionally exported
+	our @EXPORT_OK   = qw();
+}
+
 our %assemblers = {};
 
-package Assembler;
 
 sub parse_config {
-	my $self = shift;
 	open FH, "<", "$FindBin::Bin/config.txt";
 	foreach my $line (<FH>) {
 		$line =~ s/(#.*)$//;
@@ -22,7 +33,6 @@ sub parse_config {
 }
 
 sub find_bin {
-	my $self = shift;
 	my $cmd = shift;
 
 	if (exists $assemblers{$cmd}) {

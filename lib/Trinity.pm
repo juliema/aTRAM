@@ -2,13 +2,13 @@
 use strict;
 use File::Temp qw/ tempfile /;
 use Module::Load;
-load Assembler;
+use Assembler;
 use Subfunctions;
 
 # Assembler modules need to know:
 	# where to find the short reads (pass this in as a file name)
 	# what the assembly parameters are. (pass this in as a hash)
-# Assembler modules should return a file name for the resulting contigs.
+# Assembler modules should return a hash of the resulting contigs.
 
 package Trinity;
 
@@ -19,7 +19,7 @@ sub assembler {
 
 	my $jm = "1G";
 
-	my $path = Assembler->find_bin("Trinity.pl");
+	my $path = Assembler::find_bin("Trinity.pl");
 
 	my ($kmer, $tempdir, $longreads, $ins_length, $exp_cov, $min_contig_len) = 0;
 	if ((ref $params) =~ /HASH/) {
@@ -35,7 +35,6 @@ sub assembler {
 	}
 	# using Trinity.pl
 	print "\tassembling with Trinity...\n";
-# perl ~/packages/trinityrnaseq_r20131110/Trinity.pl --seqType fa --single Pop_delt_psbA_atpA.1.blast.fasta --run_as_paired --JM 10G
 	Subfunctions::system_call ("$path --seqType fa --single $short_read_file --run_as_paired --JM $jm --output $tempdir");
 
 	my ($contigs, $contignames) = Subfunctions::parsefasta ("$tempdir/Trinity.fasta");

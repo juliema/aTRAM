@@ -2,14 +2,14 @@
 use strict;
 use File::Temp qw/ tempfile /;
 use Module::Load;
-load Assembler;
+use Assembler;
 use Subfunctions;
 
 
 # Assembler modules need to know:
 	# where to find the short reads (pass this in as a file name)
 	# what the assembly parameters are. (pass this in as a hash)
-# Assembler modules should return a file name for the resulting contigs.
+# Assembler modules should return a hash of the resulting contigs.
 
 package Velvet;
 
@@ -18,9 +18,8 @@ sub assembler {
 	my $short_read_file = shift;
 	my $params = shift;
 
-	my $velveth = Assembler->find_bin("velveth");
-	my $velvetg = Assembler->find_bin("velvetg");
-
+	my $velveth = Assembler::find_bin("velveth");
+	my $velvetg = Assembler::find_bin("velvetg");
 
 	my ($kmer, $tempdir, $longreads, $ins_length, $exp_cov, $min_contig_len) = 0;
 	if ((ref $params) =~ /HASH/) {

@@ -10,8 +10,8 @@ use Subfunctions;
 use Module::Load;
 require Sequenceretrieval;
 
-load Assembler;
-Assembler->parse_config();
+use Assembler;
+Assembler::parse_config();
 
 my $debug = 0;
 
