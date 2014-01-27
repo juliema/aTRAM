@@ -305,10 +305,14 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 		last;
 	}
 	my $contigs_file = "";
+	my $temp_assembly_dir = "";
+
 	if ($save_temp) {
 		$contigs_file = "$temp_name.$i.contigs.fasta";
+		$temp_assembly_dir = "$temp_name.$assembler";
 	} else {
 		(undef, $contigs_file) = tempfile(UNLINK => 1);
+		$temp_assembly_dir = tempdir(CLEANUP => 1);
 	}
 
 	#   assemble the sequences:
@@ -316,7 +320,7 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 	load "$assembler";
 
 	my $assembly_params = { 'kmer' => $kmer,
-							'tempdir' => "$temp_name.$assembler",
+							'tempdir' => $temp_assembly_dir,
 							'ins_length' => $ins_length,
 							'exp_cov' => $exp_cov,
 							'min_contig_len' => 200,
