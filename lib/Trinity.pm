@@ -24,11 +24,6 @@ sub assembler {
 		die "couldn't find Trinity.pl ";
 	}
 
-	my ($saveout, $saveerr);
-	open $saveout, ">&STDOUT";
-	open $saveerr, ">&STDERR";
-	open STDOUT, '>', File::Spec->devnull();
-	open STDERR, '>', File::Spec->devnull();
 
 	my ($kmer, $tempdir, $longreads, $ins_length, $exp_cov, $min_contig_len) = 0;
 	if ((ref $params) =~ /HASH/) {
@@ -46,9 +41,6 @@ sub assembler {
 	print "\tassembling with Trinity...\n";
 # perl ~/packages/trinityrnaseq_r20131110/Trinity.pl --seqType fa --single Pop_delt_psbA_atpA.1.blast.fasta --run_as_paired --JM 10G
 	Subfunctions::system_call ("$path --seqType fa --single $short_read_file --run_as_paired --JM $jm --output $tempdir");
-
-	open STDOUT, ">&", $saveout;
-	open STDERR, ">&", $saveerr;
 
 	my ($contigs, $contignames) = Subfunctions::parsefasta ("$tempdir/Trinity.fasta");
 	open FH, ">", "$tempdir/results.fasta";

@@ -25,12 +25,6 @@ sub assembler {
 		die "couldn't find binaries for velvet (velvetg at $velvetg, velveth at $velveth)";
 	}
 
-	my ($saveout, $saveerr);
-	open $saveout, ">&STDOUT";
-	open $saveerr, ">&STDERR";
-	open STDOUT, '>', File::Spec->devnull();
-	open STDERR, '>', File::Spec->devnull();
-
 	my ($kmer, $tempdir, $longreads, $ins_length, $exp_cov, $min_contig_len) = 0;
 	if ((ref $params) =~ /HASH/) {
         if (exists $params->{"kmer"}) {
@@ -59,9 +53,6 @@ sub assembler {
 		Subfunctions::system_call ("$velveth $tempdir $kmer -fasta -shortPaired $short_read_file");
 	}
 	Subfunctions::system_call ("$velvetg $tempdir -ins_length $ins_length -exp_cov $exp_cov -min_contig_lgth $min_contig_len");
-
-	open STDOUT, ">&", $saveout;
-	open STDERR, ">&", $saveerr;
 
 	my ($contigs, $contignames) = Subfunctions::parsefasta ("$tempdir/contigs.fa");
 	open FH, ">", "$tempdir/results.fasta";
