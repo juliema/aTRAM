@@ -101,6 +101,9 @@ unless ((-e "$atram_db.0.1.fasta") && (-e "$atram_db.0.2.fasta")) {
 if ($output_file eq "") {
     $output_file = $atram_db;
 }
+
+$output_file = File::Spec->rel2abs($output_file);
+
 if ($log_file eq "") {
 	$log_file = "$output_file.log";
 }
