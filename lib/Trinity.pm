@@ -16,7 +16,6 @@ sub assembler {
 	my $self = shift;
 	my $short_read_file = shift;
 	my $params = shift;
-	my $log_fh = shift;
 
 	my $jm = "1G";
 
@@ -51,12 +50,19 @@ sub assembler {
 	open STDOUT, ">&", $saveout;
 	open STDERR, ">&", $saveerr;
 
-	return "$tempdir/Trinity.fasta";
+	my ($contigs, $contignames) = Subfunctions::parsefasta ("$tempdir/Trinity.fasta");
+	open FH, ">", "$tempdir/results.fasta";
+	foreach my $contig (@$contignames) {
+		print "$contig\n";
+		print FH ">$contig\n$contigs->{$contig}\n";
+	}
+	close FH;
+	return $contigs;
 }
 
-sub rename_contigs {
+sub write_contig_file {
 	my $self = shift;
-	my $contigfile = shift;
+	my $contigs = shift;
 	my $renamefile = shift;
 	my $prefix = shift;
 
@@ -66,18 +72,14 @@ sub rename_contigs {
 		$prefix = "";
 	}
 
-	open FH, "<", $contigfile;
 	open OUTFH, ">", $renamefile;
-	while (my $line = readline FH) {
-		if ($line =~ /^>/) {
-			# >comp0_c0_seq1 len=716 path=[1070:0-715]
-			# >comp0_c1_seq1 len=3433 path=[4485:0-3432]
-			# >comp1_c0_seq1 len=1572 path=[2936:0-1571]
-			# >comp2_c0_seq1 len=4637 path=[7895:0-4636]
-			$line =~ s/^>comp(\d+)_(c\d+)_seq. len=(\d+).*$/>$prefix$1$2_len_$3/;
-		}
-		print OUTFH $line;
+	foreach my $contigname (keys $contigs) {
+		my $sequence = $contigs->{$contigname};
+		# >comp2_c0_seq1 len=4637 path=[7895:0-4636]
+		$contigname =~ s/^comp(\d+)_(c\d+)_seq. len=(\d+).*$/$prefix$1$2_len_$3/;
+		print OUTFH ">$contigname\n$sequence\n";
 	}
+	close OUTFH;
 }
 
 return 1;
