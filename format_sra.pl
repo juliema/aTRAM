@@ -38,10 +38,19 @@ unless ($output_file) {
     $output_file = $short_read_archive;
 }
 
+# make the output file an absolute path, just to be safe.
+my $output_file = File::Spec->rel2abs($output_file);
+
 my $tempdir = dirname ("$output_file");
 my $log_file = "$output_file.log";
 open my $log_fh, ">", $log_file or die "couldn't open $log_file\n";
 set_log ($log_fh);
+
+# making a redirect file to make it easier for users to have something to specify.
+my $db_file = "$output_file.atram";
+open DB_FH, ">", $db_file;
+print DB_FH "$output_file";
+close DB_FH;
 
 my $srasize = (-s $short_read_archive);
 my $srasizeMB = $srasize / 1e6;
@@ -60,6 +69,8 @@ if ($numshards == 0) {
 } else {
 	printlog ("making $numshards shards from $short_read_archive.");
 }
+
+
 
 # declare how many shards we'll be making.
 set_total_shards ($numshards);

@@ -80,6 +80,14 @@ if ($debug) {
 	set_debug(1);
 }
 
+# find the path specified in the .atram file, if provided.
+if ($atram_db =~ /\.atram$/) {
+	open ATRAM_FH, "<", $atram_db;
+	$atram_db = readline ATRAM_FH;
+	chomp $atram_db;
+	close ATRAM_FH;
+}
+
 unless($atram_db and $target_fasta) {
     pod2usage(-msg => "Must specify a short read archive (that has already been prepared with makelibrary.pl) and a target gene in fasta form.");
 }
