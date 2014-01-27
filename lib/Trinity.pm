@@ -3,6 +3,7 @@ use strict;
 use File::Temp qw/ tempfile /;
 use Module::Load;
 load Assembler;
+use Subfunctions;
 
 # Assembler modules need to know:
 	# where to find the short reads (pass this in as a file name)
@@ -45,7 +46,7 @@ sub assembler {
 	# using Trinity.pl
 	print "\tassembling with Trinity...\n";
 # perl ~/packages/trinityrnaseq_r20131110/Trinity.pl --seqType fa --single Pop_delt_psbA_atpA.1.blast.fasta --run_as_paired --JM 10G
-	Assembler->system_call ("$path --seqType fa --single $short_read_file --run_as_paired --JM $jm --output $tempdir", $log_fh);
+	Subfunctions::system_call ("$path --seqType fa --single $short_read_file --run_as_paired --JM $jm --output $tempdir");
 
 	open STDOUT, ">&", $saveout;
 	open STDERR, ">&", $saveerr;

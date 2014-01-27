@@ -3,6 +3,8 @@ use strict;
 use File::Temp qw/ tempfile /;
 use Module::Load;
 load Assembler;
+use Subfunctions;
+
 
 # Assembler modules need to know:
 	# where to find the short reads (pass this in as a file name)
@@ -53,11 +55,11 @@ sub assembler {
 	}
 	# using velvet
 	if ($longreads != 0) {
-		Assembler->system_call ("$velveth $tempdir $kmer -fasta -shortPaired $short_read_file -long $longreads", $log_fh);
+		Subfunctions::system_call ("$velveth $tempdir $kmer -fasta -shortPaired $short_read_file -long $longreads");
 	} else {
-		Assembler->system_call ("$velveth $tempdir $kmer -fasta -shortPaired $short_read_file", $log_fh);
+		Subfunctions::system_call ("$velveth $tempdir $kmer -fasta -shortPaired $short_read_file");
 	}
-	Assembler->system_call ("$velvetg $tempdir -ins_length $ins_length -exp_cov $exp_cov -min_contig_lgth $min_contig_len", $log_fh);
+	Subfunctions::system_call ("$velvetg $tempdir -ins_length $ins_length -exp_cov $exp_cov -min_contig_lgth $min_contig_len");
 
 	open STDOUT, ">&", $saveout;
 	open STDERR, ">&", $saveerr;

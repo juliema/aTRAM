@@ -31,25 +31,4 @@ sub find_bin {
 	return "$cmd";
 }
 
-sub system_call {
-	my $self = shift;
-	my $cmd = shift;
-	my $log_fh = shift;
-
-	unless ($log_fh) {
-		$log_fh = &STDOUT;
-	}
-
-	print $log_fh ("\t$cmd\n");
-	my $exit_val = eval {
-		system ($cmd);
-	};
-
-	if ($exit_val != 0) {
-		print "System call \"$cmd\" exited with $exit_val\n";
-		exit;
-	}
-
-	return $exit_val;
-}
-
+return 1;
