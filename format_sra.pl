@@ -58,7 +58,7 @@ if ($numshards == 0) {
 	$numshards = int($srasize / 5e8);
 	printlog ("$short_read_archive is $srasizeMB MB; we will make $numshards shards.");
 } else {
-	printlog ("making $numshards shards.");
+	printlog ("making $numshards shards from $short_read_archive.");
 }
 
 # declare how many shards we'll be making.
