@@ -440,15 +440,16 @@ print "\n\nContigs by target coverage:\n";
 
 system ("cat $output_file.results.txt");
 
-printlog ("Contigs containing the entire target sequence:\n\t" . join("\n\t", @complete_contigs) . "");
 
 close $log_fh;
 
 if (@complete_contigs > 0) {
+	print ("\n\nContigs containing the entire target sequence:\n");
 	open COMPLETE_FH, ">", "$output_file.complete.fasta";
 	foreach my $contig_name (@complete_contigs) {
 		$contig_name =~ /(\d+)\.(.+)/;
 		print COMPLETE_FH ">$contig_name\n$hit_matrix->{$2}->{'seq'}\n";
+		print ("\t$contig_name\n");
 	}
 	close COMPLETE_FH;
 }
