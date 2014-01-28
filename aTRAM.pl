@@ -4,6 +4,7 @@ use Getopt::Long;
 use Pod::Usage;
 use File::Basename;
 use File::Temp qw/ tempfile tempdir /;
+use File::Find;
 use FindBin;
 use lib "$FindBin::Bin/lib";
 use Subfunctions;
@@ -78,6 +79,21 @@ if ($help) {
 
 if ($debug) {
 	set_debug(1);
+}
+
+# make sure that the requested assembler module is available.
+my $assembler_dir = "$FindBin::Bin/lib/Assembler";
+my @assembly_software = ();
+
+find ( {wanted => \&add_assemblers, no_chdir => 1} , "$assembler_dir");
+my $assembler_available = 0;
+foreach my $a (@assembly_software) {
+	if ($a eq $assembler) {
+		$assembler_available = 1;
+	}
+}
+if ($assembler_available == 0) {
+	pod2usage(-msg => "Assembler module $assembler is not available in the Assembler directory.");
 }
 
 # find the path specified in the .atram file, if provided.
@@ -501,6 +517,15 @@ sub reverse_complement {
 	# complement the reversed DNA sequence
 	$revcomp =~ tr/ABCDGHMNRSTUVWXYabcdghmnrstuvwxy/TVGHCDKNYSAABWXRtvghcdknysaabwxr/;
 	return $revcomp;
+}
+
+sub add_assemblers {
+	if ( $File::Find::name ne $assembler_dir) {
+		my $modname = basename ($_);
+		$modname =~ s/\.pm//;
+		push @assembly_software, $modname;
+	}
+	return;
 }
 
 
