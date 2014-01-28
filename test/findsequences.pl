@@ -5,7 +5,7 @@ use lib "$FindBin::Bin/../lib";
 require Sequenceretrieval;
 
 if (@ARGV < 3) {
-    die "Usage: 6.5-findsequences.pl fastafile sequencelist outfile\n";
+    die "Usage: findsequences.pl fastafile sequencelist outfile\n";
 }
 
 my $fastafile = shift;
