@@ -35,6 +35,7 @@ sub parse_config {
 			$assemblers{$name} = "$path";
 		}
 	}
+	close FH;
 }
 
 sub find_bin {
@@ -170,7 +171,7 @@ sub parsefasta {
 		$input = readline fileIN;
 	}
 
-	close (fileIN);
+	close fileIN;
 	return $taxa, \@taxanames;
 }
 
@@ -189,6 +190,7 @@ sub sortfasta {
 	foreach my $taxon (@sortedtaxa) {
 		print fileOUT ">$taxon$separator$taxa->{$taxon}\n";
 	}
+	close fileOUT;
 }
 
 sub flattenfasta {
@@ -205,6 +207,7 @@ sub flattenfasta {
 	foreach my $taxon (@$taxanames) {
 		print fileOUT ">$taxon$separator$taxa->{$taxon}\n";
 	}
+	close fileOUT;
 }
 
 sub make_hit_matrix {
