@@ -155,7 +155,12 @@ AlignmentPipeline.pl
 
 AlignmentPipeline.pl -samples samplefile -targets targetfile -output outputprefix
 
-Runs aTRAM on a list of aTRAM databases and a list of target sequences, returning a fasta file for each target sequence with the best contig for each aTRAM database.
+Runs aTRAM on a list of aTRAM databases and a list of target sequences, returning a
+fasta file for each target sequence with the best contig for each aTRAM database.
+
+For each target sequence, the best match is determined by aligning the best contigs with
+the target sequence to determine how much of the target sequence is covered, and then
+re-blasting the aligned contigs against the target sequence to find the best-scoring match.
 
 =head1 OPTIONS
 
