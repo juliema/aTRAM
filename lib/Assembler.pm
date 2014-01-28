@@ -24,12 +24,18 @@ sub parse_config {
 sub find_bin {
 	my $self = shift;
 	my $cmd = shift;
+	my $bin = $cmd;
 
 	if (exists $assemblers{$cmd}) {
-		return "$assemblers{$cmd}";
+		$bin = "$assemblers{$cmd}";
 	}
-	return "$cmd";
+
+	if ($bin eq "") {
+		die "Assembler $cmd not installed on this system";
+	}
+	return $bin;
 }
+
 
 sub system_call {
 	my $self = shift;
