@@ -6,12 +6,12 @@ use File::Basename;
 use File::Temp qw/ tempfile tempdir /;
 use FindBin;
 use lib "$FindBin::Bin/lib";
-require Subfunctions;
+use Subfunctions;
 use Module::Load;
 require Sequenceretrieval;
 
-load Assembler;
-Assembler->parse_config();
+use Assembler;
+Assembler::parse_config();
 
 my $debug = 0;
 
@@ -101,6 +101,9 @@ unless ((-e "$atram_db.0.1.fasta") && (-e "$atram_db.0.2.fasta")) {
 if ($output_file eq "") {
     $output_file = $atram_db;
 }
+
+$output_file = File::Spec->rel2abs($output_file);
+
 if ($log_file eq "") {
 	$log_file = "$output_file.log";
 }
@@ -302,10 +305,14 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 		last;
 	}
 	my $contigs_file = "";
+	my $temp_assembly_dir = "";
+
 	if ($save_temp) {
 		$contigs_file = "$temp_name.$i.contigs.fasta";
+		$temp_assembly_dir = "$temp_name.$assembler";
 	} else {
 		(undef, $contigs_file) = tempfile(UNLINK => 1);
+		$temp_assembly_dir = tempdir(CLEANUP => 1);
 	}
 
 	#   assemble the sequences:
@@ -313,7 +320,7 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 	load "$assembler";
 
 	my $assembly_params = { 'kmer' => $kmer,
-							'tempdir' => "$temp_name.$assembler",
+							'tempdir' => $temp_assembly_dir,
 							'ins_length' => $ins_length,
 							'exp_cov' => $exp_cov,
 							'min_contig_len' => 200,
@@ -324,8 +331,8 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 		$assembly_params->{'longreads'} = $search_fasta;
 	}
 
-	my $assembled_contig_file = "$assembler"->assembler ("$temp_name.$i.blast.fasta", $assembly_params, $log_fh);
-	"$assembler"->rename_contigs($assembled_contig_file, $contigs_file);
+	my $assembled_contigs = "$assembler"->assembler ("$temp_name.$i.blast.fasta", $assembly_params);
+ 	"$assembler"->write_contig_file($assembled_contigs, $contigs_file);
 
 	if ($save_temp == 0) {
 		system_call ("rm $temp_name.$i.blast.fasta");

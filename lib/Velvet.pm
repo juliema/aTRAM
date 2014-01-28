@@ -2,12 +2,14 @@
 use strict;
 use File::Temp qw/ tempfile /;
 use Module::Load;
-load Assembler;
+use Assembler;
+use Subfunctions;
+
 
 # Assembler modules need to know:
 	# where to find the short reads (pass this in as a file name)
 	# what the assembly parameters are. (pass this in as a hash)
-# Assembler modules should return a file name for the resulting contigs.
+# Assembler modules should return a hash of the resulting contigs.
 
 package Velvet;
 
@@ -15,20 +17,9 @@ sub assembler {
 	my $self = shift;
 	my $short_read_file = shift;
 	my $params = shift;
-	my $log_fh = shift;
 
-	my $velveth = Assembler->find_bin("velveth");
-	my $velvetg = Assembler->find_bin("velvetg");
-
-	if (($velvetg eq "") || ($velveth eq "")) {
-		die "couldn't find binaries for velvet (velvetg at $velvetg, velveth at $velveth)";
-	}
-
-	my ($saveout, $saveerr);
-	open $saveout, ">&STDOUT";
-	open $saveerr, ">&STDERR";
-	open STDOUT, '>', File::Spec->devnull();
-	open STDERR, '>', File::Spec->devnull();
+	my $velveth = Assembler::find_bin("velveth");
+	my $velvetg = Assembler::find_bin("velvetg");
 
 	my ($kmer, $tempdir, $longreads, $ins_length, $exp_cov, $min_contig_len) = 0;
 	if ((ref $params) =~ /HASH/) {
@@ -53,21 +44,24 @@ sub assembler {
 	}
 	# using velvet
 	if ($longreads != 0) {
-		Assembler->system_call ("$velveth $tempdir $kmer -fasta -shortPaired $short_read_file -long $longreads", $log_fh);
+		Subfunctions::system_call ("$velveth $tempdir $kmer -fasta -shortPaired $short_read_file -long $longreads");
 	} else {
-		Assembler->system_call ("$velveth $tempdir $kmer -fasta -shortPaired $short_read_file", $log_fh);
+		Subfunctions::system_call ("$velveth $tempdir $kmer -fasta -shortPaired $short_read_file");
 	}
-	Assembler->system_call ("$velvetg $tempdir -ins_length $ins_length -exp_cov $exp_cov -min_contig_lgth $min_contig_len", $log_fh);
+	Subfunctions::system_call ("$velvetg $tempdir -ins_length $ins_length -exp_cov $exp_cov -min_contig_lgth $min_contig_len");
 
-	open STDOUT, ">&", $saveout;
-	open STDERR, ">&", $saveerr;
-
-	return "$tempdir/contigs.fa";
+	my ($contigs, $contignames) = Subfunctions::parsefasta ("$tempdir/contigs.fa");
+	open FH, ">", "$tempdir/results.fasta";
+	foreach my $contig (@$contignames) {
+		print FH ">$contig\n$contigs->{$contig}\n";
+	}
+	close FH;
+	return $contigs;
 }
 
-sub rename_contigs {
+sub write_contig_file {
 	my $self = shift;
-	my $contigfile = shift;
+	my $contigs = shift;
 	my $renamefile = shift;
 	my $prefix = shift;
 
@@ -77,15 +71,14 @@ sub rename_contigs {
 		$prefix = "";
 	}
 
-	open FH, "<", $contigfile;
 	open OUTFH, ">", $renamefile;
-	while (my $line = readline FH) {
-		if ($line =~ /^>/) {
-			#NODE_41_length_2668_cov_4.901050
-			$line =~ s/^>NODE_(\d+)_length_(\d+)_cov_(\d+\.\d).*$/>$prefix$1_len_$2_cov_$3/;
-		}
-		print OUTFH $line;
+	foreach my $contigname (keys $contigs) {
+		my $sequence = $contigs->{$contigname};
+		#NODE_41_length_2668_cov_4.901050
+		$contigname =~ s/^NODE_(\d+)_length_(\d+)_cov_(\d+\.\d).*$/$prefix$1_len_$2_cov_$3/;
+		print OUTFH ">$contigname\n$sequence\n";
 	}
+	close OUTFH;
 }
 
 
