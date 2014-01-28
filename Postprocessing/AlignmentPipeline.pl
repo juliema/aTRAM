@@ -5,7 +5,7 @@ use Getopt::Long;
 use Pod::Usage;
 use FindBin;
 use lib "$FindBin::Bin/../lib";
-require Subfunctions;
+use Subfunctions;
 
 if (@ARGV == 0) {
     pod2usage(-verbose => 1);

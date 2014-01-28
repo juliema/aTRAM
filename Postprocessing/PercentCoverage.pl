@@ -3,7 +3,7 @@
 use strict;
 use FindBin;
 use lib "$FindBin::Bin/../lib";
-require Subfunctions;
+use Subfunctions;
 
 my $ref_file = shift @ARGV;
 my $contigs_file = shift @ARGV;
