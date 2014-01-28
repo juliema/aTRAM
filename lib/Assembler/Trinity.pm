@@ -2,19 +2,19 @@
 package Trinity;
 use strict;
 use File::Temp qw/ tempfile /;
-use Module::Load;
-use Assembler;
 use Subfunctions;
+use Assembler;
 
 # Assembler modules need to know:
 	# where to find the short reads (pass this in as a file name)
 	# what the assembly parameters are. (pass this in as a hash)
 # Assembler modules should return a hash of the resulting contigs.
 
-my $path = "Trinity.pl";
+# Hash of assembler's required binaries
+my $binaries = {trinity => "Trinity.pl"};
 
-sub list_bins {
-	return $path;
+sub get_binaries {
+	return $binaries;
 }
 
 sub assembler {
@@ -24,7 +24,7 @@ sub assembler {
 
 	my $jm = "1G";
 
-	$path = Assembler::find_bin($path);
+	my $trinity = $binaries->{trinity};
 
 	my ($kmer, $tempdir, $longreads, $ins_length, $exp_cov, $min_contig_len) = 0;
 	if ((ref $params) =~ /HASH/) {
@@ -39,16 +39,10 @@ sub assembler {
 		}
 	}
 	# using Trinity.pl
-	print "\tassembling with Trinity...\n";
-	Subfunctions::system_call ("$path --seqType fa --single $short_read_file --run_as_paired --JM $jm --output $tempdir");
+	Subfunctions::system_call ("$trinity --seqType fa --single $short_read_file --run_as_paired --JM $jm --output $tempdir");
 
-	my ($contigs, $contignames) = Subfunctions::parsefasta ("$tempdir/Trinity.fasta");
-	open FH, ">", "$tempdir/results.fasta";
-	foreach my $contig (@$contignames) {
-		print "$contig\n";
-		print FH ">$contig\n$contigs->{$contig}\n";
-	}
-	close FH;
+	my ($contigs, undef) = Subfunctions::parsefasta ("$tempdir/Trinity.fasta");
+
 	return $contigs;
 }
 

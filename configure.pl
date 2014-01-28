@@ -133,7 +133,7 @@ sub list_bins {
 		my $modname = basename ($_);
 		$modname =~ s/\.pm//;
 		load "Assembler::$modname";
-		push @assembly_software, $modname->list_bins();
+		push @assembly_software, values ($modname->get_binaries());
 	}
 
 	return;
