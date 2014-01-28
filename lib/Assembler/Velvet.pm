@@ -1,17 +1,19 @@
 #!/usr/bin/env perl
+package Velvet;
 use strict;
 use File::Temp qw/ tempfile /;
 use Module::Load;
 use Assembler;
 use Subfunctions;
 
-
 # Assembler modules need to know:
 	# where to find the short reads (pass this in as a file name)
 	# what the assembly parameters are. (pass this in as a hash)
 # Assembler modules should return a hash of the resulting contigs.
 
-package Velvet;
+sub list_bins {
+	return qw (velveth velvetg);
+}
 
 sub assembler {
 	my $self = shift;

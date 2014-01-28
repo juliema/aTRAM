@@ -2,18 +2,21 @@
 use strict;
 use File::Basename;
 use File::Spec;
+use File::Find;
+use Module::Load;
+use FindBin;
+use lib "$FindBin::Bin/lib";
 
+open CONFIG_FH, ">", "config.txt";
+print CONFIG_FH "# Enter the full path for the software binary below:\n";
 
+my $sw_ready = 1;
 my $i = 1;
 print "==== aTRAM checklist ====\n\n";
 
 print $i++ .". Checking for required software...\n";
 my @req_software = qw(blastn makeblastdb gawk);
-my @assembly_software = qw (velveth velvetg Trinity.pl);
 
-open CONFIG_FH, ">", "config.txt";
-print CONFIG_FH "# Enter the full path for the software binary below:\n";
-my $sw_ready = 1;
 foreach my $sw (@req_software) {
 	my $result = system_call("$sw 2>&1 1>/dev/null");
 	my $fullpath = which ($sw);
@@ -29,7 +32,7 @@ foreach my $sw (@req_software) {
 
 if ($sw_ready == 0) {
 	print "You need to install some software before you can run aTRAM. \n";
-	print "If software is installed but not included in PATH, edit the appropriate line in config.txt.\n";
+	print "If software is installed but not included in \$PATH, edit the appropriate line in config.txt.\n";
 	print "\nContinue checks? [Y/n]\n";
 	my $userpath = <STDIN>;
 	if ($userpath =~ /[nN]\n/) {
@@ -38,6 +41,11 @@ if ($sw_ready == 0) {
 }
 
 print $i++ .". Checking for assembly software...\n";
+my $assembler_dir = "$FindBin::Bin/lib/Assembler";
+my @assembly_software = ();
+
+find ( {wanted => \&list_bins, no_chdir => 1} , "$assembler_dir");
+
 foreach my $sw (@assembly_software) {
 	my $result = system_call("$sw 2>&1 1>/dev/null");
 	my $fullpath = which ($sw);
@@ -54,7 +62,7 @@ foreach my $sw (@assembly_software) {
 close CONFIG_FH;
 if ($sw_ready == 0) {
 	print "I couldn't find some binaries for assembly software. At least one assembler should be installed.\n";
-	print "If it is installed but not included in PATH, edit the appropriate line in config.txt.\n";
+	print "If it is installed but not included in \$PATH, edit the appropriate line in config.txt.\n";
 	print "\nContinue checks? [Y/n]\n";
 	my $userpath = <STDIN>;
 	if ($userpath =~ /[nN]\n/) {
@@ -92,7 +100,6 @@ system_call("rm $executing_path/test_inst.*");
 
 sub system_call {
 	my $cmd = shift;
-
 	open my $saveout, ">&STDOUT";
 	open my $saveerr, ">&STDERR";
 	open STDOUT, '>', File::Spec->devnull();
@@ -119,4 +126,15 @@ sub which {
 		}
 	}
 	return "";
+}
+
+sub list_bins {
+	if ( $File::Find::name ne $assembler_dir) {
+		my $modname = basename ($_);
+		$modname =~ s/\.pm//;
+		load "Assembler::$modname";
+		push @assembly_software, $modname->list_bins();
+	}
+
+	return;
 }

@@ -1,4 +1,5 @@
 #!/usr/bin/env perl
+package Trinity;
 use strict;
 use File::Temp qw/ tempfile /;
 use Module::Load;
@@ -10,7 +11,11 @@ use Subfunctions;
 	# what the assembly parameters are. (pass this in as a hash)
 # Assembler modules should return a hash of the resulting contigs.
 
-package Trinity;
+my $path = "Trinity.pl";
+
+sub list_bins {
+	return $path;
+}
 
 sub assembler {
 	my $self = shift;
@@ -18,8 +23,6 @@ sub assembler {
 	my $params = shift;
 
 	my $jm = "1G";
-
-	my $path = Assembler::find_bin("Trinity.pl");
 
 	my ($kmer, $tempdir, $longreads, $ins_length, $exp_cov, $min_contig_len) = 0;
 	if ((ref $params) =~ /HASH/) {
