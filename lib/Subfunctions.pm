@@ -102,8 +102,9 @@ sub printlog {
 sub system_call {
 	my $cmd = shift;
 
-	unless ($log_fh) {
-		$log_fh = &STDOUT;
+	if ($log_fh == 0) {
+		open my $std_log, ">&", STDOUT;
+		$log_fh = $std_log;
 	}
 
 	print $log_fh ("\t$cmd\n");
