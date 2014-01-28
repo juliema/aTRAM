@@ -34,16 +34,24 @@ sub parse_config {
 
 sub find_bin {
 	my $cmd = shift;
-	my $bin = $cmd;
 
 	if (exists $assemblers{$cmd}) {
-		$bin = "$assemblers{$cmd}";
+		return "$assemblers{$cmd}";
 	}
-
-	if ($bin eq "") {
-		die "Assembler $cmd not installed on this system";
-	}
-	return $bin;
+	return "";
 }
+
+sub initialize {
+	my $binaries = shift;
+	foreach my $b (keys $binaries) {
+		$binaries->{$b} = Assembler::find_bin($binaries->{$b});
+		if ($binaries->{$b} eq "") {
+			return 0;
+		}
+	}
+	return 1;
+}
+
+
 
 return 1;
