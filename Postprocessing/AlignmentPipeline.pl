@@ -11,7 +11,7 @@ if (@ARGV == 0) {
     pod2usage(-verbose => 1);
 }
 
-my $atrampath = "$FindBin::Bin/../";
+my $atrampath = "$FindBin::Bin/..";
 my $help = 0;
 my $samplefile = "";
 my $targetfile = "";
@@ -20,6 +20,7 @@ my $kmer = 31;
 my $iter = 10;
 my $frac = 1;
 my $ins_length = 400;
+my $debug = 0;
 
 GetOptions ('samples=s' => \$samplefile,
             'targets=s' => \$targetfile,
@@ -28,6 +29,7 @@ GetOptions ('samples=s' => \$samplefile,
 			'frac=f' => \$frac,
 			'ins_length=i' =>  \$ins_length,
 			'output|outfile=s' => \$outfile,
+			'debug|verbose' => \$debug,
             'help|?' => \$help) or pod2usage(-msg => "GetOptions failed.", -exitval => 2);
 
 if ($help) {
@@ -37,6 +39,8 @@ if ($help) {
 if ($outfile eq "") {
 	$outfile = "result";
 }
+
+set_debug ($debug);
 
 if (($targetfile eq "") || ($samplefile eq "")) {
     pod2usage(-msg => "Must specify a list of aTRAM databases and a list of target sequences.", -verbose => 1);
@@ -48,7 +52,7 @@ set_log($log_fh);
 
 my $samples = {};
 my @samplenames = ();
-open FH, "<", "$samplefile" or die "couldn't open $samplefile";
+open FH, "<", "$samplefile" or die "Couldn't open sample file $samplefile";
 foreach my $line (<FH>) {
 	if ($line =~ /(.+?)\t(.+)/) {
 		$samples->{$1} = $2;
@@ -57,9 +61,13 @@ foreach my $line (<FH>) {
 }
 close FH;
 
+if (@samplenames == 0) {
+	die "Sample file $samplefile doesn't contain a list";
+}
+
 my $targets = {};
 my @targetnames = ();
-open FH, "<", $targetfile;
+open FH, "<", $targetfile or die "Couldn't open target file $targetfile";
 foreach my $line (<FH>) {
 	if ($line =~ /(.+?)\t(.+)/) {
 		$targets->{$1} = $2;
@@ -67,6 +75,10 @@ foreach my $line (<FH>) {
 	}
 }
 close FH;
+
+if (@targetnames == 0) {
+	die "Target file $targetfile doesn't contain a list";
+}
 
 open TABLE_FH, ">", "$outfile.results.txt";
 print TABLE_FH "target\tsample\tcontig\tbitscore\tpercentcoverage\n";
