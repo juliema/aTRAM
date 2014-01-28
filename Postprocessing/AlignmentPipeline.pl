@@ -153,9 +153,9 @@ AlignmentPipeline.pl
 
 =head1 SYNOPSIS
 
-AlignmentPipeline.pl -input short_read_archive [-output aTRAM_db_name] [-number int]
+AlignmentPipeline.pl -samples samplefile -targets targetfile -output outputprefix
 
-Takes a fasta or fastq file of paired-end short reads and creates an aTRAM database for use by aTRAM.pl.
+Runs aTRAM on a list of aTRAM databases and a list of target sequences, returning a fasta file for each target sequence with the best contig for each aTRAM database.
 
 =head1 OPTIONS
 
@@ -165,7 +165,7 @@ Takes a fasta or fastq file of paired-end short reads and creates an aTRAM datab
  -iter:       optional: number of aTRAM iterations (default is 5).
  -frac:       optional: fraction of aTRAM database to use (default is 1.0).
  -ins_length: optional: insert length of Illumina short read library (default is 400).
- -output:   optional: prefix of aTRAM database (default is the same as -input).
+ -output:     output file prefix.
 
 =cut
 
