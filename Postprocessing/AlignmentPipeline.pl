@@ -82,7 +82,7 @@ foreach my $target (@targetnames) {
 	foreach my $sample (@samplenames) {
 		my $outname = "$outfile.$target.$sample";
 		printlog ("$target $sample");
-		system ("perl $atrampath/aTRAM.pl -reads $samples->{$sample} -target $targets->{$target} -iter $iter -ins_length $ins_length -frac $frac -assemble Velvet -out $outname -kmer $kmer -complete");
+		system_call ("perl $atrampath/aTRAM.pl -reads $samples->{$sample} -target $targets->{$target} -iter $iter -ins_length $ins_length -frac $frac -assemble Velvet -out $outname -kmer $kmer -complete");
 		# run percentcoverage to get the contigs nicely aligned
 		system_call ("perl $atrampath/Postprocessing/PercentCoverage.pl $targets->{$target} $outname.best.fasta $outname");
 
