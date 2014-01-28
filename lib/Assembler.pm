@@ -1,9 +1,6 @@
 #!/usr/bin/env perl
 package Assembler;
 use strict;
-use File::Temp qw/ tempfile /;
-use FindBin;
-use lib "$FindBin::Bin/lib";
 
 BEGIN {
 	require Exporter;
@@ -12,13 +9,12 @@ BEGIN {
 	# Inherit from Exporter to export functions and variables
 	our @ISA         = qw(Exporter);
 	# Functions and variables which are exported by default
-	our @EXPORT      = qw( parse_config find_bin );
+	our @EXPORT      = qw( parse_config find_bin initialize );
 	# Functions and variables which can be optionally exported
 	our @EXPORT_OK   = qw();
 }
 
 our %assemblers = {};
-
 
 sub parse_config {
 	open FH, "<", "$FindBin::Bin/config.txt";

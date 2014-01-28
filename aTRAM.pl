@@ -9,10 +9,9 @@ use FindBin;
 use lib "$FindBin::Bin/lib";
 use Subfunctions;
 use Module::Load;
+use Assembler;
 require Sequenceretrieval;
 
-use Assembler;
-Assembler::parse_config();
 
 my $debug = 0;
 
@@ -82,6 +81,7 @@ if ($debug) {
 }
 
 # make sure that the requested assembler module is available.
+Assembler::parse_config();
 my $assembler_dir = "$FindBin::Bin/lib/Assembler";
 my @assembly_software = ();
 
