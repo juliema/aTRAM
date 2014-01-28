@@ -18,7 +18,7 @@ my $targetfile = "";
 my $outfile = "";
 my $kmer = 31;
 my $iter = 10;
-my $frac = 0.01;
+my $frac = 1;
 my $ins_length = 400;
 
 GetOptions ('samples=s' => \$samplefile,
