@@ -9,7 +9,7 @@ my $contigs_fasta = shift;
 my $target_fasta = shift;
 my $blast_file = shift;
 
-if ($gene_name eq "") {
+if ($blast_file eq "") {
 	print "Usage: blastcontigs.pl contigs_fasta target_fasta blast_file\n";
 	exit;
 }
