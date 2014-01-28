@@ -317,7 +317,7 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 
 	#   assemble the sequences:
 	print "\tassembling pairs with $assembler...\n";
-	load "$assembler";
+	load "Assembler::$assembler";
 
 	my $assembly_params = { 'kmer' => $kmer,
 							'tempdir' => $temp_assembly_dir,
