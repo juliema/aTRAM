@@ -34,11 +34,16 @@ sub parse_config {
 
 sub find_bin {
 	my $cmd = shift;
+	my $bin = $cmd;
 
 	if (exists $assemblers{$cmd}) {
-		return "$assemblers{$cmd}";
+		$bin = "$assemblers{$cmd}";
 	}
-	return "$cmd";
+
+	if ($bin eq "") {
+		die "Assembler $cmd not installed on this system";
+	}
+	return $bin;
 }
 
 return 1;
