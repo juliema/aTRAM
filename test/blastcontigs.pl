@@ -3,7 +3,7 @@ use strict;
 use File::Temp qw/ tempfile /;
 use FindBin;
 use lib "$FindBin::Bin/../lib";
-require Subfunctions;
+use Subfunctions;
 
 my $contigs_fasta = shift;
 my $target_fasta = shift;
