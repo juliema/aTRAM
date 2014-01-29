@@ -108,7 +108,11 @@ foreach my $target (@targetnames) {
 		system_call ("perl $atrampath/Postprocessing/PercentCoverage.pl $targets->{$target} $outname.best.fasta $outname");
 
 		# find the one best contig (one with fewest gaps)
-		system_call ("blastn -task blastn -query $outname.exons.fasta -subject $targets->{$target} -outfmt '6 qseqid bitscore' -out $outname.blast");
+		if ($protein == 0) {
+			system_call ("blastn -task blastn -query $outname.exons.fasta -subject $targets->{$target} -outfmt '6 qseqid bitscore' -out $outname.blast");
+		} else {
+			system_call ("blastx -query $outname.exons.fasta -subject $targets->{$target} -outfmt '6 qseqid bitscore' -out $outname.blast");
+		}
 		open FH, "<", "$outname.blast";
 		my $contig = "";
 		my $score = 0;
