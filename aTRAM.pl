@@ -93,8 +93,8 @@ foreach my $a (@assembly_software) {
 	if ($a eq $assembler) {
 		$assembler_available = 1;
 		load "Assembler::$a";
-		my $binary_names = join (", ", values ($a->get_binaries()));
-		if (Configuration::init_module($a->get_binaries()) == 0) {
+		my $binary_names = join (", ", values %$a::binaries);
+		if (Configuration::init_module(%$a::binaries) == 0) {
 			pod2usage(-msg => "Binaries required for $assembler ($binary_names) are not available on this system. Please update the config.txt file if this is incorrect.");
 		}
 	}

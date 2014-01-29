@@ -9,19 +9,12 @@ use Subfunctions;
 # Assembler modules should return a hash of the resulting contigs.
 
 # Hash of assembler's required binaries
-my $binaries = {velveth => "velveth", velvetg => "velvetg"};
-
-sub get_binaries {
-	return $binaries;
-}
+our $binaries = {velveth => "velveth", velvetg => "velvetg"};
 
 sub assembler {
 	my $self = shift;
 	my $short_read_file = shift;
 	my $params = shift;
-
-	my $velveth = $binaries->{velveth};
-	my $velvetg = $binaries->{velvetg};
 
 	my ($kmer, $tempdir, $longreads, $ins_length, $exp_cov, $min_contig_len) = 0;
 	if ((ref $params) =~ /HASH/) {
@@ -46,11 +39,11 @@ sub assembler {
 	}
 	# using velvet
 	if ($longreads != 0) {
-		Subfunctions::system_call ("$velveth $tempdir $kmer -fasta -shortPaired $short_read_file -long $longreads");
+		Subfunctions::system_call ("$binaries->{velveth} $tempdir $kmer -fasta -shortPaired $short_read_file -long $longreads");
 	} else {
-		Subfunctions::system_call ("$velveth $tempdir $kmer -fasta -shortPaired $short_read_file");
+		Subfunctions::system_call ("$binaries->{velveth} $tempdir $kmer -fasta -shortPaired $short_read_file");
 	}
-	Subfunctions::system_call ("$velvetg $tempdir -ins_length $ins_length -exp_cov $exp_cov -min_contig_lgth $min_contig_len");
+	Subfunctions::system_call ("$binaries->{velvetg} $tempdir -ins_length $ins_length -exp_cov $exp_cov -min_contig_lgth $min_contig_len");
 
 	my ($contigs, undef) = Subfunctions::parsefasta ("$tempdir/contigs.fa");
 
