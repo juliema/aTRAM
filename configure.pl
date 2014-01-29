@@ -2,6 +2,7 @@
 use strict;
 use File::Basename;
 use File::Spec;
+use FindBin;
 
 
 my $i = 1;
@@ -11,7 +12,7 @@ print $i++ .". Checking for required software...\n";
 my @req_software = qw(blastn makeblastdb gawk);
 my @assembly_software = qw (velveth velvetg Trinity.pl);
 
-open CONFIG_FH, ">", "config.txt";
+open CONFIG_FH, ">", "$FindBin::Bin/config.txt";
 print CONFIG_FH "# Enter the full path for the software binary below:\n";
 my $sw_ready = 1;
 foreach my $sw (@req_software) {
