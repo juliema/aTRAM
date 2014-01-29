@@ -9,7 +9,7 @@ BEGIN {
 	# Inherit from Exporter to export functions and variables
 	our @ISA         = qw(Exporter);
 	# Functions and variables which are exported by default
-	our @EXPORT      = qw( parse_config find_bin initialize );
+	our @EXPORT      = qw( parse_config find_bin init_module );
 	# Functions and variables which can be optionally exported
 	our @EXPORT_OK   = qw( $binaries);
 }
@@ -37,7 +37,7 @@ sub find_bin {
 	return "";
 }
 
-sub initialize {
+sub init_module {
 	my $mod_bins = shift;
 	foreach my $b (keys $mod_bins) {
 		$mod_bins->{$b} = find_bin($mod_bins->{$b});
