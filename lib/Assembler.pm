@@ -40,7 +40,7 @@ sub find_bin {
 sub initialize {
 	my $binaries = shift;
 	foreach my $b (keys $binaries) {
-		$binaries->{$b} = Assembler::find_bin($binaries->{$b});
+		$binaries->{$b} = find_bin($binaries->{$b});
 		if ($binaries->{$b} eq "") {
 			return 0;
 		}
