@@ -17,7 +17,7 @@ BEGIN {
 our $binaries = {};
 
 sub initialize {
-	open FH, "<", "$FindBin::Bin/config.txt";
+	open FH, "<", "$FindBin::Bin/config.txt" or die "Couldn't find $FindBin::Bin/config.txt. Did you run $FindBin::Bin/configure.pl?";
 	foreach my $line (<FH>) {
 		$line =~ s/(#.*)$//;
 		if ($line =~ /(.*)=(.*)$/) {
