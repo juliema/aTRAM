@@ -9,14 +9,14 @@ BEGIN {
 	# Inherit from Exporter to export functions and variables
 	our @ISA         = qw(Exporter);
 	# Functions and variables which are exported by default
-	our @EXPORT      = qw( parse_config find_bin init_module );
+	our @EXPORT      = qw( initialize find_bin init_module );
 	# Functions and variables which can be optionally exported
 	our @EXPORT_OK   = qw( $binaries);
 }
 
 our $binaries = {};
 
-sub parse_config {
+sub initialize {
 	open FH, "<", "$FindBin::Bin/config.txt";
 	foreach my $line (<FH>) {
 		$line =~ s/(#.*)$//;

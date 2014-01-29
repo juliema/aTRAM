@@ -81,7 +81,7 @@ if ($debug) {
 }
 
 # Look in the config.txt file to find the correct paths to binaries.
-Configuration::parse_config();
+Configuration::initialize();
 
 # make sure that the requested assembler module is available.
 my $assembler_dir = "$FindBin::Bin/lib/Assembler";
