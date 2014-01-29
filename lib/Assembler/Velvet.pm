@@ -2,7 +2,6 @@
 package Velvet;
 use strict;
 use Subfunctions;
-use Assembler;
 
 # Assembler modules need to know:
 	# where to find the short reads (pass this in as a file name)
