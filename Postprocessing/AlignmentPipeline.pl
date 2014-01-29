@@ -98,7 +98,12 @@ foreach my $target (@targetnames) {
 		printlog ("$target $sample");
 		my $protein_flag = "";
 		if ($protein == 1) { $protein_flag = "-protein"; }
-		system_call ("perl $atrampath/aTRAM.pl -reads $samples->{$sample} -target $targets->{$target} -iter $iter -ins_length $ins_length -frac $frac -assemble Velvet -out $outname -kmer $kmer -complete $protein_flag");
+		my $atram_result = system_call ("perl $atrampath/aTRAM.pl -reads $samples->{$sample} -target $targets->{$target} -iter $iter -ins_length $ins_length -frac $frac -assemble Velvet -out $outname -kmer $kmer -complete $protein_flag", 1);
+
+		if ($atram_result) {
+			printlog ("aTRAM of $outname found no contigs.");
+			next;
+		}
 		# run percentcoverage to get the contigs nicely aligned
 		system_call ("perl $atrampath/Postprocessing/PercentCoverage.pl $targets->{$target} $outname.best.fasta $outname");
 
