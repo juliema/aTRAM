@@ -105,7 +105,11 @@ foreach my $target (@targetnames) {
 			next;
 		}
 		# run percentcoverage to get the contigs nicely aligned
-		system_call ("perl $atrampath/Postprocessing/PercentCoverage.pl $targets->{$target} $outname.best.fasta $outname");
+		my $comparefile = "$outname.best.fasta";
+		if (-e "$outname.complete.fasta") {
+			$comparefile = "$outname.complete.fasta";
+		}
+		system_call ("perl $atrampath/Postprocessing/PercentCoverage.pl $targets->{$target} $comparefile $outname");
 
 		# find the one best contig (one with fewest gaps)
 		if ($protein == 0) {
