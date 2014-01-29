@@ -12,7 +12,7 @@ BEGIN {
 	# Inherit from Exporter to export functions and variables
 	our @ISA         = qw(Exporter);
 	# Functions and variables which are exported by default
-	our @EXPORT      = qw( $log_fh parse_config find_bin timestamp exit_with_msg fork_cmd wait_for_forks printlog system_call debug set_debug set_log parsefasta sortfasta flattenfasta make_hit_matrix process_hit_matrix set_multiplier get_multiplier map_to_shard set_total_shards get_total_shards get_max_shard is_protein percentcoverage split_seq );
+	our @EXPORT      = qw( $log_fh find_bin timestamp exit_with_msg fork_cmd wait_for_forks printlog system_call debug set_debug set_log parsefasta sortfasta flattenfasta make_hit_matrix process_hit_matrix set_multiplier get_multiplier map_to_shard set_total_shards get_total_shards get_max_shard is_protein percentcoverage split_seq );
 	# Functions and variables which can be optionally exported
 	our @EXPORT_OK   = qw($total_shards %assemblers $multiplier);
 }
@@ -24,27 +24,6 @@ our $total_shards = 0;
 our @primes = (3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97, 101, 103, 107, 109, 113, 127, 131, 137, 139, 149, 151);
 our $multiplier = 0;
 
-
-sub parse_config {
-	open FH, "<", "$FindBin::Bin/config.txt";
-	foreach my $line (<FH>) {
-		$line =~ s/(#.*)$//;
-		if ($line =~ /(.*)=(.*)$/) {
-			my $name = $1;
-			my $path = $2;
-			$assemblers{$name} = "$path";
-		}
-	}
-	close FH;
-}
-
-sub find_bin {
-	my $cmd = shift;
-
-	if (exists $assemblers{$cmd}) {
-		print "found $cmd: at $assemblers{$cmd}\n";
-	}
-}
 
 sub timestamp {
     my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime(time);
