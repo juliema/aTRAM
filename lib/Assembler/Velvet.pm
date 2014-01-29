@@ -16,7 +16,7 @@ sub assembler {
 	my $short_read_file = shift;
 	my $params = shift;
 
-	my ($kmer, $tempdir, $longreads, $ins_length, $exp_cov, $min_contig_len) = 0;
+	my ($kmer, $tempdir, $longreads, $ins_length, $exp_cov, $min_contig_len);
 	if ((ref $params) =~ /HASH/) {
         if (exists $params->{"kmer"}) {
 			$kmer = $params->{"kmer"};
@@ -38,7 +38,7 @@ sub assembler {
 		}
 	}
 	# using velvet
-	if ($longreads != 0) {
+	if (defined $longreads) {
 		Subfunctions::system_call ("$binaries->{velveth} $tempdir $kmer -fasta -shortPaired $short_read_file -long $longreads");
 	} else {
 		Subfunctions::system_call ("$binaries->{velveth} $tempdir $kmer -fasta -shortPaired $short_read_file");

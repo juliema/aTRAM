@@ -10,7 +10,7 @@ use lib "$FindBin::Bin/lib";
 use Subfunctions;
 use Module::Load;
 use Configuration;
-require Sequenceretrieval;
+use Sequenceretrieval;
 
 
 my $debug = 0;
@@ -238,7 +238,7 @@ if ($lastseq =~ /(.*),(.*)(.{$len})/) {
 }
 
 # okay, let's re-assemble the file for the target fasta.
-my ($TARGET_FH, $target_fasta) = tempfile(UNLINK => 1);
+my ($TARGET_FH, $assembled_target) = tempfile(UNLINK => 1);
 my @targets = ();
 foreach my $line (@target_seqs) {
 	$line =~ /(.*),(.*)/;
@@ -249,9 +249,9 @@ foreach my $line (@target_seqs) {
 # make a database from the target so that we can compare contigs to the target.
 my (undef, $targetdb) = tempfile(UNLINK => 1);
 if ($protein == 1) {
-	system_call ("$Configuration::binaries->{makeblastdb} -in $target_fasta -dbtype prot -out $targetdb.db -input_type fasta");
+	system_call ("$Configuration::binaries->{makeblastdb} -in $assembled_target -dbtype prot -out $targetdb.db -input_type fasta");
 } else {
-	system_call ("$Configuration::binaries->{makeblastdb} -in $target_fasta -dbtype nucl -out $targetdb.db -input_type fasta");
+	system_call ("$Configuration::binaries->{makeblastdb} -in $assembled_target -dbtype nucl -out $targetdb.db -input_type fasta");
 }
 
 if ($start_iter > 1) {
@@ -444,16 +444,18 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 		print RESULTS_FH "$i.$contig_name\t";
 		foreach my $target (@targets) {
 			my $score = $hit_matrix->{$contig_name}->{$target};
-			if ($score == undef) {
-				print RESULTS_FH "-\t";
-			} else {
+			if (defined $score) {
 				print RESULTS_FH "$score\t";
+			} else {
+				print RESULTS_FH "-\t";
 			}
 		}
 		my $total = $hit_matrix->{$contig_name}->{"total"};
 		print RESULTS_FH "$total\n";
-		if ((abs($hit_matrix->{$contig_name}->{$start_seq}) > 20) && (abs($hit_matrix->{$contig_name}->{$end_seq}) > 20)) {
-			push @complete_contigs, "$i.$contig_name";
+		if ((defined $hit_matrix->{$contig_name}->{$start_seq}) && (defined $hit_matrix->{$contig_name}->{$end_seq})) {
+			if ((abs($hit_matrix->{$contig_name}->{$start_seq}) > 20) && (abs($hit_matrix->{$contig_name}->{$end_seq}) > 20)) {
+				push @complete_contigs, "$i.$contig_name";
+			}
 		}
 	}
 	close RESULTS_FH;
