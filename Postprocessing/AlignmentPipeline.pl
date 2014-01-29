@@ -21,6 +21,7 @@ my $iter = 10;
 my $frac = 1;
 my $ins_length = 400;
 my $debug = 0;
+my $protein = 0;
 
 GetOptions ('samples=s' => \$samplefile,
             'targets=s' => \$targetfile,
@@ -30,6 +31,7 @@ GetOptions ('samples=s' => \$samplefile,
 			'ins_length=i' =>  \$ins_length,
 			'output|outfile=s' => \$outfile,
 			'debug|verbose' => \$debug,
+			'protein' => \$protein,
             'help|?' => \$help) or pod2usage(-msg => "GetOptions failed.", -exitval => 2);
 
 if ($help) {
@@ -94,7 +96,9 @@ foreach my $target (@targetnames) {
 	foreach my $sample (@samplenames) {
 		my $outname = "$outfile.$target.$sample";
 		printlog ("$target $sample");
-		system_call ("perl $atrampath/aTRAM.pl -reads $samples->{$sample} -target $targets->{$target} -iter $iter -ins_length $ins_length -frac $frac -assemble Velvet -out $outname -kmer $kmer -complete");
+		my $protein_flag = "";
+		if ($protein == 1) { $protein_flag = "-protein"; }
+		system_call ("perl $atrampath/aTRAM.pl -reads $samples->{$sample} -target $targets->{$target} -iter $iter -ins_length $ins_length -frac $frac -assemble Velvet -out $outname -kmer $kmer -complete $protein_flag");
 		# run percentcoverage to get the contigs nicely aligned
 		system_call ("perl $atrampath/Postprocessing/PercentCoverage.pl $targets->{$target} $outname.best.fasta $outname");
 
