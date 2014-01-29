@@ -15,7 +15,7 @@ my $i = 1;
 print "==== aTRAM checklist ====\n\n";
 
 print $i++ .". Checking for required software...\n";
-my @req_software = qw(blastn makeblastdb gawk);
+my @req_software = qw(blastn tblastn blastx tblastx makeblastdb gawk);
 
 foreach my $sw (@req_software) {
 	my $result = system_call("$sw 2>&1 1>/dev/null");
