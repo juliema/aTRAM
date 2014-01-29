@@ -1,5 +1,5 @@
 #!/usr/bin/env perl
-package Assembler;
+package Configuration;
 use strict;
 
 BEGIN {
@@ -11,10 +11,10 @@ BEGIN {
 	# Functions and variables which are exported by default
 	our @EXPORT      = qw( parse_config find_bin initialize );
 	# Functions and variables which can be optionally exported
-	our @EXPORT_OK   = qw();
+	our @EXPORT_OK   = qw( $binaries);
 }
 
-our %assemblers = {};
+our $binaries = {};
 
 sub parse_config {
 	open FH, "<", "$FindBin::Bin/config.txt";
@@ -23,31 +23,29 @@ sub parse_config {
 		if ($line =~ /(.*)=(.*)$/) {
 			my $name = $1;
 			my $path = $2;
-			$assemblers{$name} = "$path";
+			$binaries->{$name} = "$path";
 		}
 	}
 }
 
 sub find_bin {
-	my $cmd = shift;
+	my $bin = shift;
 
-	if (exists $assemblers{$cmd}) {
-		return "$assemblers{$cmd}";
+	if (exists $binaries->{$bin}) {
+		return "$binaries->{$bin}";
 	}
 	return "";
 }
 
 sub initialize {
-	my $binaries = shift;
-	foreach my $b (keys $binaries) {
-		$binaries->{$b} = find_bin($binaries->{$b});
-		if ($binaries->{$b} eq "") {
+	my $mod_bins = shift;
+	foreach my $b (keys $mod_bins) {
+		$mod_bins->{$b} = find_bin($mod_bins->{$b});
+		if ($mod_bins->{$b} eq "") {
 			return 0;
 		}
 	}
 	return 1;
 }
-
-
 
 return 1;

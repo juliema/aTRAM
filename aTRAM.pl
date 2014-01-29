@@ -9,7 +9,7 @@ use FindBin;
 use lib "$FindBin::Bin/lib";
 use Subfunctions;
 use Module::Load;
-use Assembler;
+use Configuration;
 require Sequenceretrieval;
 
 
@@ -80,8 +80,10 @@ if ($debug) {
 	set_debug(1);
 }
 
+# Look in the config.txt file to find the correct paths to binaries.
+Configuration::parse_config();
+
 # make sure that the requested assembler module is available.
-Assembler::parse_config();
 my $assembler_dir = "$FindBin::Bin/lib/Assembler";
 my @assembly_software = ();
 
@@ -92,7 +94,7 @@ foreach my $a (@assembly_software) {
 		$assembler_available = 1;
 		load "Assembler::$a";
 		my $binary_names = join (", ", values ($a->get_binaries()));
-		if (Assembler::initialize($a->get_binaries()) == 0) {
+		if (Configuration::initialize($a->get_binaries()) == 0) {
 			pod2usage(-msg => "Binaries required for $assembler ($binary_names) are not available on this system. Please update the config.txt file if this is incorrect.");
 		}
 	}
