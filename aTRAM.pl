@@ -4,14 +4,14 @@ use Getopt::Long;
 use Pod::Usage;
 use File::Basename;
 use File::Temp qw/ tempfile tempdir /;
+use File::Find;
 use FindBin;
 use lib "$FindBin::Bin/lib";
 use Subfunctions;
 use Module::Load;
+use Assembler;
 require Sequenceretrieval;
 
-use Assembler;
-Assembler::parse_config();
 
 my $debug = 0;
 
@@ -78,6 +78,28 @@ if ($help) {
 
 if ($debug) {
 	set_debug(1);
+}
+
+# make sure that the requested assembler module is available.
+Assembler::parse_config();
+my $assembler_dir = "$FindBin::Bin/lib/Assembler";
+my @assembly_software = ();
+
+find ( {wanted => \&add_assemblers, no_chdir => 1} , "$assembler_dir");
+my $assembler_available = 0;
+foreach my $a (@assembly_software) {
+	if ($a eq $assembler) {
+		$assembler_available = 1;
+		load "Assembler::$a";
+		my $binary_names = join (", ", values ($a->get_binaries()));
+		if (Assembler::initialize($a->get_binaries()) == 0) {
+			pod2usage(-msg => "Binaries required for $assembler ($binary_names) are not available on this system. Please update the config.txt file if this is incorrect.");
+		}
+	}
+}
+
+if ($assembler_available == 0) {
+	pod2usage(-msg => "Assembler module $assembler.pm is not available in the Assembler directory.");
 }
 
 # find the path specified in the .atram file, if provided.
@@ -317,7 +339,7 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 
 	#   assemble the sequences:
 	print "\tassembling pairs with $assembler...\n";
-	load "$assembler";
+	load "Assembler::$assembler";
 
 	my $assembly_params = { 'kmer' => $kmer,
 							'tempdir' => $temp_assembly_dir,
@@ -501,6 +523,15 @@ sub reverse_complement {
 	# complement the reversed DNA sequence
 	$revcomp =~ tr/ABCDGHMNRSTUVWXYabcdghmnrstuvwxy/TVGHCDKNYSAABWXRtvghcdknysaabwxr/;
 	return $revcomp;
+}
+
+sub add_assemblers {
+	if ( $File::Find::name ne $assembler_dir) {
+		my $modname = basename ($_);
+		$modname =~ s/\.pm//;
+		push @assembly_software, $modname;
+	}
+	return;
 }
 
 

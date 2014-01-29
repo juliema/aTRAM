@@ -1,25 +1,28 @@
 #!/usr/bin/env perl
+package Velvet;
 use strict;
-use File::Temp qw/ tempfile /;
-use Module::Load;
-use Assembler;
 use Subfunctions;
-
+use Assembler;
 
 # Assembler modules need to know:
 	# where to find the short reads (pass this in as a file name)
 	# what the assembly parameters are. (pass this in as a hash)
 # Assembler modules should return a hash of the resulting contigs.
 
-package Velvet;
+# Hash of assembler's required binaries
+my $binaries = {velveth => "velveth", velvetg => "velvetg"};
+
+sub get_binaries {
+	return $binaries;
+}
 
 sub assembler {
 	my $self = shift;
 	my $short_read_file = shift;
 	my $params = shift;
 
-	my $velveth = Assembler::find_bin("velveth");
-	my $velvetg = Assembler::find_bin("velvetg");
+	my $velveth = $binaries->{velveth};
+	my $velvetg = $binaries->{velvetg};
 
 	my ($kmer, $tempdir, $longreads, $ins_length, $exp_cov, $min_contig_len) = 0;
 	if ((ref $params) =~ /HASH/) {
@@ -50,12 +53,8 @@ sub assembler {
 	}
 	Subfunctions::system_call ("$velvetg $tempdir -ins_length $ins_length -exp_cov $exp_cov -min_contig_lgth $min_contig_len");
 
-	my ($contigs, $contignames) = Subfunctions::parsefasta ("$tempdir/contigs.fa");
-	open FH, ">", "$tempdir/results.fasta";
-	foreach my $contig (@$contignames) {
-		print FH ">$contig\n$contigs->{$contig}\n";
-	}
-	close FH;
+	my ($contigs, undef) = Subfunctions::parsefasta ("$tempdir/contigs.fa");
+
 	return $contigs;
 }
 

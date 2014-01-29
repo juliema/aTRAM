@@ -1,9 +1,6 @@
 #!/usr/bin/env perl
 package Assembler;
 use strict;
-use File::Temp qw/ tempfile /;
-use FindBin;
-use lib "$FindBin::Bin/lib";
 
 BEGIN {
 	require Exporter;
@@ -12,13 +9,12 @@ BEGIN {
 	# Inherit from Exporter to export functions and variables
 	our @ISA         = qw(Exporter);
 	# Functions and variables which are exported by default
-	our @EXPORT      = qw( parse_config find_bin );
+	our @EXPORT      = qw( parse_config find_bin initialize );
 	# Functions and variables which can be optionally exported
 	our @EXPORT_OK   = qw();
 }
 
 our %assemblers = {};
-
 
 sub parse_config {
 	open FH, "<", "$FindBin::Bin/config.txt";
@@ -34,16 +30,24 @@ sub parse_config {
 
 sub find_bin {
 	my $cmd = shift;
-	my $bin = $cmd;
 
 	if (exists $assemblers{$cmd}) {
-		$bin = "$assemblers{$cmd}";
+		return "$assemblers{$cmd}";
 	}
-
-	if ($bin eq "") {
-		die "Assembler $cmd not installed on this system";
-	}
-	return $bin;
+	return "";
 }
+
+sub initialize {
+	my $binaries = shift;
+	foreach my $b (keys $binaries) {
+		$binaries->{$b} = Assembler::find_bin($binaries->{$b});
+		if ($binaries->{$b} eq "") {
+			return 0;
+		}
+	}
+	return 1;
+}
+
+
 
 return 1;
