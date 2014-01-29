@@ -7,6 +7,7 @@ use Pod::Usage;
 use FindBin;
 use lib "$FindBin::Bin/lib";
 use Subfunctions;
+use Configuration;
 
 if (@ARGV == 0) {
     pod2usage(-verbose => 1);
@@ -40,6 +41,9 @@ unless ($output_file) {
 
 # make the output file an absolute path, just to be safe.
 my $output_file = File::Spec->rel2abs($output_file);
+
+# Look in the config.txt file to find the correct paths to binaries.
+Configuration::initialize();
 
 my $tempdir = dirname ("$output_file");
 my $log_file = "$output_file.log";
@@ -193,7 +197,7 @@ for (my $i=0; $i<$numshards; $i++) {
 printlog ("Making blastdbs.");
 for (my $i=0; $i<$numshards; $i++) {
 	# make the blast db from the first of the paired end files
-	push @pids, fork_cmd ("makeblastdb -in $output_file.$i.1.fasta -dbtype nucl -out $output_file.$i.db");
+	push @pids, fork_cmd ("$Configuration::binaries->{makeblastdb} -in $output_file.$i.1.fasta -dbtype nucl -out $output_file.$i.db");
 }
 
 wait_for_forks(\@pids);
