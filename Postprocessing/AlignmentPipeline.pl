@@ -22,6 +22,7 @@ my $frac = 1;
 my $ins_length = 400;
 my $debug = 0;
 my $protein = 0;
+my $complete = 0;
 
 GetOptions ('samples=s' => \$samplefile,
             'targets=s' => \$targetfile,
@@ -32,6 +33,7 @@ GetOptions ('samples=s' => \$samplefile,
 			'output|outfile=s' => \$outfile,
 			'debug|verbose' => \$debug,
 			'protein' => \$protein,
+			'complete' => \$complete,
             'help|?' => \$help) or pod2usage(-msg => "GetOptions failed.", -exitval => 2);
 
 if ($help) {
@@ -97,8 +99,10 @@ foreach my $target (@targetnames) {
 		my $outname = "$outfile.$target.$sample";
 		printlog ("$target $sample");
 		my $protein_flag = "";
+		my $complete_flag = "";
 		if ($protein == 1) { $protein_flag = "-protein"; }
-		my $atram_result = system_call ("perl $atrampath/aTRAM.pl -reads $samples->{$sample} -target $targets->{$target} -iter $iter -ins_length $ins_length -frac $frac -assemble Velvet -out $outname -kmer $kmer -complete $protein_flag", 1);
+		if ($complete == 1) { $complete_flag = "-complete"; }
+		my $atram_result = system_call ("perl $atrampath/aTRAM.pl -reads $samples->{$sample} -target $targets->{$target} -iter $iter -ins_length $ins_length -frac $frac -assemble Velvet -out $outname -kmer $kmer $complete $protein_flag", 1);
 
 		if ($atram_result) {
 			printlog ("aTRAM of $outname found no contigs.");
@@ -106,7 +110,7 @@ foreach my $target (@targetnames) {
 		}
 		# run percentcoverage to get the contigs nicely aligned
 		my $comparefile = "$outname.best.fasta";
-		if (-e "$outname.complete.fasta") {
+		if (($complete == 1) && (-e "$outname.complete.fasta")) {
 			$comparefile = "$outname.complete.fasta";
 		}
 		system_call ("perl $atrampath/Postprocessing/PercentCoverage.pl $targets->{$target} $comparefile $outname");
