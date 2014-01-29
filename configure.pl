@@ -7,7 +7,7 @@ use Module::Load;
 use FindBin;
 use lib "$FindBin::Bin/lib";
 
-open CONFIG_FH, ">", "config.txt";
+open CONFIG_FH, ">", "$FindBin::Bin/config.txt";
 print CONFIG_FH "# Enter the full path for the software binary below:\n";
 
 my $sw_ready = 1;
