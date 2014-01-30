@@ -2,7 +2,6 @@
 package Velvet;
 use strict;
 use Subfunctions;
-use Assembler;
 
 # Assembler modules need to know:
 	# where to find the short reads (pass this in as a file name)
@@ -10,7 +9,7 @@ use Assembler;
 # Assembler modules should return a hash of the resulting contigs.
 
 # Hash of assembler's required binaries
-my $binaries = {velveth => "velveth", velvetg => "velvetg"};
+our $binaries = {velveth => "velveth", velvetg => "velvetg"};
 
 sub get_binaries {
 	return $binaries;
@@ -21,10 +20,7 @@ sub assembler {
 	my $short_read_file = shift;
 	my $params = shift;
 
-	my $velveth = $binaries->{velveth};
-	my $velvetg = $binaries->{velvetg};
-
-	my ($kmer, $tempdir, $longreads, $ins_length, $exp_cov, $min_contig_len) = 0;
+	my ($kmer, $tempdir, $longreads, $ins_length, $exp_cov, $min_contig_len);
 	if ((ref $params) =~ /HASH/) {
         if (exists $params->{"kmer"}) {
 			$kmer = $params->{"kmer"};
@@ -46,12 +42,12 @@ sub assembler {
 		}
 	}
 	# using velvet
-	if ($longreads != 0) {
-		Subfunctions::system_call ("$velveth $tempdir $kmer -fasta -shortPaired $short_read_file -long $longreads");
+	if (defined $longreads) {
+		Subfunctions::system_call ("$binaries->{velveth} $tempdir $kmer -fasta -shortPaired $short_read_file -long $longreads");
 	} else {
-		Subfunctions::system_call ("$velveth $tempdir $kmer -fasta -shortPaired $short_read_file");
+		Subfunctions::system_call ("$binaries->{velveth} $tempdir $kmer -fasta -shortPaired $short_read_file");
 	}
-	Subfunctions::system_call ("$velvetg $tempdir -ins_length $ins_length -exp_cov $exp_cov -min_contig_lgth $min_contig_len");
+	Subfunctions::system_call ("$binaries->{velvetg} $tempdir -ins_length $ins_length -exp_cov $exp_cov -min_contig_lgth $min_contig_len");
 
 	my ($contigs, undef) = Subfunctions::parsefasta ("$tempdir/contigs.fa");
 

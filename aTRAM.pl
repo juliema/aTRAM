@@ -9,8 +9,8 @@ use FindBin;
 use lib "$FindBin::Bin/lib";
 use Subfunctions;
 use Module::Load;
-use Assembler;
-require Sequenceretrieval;
+use Configuration;
+use Sequenceretrieval;
 
 
 my $debug = 0;
@@ -80,8 +80,10 @@ if ($debug) {
 	set_debug(1);
 }
 
+# Look in the config.txt file to find the correct paths to binaries.
+Configuration::initialize();
+
 # make sure that the requested assembler module is available.
-Assembler::parse_config();
 my $assembler_dir = "$FindBin::Bin/lib/Assembler";
 my @assembly_software = ();
 
@@ -92,7 +94,7 @@ foreach my $a (@assembly_software) {
 		$assembler_available = 1;
 		load "Assembler::$a";
 		my $binary_names = join (", ", values ($a->get_binaries()));
-		if (Assembler::initialize($a->get_binaries()) == 0) {
+		if (Configuration::init_module($a->get_binaries()) == 0) {
 			pod2usage(-msg => "Binaries required for $assembler ($binary_names) are not available on this system. Please update the config.txt file if this is incorrect.");
 		}
 	}
@@ -236,7 +238,7 @@ if ($lastseq =~ /(.*),(.*)(.{$len})/) {
 }
 
 # okay, let's re-assemble the file for the target fasta.
-my ($TARGET_FH, $target_fasta) = tempfile(UNLINK => 1);
+my ($TARGET_FH, $assembled_target) = tempfile(UNLINK => 1);
 my @targets = ();
 foreach my $line (@target_seqs) {
 	$line =~ /(.*),(.*)/;
@@ -247,9 +249,9 @@ foreach my $line (@target_seqs) {
 # make a database from the target so that we can compare contigs to the target.
 my (undef, $targetdb) = tempfile(UNLINK => 1);
 if ($protein == 1) {
-	system_call ("makeblastdb -in $target_fasta -dbtype prot -out $targetdb.db -input_type fasta");
+	system_call ("$Configuration::binaries->{makeblastdb} -in $assembled_target -dbtype prot -out $targetdb.db -input_type fasta");
 } else {
-	system_call ("makeblastdb -in $target_fasta -dbtype nucl -out $targetdb.db -input_type fasta");
+	system_call ("$Configuration::binaries->{makeblastdb} -in $assembled_target -dbtype nucl -out $targetdb.db -input_type fasta");
 }
 
 if ($start_iter > 1) {
@@ -282,9 +284,9 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 		push @shardfiles, $current_shard;
 		# 1. blast to find any short reads that match the target.
 		if (($protein == 1) && ($i == 1)) {
-			push @pids, fork_cmd ("tblastn -max_target_seqs $max_target_seqs -db $atram_db.$s.db -query $search_fasta -outfmt '6 sseqid' -out $current_shard");
+			push @pids, fork_cmd ("$Configuration::binaries->{tblastn} -max_target_seqs $max_target_seqs -db $atram_db.$s.db -query $search_fasta -outfmt '6 sseqid' -out $current_shard");
 		} else {
-			push @pids, fork_cmd ("blastn -task blastn -evalue $evalue -max_target_seqs $max_target_seqs -db $atram_db.$s.db -query $search_fasta -outfmt '6 sseqid' -out $current_shard");
+			push @pids, fork_cmd ("$Configuration::binaries->{blastn} -task blastn -evalue $evalue -max_target_seqs $max_target_seqs -db $atram_db.$s.db -query $search_fasta -outfmt '6 sseqid' -out $current_shard");
 		}
 		if (($max_processes > 0) && (@pids >= ($max_processes - 1))) {
 			# don't spawn off too many threads at once.
@@ -371,9 +373,9 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 	}
 
 	if ($protein == 1) {
-		system_call ("blastx -db $targetdb.db -query $contigs_file -out $blast_file -outfmt '6 qseqid sseqid bitscore qstart qend sstart send qlen'");
+		system_call ("$Configuration::binaries->{blastx} -db $targetdb.db -query $contigs_file -out $blast_file -outfmt '6 qseqid sseqid bitscore qstart qend sstart send qlen'");
 	} else {
-		system_call ("tblastx -db $targetdb.db -query $contigs_file -out $blast_file -outfmt '6 qseqid sseqid bitscore qstart qend sstart send qlen'");
+		system_call ("$Configuration::binaries->{tblastx} -db $targetdb.db -query $contigs_file -out $blast_file -outfmt '6 qseqid sseqid bitscore qstart qend sstart send qlen'");
 	}
 
 	# we want to keep the contigs that have a bitscore higher than $bitscore.
@@ -442,16 +444,18 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 		print RESULTS_FH "$i.$contig_name\t";
 		foreach my $target (@targets) {
 			my $score = $hit_matrix->{$contig_name}->{$target};
-			if ($score == undef) {
-				print RESULTS_FH "-\t";
-			} else {
+			if (defined $score) {
 				print RESULTS_FH "$score\t";
+			} else {
+				print RESULTS_FH "-\t";
 			}
 		}
 		my $total = $hit_matrix->{$contig_name}->{"total"};
 		print RESULTS_FH "$total\n";
-		if ((abs($hit_matrix->{$contig_name}->{$start_seq}) > 20) && (abs($hit_matrix->{$contig_name}->{$end_seq}) > 20)) {
-			push @complete_contigs, "$i.$contig_name";
+		if ((defined $hit_matrix->{$contig_name}->{$start_seq}) && (defined $hit_matrix->{$contig_name}->{$end_seq})) {
+			if ((abs($hit_matrix->{$contig_name}->{$start_seq}) > 20) && (abs($hit_matrix->{$contig_name}->{$end_seq}) > 20)) {
+				push @complete_contigs, "$i.$contig_name";
+			}
 		}
 	}
 	close RESULTS_FH;

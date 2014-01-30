@@ -1,7 +1,20 @@
 #!/usr/bin/env perl
+package Sequenceretrieval;
 use strict;
 use File::Temp qw/ tempfile /;
 use Subfunctions;
+
+BEGIN {
+	require Exporter;
+	# set the version for version checking
+	our $VERSION     = 1.00;
+	# Inherit from Exporter to export functions and variables
+	our @ISA         = qw(Exporter);
+	# Functions and variables which are exported by default
+	our @EXPORT      = qw(fork_pair_retrieval pairedsequenceretrieval findsequences);
+	# Functions and variables which can be optionally exported
+	our @EXPORT_OK   = qw();
+}
 
 sub fork_pair_retrieval {
 	my $fastafile = shift;
@@ -52,11 +65,14 @@ sub pairedsequenceretrieval {
 	open FA2_FH, "<", "$fastafile_2";
 	open OUT_FH, ">", "$outfile";
 
-	my ($fa_seq1, $fa_seq2, $line) = "";
-	$line = readline LIST_FH;
-	$fa_seq1 = (readline FA1_FH) . (readline FA1_FH);
-	$fa_seq2 = (readline FA2_FH) . (readline FA2_FH);
+	my $line = readline LIST_FH;
+	my $fa_seq1 = (readline FA1_FH) . (readline FA1_FH);
+	my $fa_seq2 = (readline FA2_FH) . (readline FA2_FH);
 	while (1) {
+		# break if any of these files are done.
+		if (!(defined $fa_seq1)) { last; }
+		if (!(defined $fa_seq2)) { last; }
+		if (!(defined $line)) { last; }
 		$line =~ /(.*?)\/1/;
 		my $curr_name = $1;
 		$fa_seq1 =~ />(.*?)\/1/;
@@ -87,10 +103,6 @@ sub pairedsequenceretrieval {
 			}
 		}
 		$fa_seq1 = (readline FA1_FH) . (readline FA1_FH);
-		# break if any of these files are done.
-		if ($fa_seq1 eq "") { last; }
-		if ($fa_seq2 eq "") { last; }
-		if ($line eq "") { last; }
 
 	}
 

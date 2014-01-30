@@ -2,7 +2,7 @@
 use strict;
 use FindBin;
 use lib "$FindBin::Bin/../lib";
-require Sequenceretrieval;
+use Sequenceretrieval;
 
 if (@ARGV < 3) {
     die "Usage: findsequences.pl fastafile sequencelist outfile\n";

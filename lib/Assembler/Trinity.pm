@@ -3,7 +3,6 @@ package Trinity;
 use strict;
 use File::Temp qw/ tempfile /;
 use Subfunctions;
-use Assembler;
 
 # Assembler modules need to know:
 	# where to find the short reads (pass this in as a file name)
@@ -11,7 +10,7 @@ use Assembler;
 # Assembler modules should return a hash of the resulting contigs.
 
 # Hash of assembler's required binaries
-my $binaries = {trinity => "Trinity.pl"};
+our $binaries = {trinity => "Trinity.pl"};
 
 sub get_binaries {
 	return $binaries;
@@ -24,7 +23,6 @@ sub assembler {
 
 	my $jm = "1G";
 
-	my $trinity = $binaries->{trinity};
 
 	my ($kmer, $tempdir, $longreads, $ins_length, $exp_cov, $min_contig_len) = 0;
 	if ((ref $params) =~ /HASH/) {
@@ -39,7 +37,7 @@ sub assembler {
 		}
 	}
 	# using Trinity.pl
-	Subfunctions::system_call ("$trinity --seqType fa --single $short_read_file --run_as_paired --JM $jm --output $tempdir");
+	Subfunctions::system_call ("$binaries->{trinity} --seqType fa --single $short_read_file --run_as_paired --JM $jm --output $tempdir");
 
 	my ($contigs, undef) = Subfunctions::parsefasta ("$tempdir/Trinity.fasta");
 

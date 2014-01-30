@@ -12,13 +12,14 @@ print CONFIG_FH "# Enter the full path for the software binary below:\n";
 
 my $sw_ready = 1;
 my $i = 1;
+my $result = 0;
 print "==== aTRAM checklist ====\n\n";
 
 print $i++ .". Checking for required software...\n";
-my @req_software = qw(blastn makeblastdb gawk);
+my @req_software = qw(blastn tblastn blastx tblastx makeblastdb gawk);
 
 foreach my $sw (@req_software) {
-	my $result = system_call("$sw 2>&1 1>/dev/null");
+	$result = system_call("$sw 2>&1 1>/dev/null");
 	my $fullpath = which ($sw);
 
 	if ($result == 127) {
@@ -47,7 +48,7 @@ my @assembly_software = ();
 find ( {wanted => \&list_bins, no_chdir => 1} , "$assembler_dir");
 
 foreach my $sw (@assembly_software) {
-	my $result = system_call("$sw 2>&1 1>/dev/null");
+	$result = system_call("$sw 2>&1 1>/dev/null");
 	my $fullpath = which ($sw);
 
 	if ($result == 127) {
@@ -78,7 +79,7 @@ unless (system_call ("cp $executing_path/test/test_good.fastq $executing_path/te
 	die "Couldn't find test_good.fastq";
 }
 
-my $result = system_call ("perl $executing_path/makelibrary.pl $executing_path/test_inst.fastq");
+$result = system_call ("perl $executing_path/makelibrary.pl $executing_path/test_inst.fastq");
 if ($result == 1) {
 	print "Test failed. Please contact the developers with details of this failure at https://github.com/juliema/TRAM/issues.\n";
 	exit;
@@ -89,7 +90,7 @@ unless (system_call ("cp $executing_path/test/test_bad.fasta $executing_path/tes
 	die "Couldn't find test_bad.fasta";
 }
 
-my $result = system_call ("perl $executing_path/makelibrary.pl $executing_path/test_inst.fasta");
+$result = system_call ("perl $executing_path/makelibrary.pl $executing_path/test_inst.fasta");
 if ($result == 0) {
 	print "Test failed. Please contact the developers with details of this failure at https://github.com/juliema/TRAM/issues.\n";
 	exit;
@@ -133,7 +134,8 @@ sub list_bins {
 		my $modname = basename ($_);
 		$modname =~ s/\.pm//;
 		load "Assembler::$modname";
-		push @assembly_software, values ($modname->get_binaries());
+		my $bins = $modname->get_binaries();
+		push @assembly_software, (values %$bins);
 	}
 
 	return;
