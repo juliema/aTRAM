@@ -348,6 +348,7 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 							'ins_length' => $ins_length,
 							'exp_cov' => $exp_cov,
 							'min_contig_len' => 200,
+							'output' => $contigs_file,
 						  };
 
 	if ($i > 1) {
@@ -355,8 +356,7 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 		$assembly_params->{'longreads'} = $search_fasta;
 	}
 
-	my $assembled_contigs = "$assembler"->assembler ("$temp_name.$i.blast.fasta", $assembly_params);
- 	"$assembler"->write_contig_file($assembled_contigs, $contigs_file);
+	"$assembler"->assembler ("$temp_name.$i.blast.fasta", $assembly_params);
 
 	if ($save_temp == 0) {
 		system_call ("rm $temp_name.$i.blast.fasta");

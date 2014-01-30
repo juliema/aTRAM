@@ -24,7 +24,7 @@ sub assembler {
 	my $jm = "1G";
 
 
-	my ($kmer, $tempdir, $longreads, $ins_length, $exp_cov, $min_contig_len) = 0;
+	my ($kmer, $tempdir, $longreads, $ins_length, $exp_cov, $min_contig_len, $rename_file) = 0;
 	if ((ref $params) =~ /HASH/) {
         if (exists $params->{"jm"}) {
 			$jm = $params->{"jm"};
@@ -35,35 +35,24 @@ sub assembler {
 		if (exists $params->{"longreads"}) {
 			$longreads = $params->{"longreads"};
 		}
+		if (exists $params->{"output"}) {
+			$rename_file = $params->{"output"};
+		}
 	}
 	# using Trinity.pl
 	Subfunctions::system_call ("$binaries->{trinity} --seqType fa --single $short_read_file --run_as_paired --JM $jm --output $tempdir");
 
 	my ($contigs, undef) = Subfunctions::parsefasta ("$tempdir/Trinity.fasta");
 
-	return $contigs;
-}
-
-sub write_contig_file {
-	my $self = shift;
-	my $contigs = shift;
-	my $renamefile = shift;
-	my $prefix = shift;
-
-	if ($prefix) {
-		$prefix = "$prefix.";
-	} else {
-		$prefix = "";
-	}
-
 	open OUTFH, ">", $renamefile;
 	foreach my $contigname (keys $contigs) {
 		my $sequence = $contigs->{$contigname};
 		# >comp2_c0_seq1 len=4637 path=[7895:0-4636]
-		$contigname =~ s/^comp(\d+)_(c\d+)_seq. len=(\d+).*$/$prefix$1$2_len_$3/;
+		$contigname =~ s/^comp(\d+)_(c\d+)_seq. len=(\d+).*$/$1$2_len_$3/;
 		print OUTFH ">$contigname\n$sequence\n";
 	}
 	close OUTFH;
+	return $contigs;
 }
 
 return 1;
