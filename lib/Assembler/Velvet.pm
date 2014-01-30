@@ -20,7 +20,7 @@ sub assembler {
 	my $short_read_file = shift;
 	my $params = shift;
 
-	my ($kmer, $tempdir, $longreads, $ins_length, $exp_cov, $min_contig_len);
+	my ($kmer, $tempdir, $longreads, $ins_length, $exp_cov, $min_contig_len, $rename_file);
 	if ((ref $params) =~ /HASH/) {
         if (exists $params->{"kmer"}) {
 			$kmer = $params->{"kmer"};
@@ -40,6 +40,9 @@ sub assembler {
 		if (exists $params->{"min_contig_len"}) {
 			$min_contig_len = $params->{"min_contig_len"};
 		}
+		if (exists $params->{"output"}) {
+			$rename_file = $params->{"output"};
+		}
 	}
 	# using velvet
 	if (defined $longreads) {
@@ -51,30 +54,15 @@ sub assembler {
 
 	my ($contigs, undef) = Subfunctions::parsefasta ("$tempdir/contigs.fa");
 
-	return $contigs;
-}
-
-sub write_contig_file {
-	my $self = shift;
-	my $contigs = shift;
-	my $renamefile = shift;
-	my $prefix = shift;
-
-	if ($prefix) {
-		$prefix = "$prefix.";
-	} else {
-		$prefix = "";
-	}
-
-	open OUTFH, ">", $renamefile;
+	open OUTFH, ">", $rename_file;
 	foreach my $contigname (keys $contigs) {
 		my $sequence = $contigs->{$contigname};
 		#NODE_41_length_2668_cov_4.901050
-		$contigname =~ s/^NODE_(\d+)_length_(\d+)_cov_(\d+\.\d).*$/$prefix$1_len_$2_cov_$3/;
+		$contigname =~ s/^NODE_(\d+)_length_(\d+)_cov_(\d+\.\d).*$/$1_len_$2_cov_$3/;
 		print OUTFH ">$contigname\n$sequence\n";
 	}
 	close OUTFH;
+	return $contigs;
 }
-
 
 return 1;
