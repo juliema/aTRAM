@@ -130,13 +130,12 @@ sub which {
 }
 
 sub list_bins {
-	print ">>$File::Find::name $assembler_dir\n";
 	if ( $File::Find::name ne $assembler_dir) {
 		my $modname = basename ($_);
 		$modname =~ s/\.pm//;
 		load "Assembler::$modname";
-		print "$modname $modname::binaries\n";
-		push @assembly_software, values (%$modname::binaries);
+		my $bins = $modname->get_binaries();
+		push @assembly_software, (values %$bins);
 	}
 
 	return;

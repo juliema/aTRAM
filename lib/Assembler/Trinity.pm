@@ -12,6 +12,10 @@ use Subfunctions;
 # Hash of assembler's required binaries
 our $binaries = {trinity => "Trinity.pl"};
 
+sub get_binaries {
+	return $binaries;
+}
+
 sub assembler {
 	my $self = shift;
 	my $short_read_file = shift;
