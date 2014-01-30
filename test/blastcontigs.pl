@@ -5,23 +5,24 @@ use FindBin;
 use lib "$FindBin::Bin/../lib";
 use Subfunctions;
 
+if (@ARGV < 2) {
+	print "Usage: blastcontigs.pl contigs_fasta target_fasta [blast_file]\n";
+	exit;
+}
+
 my $contigs_fasta = shift;
 my $target_fasta = shift;
 my $blast_file = shift;
 
-if ($blast_file eq "") {
-	print "Usage: blastcontigs.pl contigs_fasta target_fasta blast_file\n";
-	exit;
-}
-
-
-my $blast_asn = "$blast_file.asn";
+my $blast_asn = "";
 
 # make a database from the target so that we can compare contigs to the target.
 my (undef, $targetdb) = tempfile(UNLINK => 1);
 my (undef, $targets) = tempfile(UNLINK => 1);
 
-unless ($blast_file) {
+if (defined $blast_file) {
+	$blast_asn = "$blast_file.asn";
+} else {
 	(undef, $blast_file) = tempfile(UNLINK => 1);
 	(undef, $blast_asn) = tempfile(UNLINK => 1);
 }
@@ -50,12 +51,12 @@ foreach my $contig (keys $hit_matrix) {
 	print "$contigname\t";
 	my $total = 0;
 	foreach my $target (@targets) {
-		if ($hit_matrix->{$contig}->{$target} == undef) {
-			print "-\t";
-		} else {
+		if (defined $hit_matrix->{$contig}->{$target}) {
 			my $score = abs($hit_matrix->{$contig}->{$target});
 			print "$score\t";
 			$total += $score;
+		} else {
+			print "-\t";
 		}
 	}
 	print "$total\n";

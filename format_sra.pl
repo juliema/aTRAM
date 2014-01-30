@@ -40,7 +40,7 @@ unless ($output_file) {
 }
 
 # make the output file an absolute path, just to be safe.
-my $output_file = File::Spec->rel2abs($output_file);
+$output_file = File::Spec->rel2abs($output_file);
 
 # Look in the config.txt file to find the correct paths to binaries.
 Configuration::initialize();
@@ -58,7 +58,7 @@ close DB_FH;
 
 my $srasize = (-s $short_read_archive);
 my $srasizeMB = $srasize / 1e6;
-$srasizeMB =~ s/(\d*)\.(\d{2}).*/\1.\2/;
+$srasizeMB =~ s/(\d*)\.(\d{2}).*/$1.$2/;
 
 set_multiplier ($srasize);
 
@@ -152,7 +152,7 @@ printlog ("starting sort.");
 for (my $i=0; $i<$numshards; $i++) {
 	close $out1_fhs[$i];
 	close $out2_fhs[$i];
-	push @pids, fork_cmd ("sort -t',' -k 1 -T $tempdir @out1_bucketfiles[$i] > @out1_sortedfiles[$i]");
+	push @pids, fork_cmd ("sort -t',' -k 1 -T $tempdir $out1_bucketfiles[$i] > $out1_sortedfiles[$i]");
 	if (@pids >= ($max_processes - 1)) {
 		# don't spawn off too many threads at once.
 		wait_for_forks(\@pids);
@@ -161,7 +161,7 @@ for (my $i=0; $i<$numshards; $i++) {
 wait_for_forks(\@pids);
 
 for (my $i=0; $i<$numshards; $i++) {
-    push @pids, fork_cmd ("sort -t',' -k 1 -T $tempdir @out2_bucketfiles[$i] > @out2_sortedfiles[$i]");
+    push @pids, fork_cmd ("sort -t',' -k 1 -T $tempdir $out2_bucketfiles[$i] > $out2_sortedfiles[$i]");
 	if (@pids >= ($max_processes - 1)) {
 		# don't spawn off too many threads at once.
 		wait_for_forks(\@pids);
@@ -172,7 +172,7 @@ printlog ("sorted.");
 
 for (my $i=0; $i<$numshards; $i++) {
 	printlog ("Making $output_file.$i.1.fasta.");
-	open my $in_fh, "<", "@out1_sortedfiles[$i]" or exit_with_msg ("couldn't read @out1_sortedfiles[$i]");
+	open my $in_fh, "<", "$out1_sortedfiles[$i]" or exit_with_msg ("couldn't read $out1_sortedfiles[$i]");
 	open my $out_fh, ">", "$output_file.$i.1.fasta" or exit_with_msg ("couldn't create $output_file.$i.1.fasta");
 	while (my $line = readline $in_fh) {
 		chomp $line;
@@ -183,8 +183,8 @@ for (my $i=0; $i<$numshards; $i++) {
 	close $out_fh;
 
 	printlog ("Making $output_file.$i.2.fasta.");
-	open my $in_fh, "<", "@out2_sortedfiles[$i]" or exit_with_msg ("couldn't read @out2_sortedfiles[$i]");
-	open my $out_fh, ">", "$output_file.$i.2.fasta" or exit_with_msg ("couldn't create $output_file.$i.2.fasta");
+	open $in_fh, "<", "$out2_sortedfiles[$i]" or exit_with_msg ("couldn't read $out2_sortedfiles[$i]");
+	open $out_fh, ">", "$output_file.$i.2.fasta" or exit_with_msg ("couldn't create $output_file.$i.2.fasta");
 	while (my $line = readline $in_fh) {
 		chomp $line;
 		my ($name, $seq) = split(/,/,$line);
