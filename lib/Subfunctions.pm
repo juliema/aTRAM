@@ -80,6 +80,7 @@ sub printlog {
 
 sub system_call {
 	my $cmd = shift;
+	my $noexit = shift;
 
 	if ($log_fh == 0) {
 		open my $std_log, ">&", STDOUT;
@@ -103,11 +104,11 @@ sub system_call {
 		open STDERR, ">&", $saveerr;
 	}
 
-	if ($exit_val != 0) {
+	if (($exit_val != 0) && !(defined $noexit)) {
 		print "System call \"$cmd\" exited with $exit_val\n";
 		exit;
 	}
-	return $exit_val;
+	return $exit_val >> 8;
 }
 
 sub debug {

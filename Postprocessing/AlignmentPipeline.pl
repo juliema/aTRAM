@@ -1,4 +1,4 @@
-#!usr/bin/env perl
+#!/usr/bin/env perl
 
 use strict;
 use Getopt::Long;
@@ -21,6 +21,8 @@ my $iter = 10;
 my $frac = 1;
 my $ins_length = 400;
 my $debug = 0;
+my $protein = 0;
+my $complete = 0;
 
 GetOptions ('samples=s' => \$samplefile,
             'targets=s' => \$targetfile,
@@ -30,6 +32,8 @@ GetOptions ('samples=s' => \$samplefile,
 			'ins_length=i' =>  \$ins_length,
 			'output|outfile=s' => \$outfile,
 			'debug|verbose' => \$debug,
+			'protein' => \$protein,
+			'complete' => \$complete,
             'help|?' => \$help) or pod2usage(-msg => "GetOptions failed.", -exitval => 2);
 
 if ($help) {
@@ -94,12 +98,29 @@ foreach my $target (@targetnames) {
 	foreach my $sample (@samplenames) {
 		my $outname = "$outfile.$target.$sample";
 		printlog ("$target $sample");
-		system_call ("perl $atrampath/aTRAM.pl -reads $samples->{$sample} -target $targets->{$target} -iter $iter -ins_length $ins_length -frac $frac -assemble Velvet -out $outname -kmer $kmer -complete");
+		my $protein_flag = "";
+		my $complete_flag = "";
+		if ($protein == 1) { $protein_flag = "-protein"; }
+		if ($complete == 1) { $complete_flag = "-complete"; }
+		my $atram_result = system_call ("perl $atrampath/aTRAM.pl -reads $samples->{$sample} -target $targets->{$target} -iter $iter -ins_length $ins_length -frac $frac -assemble Velvet -out $outname -kmer $kmer $complete_flag $protein_flag", 1);
+
+		if ($atram_result) {
+			printlog ("aTRAM of $outname found no contigs.");
+			next;
+		}
 		# run percentcoverage to get the contigs nicely aligned
-		system_call ("perl $atrampath/Postprocessing/PercentCoverage.pl $targets->{$target} $outname.best.fasta $outname");
+		my $comparefile = "$outname.best.fasta";
+		if (($complete == 1) && (-e "$outname.complete.fasta")) {
+			$comparefile = "$outname.complete.fasta";
+		}
+		system_call ("perl $atrampath/Postprocessing/PercentCoverage.pl $targets->{$target} $comparefile $outname");
 
 		# find the one best contig (one with fewest gaps)
-		system_call ("blastn -task blastn -query $outname.exons.fasta -subject $targets->{$target} -outfmt '6 qseqid bitscore' -out $outname.blast");
+		if ($protein == 0) {
+			system_call ("blastn -task blastn -query $outname.exons.fasta -subject $targets->{$target} -outfmt '6 qseqid bitscore' -out $outname.blast");
+		} else {
+			system_call ("blastx -query $outname.exons.fasta -subject $targets->{$target} -outfmt '6 qseqid bitscore' -out $outname.blast");
+		}
 		open FH, "<", "$outname.blast";
 		my $contig = "";
 		my $score = 0;

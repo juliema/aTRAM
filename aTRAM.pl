@@ -469,12 +469,16 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 	}
 }
 
+close $log_fh;
+
+if ((keys %$hit_matrix) == 0) {
+	print "aTRAM found nothing\n";
+	return -1;
+}
+
 print "\n\nContigs by target coverage:\n";
 
 system ("cat $output_file.results.txt");
-
-
-close $log_fh;
 
 if (@complete_contigs > 0) {
 	print ("\n\nContigs containing the entire target sequence:\n");
