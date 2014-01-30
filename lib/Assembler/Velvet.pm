@@ -20,7 +20,7 @@ sub assembler {
 	my $short_read_file = shift;
 	my $params = shift;
 
-	my ($kmer, $tempdir, $ins_length, $exp_cov, $min_contig_len) = 0;
+	my ($kmer, $tempdir, $ins_length, $exp_cov, $min_contig_len, $output_file) = 0;
 	my $longreads = "";
 
 	if ((ref $params) =~ /HASH/) {
@@ -43,7 +43,7 @@ sub assembler {
 			$min_contig_len = $params->{"min_contig_len"};
 		}
 		if (exists $params->{"output"}) {
-			$rename_file = $params->{"output"};
+			$output_file = $params->{"output"};
 		}
 	}
 	# using velvet
@@ -56,7 +56,7 @@ sub assembler {
 
 	my ($contigs, undef) = Subfunctions::parsefasta ("$tempdir/contigs.fa");
 
-	open OUTFH, ">", $rename_file;
+	open OUTFH, ">", $output_file;
 	foreach my $contigname (keys $contigs) {
 		my $sequence = $contigs->{$contigname};
 		#NODE_41_length_2668_cov_4.901050

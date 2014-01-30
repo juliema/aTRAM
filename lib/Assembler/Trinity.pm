@@ -24,7 +24,7 @@ sub assembler {
 	my $jm = "1G";
 
 
-	my ($kmer, $tempdir, $longreads, $ins_length, $exp_cov, $min_contig_len, $rename_file) = 0;
+	my ($kmer, $tempdir, $longreads, $ins_length, $exp_cov, $min_contig_len, $output_file) = 0;
 	if ((ref $params) =~ /HASH/) {
         if (exists $params->{"jm"}) {
 			$jm = $params->{"jm"};
@@ -36,7 +36,7 @@ sub assembler {
 			$longreads = $params->{"longreads"};
 		}
 		if (exists $params->{"output"}) {
-			$rename_file = $params->{"output"};
+			$output_file = $params->{"output"};
 		}
 	}
 	# using Trinity.pl
@@ -44,7 +44,7 @@ sub assembler {
 
 	my ($contigs, undef) = Subfunctions::parsefasta ("$tempdir/Trinity.fasta");
 
-	open OUTFH, ">", $renamefile;
+	open OUTFH, ">", $output_file;
 	foreach my $contigname (keys $contigs) {
 		my $sequence = $contigs->{$contigname};
 		# >comp2_c0_seq1 len=4637 path=[7895:0-4636]
