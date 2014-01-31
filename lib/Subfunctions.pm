@@ -280,7 +280,7 @@ sub set_multiplier {
 }
 
 sub get_multiplier {
-	if ($multiplier != 0) {
+	if ($multiplier == 0) {
 		$multiplier = $primes[0];
 	}
 	return $multiplier;
