@@ -20,5 +20,7 @@ Running on a cluster:
 
 max_processes should equal number of threads
 
-makelibraries.pl max processes is set to 4
+format_sra.pl max processes is set to 4
+
+concatenate the two reads into one file. 
 
