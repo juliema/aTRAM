@@ -32,7 +32,6 @@ GetOptions ('samples=s' => \$samplefile,
 			'ins_length=i' =>  \$ins_length,
 			'output|outfile=s' => \$outfile,
 			'debug|verbose' => \$debug,
-			'protein' => \$protein,
 			'complete' => \$complete,
             'help|?' => \$help) or pod2usage(-msg => "GetOptions failed.", -exitval => 2);
 
@@ -93,16 +92,20 @@ foreach my $target (@targetnames) {
 	open FH, ">", "$outfile.$target.full.fasta";
 	truncate FH, 0;
 	close FH;
-
+	my ($targetseqs, undef) = parsefasta ("$targets->{$target}");
+	if (is_protein(join ("",(values %$targetseqs)))) {
+		# if any of the seqs in the target fasta are protein sequences, break.
+		printlog ("Target fasta file $targets->{$target} is not a DNA sequence, cannot perform alignment.");
+		next;
+	}
 	# for each sample:
 	foreach my $sample (@samplenames) {
 		my $outname = "$outfile.$target.$sample";
 		printlog ("$target $sample");
-		my $protein_flag = "";
+
 		my $complete_flag = "";
-		if ($protein == 1) { $protein_flag = "-protein"; }
 		if ($complete == 1) { $complete_flag = "-complete"; }
-		my $atram_result = system_call ("perl $atrampath/aTRAM.pl -reads $samples->{$sample} -target $targets->{$target} -iter $iter -ins_length $ins_length -frac $frac -assemble Velvet -out $outname -kmer $kmer $complete_flag $protein_flag", 1);
+		my $atram_result = system_call ("perl $atrampath/aTRAM.pl -reads $samples->{$sample} -target $targets->{$target} -iter $iter -ins_length $ins_length -frac $frac -assemble Velvet -out $outname -kmer $kmer $complete_flag", 1);
 
 		if ($atram_result) {
 			printlog ("aTRAM of $outname found no contigs.");
@@ -118,8 +121,6 @@ foreach my $target (@targetnames) {
 		# find the one best contig (one with fewest gaps)
 		if ($protein == 0) {
 			system_call ("blastn -task blastn -query $outname.exons.fasta -subject $targets->{$target} -outfmt '6 qseqid bitscore' -out $outname.blast");
-		} else {
-			system_call ("blastx -query $outname.exons.fasta -subject $targets->{$target} -outfmt '6 qseqid bitscore' -out $outname.blast");
 		}
 		open FH, "<", "$outname.blast";
 		my $contig = "";
