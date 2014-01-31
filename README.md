@@ -2,12 +2,12 @@
 
 aTRAM consists of two scripts:
 
-1.	makelibrary.pl: this script takes a short-read archive and prepares it for aTRAMming.
+1.	fomrat_sra.pl: this script takes a concatenated paired-end short-read archive and prepares it for aTRAMming.
 2.	aTRAM.pl: this script runs the pipeline on a prepared short-read archive.
 
 		aTRAM.pl -reads shortreadfile -target target.fasta [-ins_length int] [-exp_coverage int] [-iterations int] [-start_iteration int] [-log_file filename] [-use_ends] [-output filename]
 
-		* -reads:     		short read archive (already run through makelibrary.pl).
+		* -reads:     		short read archive (already run through format_sra.pl).
 		* -target:          fasta file with sequences of interest.
 		* -output:	        optional: the prefix for the pipeline's output files (default name is the same as -reads).
 		* -ins_length:	    optional: the size of the fragments used in the short-read library (default 300).
