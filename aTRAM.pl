@@ -473,7 +473,7 @@ close $log_fh;
 
 if ((keys %$hit_matrix) == 0) {
 	print "aTRAM found nothing\n";
-	return -1;
+	exit -1;
 }
 
 print "\n\nContigs by target coverage:\n";
