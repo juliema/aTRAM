@@ -99,9 +99,11 @@ foreach my $sample (@samplenames) {
 		if ($complete == 1) { $complete_flag = "-complete"; }
 		my $atram_result = system_call ("perl $atrampath/aTRAM.pl -reads $samples->{$sample} -target $targets->{$target} -iter $iter -ins_length $ins_length -frac $frac -assemble Velvet -out $outname -kmer $kmer $complete_flag $protein_flag", 1);
 
-		if ($atram_result) {
+		if ($atram_result == -1) {
 			printlog ("$atram_result: aTRAM of $outname found no contigs.");
 			next;
+		} elsif ($atram_result != 0) {
+			die "unexpected error";
 		}
 	}
 }
