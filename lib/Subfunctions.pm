@@ -107,7 +107,7 @@ sub system_call {
 	if ($? == 2) {
 		# user signaled kill, so we should die.
 		print "System call \"$cmd\" exited with $exit_val\n";
-		die;
+		exit;
 	}
 
 	if (($exit_val != 0) && !(defined $noexit)) {
