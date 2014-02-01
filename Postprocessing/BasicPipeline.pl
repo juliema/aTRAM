@@ -100,7 +100,7 @@ foreach my $sample (@samplenames) {
 		my $atram_result = system_call ("perl $atrampath/aTRAM.pl -reads $samples->{$sample} -target $targets->{$target} -iter $iter -ins_length $ins_length -frac $frac -assemble Velvet -out $outname -kmer $kmer $complete_flag $protein_flag", 1);
 
 		if ($atram_result) {
-			printlog ("aTRAM of $outname found no contigs.");
+			printlog ("$atram_result: aTRAM of $outname found no contigs.");
 			next;
 		}
 	}
