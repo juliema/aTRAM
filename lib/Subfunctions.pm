@@ -104,6 +104,12 @@ sub system_call {
 		open STDERR, ">&", $saveerr;
 	}
 
+	if ($? == 2) {
+		# user signaled kill, so we should die.
+		print "System call \"$cmd\" exited with $exit_val\n";
+		die;
+	}
+
 	if (($exit_val != 0) && !(defined $noexit)) {
 		print "System call \"$cmd\" exited with $exit_val\n";
 		exit;
