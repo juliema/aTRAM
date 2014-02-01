@@ -17,7 +17,7 @@ my $atrampath = "$FindBin::Bin/..";
 my $help = 0;
 my $samplefile = "";
 my $targetfile = "";
-my $outfile = "";
+my $outfile = ".";
 my $kmer = 31;
 my $iter = 20;
 my $frac = 1;
@@ -44,9 +44,8 @@ if ($help) {
 
 set_debug ($debug);
 
-if ($outfile ne "") {
-	make_path(File::Spec->rel2abs($outfile));
-}
+$outfile = File::Spec->rel2abs($outfile);
+make_path($outfile);
 
 if (($targetfile eq "") || ($samplefile eq "")) {
     pod2usage(-msg => "Must specify a list of aTRAM databases and a list of target sequences.", -verbose => 1);
@@ -88,8 +87,11 @@ if (@targetnames == 0) {
 
 # for each sample:
 foreach my $sample (@samplenames) {
+	my $sampledir = File::Spec->catfile($outfile, "$sample");
+	make_path($sampledir);
+	print "made $sampledir\n";
 	foreach my $target (@targetnames) {
-		my $outname = File::Spec->catfile($outfile, "$target.$sample");
+		my $outname = File::Spec->catfile($sampledir, "$target");
 		printlog ("$target $sample");
 		my $protein_flag = "";
 		my $complete_flag = "";
