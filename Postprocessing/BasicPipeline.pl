@@ -17,7 +17,7 @@ my $atrampath = "$FindBin::Bin/..";
 my $help = 0;
 my $samplefile = "";
 my $targetfile = "";
-my $outfile = ".";
+my $outdir = ".";
 my $kmer = 31;
 my $iter = 20;
 my $frac = 1;
@@ -32,7 +32,7 @@ GetOptions ('samples=s' => \$samplefile,
             'iter=i' => \$iter,
 			'frac=f' => \$frac,
 			'ins_length=i' =>  \$ins_length,
-			'output|outfile=s' => \$outfile,
+			'output|outdir=s' => \$outdir,
 			'debug|verbose' => \$debug,
 			'protein' => \$protein,
 			'complete' => \$complete,
@@ -44,15 +44,15 @@ if ($help) {
 
 set_debug ($debug);
 
-$outfile = File::Spec->rel2abs($outfile);
-make_path($outfile);
+$outdir = File::Spec->rel2abs($outdir);
+make_path($outdir);
 
 if (($targetfile eq "") || ($samplefile eq "")) {
     pod2usage(-msg => "Must specify a list of aTRAM databases and a list of target sequences.", -verbose => 1);
 	exit;
 }
 
-open my $log_fh, ">", File::Spec->catfile($outfile, "pipeline.log");;
+open my $log_fh, ">", File::Spec->catfile($outdir, "pipeline.log");;
 set_log($log_fh);
 
 my $samples = {};
@@ -87,7 +87,7 @@ if (@targetnames == 0) {
 
 # for each sample:
 foreach my $sample (@samplenames) {
-	my $sampledir = File::Spec->catfile($outfile, "$sample");
+	my $sampledir = File::Spec->catfile($outdir, "$sample");
 	make_path($sampledir);
 	print "made $sampledir\n";
 	foreach my $target (@targetnames) {

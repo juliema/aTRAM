@@ -3,6 +3,8 @@
 use strict;
 use Getopt::Long;
 use Pod::Usage;
+use File::Spec;
+use File::Path qw (make_path);
 use FindBin;
 use lib "$FindBin::Bin/../lib";
 use Subfunctions;
@@ -15,7 +17,7 @@ my $atrampath = "$FindBin::Bin/..";
 my $help = 0;
 my $samplefile = "";
 my $targetfile = "";
-my $outfile = "";
+my $outdir = ".";
 my $kmer = 31;
 my $iter = 10;
 my $frac = 1;
@@ -30,7 +32,7 @@ GetOptions ('samples=s' => \$samplefile,
             'iter=i' => \$iter,
 			'frac=f' => \$frac,
 			'ins_length=i' =>  \$ins_length,
-			'output|outfile=s' => \$outfile,
+			'output|outdir=s' => \$outdir,
 			'debug|verbose' => \$debug,
 			'complete' => \$complete,
             'help|?' => \$help) or pod2usage(-msg => "GetOptions failed.", -exitval => 2);
@@ -39,8 +41,8 @@ if ($help) {
     pod2usage(-verbose => 1);
 }
 
-if ($outfile eq "") {
-	$outfile = "result";
+if ($outdir eq "") {
+	$outdir = "result";
 }
 
 set_debug ($debug);
@@ -50,7 +52,10 @@ if (($targetfile eq "") || ($samplefile eq "")) {
 	exit;
 }
 
-open my $log_fh, ">", "$outfile.log";
+$outdir = File::Spec->rel2abs($outdir);
+make_path($outdir);
+
+open my $log_fh, ">", File::Spec->catfile($outdir, "pipeline.log");
 set_log($log_fh);
 
 my $samples = {};
@@ -83,46 +88,59 @@ if (@targetnames == 0) {
 	die "Target file $targetfile doesn't contain a list";
 }
 
-open TABLE_FH, ">", "$outfile.results.txt";
+my $atram_dir = File::Spec->catfile($outdir, "aTRAM");
+make_path($atram_dir);
+my $align_dir = File::Spec->catfile($outdir, "alignments");
+make_path($align_dir);
+
+open TABLE_FH, ">", File::Spec->catfile($outdir, "results.txt");
 print TABLE_FH "target\tsample\tcontig\tbitscore\tpercentcoverage\n";
 foreach my $target (@targetnames) {
-	open FH, ">", "$outfile.$target.exons.fasta";
-	truncate FH, 0;
-	close FH;
-	open FH, ">", "$outfile.$target.full.fasta";
-	truncate FH, 0;
-	close FH;
 	my ($targetseqs, undef) = parsefasta ("$targets->{$target}");
-	if (is_protein(join ("",(values %$targetseqs)))) {
+	my $refseq = join ("",(values %$targetseqs));
+	if (is_protein($refseq)) {
 		# if any of the seqs in the target fasta are protein sequences, break.
 		printlog ("Target fasta file $targets->{$target} is not a DNA sequence, cannot perform alignment.");
 		next;
 	}
+
+	my $trimmed_file = File::Spec->catfile($align_dir, "$target.trimmed.fasta");
+	open FH, ">", $trimmed_file;
+	truncate FH, 0;
+	print FH ">reference\n$refseq\n";
+	close FH;
+
+	my $full_contigs_file = File::Spec->catfile($align_dir, "$target.full.fasta");
+	open FH, ">", $full_contigs_file;
+	truncate FH, 0;
+	close FH;
+
 	# for each sample:
 	foreach my $sample (@samplenames) {
-		my $outname = "$outfile.$target.$sample";
+		my $outname = "$target.$sample";
 		printlog ("$target $sample");
 
 		my $complete_flag = "";
 		if ($complete == 1) { $complete_flag = "-complete"; }
-		my $atram_result = system_call ("perl $atrampath/aTRAM.pl -reads $samples->{$sample} -target $targets->{$target} -iter $iter -ins_length $ins_length -frac $frac -assemble Velvet -out $outname -kmer $kmer $complete_flag", 1);
+		my $atram_outname = File::Spec->catfile($atram_dir, $outname);
+		my $atram_result = system_call ("perl $atrampath/aTRAM.pl -reads $samples->{$sample} -target $targets->{$target} -iter $iter -ins_length $ins_length -frac $frac -assemble Velvet -out $atram_outname -kmer $kmer $complete_flag", 1);
 
 		if ($atram_result) {
-			printlog ("aTRAM of $outname found no contigs.");
+			printlog ("aTRAM found no contigs matching $target for $sample.");
 			next;
 		}
 		# run percentcoverage to get the contigs nicely aligned
-		my $comparefile = "$outname.best.fasta";
-		if (($complete == 1) && (-e "$outname.complete.fasta")) {
-			$comparefile = "$outname.complete.fasta";
+		my $comparefile = "$atram_outname.best.fasta";
+		if (($complete == 1) && (-e "$atram_outname.complete.fasta")) {
+			$comparefile = "$atram_outname.complete.fasta";
 		}
-		system_call ("perl $atrampath/Postprocessing/PercentCoverage.pl $targets->{$target} $comparefile $outname");
+		system_call ("perl $atrampath/Postprocessing/PercentCoverage.pl $targets->{$target} $comparefile $atram_outname");
 
 		# find the one best contig (one with fewest gaps)
 		if ($protein == 0) {
-			system_call ("blastn -task blastn -query $outname.exons.fasta -subject $targets->{$target} -outfmt '6 qseqid bitscore' -out $outname.blast");
+			system_call ("blastn -task blastn -query $atram_outname.trimmed.fasta -subject $targets->{$target} -outfmt '6 qseqid bitscore' -out $atram_outname.blast");
 		}
-		open FH, "<", "$outname.blast";
+		open FH, "<", "$atram_outname.blast";
 		my $contig = "";
 		my $score = 0;
 		foreach my $line (<FH>) {
@@ -137,9 +155,9 @@ foreach my $target (@targetnames) {
 			}
 		}
 		close FH;
-		system_call ("rm $outname.blast");
+		system_call ("rm $atram_outname.blast");
 
-		open FH, "<", "$outname.results.txt";
+		open FH, "<", "$atram_outname.results.txt";
 		$contig = "";
 		my $percent = 0;
 		foreach my $line (<FH>) {
@@ -159,16 +177,16 @@ foreach my $target (@targetnames) {
 		print TABLE_FH "$target\t$sample\t$contig\t$score\t$percent\n";
 		if ($contig ne "") {
 			# pick this contig from the fasta file
-			my ($taxa, $taxanames) = parsefasta ("$outname.exons.fasta");
+			my ($taxa, $taxanames) = parsefasta ("$atram_outname.trimmed.fasta");
 			# write this contig out to the target.fasta file, named by sample.
-			open FH, ">>", "$outfile.$target.exons.fasta";
-			printlog ("adding $contig to $target.exons.fasta");
+			open FH, ">>", $trimmed_file;
+			printlog ("adding $contig to $target.trimmed.fasta");
 			print FH ">$sample\n$taxa->{$contig}\n";
 			close FH;
-			($taxa, $taxanames) = parsefasta ("$outname.best.fasta");
+			($taxa, $taxanames) = parsefasta ("$atram_outname.best.fasta");
 			# write this contig out to the target.fasta file, named by sample.
-			open FH, ">>", "$outfile.$target.full.fasta";
-			printlog ("adding $contig from $outname.best.fasta to $target.full.fasta");
+			open FH, ">>", $full_contigs_file;
+			printlog ("adding $contig from $atram_outname.best.fasta to $target.full.fasta");
 			print FH ">$sample\n$taxa->{$contig}\n";
 			close FH;
 		}
