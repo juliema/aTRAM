@@ -103,7 +103,7 @@ foreach my $sample (@samplenames) {
 			printlog ("$atram_result: aTRAM of $outname found no contigs.");
 			next;
 		} elsif ($atram_result != 0) {
-			die "unexpected error";
+			die "unexpected error $atram_result";
 		}
 	}
 }
