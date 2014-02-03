@@ -6,7 +6,9 @@ use File::Find;
 use Module::Load;
 use FindBin;
 use lib "$FindBin::Bin/lib";
+use Configuration;
 
+Configuration::initialize();
 open CONFIG_FH, ">", "$FindBin::Bin/config.txt";
 print CONFIG_FH "# Enter the full path for the software binary below:\n";
 
@@ -19,26 +21,27 @@ print $i++ .". Checking for required software...\n";
 my @req_software = qw(blastn tblastn blastx tblastx makeblastdb gawk);
 
 foreach my $sw (@req_software) {
-	$result = system_call("$sw 2>&1 1>/dev/null");
-	my $fullpath = which ($sw);
+	my $fullpath = Configuration::find_bin($sw); # see if $sw has already been located.
 
-	if ($result == 127) {
-		print "   ...$sw is not installed.\n";
+	if ($fullpath eq "") {
+		# if we don't have a path for $sw, ask the system.
+		$fullpath = which ($sw);
+	}
+
+	if ($fullpath eq "") {
+		print "   ...$sw couldn't be found on this system.\n";
 		$sw_ready = 0;
 	} else {
-		print "   ...$sw is present.\n";
+		$result = system_call("$fullpath 2>&1 1>/dev/null");
+		if ($result == 127) {
+			print "   ...$sw was not found at $fullpath.\n";
+			$sw_ready = 0;
+		} else {
+			print "   ...$sw is present.\n";
+		}
 	}
-	print CONFIG_FH "$sw=$fullpath\n";
-}
 
-if ($sw_ready == 0) {
-	print "You need to install some software before you can run aTRAM. \n";
-	print "If software is installed but not included in \$PATH, edit the appropriate line in config.txt.\n";
-	print "\nContinue checks? [Y/n]\n";
-	my $userpath = <STDIN>;
-	if ($userpath =~ /[nN]\n/) {
-		exit;
-	}
+	print CONFIG_FH "$sw=$fullpath\n";
 }
 
 print $i++ .". Checking for assembly software...\n";
@@ -48,22 +51,33 @@ my @assembly_software = ();
 find ( {wanted => \&list_bins, no_chdir => 1} , "$assembler_dir");
 
 foreach my $sw (@assembly_software) {
-	$result = system_call("$sw 2>&1 1>/dev/null");
-	my $fullpath = which ($sw);
+	my $fullpath = Configuration::find_bin($sw); # see if $sw has already been located.
 
-	if ($result == 127) {
-		print "   ...$sw is not installed.\n";
+	if ($fullpath eq "") {
+		# if we don't have a path for $sw, ask the system.
+		$fullpath = which ($sw);
+	}
+
+	if ($fullpath eq "") {
+		print "   ...$sw couldn't be found on this system.\n";
 		$sw_ready = 0;
 	} else {
-		print "   ...$sw is present.\n";
+		$result = system_call("$fullpath 2>&1 1>/dev/null");
+		if ($result == 127) {
+			print "   ...$sw was not found at $fullpath.\n";
+			$sw_ready = 0;
+		} else {
+			print "   ...$sw is present.\n";
+		}
 	}
+
 	print CONFIG_FH "$sw=$fullpath\n";
 }
 
 close CONFIG_FH;
 if ($sw_ready == 0) {
-	print "I couldn't find some binaries for assembly software. At least one assembler should be installed.\n";
-	print "If it is installed but not included in \$PATH, edit the appropriate line in config.txt.\n";
+	print "You need to install some software before you can run aTRAM. \n";
+	print "If software is installed but not included in \$PATH, edit the appropriate line in config.txt.\n";
 	print "\nContinue checks? [Y/n]\n";
 	my $userpath = <STDIN>;
 	if ($userpath =~ /[nN]\n/) {
