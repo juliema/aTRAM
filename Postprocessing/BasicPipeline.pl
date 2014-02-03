@@ -93,6 +93,9 @@ foreach my $sample (@samplenames) {
 	foreach my $target (@targetnames) {
 		my $outname = File::Spec->catfile($sampledir, "$target");
 		if (-e "$outname.results.txt") {
+			printlog ("$target.results.txt already exists.");
+			next;
+		} else {
 			printlog ("$target $sample");
 			my $protein_flag = "";
 			my $complete_flag = "";
@@ -106,8 +109,6 @@ foreach my $sample (@samplenames) {
 			} elsif ($atram_result != 0) {
 				die "unexpected error $atram_result";
 			}
-		} else {
-			printlog ("$target.results.txt already exists.");
 		}
 	}
 }
