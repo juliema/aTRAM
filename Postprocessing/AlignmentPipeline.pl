@@ -127,8 +127,12 @@ foreach my $target (@targetnames) {
 
 		my $processes_flag = "";
 		if ($processes > 0) { $processes_flat = "-processes $processes"; }
+
+		my $debug_flag = "";
+		if ($debug == 1) { $debug_flag = "-debug"; }
+
 		my $atram_outname = File::Spec->catfile($atram_dir, $outname);
-		my $atram_result = system_call ("perl $atrampath/aTRAM.pl -reads $samples->{$sample} -target $targets->{$target} -iter $iter -ins_length $ins_length -frac $frac -assemble Velvet -out $atram_outname -kmer $kmer $complete_flag $processes_flag", 1);
+		my $atram_result = system_call ("perl $atrampath/aTRAM.pl -reads $samples->{$sample} -target $targets->{$target} -iter $iter -ins_length $ins_length -frac $frac -assemble Velvet -out $atram_outname -kmer $kmer $complete_flag $processes_flag $debug_flag", 1);
 
 		if ($atram_result) {
 			printlog ("aTRAM found no contigs matching $target for $sample.");
