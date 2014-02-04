@@ -25,6 +25,7 @@ my $ins_length = 400;
 my $debug = 0;
 my $protein = 0;
 my $complete = 0;
+my $processes = 0;
 
 GetOptions ('samples=s' => \$samplefile,
             'targets=s' => \$targetfile,
@@ -36,6 +37,7 @@ GetOptions ('samples=s' => \$samplefile,
 			'debug|verbose' => \$debug,
 			'protein' => \$protein,
 			'complete' => \$complete,
+			'processes=i' => \$processes,
             'help|?' => \$help) or pod2usage(-msg => "GetOptions failed.", -exitval => 2);
 
 if ($help) {
@@ -99,9 +101,11 @@ foreach my $sample (@samplenames) {
 			printlog ("$target $sample");
 			my $protein_flag = "";
 			my $complete_flag = "";
+			my $processes_flag = "";
 			if ($protein == 1) { $protein_flag = "-protein"; }
 			if ($complete == 1) { $complete_flag = "-complete"; }
-			my $atram_result = system_call ("perl $atrampath/aTRAM.pl -reads $samples->{$sample} -target $targets->{$target} -iter $iter -ins_length $ins_length -frac $frac -assemble Velvet -out $outname -kmer $kmer $complete_flag $protein_flag", 1);
+			if ($processes > 0) { $processes_flat = "-processes $processes"; }
+			my $atram_result = system_call ("perl $atrampath/aTRAM.pl -reads $samples->{$sample} -target $targets->{$target} -iter $iter -ins_length $ins_length -frac $frac -assemble Velvet -out $outname -kmer $kmer $complete_flag $protein_flag $processes_flag", 1);
 
 			if ($atram_result == 255) {
 				printlog ("$atram_result: aTRAM of $outname found no contigs.");

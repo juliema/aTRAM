@@ -25,6 +25,7 @@ my $ins_length = 400;
 my $debug = 0;
 my $protein = 0;
 my $complete = 0;
+my $processes = 0;
 
 GetOptions ('samples=s' => \$samplefile,
             'targets=s' => \$targetfile,
@@ -33,6 +34,7 @@ GetOptions ('samples=s' => \$samplefile,
 			'frac=f' => \$frac,
 			'ins_length=i' =>  \$ins_length,
 			'output|outdir=s' => \$outdir,
+			'processes=i' => \$processes,
 			'debug|verbose' => \$debug,
 			'complete' => \$complete,
             'help|?' => \$help) or pod2usage(-msg => "GetOptions failed.", -exitval => 2);
@@ -122,8 +124,11 @@ foreach my $target (@targetnames) {
 
 		my $complete_flag = "";
 		if ($complete == 1) { $complete_flag = "-complete"; }
+
+		my $processes_flag = "";
+		if ($processes > 0) { $processes_flat = "-processes $processes"; }
 		my $atram_outname = File::Spec->catfile($atram_dir, $outname);
-		my $atram_result = system_call ("perl $atrampath/aTRAM.pl -reads $samples->{$sample} -target $targets->{$target} -iter $iter -ins_length $ins_length -frac $frac -assemble Velvet -out $atram_outname -kmer $kmer $complete_flag", 1);
+		my $atram_result = system_call ("perl $atrampath/aTRAM.pl -reads $samples->{$sample} -target $targets->{$target} -iter $iter -ins_length $ins_length -frac $frac -assemble Velvet -out $atram_outname -kmer $kmer $complete_flag $processes_flag", 1);
 
 		if ($atram_result) {
 			printlog ("aTRAM found no contigs matching $target for $sample.");
