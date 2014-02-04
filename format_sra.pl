@@ -198,6 +198,9 @@ printlog ("Making blastdbs.");
 for (my $i=0; $i<$numshards; $i++) {
 	# make the blast db from the first of the paired end files
 	push @pids, fork_cmd ("$Configuration::binaries->{makeblastdb} -in $output_file.$i.1.fasta -dbtype nucl -out $output_file.$i.db");
+	if (@pids >= ($max_processes - 1)) {
+		# don't spawn off too many threads at once.
+		wait_for_forks(\@pids);
 }
 
 wait_for_forks(\@pids);
