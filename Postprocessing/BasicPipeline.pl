@@ -104,7 +104,7 @@ foreach my $sample (@samplenames) {
 			my $processes_flag = "";
 			if ($protein == 1) { $protein_flag = "-protein"; }
 			if ($complete == 1) { $complete_flag = "-complete"; }
-			if ($processes > 0) { $processes_flat = "-processes $processes"; }
+			if ($processes > 0) { $processes_flag = "-processes $processes"; }
 			my $atram_result = system_call ("perl $atrampath/aTRAM.pl -reads $samples->{$sample} -target $targets->{$target} -iter $iter -ins_length $ins_length -frac $frac -assemble Velvet -out $outname -kmer $kmer $complete_flag $protein_flag $processes_flag", 1);
 
 			if ($atram_result == 255) {
