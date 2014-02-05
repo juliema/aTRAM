@@ -45,7 +45,7 @@ sub assembler {
 	my ($contigs, undef) = Subfunctions::parsefasta ("$tempdir/Trinity.fasta");
 
 	open OUTFH, ">", $output_file;
-	foreach my $contigname (keys $contigs) {
+	foreach my $contigname (keys %$contigs) {
 		my $sequence = $contigs->{$contigname};
 		# >comp2_c0_seq1 len=4637 path=[7895:0-4636]
 		$contigname =~ s/^comp(\d+)_(c\d+)_seq. len=(\d+).*$/$1$2_len_$3/;
