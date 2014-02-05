@@ -46,7 +46,7 @@ my $hit_matrix = {};
 make_hit_matrix ($blast_file, $hit_matrix);
 
 print "contig\t" . join ("\t",@targets) . "\ttotal score\n";
-foreach my $contig (keys $hit_matrix) {
+foreach my $contig (keys %$hit_matrix) {
 	my $contigname = "$contig";
 	print "$contigname\t";
 	my $total = 0;

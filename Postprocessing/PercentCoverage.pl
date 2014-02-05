@@ -25,7 +25,7 @@ open EXON_FH, ">", "$out_name.trimmed.fasta";
 print EXON_FH ">reference\n$refseq\n";
 print TABLE_FH "contig\ttotal\tpercent\n";
 my $total_length = length $refseq;
-foreach my $contig (keys $contigs) {
+foreach my $contig (keys %$contigs) {
 	print EXON_FH ">$contig\n$contigs->{$contig}\n";
 	my $gaps = ($contigs->{$contig} =~ tr/N-//);
 	my $total = $total_length - $gaps;
