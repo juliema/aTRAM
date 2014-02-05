@@ -57,7 +57,7 @@ sub assembler {
 	my ($contigs, undef) = Subfunctions::parsefasta ("$tempdir/contigs.fa");
 
 	open OUTFH, ">", $output_file;
-	foreach my $contigname (keys $contigs) {
+	foreach my $contigname (keys %$contigs) {
 		my $sequence = $contigs->{$contigname};
 		#NODE_41_length_2668_cov_4.901050
 		$contigname =~ s/^NODE_(\d+)_length_(\d+)_cov_(\d+\.\d).*$/$1_len_$2_cov_$3/;
