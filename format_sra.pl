@@ -201,6 +201,7 @@ for (my $i=0; $i<$numshards; $i++) {
 	if (@pids >= ($max_processes - 1)) {
 		# don't spawn off too many threads at once.
 		wait_for_forks(\@pids);
+	}
 }
 
 wait_for_forks(\@pids);
