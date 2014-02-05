@@ -8,7 +8,9 @@ use FindBin;
 use lib "$FindBin::Bin/lib";
 use Configuration;
 
-Configuration::initialize();
+if (-e "$FindBin::Bin/config.txt") {
+	Configuration::initialize();
+}
 open CONFIG_FH, ">", "$FindBin::Bin/config.txt";
 print CONFIG_FH "# Enter the full path for the software binary below:\n";
 
