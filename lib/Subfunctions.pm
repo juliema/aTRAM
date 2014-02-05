@@ -12,7 +12,7 @@ BEGIN {
 	# Inherit from Exporter to export functions and variables
 	our @ISA         = qw(Exporter);
 	# Functions and variables which are exported by default
-	our @EXPORT      = qw();
+	our @EXPORT      = qw(timestamp exit_with_msg fork_cmd wait_for_forks printlog system_call debug set_debug set_log parsefasta sortfasta flattenfasta make_hit_matrix process_hit_matrix set_multiplier get_multiplier map_to_shard set_total_shards get_total_shards get_max_shard is_protein percentcoverage split_seq);
 	# Functions and variables which can be optionally exported
 	our @EXPORT_OK   = qw();
 }
