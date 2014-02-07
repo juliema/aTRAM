@@ -87,18 +87,21 @@ if (@targetnames == 0) {
 	die "Target file $targetfile doesn't contain a list";
 }
 
+
 # for each sample:
 foreach my $sample (@samplenames) {
 	my $sampledir = File::Spec->catfile($outdir, "$sample");
 	make_path($sampledir);
 	print "made $sampledir\n";
+	my $targetcount = 0;
 	foreach my $target (@targetnames) {
+		$targetcount++;
 		my $outname = File::Spec->catfile($sampledir, "$target");
 		if (-e "$outname.results.txt") {
-			printlog ("$target.results.txt already exists.");
+			printlog ("$targetcount: $target.results.txt already exists.");
 			next;
 		} else {
-			printlog ("$target $sample");
+			printlog ("$targetcount: $target $sample");
 			my $debug_flag = "";
 			my $protein_flag = "";
 			my $complete_flag = "";
