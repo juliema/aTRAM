@@ -26,6 +26,8 @@ my $debug = 0;
 my $protein = 0;
 my $complete = 0;
 my $processes = 0;
+my $assembler = "";
+my $aligner = "";
 
 GetOptions ('samples=s' => \$samplefile,
             'targets=s' => \$targetfile,
@@ -37,6 +39,8 @@ GetOptions ('samples=s' => \$samplefile,
 			'processes=i' => \$processes,
 			'debug|verbose' => \$debug,
 			'complete' => \$complete,
+			'assembler=s' => \$assembler,
+			'aligner=s' => \$aligner,
             'help|?' => \$help) or pod2usage(-msg => "GetOptions failed.", -exitval => 2);
 
 if ($help) {
@@ -131,8 +135,10 @@ foreach my $target (@targetnames) {
 		my $debug_flag = "";
 		if ($debug == 1) { $debug_flag = "-debug"; }
 
+		if ($assembler ne "") { $assembler = "-assemble $assembler"; }
+
 		my $atram_outname = File::Spec->catfile($atram_dir, $outname);
-		my $atram_result = system_call ("perl $atrampath/aTRAM.pl -reads $samples->{$sample} -target $targets->{$target} -iter $iter -ins_length $ins_length -frac $frac -assemble Velvet -out $atram_outname -kmer $kmer $complete_flag $processes_flag $debug_flag", 1);
+		my $atram_result = system_call ("perl $atrampath/aTRAM.pl -reads $samples->{$sample} -target $targets->{$target} -iter $iter -ins_length $ins_length -frac $frac $assembler -out $atram_outname -kmer $kmer $complete_flag $processes_flag $debug_flag", 1);
 
 		if ($atram_result) {
 			printlog ("aTRAM found no contigs matching $target for $sample.");
@@ -143,7 +149,8 @@ foreach my $target (@targetnames) {
 		if (($complete == 1) && (-e "$atram_outname.complete.fasta")) {
 			$comparefile = "$atram_outname.complete.fasta";
 		}
-		system_call ("perl $atrampath/Postprocessing/PercentCoverage.pl $targets->{$target} $comparefile $atram_outname");
+
+		system_call ("perl $atrampath/Postprocessing/PercentCoverage.pl $targets->{$target} $comparefile $atram_outname $aligner");
 
 		# find the one best contig (one with fewest gaps)
 		if ($protein == 0) {
