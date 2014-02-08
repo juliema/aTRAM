@@ -126,7 +126,7 @@ foreach my $target (@targetnames) {
 		if ($complete == 1) { $complete_flag = "-complete"; }
 
 		my $processes_flag = "";
-		if ($processes > 0) { $processes_flat = "-processes $processes"; }
+		if ($processes > 0) { $processes_flag = "-processes $processes"; }
 
 		my $debug_flag = "";
 		if ($debug == 1) { $debug_flag = "-debug"; }
