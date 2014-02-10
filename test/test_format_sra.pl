@@ -78,12 +78,18 @@ foreach my $line (<FH>) {
 		$keys[$key]++;
 		$totalkeys++;
 	}
+	if (($totalkeys % 10000) == 0) {
+		for (my $i=0;$i<$numshards; $i++) {
+			print "shard $i has\t$keys[$i] keys\n";
+		}
+	}
 }
 
-print "average shard should be " . int ($totalkeys / $numshards) . " keys in size.\n\n";
 for (my $i=0;$i<$numshards; $i++) {
 	print "shard $i has\t$keys[$i] keys\n";
 }
+
+print "average shard should be " . int ($totalkeys / $numshards) . " keys in size.\n\n";
 
 
 close FH;
