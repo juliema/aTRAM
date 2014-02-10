@@ -79,9 +79,11 @@ foreach my $line (<FH>) {
 		$totalkeys++;
 	}
 	if (($totalkeys % 10000) == 0) {
+		$| = 1;
 		for (my $i=0;$i<$numshards; $i++) {
 			print "shard $i has\t$keys[$i] keys\n";
 		}
+		$| = 0;
 	}
 }
 
