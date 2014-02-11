@@ -113,7 +113,7 @@ foreach my $sample (@samplenames) {
 			my $atram_result = system_call ("perl $atrampath/aTRAM.pl -reads $samples->{$sample} -target $targets->{$target} -iter $iter -ins_length $ins_length -frac $frac -assemble Velvet -out $outname -kmer $kmer $complete_flag $protein_flag $processes_flag $debug", 1);
 
 			if ($atram_result == 255) {
-				printlog ("$atram_result: aTRAM of $outname found no contigs.");
+				printlog ("aTRAM of $outname found no contigs.");
 				next;
 			} elsif ($atram_result != 0) {
 				die "unexpected error $atram_result";
