@@ -13,6 +13,8 @@ if (@ARGV == 0) {
     pod2usage(-verbose => 1);
 }
 
+my $runline = "running $0 " . join (" ", @ARGV) . "\n";
+
 my $atrampath = "$FindBin::Bin/..";
 my $help = 0;
 my $samplefile = "";
@@ -56,6 +58,8 @@ if (($targetfile eq "") || ($samplefile eq "")) {
 
 open my $log_fh, ">", File::Spec->catfile($outdir, "pipeline.log");;
 set_log($log_fh);
+
+printlog ($runline);
 
 my $samples = {};
 my @samplenames = ();
@@ -121,6 +125,11 @@ foreach my $sample (@samplenames) {
 		}
 	}
 }
+
+printlog ("Finished executing $runline");
+close $log_fh;
+
+
 
 
 __END__

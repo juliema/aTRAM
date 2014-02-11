@@ -215,6 +215,8 @@ foreach my $target (@targetnames) {
 
 close TABLE_FH;
 
+printlog ("Finished executing $runline");
+close $log_fh;
 
 
 __END__
