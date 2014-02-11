@@ -474,7 +474,9 @@ close $log_fh;
 
 if ((keys %$hit_matrix) == 0) {
 	print "aTRAM found nothing\n";
-	system_call ("rm $output_file.results.txt");
+	open RESULTS_FH, ">", "$output_file.results.txt";
+	print RESULTS_FH "no results\n";
+	close RESULTS_FH;
 	system_call ("rm $output_file.all.fasta");
 	exit -1;
 }
