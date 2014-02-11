@@ -326,6 +326,7 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 	# SHUTDOWN CHECK: did we not find any reads? Go ahead and quit.
 	if ((-s "$temp_name.$i.blast.fasta") == 0) {
 		printlog ("No similar reads were found.");
+		system_call ("rm $temp_name.$i.blast.fasta");
 		last;
 	}
 	my $contigs_file = "";
@@ -473,6 +474,8 @@ close $log_fh;
 
 if ((keys %$hit_matrix) == 0) {
 	print "aTRAM found nothing\n";
+	system_call ("rm $output_file.results.txt");
+	system_call ("rm $output_file.all.fasta");
 	exit -1;
 }
 
