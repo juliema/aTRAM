@@ -342,6 +342,11 @@ sub percentcoverage {
 	my $outname = shift;
 	my $aligner = shift;
 
+	# check that the files we need exist:
+	unless ((-e $reffile) && (-e $contigfile)) {
+		return undef;
+	}
+
 	my (undef, $catfile) = tempfile(UNLINK => 1);
 	system ("cat $reffile $contigfile > $catfile");
 

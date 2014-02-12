@@ -15,23 +15,33 @@ if ($out_name eq "") {
 	exit;
 }
 
-my $contigs = percentcoverage ($ref_file, $contigs_file, $out_name, $aligner);
-
-my $refseq = delete $contigs->{reference};
-
-open TABLE_FH, ">", "$out_name.results.txt";
-open EXON_FH, ">", "$out_name.trimmed.fasta";
-
-print EXON_FH ">reference\n$refseq\n";
-print TABLE_FH "contig\ttotal\tpercent\n";
-my $total_length = length $refseq;
-foreach my $contig (keys %$contigs) {
-	print EXON_FH ">$contig\n$contigs->{$contig}\n";
-	my $gaps = ($contigs->{$contig} =~ tr/N-//);
-	my $total = $total_length - $gaps;
-	my $percent = $total / $total_length;
-	print TABLE_FH "$contig\t$total\t$percent\n";
+if (!(-e $ref_file)) {
+	die "Couldn't find reference file $ref_file";
 }
 
-close TABLE_FH;
-close EXON_FH;
+if (!(-e $contigs_file)) {
+	die "Couldn't find contigs file $contigs_file";
+}
+
+my $contigs = percentcoverage ($ref_file, $contigs_file, $out_name, $aligner);
+
+if (defined $contigs) {
+	my $refseq = delete $contigs->{reference};
+
+	open TABLE_FH, ">", "$out_name.results.txt";
+	open EXON_FH, ">", "$out_name.trimmed.fasta";
+
+	print EXON_FH ">reference\n$refseq\n";
+	print TABLE_FH "contig\ttotal\tpercent\n";
+	my $total_length = length $refseq;
+	foreach my $contig (keys %$contigs) {
+		print EXON_FH ">$contig\n$contigs->{$contig}\n";
+		my $gaps = ($contigs->{$contig} =~ tr/N-//);
+		my $total = $total_length - $gaps;
+		my $percent = $total / $total_length;
+		print TABLE_FH "$contig\t$total\t$percent\n";
+	}
+
+	close TABLE_FH;
+	close EXON_FH;
+}
