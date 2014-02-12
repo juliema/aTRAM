@@ -154,7 +154,32 @@ foreach my $target (@targetnames) {
 			$comparefile = "$atram_outname.complete.fasta";
 		}
 
-		system_call ("perl $atrampath/Postprocessing/PercentCoverage.pl $targets->{$target} $comparefile $atram_outname $aligner");
+		my $contigs = percentcoverage ($targets->{$target}, $comparefile, $atram_outname, $aligner);
+
+		if (!(defined $contigs)) {
+			printlog ("Nothing found for $atram_outname\n");
+			next;
+		}
+
+		my $refseq = delete $contigs->{reference};
+
+		open EXON_FH, ">", "$atram_outname.trimmed.fasta";
+		my $results = {};
+		my @result_names = ();
+
+		print EXON_FH ">reference\n$refseq\n";
+		my $total_length = length $refseq;
+		foreach my $contig (keys %$contigs) {
+			print EXON_FH ">$contig\n$contigs->{$contig}\n";
+			my $gaps = ($contigs->{$contig} =~ tr/N-//);
+			my $total = $total_length - $gaps;
+			my $percent = $total / $total_length;
+			push @result_names, $contig;
+			$results->{$contig}->{total} = $total;
+			$results->{$contig}->{percent} = $percent;
+		}
+
+		close EXON_FH;
 
 		# find the one best contig (one with fewest gaps)
 		if ($protein == 0) {
@@ -177,21 +202,14 @@ foreach my $target (@targetnames) {
 		close FH;
 		system_call ("rm $atram_outname.blast");
 
-		open FH, "<", "$atram_outname.results.txt";
 		$contig = "";
 		my $percent = 0;
-		foreach my $line (<FH>) {
-			if ($line =~ /(\S+)\t(\S+)\t(\S+)$/) {
-				if ($1 =~ /$target/) {
-					next;
-				}
-				if ($3 > $percent) {
-					$contig = $1;
-					$percent = $3;
-				}
+		foreach my $c (@result_names) {
+			if ($results->{$c}->{percent} > $percent) {
+				$contig = $c;
+				$percent = $results->{$c}->{percent};
 			}
 		}
-		close FH;
 
 		$percent =~ s/^(\d+\.\d{2}).*$/\1/;
 		print TABLE_FH "$target\t$sample\t$contig\t$score\t$percent\n";
