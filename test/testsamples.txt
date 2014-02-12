@@ -1,1 +1,1 @@
-test	test/test.atram
+test	test_inst.atram

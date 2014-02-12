@@ -1,0 +1,22 @@
+no results
+contig	aTRAM_target_start	testref	aTRAM_target_end	total score
+1.1_len_858_cov_3.5	-	156	77.6	233.6
+2.1_len_764_cov_5.4	20.8	156	77.6	254.4
+3.1_len_764_cov_5.5	20.8	156	77.6	254.4
+contig	aTRAM_target_start	rbcL	aTRAM_target_end	total score
+1.2_len_1695_cov_3.4	60.5	817	63.2	940.7
+2.2_len_1753_cov_4.3	60.5	749	63.2	872.7
+3.2_len_1843_cov_4.3	60.5	750	63.5	874
+4.2_len_1843_cov_4.4	60.5	750	63.5	874
+contig	aTRAM_target_start	testref	aTRAM_target_end	total score
+1.1_len_1958_cov_4.8	-	374	76.2	450.2
+1.3_len_516_cov_5.1	-	182	-	182
+2.2_len_516_cov_5.4	-	182	-	182
+2.1_len_2123_cov_5.5	-	374	76.2	450.2
+3.4_len_2346_cov_5.7	-	374	76.2	450.2
+3.2_len_497_cov_5.7	-	182	-	182
+4.2_len_497_cov_5.9	-	182	-	182
+4.1_len_2701_cov_5.6	-	374	76.2	450.2
+5.1_len_2946_cov_6.4	-	374	76.2	450.2
+6.1_len_3082_cov_6.5	-	374	76.2	450.2
+7.1_len_3046_cov_6.7	-	374	76.2	450.2
