@@ -53,7 +53,7 @@ set_log ($log_fh);
 # making a redirect file to make it easier for users to have something to specify.
 my $db_file = "$output_file.atram";
 open DB_FH, ">", $db_file;
-print DB_FH "$output_file";
+print DB_FH "$output_file\n";
 close DB_FH;
 
 my $srasize = (-s $short_read_archive);
@@ -74,11 +74,14 @@ if ($numshards == 0) {
 	printlog ("making $numshards shards from $short_read_archive.");
 }
 
-
-
 # declare how many shards we'll be making.
 set_total_shards ($numshards);
 my $max_shard = get_max_shard();
+
+my @keys = ();
+for (my $i=0;$i<$numshards; $i++) {
+	$keys[$i] = 0;
+}
 
 my @tempfiles = ();
 
@@ -126,6 +129,7 @@ while (my $line = readline SEARCH_FH) {
 		}
 		$name = "$1\/$3";
 		$shard = map_to_shard($name);
+		$keys[$shard]++;
 		$seq = "";
 	} elsif ($line =~ /^\+/){
 		# is this a fastq quality line? eat chars to the length of the full sequence.
@@ -211,6 +215,12 @@ foreach my $tempfile (@tempfiles) {
 	printlog ("removing $tempfile");
 	system ("rm $tempfile");
 }
+
+open DB_FH, ">>", $db_file;
+for (my $i=0;$i<$numshards; $i++) {
+	print DB_FH "shard $i has\t$keys[$i] keys\n";
+}
+close DB_FH;
 
 set_total_shards(0); # reset total shards to force a file count.
 printlog ("Finished: aTRAM database $output_file has " . (get_total_shards($output_file)) . " shards.");
