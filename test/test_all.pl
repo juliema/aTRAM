@@ -1,6 +1,6 @@
 #!/usr/bin/env perl
 use strict;
-# use File::Spec;
+use File::Path qw (make_path);
 use FindBin;
 use File::Temp qw(tempdir);
 
@@ -8,7 +8,10 @@ my $i = 0;
 my $result = 0;
 my $executing_path = "$FindBin::Bin";
 my $temp_dir = tempdir(CLEANUP => 1);
-
+if (@ARGV[0] eq "debug") {
+	$temp_dir = $ARGV[0];
+	make_path ($temp_dir);
+}
 
 ##########################################################################################
 ## Testing format_sra.pl
@@ -93,8 +96,13 @@ sub system_call {
 	my $cmd = shift;
 	open my $saveout, ">&STDOUT";
 	open my $saveerr, ">&STDERR";
-	open STDOUT, '>', File::Spec->devnull();
-	open STDERR, '>', File::Spec->devnull();
+
+	if ($temp_dir eq "debug") {
+		print "$cmd\n";
+	} else {
+		open STDOUT, '>', File::Spec->devnull();
+		open STDERR, '>', File::Spec->devnull();
+	}
 
 	my $exit_val = eval {
 		system ($cmd);
