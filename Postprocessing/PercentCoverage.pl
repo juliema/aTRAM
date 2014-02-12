@@ -2,6 +2,7 @@
 
 use strict;
 use FindBin;
+use File::Basename qw(basename);
 use lib "$FindBin::Bin/../lib";
 use Subfunctions;
 
@@ -28,10 +29,13 @@ my $contigs = percentcoverage ($ref_file, $contigs_file, $out_name, $aligner);
 if (defined $contigs) {
 	my $refseq = delete $contigs->{reference};
 
+	my $ref_name = basename($ref_file);
+	$ref_name =~ s/\.fa(sta)*//;
+
 	open TABLE_FH, ">", "$out_name.results.txt";
 	open EXON_FH, ">", "$out_name.trimmed.fasta";
 
-	print EXON_FH ">reference\n$refseq\n";
+	print EXON_FH ">$ref_name\n$refseq\n";
 	print TABLE_FH "contig\ttotal\tpercent\n";
 	my $total_length = length $refseq;
 	foreach my $contig (keys %$contigs) {
