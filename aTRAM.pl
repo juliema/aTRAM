@@ -265,6 +265,14 @@ print RESULTS_FH "contig\t" . join ("\t",@targets) . "\ttotal score\n";
 close RESULTS_FH;
 
 my $best_score = 0;
+my $temp_assembly_dir = "";
+
+if ($save_temp) {
+	$temp_assembly_dir = "$temp_name.$assembler";
+} else {
+	$temp_assembly_dir = tempdir(CLEANUP => 1);
+}
+
 
 # STARTING ITERATIONS:
 for (my $i=$start_iter; $i<=$iterations; $i++) {
@@ -330,14 +338,11 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 		last;
 	}
 	my $contigs_file = "";
-	my $temp_assembly_dir = "";
 
 	if ($save_temp) {
 		$contigs_file = "$temp_name.$i.contigs.fasta";
-		$temp_assembly_dir = "$temp_name.$assembler";
 	} else {
 		(undef, $contigs_file) = tempfile(UNLINK => 1);
-		$temp_assembly_dir = tempdir(CLEANUP => 1);
 	}
 
 	#   assemble the sequences:
@@ -361,6 +366,7 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 
 	if ($save_temp == 0) {
 		system_call ("rm $temp_name.$i.blast.fasta");
+
 	}
 
 	# filter out the contigs to look for just the best ones:
