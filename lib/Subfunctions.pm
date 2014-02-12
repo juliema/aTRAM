@@ -72,7 +72,7 @@ sub printlog {
 	print $msg;
 	if ($log_fh) {
         select($log_fh);
-        $|++;
+        $| = 1;
 		print $log_fh $msg;
 		select(STDOUT);
 	}
@@ -80,14 +80,14 @@ sub printlog {
 
 sub system_call {
 	my $cmd = shift;
-	my $noexit = shift;
+	my $log_fh = shift;
 
 	if ($log_fh == 0) {
 		open my $std_log, ">&", STDOUT;
 		$log_fh = $std_log;
 	}
 
-	print $log_fh ("\t$cmd\n");
+	printlog ("$cmd\n");
 	my ($saveout, $saveerr);
 	if ($debug == 0) {
 		open $saveout, ">&STDOUT";
@@ -110,7 +110,7 @@ sub system_call {
 		exit;
 	}
 
-	if (($exit_val != 0) && !(defined $noexit)) {
+	if (($exit_val != 0) && !(defined $log_fh)) {
 		print "System call \"$cmd\" exited with $exit_val\n";
 		exit;
 	}
