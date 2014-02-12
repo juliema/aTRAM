@@ -1,4 +1,0 @@
-protein	protref.fasta
-region	testref.fasta
-bad	badref.fasta
-complete	completeref.fasta
