@@ -1,0 +1,7 @@
+shard 0 has	10274 keys
+shard 1 has	9976 keys
+shard 2 has	10148 keys
+shard 3 has	9998 keys
+shard 4 has	9840 keys
+shard 5 has	10236 keys
+shard 6 has	9884 keys
