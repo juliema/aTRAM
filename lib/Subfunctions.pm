@@ -135,6 +135,13 @@ sub set_log {
 	$log_fh = $log_new;
 }
 
+sub get_log {
+	if ($log_fh == 0) {
+		open my $std_log, ">&", STDOUT;
+		$log_fh = $std_log;
+	}
+}
+
 sub parsefasta {
 	my $fastafile = shift;
 
