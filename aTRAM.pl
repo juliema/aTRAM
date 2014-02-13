@@ -16,7 +16,7 @@ use constant {
 	NO_ERROR	=> 0,
 	RUN_ERROR	=> 1,
 	NO_CONTIGS	=> -1,
-}
+};
 
 my $debug = 0;
 
