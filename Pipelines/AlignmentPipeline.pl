@@ -157,8 +157,8 @@ foreach my $target (@targetnames) {
 		my $contigs = percentcoverage ($targets->{$target}, $comparefile, $atram_outname, $aligner);
 
 		if (!(defined $contigs)) {
-			printlog ("Nothing found for $atram_outname\n");
-			next;
+			printlog ("percentcoverage failed for $targets->{$target}, $comparefile.\n");
+			exit;
 		}
 
 		my $refseq = delete $contigs->{reference};
