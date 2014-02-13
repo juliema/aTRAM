@@ -348,12 +348,19 @@ sub percentcoverage {
 	}
 
 	my (undef, $catfile) = tempfile(UNLINK => 1);
-	system ("cat $reffile $contigfile > $catfile");
+	my $result = 0;
+	$result = system_call ("cat $reffile $contigfile > $catfile");
 
 	if ($aligner eq "mafft") {
-		system ("mafft  $catfile > $outname.align.fasta");
+		$result = system_call ("mafft $catfile > $outname.align.fasta");
 	} else {
-		system ("muscle -in $catfile -out $outname.align.fasta");
+		$aligner = "muscle";
+		$result = system_call ("muscle -in $catfile -out $outname.align.fasta");
+	}
+
+	if ($result != 0) {
+		printlog ("Aligner $aligner failed or could not be found.\n");
+		return undef;
 	}
 
 	open REF_FH, "<", $reffile;
