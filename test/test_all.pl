@@ -81,7 +81,7 @@ if ($result == 1) {
 	exit;
 }
 
-$result = system_call ("cat $temp_dir/test_bp/test/*.results.txt > $temp_dir/test_bp/results.txt");
+$result = system_call ("grep -h '>' $temp_dir/test_bp/test/*.best.fasta > $temp_dir/test_bp/results.txt");
 if ((-s "$temp_dir/test_bp/results.txt") > 0) {
 	$result = system_call ("diff $executing_path/test_results_bp.txt $temp_dir/test_bp/results.txt > $executing_path/test.results.$i.diff");
 	if ($result == 1) {
