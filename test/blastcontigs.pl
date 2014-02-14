@@ -3,7 +3,8 @@ use strict;
 use File::Temp qw/ tempfile /;
 use FindBin;
 use lib "$FindBin::Bin/../lib";
-use Subfunctions;
+use System;
+use Parsing;
 
 if (@ARGV < 2) {
 	print "Usage: blastcontigs.pl contigs_fasta target_fasta [blast_file]\n";

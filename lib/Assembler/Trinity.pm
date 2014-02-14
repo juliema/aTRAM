@@ -2,7 +2,8 @@
 package Trinity;
 use strict;
 use File::Temp qw/ tempfile /;
-use Subfunctions;
+use System;
+use Parsing;
 
 # Assembler modules need to know:
 	# where to find the short reads (pass this in as a file name)
@@ -40,9 +41,9 @@ sub assembler {
 		}
 	}
 	# using Trinity.pl
-	Subfunctions::system_call ("$binaries->{trinity} --seqType fa --single $short_read_file --run_as_paired --JM $jm --output $tempdir");
+	system_call ("$binaries->{trinity} --seqType fa --single $short_read_file --run_as_paired --JM $jm --output $tempdir");
 
-	my ($contigs, undef) = Subfunctions::parsefasta ("$tempdir/Trinity.fasta");
+	my ($contigs, undef) = parsefasta ("$tempdir/Trinity.fasta");
 
 	open OUTFH, ">", $output_file;
 	foreach my $contigname (keys %$contigs) {

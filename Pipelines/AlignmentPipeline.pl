@@ -7,7 +7,9 @@ use File::Spec;
 use File::Path qw (make_path);
 use FindBin;
 use lib "$FindBin::Bin/../lib";
-use Subfunctions;
+use System;
+use Parsing;
+use Postprocessing;
 
 if (@ARGV == 0) {
     pod2usage(-verbose => 1);
