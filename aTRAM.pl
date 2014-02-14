@@ -7,10 +7,12 @@ use File::Temp qw/ tempfile tempdir /;
 use File::Find;
 use FindBin;
 use lib "$FindBin::Bin/lib";
-use Subfunctions;
+use System;
 use Module::Load;
 use Configuration;
 use Sequenceretrieval;
+use Mapreduce;
+use Parsing;
 
 use constant {
 	NO_ERROR	=> 0,

@@ -2,7 +2,8 @@
 package Sequenceretrieval;
 use strict;
 use File::Temp qw/ tempfile /;
-use Subfunctions;
+use System;
+use Parsing;
 
 BEGIN {
 	require Exporter;

@@ -1,7 +1,8 @@
 #!/usr/bin/env perl
 package Velvet;
 use strict;
-use Subfunctions;
+use System;
+use Parsing;
 
 # Assembler modules need to know:
 	# where to find the short reads (pass this in as a file name)
@@ -48,13 +49,13 @@ sub assembler {
 	}
 	# using velvet
 	if ($longreads ne "") {
-		Subfunctions::system_call ("$binaries->{velveth} $tempdir $kmer -fasta -shortPaired $short_read_file -long $longreads");
+		system_call ("$binaries->{velveth} $tempdir $kmer -fasta -shortPaired $short_read_file -long $longreads");
 	} else {
-		Subfunctions::system_call ("$binaries->{velveth} $tempdir $kmer -fasta -shortPaired $short_read_file");
+		system_call ("$binaries->{velveth} $tempdir $kmer -fasta -shortPaired $short_read_file");
 	}
-	Subfunctions::system_call ("$binaries->{velvetg} $tempdir -ins_length $ins_length -exp_cov $exp_cov -min_contig_lgth $min_contig_len");
+	system_call ("$binaries->{velvetg} $tempdir -ins_length $ins_length -exp_cov $exp_cov -min_contig_lgth $min_contig_len");
 
-	my ($contigs, undef) = Subfunctions::parsefasta ("$tempdir/contigs.fa");
+	my ($contigs, undef) = parsefasta ("$tempdir/contigs.fa");
 
 	open OUTFH, ">", $output_file;
 	foreach my $contigname (keys %$contigs) {
