@@ -211,6 +211,9 @@ sub make_hit_matrix {
 	open BLAST_FH, "<", $blast_file;
 	while (my $line = readline BLAST_FH) {
 		my ($contig, $baitseq, $score, $qstart, $qend, $sstart, $send, $qlen, undef) = split(/\s+/,$line);
+		if (!(defined $contig)) {
+			return undef;
+		}
 		my $strand = 1;
 		if ((($qend-$qstart) / ($send-$sstart)) < 0) {
 			$strand = -1;

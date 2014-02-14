@@ -12,8 +12,14 @@ use Module::Load;
 use Configuration;
 use Sequenceretrieval;
 
+use constant {
+	NO_ERROR	=> 0,
+	RUN_ERROR	=> 1,
+	NO_CONTIGS	=> -1,
+};
 
 my $debug = 0;
+
 
 my $hit_matrix = {};
 
@@ -388,7 +394,9 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 	# we want to keep the contigs that have a bitscore higher than $bitscore.
 	print "\tsaving best-scoring contigs...\n";
 	my $raw_hit_matrix = {};
-	make_hit_matrix ($blast_file, $raw_hit_matrix, $i);
+	if (! defined (make_hit_matrix ($blast_file, $raw_hit_matrix, $i))) {
+		exit RUN_ERROR;
+	}
 
 	if ($save_temp == 0) {
 		system_call ("rm $blast_file");
@@ -484,7 +492,7 @@ if ((keys %$hit_matrix) == 0) {
 	print RESULTS_FH "no results\n";
 	close RESULTS_FH;
 	system_call ("rm $output_file.all.fasta");
-	exit -1;
+	exit NO_CONTIGS;
 }
 
 print "\n\nContigs by target coverage:\n";
