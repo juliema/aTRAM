@@ -34,6 +34,25 @@ if ($result == 1) {
 print "OK\n";
 
 ##########################################################################################
+## Testing aTRAM.pl
+##########################################################################################
+
+print ++$i .". Checking that aTRAM works correctly...";
+$result = system_call ("perl $executing_path/../aTRAM.pl -db $temp_dir/test_db -target $executing_path/testref.fasta -out $temp_dir/test_atram");
+if ($result == 1) {
+	print "\aTRAM failed. Please contact the developers with details of this failure at https://github.com/juliema/aTRAM/issues.\n";
+	exit;
+}
+
+$result = system_call ("diff $executing_path/test_results_atram.txt $temp_dir/test_atram.results.txt > $executing_path/test.results.$i.diff");
+if ($result == 1) {
+	print "\aTRAM returned incorrect results. Please contact the developers with details of this failure at https://github.com/juliema/aTRAM/issues.\n";
+	exit;
+}
+
+print "OK\n";
+
+##########################################################################################
 ## Testing AlignmentPipeline.pl
 ##########################################################################################
 
