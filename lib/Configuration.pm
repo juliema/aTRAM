@@ -17,8 +17,13 @@ BEGIN {
 our $binaries = {};
 
 sub initialize {
-	open FH, "<", "$FindBin::Bin/config.txt" or die "Couldn't find $FindBin::Bin/config.txt. Did you run $FindBin::Bin/configure.pl?";
-	foreach my $line (<FH>) {
+	my $fh;
+	# this module can be invoked from either a subdirectory or from the aTRAM directory directly. Check both places.
+	if (!(defined (open $fh, "<", "$FindBin::Bin/../config.txt"))) {
+		open $fh, "<", "$FindBin::Bin/config.txt" or die "Couldn't find $FindBin::Bin/../config.txt. Did you run configure.pl?";
+	}
+	print "findbin is $FindBin::Bin\n";
+	foreach my $line (<$fh>) {
 		$line =~ s/(#.*)$//;
 		if ($line =~ /(.*)=(.*)$/) {
 			my $name = $1;
