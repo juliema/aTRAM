@@ -2,8 +2,6 @@
 package Postprocessing;
 use strict;
 use File::Temp qw/ tempfile /;
-use FindBin;
-use lib "$FindBin::Bin/lib";
 use System;
 use Parsing;
 

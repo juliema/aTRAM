@@ -2,8 +2,6 @@
 package Mapreduce;
 use strict;
 use File::Temp qw/ tempfile /;
-use FindBin;
-use lib "$FindBin::Bin/lib";
 
 BEGIN {
 	require Exporter;

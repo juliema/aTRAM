@@ -4,7 +4,6 @@ use strict;
 use FindBin;
 use File::Basename qw(basename);
 use lib "$FindBin::Bin/../lib";
-use System;
 use Postprocessing;
 
 my $ref_file = shift @ARGV;
