@@ -75,8 +75,8 @@ my $crossfile = "$blastdb.crossref";
 if ($blastdb eq "") {
 	$blastdb = File::Spec->catfile($outdir, "$refname.blastdb");
 	$crossfile = File::Spec->catfile($outdir, "$refname.blastdb.crossref");
-	my $result = system_call (Configuration::find_bin('makeblastdb') . " -in $reffile -dbtype nucl -out $blastdb", $log_file);
-	my $result = system_call (Configuration::find_bin('blastn') . " -query $reffile -db $blastdb -num_threads $processes -evalue 1e-50 -out $crossfile -outfmt '6 qseqid sseqid evalue length'", $log_file);
+	system_call (Configuration::find_bin('makeblastdb') . " -in $reffile -dbtype nucl -out $blastdb", $log_file);
+	system_call (Configuration::find_bin('blastn') . " -query $reffile -db $blastdb -num_threads $processes -evalue 1e-50 -out $crossfile -outfmt '6 qseqid sseqid evalue length'", $log_file);
 }
 
 open CROSS_FH, "<", $crossfile;
