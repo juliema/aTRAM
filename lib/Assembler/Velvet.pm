@@ -21,7 +21,7 @@ sub assembler {
 	my $short_read_file = shift;
 	my $params = shift;
 
-	my ($kmer, $tempdir, $ins_length, $exp_cov, $min_contig_len, $output_file) = 0;
+	my ($kmer, $tempdir, $ins_length, $exp_cov, $min_contig_len, $output_file, $log_file) = 0;
 	my $longreads = "";
 
 	if ((ref $params) =~ /HASH/) {
@@ -46,16 +46,19 @@ sub assembler {
 		if (exists $params->{"output"}) {
 			$output_file = $params->{"output"};
 		}
+		if (exists $params->{"log_file"}) {
+			$log_file = $params->{"log_file"};
+		}
 	}
 	# using velvet
 	if ($longreads ne "") {
-		system_call ("$binaries->{velveth} $tempdir $kmer -fasta -shortPaired $short_read_file -long $longreads");
+		system_call ("$binaries->{velveth} $tempdir $kmer -fasta -shortPaired $short_read_file -long $longreads", $log_file);
 	} else {
-		system_call ("$binaries->{velveth} $tempdir $kmer -fasta -shortPaired $short_read_file");
+		system_call ("$binaries->{velveth} $tempdir $kmer -fasta -shortPaired $short_read_file", $log_file);
 	}
-	system_call ("$binaries->{velvetg} $tempdir -ins_length $ins_length -exp_cov $exp_cov -min_contig_lgth $min_contig_len");
-
+	system_call ("$binaries->{velvetg} $tempdir -ins_length $ins_length -exp_cov $exp_cov -min_contig_lgth $min_contig_len", $log_file);
 	my ($contigs, undef) = parsefasta ("$tempdir/contigs.fa");
+
 
 	open OUTFH, ">", $output_file;
 	foreach my $contigname (keys %$contigs) {

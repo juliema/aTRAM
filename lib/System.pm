@@ -18,6 +18,7 @@ BEGIN {
 
 our $debug = 0;
 our $log_fh = 0;
+our $log_file = "";
 
 sub timestamp {
     my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime(time);
@@ -75,24 +76,30 @@ sub printlog {
 
 sub system_call {
 	my $cmd = shift;
-	my $log_fh = shift;
-
-	if ($log_fh == 0) {
-		open my $std_log, ">&", STDOUT;
-		$log_fh = $std_log;
-	}
+	my $log_file = shift;
 
 	printlog ("$cmd\n");
 	my ($saveout, $saveerr);
+	open $saveout, ">&STDOUT";
+	open $saveerr, ">&STDERR";
 	if ($debug == 0) {
-		open $saveout, ">&STDOUT";
-		open $saveerr, ">&STDERR";
 		open STDOUT, '>', File::Spec->devnull();
 		open STDERR, '>', File::Spec->devnull();
+	}
+
+	if ($log_file) {
+		open STDOUT, ">>", $log_file;
+		open STDERR, ">>", $log_file;
 	}
 	my $exit_val = eval {
 		system ($cmd);
 	};
+	if ($log_file) {
+		close STDOUT;
+		close STDERR;
+		open STDOUT, ">&", $saveout;
+		open STDERR, ">&", $saveerr;
+	}
 
 	if ($debug == 0) {
 		open STDOUT, ">&", $saveout;
@@ -105,7 +112,7 @@ sub system_call {
 		exit;
 	}
 
-	if (($exit_val != 0) && !(defined $log_fh)) {
+	if (($exit_val != 0) && !(defined $log_file)) {
 		print "System call \"$cmd\" exited with $exit_val\n";
 		exit;
 	}
@@ -127,7 +134,9 @@ sub set_debug {
 
 sub set_log {
 	my $log_new = shift;
-	$log_fh = $log_new;
+	$log_file = $log_new;
+	open my $temp_fh, ">>", $log_file or print "Couldn't open $log_file\n";
+	$log_fh = $temp_fh;
 }
 
 sub get_log {

@@ -146,9 +146,7 @@ if ($temp_name eq "") {
 	$save_temp = 1;
 }
 
-my $log_fh;
-open $log_fh, ">", $log_file or die "couldn't open $log_file\n";
-set_log($log_fh);
+set_log($log_file);
 
 printlog ($runline);
 
@@ -363,6 +361,7 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 							'exp_cov' => $exp_cov,
 							'min_contig_len' => 200,
 							'output' => $contigs_file,
+							'log_file' => $log_file
 						  };
 
 	if ($i > 1) {
@@ -388,9 +387,9 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 	}
 
 	if ($protein == 1) {
-		system_call ("$Configuration::binaries->{blastx} -db $targetdb.db -query $contigs_file -out $blast_file -outfmt '6 qseqid sseqid bitscore qstart qend sstart send qlen'");
+		system_call ("$Configuration::binaries->{blastx} -db $targetdb.db -query $contigs_file -out $blast_file -outfmt '6 qseqid sseqid bitscore qstart qend sstart send qlen'", $log_file);
 	} else {
-		system_call ("$Configuration::binaries->{tblastx} -db $targetdb.db -query $contigs_file -out $blast_file -outfmt '6 qseqid sseqid bitscore qstart qend sstart send qlen'");
+		system_call ("$Configuration::binaries->{tblastx} -db $targetdb.db -query $contigs_file -out $blast_file -outfmt '6 qseqid sseqid bitscore qstart qend sstart send qlen'", $log_file);
 	}
 
 	# we want to keep the contigs that have a bitscore higher than $bitscore.
@@ -485,8 +484,6 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 		}
 	}
 }
-
-close $log_fh;
 
 if ((keys %$hit_matrix) == 0) {
 	print "aTRAM found nothing\n";

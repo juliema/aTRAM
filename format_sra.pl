@@ -48,8 +48,7 @@ Configuration::initialize();
 
 my $tempdir = dirname ("$output_file");
 my $log_file = "$output_file.log";
-open my $log_fh, ">", $log_file or die "couldn't open $log_file\n";
-set_log ($log_fh);
+set_log ($log_file);
 
 # making a redirect file to make it easier for users to have something to specify.
 my $db_file = "$output_file.atram";

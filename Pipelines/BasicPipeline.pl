@@ -56,8 +56,8 @@ if (($targetfile eq "") || ($samplefile eq "")) {
 	exit;
 }
 
-open my $log_fh, ">", File::Spec->catfile($outdir, "pipeline.log");;
-set_log($log_fh);
+my $log_file = File::Spec->catfile($outdir, "pipeline.log");
+set_log($log_file);
 
 printlog ("Running $runline");
 
@@ -114,7 +114,7 @@ foreach my $sample (@samplenames) {
 			if ($protein == 1) { $protein_flag = "-protein"; }
 			if ($complete == 1) { $complete_flag = "-complete"; }
 			if ($processes > 0) { $processes_flag = "-processes $processes"; }
-			my $atram_result = system_call ("perl $atrampath/aTRAM.pl -reads $samples->{$sample} -target $targets->{$target} -iter $iter -ins_length $ins_length -frac $frac -assemble Velvet -out $outname -kmer $kmer $complete_flag $protein_flag $processes_flag $debug_flag", $log_fh);
+			my $atram_result = system_call ("perl $atrampath/aTRAM.pl -reads $samples->{$sample} -target $targets->{$target} -iter $iter -ins_length $ins_length -frac $frac -assemble Velvet -out $outname -kmer $kmer $complete_flag $protein_flag $processes_flag $debug_flag -log $log_file", $log_file);
 
 			if ($atram_result == 255) {
 				printlog ("aTRAM of $outname found no contigs.");
@@ -127,7 +127,6 @@ foreach my $sample (@samplenames) {
 }
 
 printlog ("Finished executing $runline");
-close $log_fh;
 
 
 

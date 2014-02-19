@@ -65,8 +65,8 @@ if (($targetfile eq "") || ($samplefile eq "")) {
 $outdir = File::Spec->rel2abs($outdir);
 make_path($outdir);
 
-open my $log_fh, ">", File::Spec->catfile($outdir, "pipeline.log");
-set_log($log_fh);
+my $log_file = File::Spec->catfile($outdir, "pipeline.log");
+set_log($log_file);
 
 printlog ("Running $runline");
 
@@ -130,7 +130,7 @@ foreach my $target (@targetnames) {
 	# for each sample:
 	foreach my $sample (@samplenames) {
 		my $outname = "$target.$sample";
-		printlog ("$target $sample");
+		printlog ("Processing $outname...");
 
 		my $complete_flag = "";
 		if ($complete == 1) { $complete_flag = "-complete"; }
@@ -144,7 +144,7 @@ foreach my $target (@targetnames) {
 		if ($assembler ne "") { $assembler = "-assemble $assembler"; }
 
 		my $atram_outname = File::Spec->catfile($atram_dir, $outname);
-		my $atram_result = system_call ("perl $atrampath/aTRAM.pl -reads $samples->{$sample} -target $targets->{$target} -iter $iter -ins_length $ins_length -frac $frac $assembler -out $atram_outname -kmer $kmer $complete_flag $processes_flag $debug_flag", $log_fh);
+		my $atram_result = system_call ("perl $atrampath/aTRAM.pl -reads $samples->{$sample} -target $targets->{$target} -iter $iter -ins_length $ins_length -frac $frac $assembler -out $atram_outname -kmer $kmer $complete_flag $processes_flag $debug_flag -log $log_file", $log_file);
 
 		if ($atram_result) {
 			printlog ("aTRAM found no contigs matching $target for $sample.");
@@ -236,7 +236,6 @@ foreach my $target (@targetnames) {
 close TABLE_FH;
 
 printlog ("Finished executing $runline");
-close $log_fh;
 
 
 __END__
