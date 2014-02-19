@@ -22,7 +22,6 @@ sub initialize {
 	if (!(defined (open $fh, "<", "$FindBin::Bin/../config.txt"))) {
 		open $fh, "<", "$FindBin::Bin/config.txt" or die "Couldn't find $FindBin::Bin/../config.txt. Did you run configure.pl?";
 	}
-	print "findbin is $FindBin::Bin\n";
 	foreach my $line (<$fh>) {
 		$line =~ s/(#.*)$//;
 		if ($line =~ /(.*)=(.*)$/) {
