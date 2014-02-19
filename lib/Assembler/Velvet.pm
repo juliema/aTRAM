@@ -51,6 +51,10 @@ sub assembler {
 		}
 	}
 	# using velvet
+
+	# truncate Velvet log file if it already exists
+	truncate "$tempdir/Log", 0;
+
 	if ($longreads ne "") {
 		system_call ("$binaries->{velveth} $tempdir $kmer -fasta -shortPaired $short_read_file -long $longreads", $log_file);
 	} else {
@@ -59,6 +63,15 @@ sub assembler {
 	system_call ("$binaries->{velvetg} $tempdir -ins_length $ins_length -exp_cov $exp_cov -min_contig_lgth $min_contig_len", $log_file);
 	my ($contigs, undef) = parsefasta ("$tempdir/contigs.fa");
 
+	# copy Velvet log output to logfile.
+	open LOGFH, "<", "$tempdir/Log";
+	printlog ("Velvet log:");
+	foreach my $line (<LOGFH>) {
+		chomp $line;
+		printlog ($line);
+	}
+	printlog ("end Velvet log");
+	close LOGFH;
 
 	open OUTFH, ">", $output_file;
 	foreach my $contigname (keys %$contigs) {
