@@ -76,9 +76,8 @@ sub printlog {
 
 sub system_call {
 	my $cmd = shift;
-	my $log_file = shift;
+	my $log_me = shift;
 
-	printlog ("$cmd\n");
 	my ($saveout, $saveerr);
 	open $saveout, ">&STDOUT";
 	open $saveerr, ">&STDERR";
@@ -87,14 +86,15 @@ sub system_call {
 		open STDERR, '>', File::Spec->devnull();
 	}
 
-	if ($log_file) {
+	if ((defined $log_me) && ($log_file ne "")) {
+		printlog ("$cmd\n");
 		open STDOUT, ">>", $log_file;
 		open STDERR, ">>", $log_file;
 	}
 	my $exit_val = eval {
 		system ($cmd);
 	};
-	if ($log_file) {
+	if ((defined $log_me) && ($log_file ne "")) {
 		close STDOUT;
 		close STDERR;
 		open STDOUT, ">&", $saveout;
@@ -112,7 +112,7 @@ sub system_call {
 		exit;
 	}
 
-	if (($exit_val != 0) && !(defined $log_file)) {
+	if (($exit_val != 0) && !(defined $log_me)) {
 		print "System call \"$cmd\" exited with $exit_val\n";
 		exit;
 	}
@@ -139,11 +139,8 @@ sub set_log {
 	$log_fh = $temp_fh;
 }
 
-sub get_log {
-	if ($log_fh == 0) {
-		open my $std_log, ">&", STDOUT;
-		$log_fh = $std_log;
-	}
+sub get_log_file {
+	return $log_file;
 }
 
 return 1;
