@@ -1,6 +1,7 @@
 #!/usr/bin/env perl
 package Configuration;
 use strict;
+use File::Spec;
 
 BEGIN {
 	require Exporter;
@@ -17,10 +18,19 @@ BEGIN {
 our $binaries = {};
 
 sub initialize {
+	# find the lib path in @INC:
+	my $config_file = "";
+	my $libpath = File::Spec->catfile("aTRAM", "lib");
+	foreach my $path (@INC) {
+		if ($path =~ /$libpath/) {
+			$config_file = File::Spec->catfile($path, "config.txt");
+			last;
+		}
+	}
+
 	my $fh;
-	# this module can be invoked from either a subdirectory or from the aTRAM directory directly. Check both places.
-	if (!(defined (open $fh, "<", "$FindBin::Bin/../config.txt"))) {
-		open $fh, "<", "$FindBin::Bin/config.txt" or die "Couldn't find $FindBin::Bin/../config.txt. Did you run configure.pl?";
+	if (!(defined (open $fh, "<", $config_file))) {
+		die "Couldn't find $config_file. Did you run configure.pl?";
 	}
 	foreach my $line (<$fh>) {
 		$line =~ s/(#.*)$//;
