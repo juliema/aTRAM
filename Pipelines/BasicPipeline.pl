@@ -28,6 +28,7 @@ my $debug = 0;
 my $protein = 0;
 my $complete = 0;
 my $processes = 0;
+my $max_memory = 0;
 
 GetOptions ('samples=s' => \$samplefile,
             'targets=s' => \$targetfile,
@@ -40,6 +41,7 @@ GetOptions ('samples=s' => \$samplefile,
 			'protein' => \$protein,
 			'complete' => \$complete,
 			'processes=i' => \$processes,
+			'max_memory|memory=i' => \$max_memory,
             'help|?' => \$help) or pod2usage(-msg => "GetOptions failed.", -exitval => 2);
 
 if ($help) {
@@ -107,14 +109,16 @@ foreach my $sample (@samplenames) {
 		} else {
 			printlog ("$targetcount: $target $sample");
 			my $debug_flag = "";
-			my $protein_flag = "";
-			my $complete_flag = "";
-			my $processes_flag = "";
 			if ($debug == 1) { $debug_flag = "-debug"; }
-			if ($protein == 1) { $protein_flag = "-protein"; }
-			if ($complete == 1) { $complete_flag = "-complete"; }
+			my $processes_flag = "";
 			if ($processes > 0) { $processes_flag = "-processes $processes"; }
-			my $atram_result = system_call ("perl $atrampath/aTRAM.pl -reads $samples->{$sample} -target $targets->{$target} -iter $iter -ins_length $ins_length -frac $frac -assemble Velvet -out $outname -kmer $kmer $complete_flag $protein_flag $processes_flag $debug_flag -log $log_file", $log_file);
+			my $protein_flag = "";
+			if ($protein == 1) { $protein_flag = "-protein"; }
+			my $complete_flag = "";
+			if ($complete == 1) { $complete_flag = "-complete"; }
+			my $memory_flag = "";
+			if ($max_memory > 0) { $memory_flag = "-max_memory $max_memory"; }
+			my $atram_result = system_call ("perl $atrampath/aTRAM.pl -reads $samples->{$sample} -target $targets->{$target} -iter $iter -ins_length $ins_length -frac $frac -assemble Velvet -out $outname -kmer $kmer $complete_flag $protein_flag $processes_flag $memory_flag $debug_flag -log $log_file", $log_file);
 
 			if ($atram_result == 255) {
 				printlog ("aTRAM of $outname found no contigs.");

@@ -32,6 +32,7 @@ my $complete = 0;
 my $processes = 0;
 my $assembler = "";
 my $aligner = "";
+my $max_memory = 0;
 
 GetOptions ('samples=s' => \$samplefile,
             'targets=s' => \$targetfile,
@@ -45,6 +46,7 @@ GetOptions ('samples=s' => \$samplefile,
 			'complete' => \$complete,
 			'assembler=s' => \$assembler,
 			'aligner=s' => \$aligner,
+			'max_memory|memory=i' => \$max_memory,
             'help|?' => \$help) or pod2usage(-msg => "GetOptions failed.", -exitval => 2);
 
 if ($help) {
@@ -132,6 +134,9 @@ foreach my $target (@targetnames) {
 		my $outname = "$target.$sample";
 		printlog ("Processing $outname...");
 
+		my $memory_flag = "";
+		if ($max_memory > 0) { $memory_flag = "-max_memory $max_memory"; }
+
 		my $complete_flag = "";
 		if ($complete == 1) { $complete_flag = "-complete"; }
 
@@ -144,7 +149,7 @@ foreach my $target (@targetnames) {
 		if ($assembler ne "") { $assembler = "-assemble $assembler"; }
 
 		my $atram_outname = File::Spec->catfile($atram_dir, $outname);
-		my $atram_result = system_call ("perl $atrampath/aTRAM.pl -reads $samples->{$sample} -target $targets->{$target} -iter $iter -ins_length $ins_length -frac $frac $assembler -out $atram_outname -kmer $kmer $complete_flag $processes_flag $debug_flag -log $log_file", $log_file);
+		my $atram_result = system_call ("perl $atrampath/aTRAM.pl -reads $samples->{$sample} -target $targets->{$target} -iter $iter -ins_length $ins_length -frac $frac $assembler -out $atram_outname -kmer $kmer $complete_flag $processes_flag $memory_flag $debug_flag -log $log_file", $log_file);
 
 		if ($atram_result) {
 			printlog ("aTRAM found no contigs matching $target for $sample.");
