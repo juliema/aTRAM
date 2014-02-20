@@ -48,6 +48,7 @@ my $protflag = 0;
 my $bitscore = 70;
 my $contiglength = 100;
 my $max_processes = 0;
+my $max_memory = 0;
 
 #parameters with modifiable default values
 my $ins_length = 300;
@@ -78,6 +79,7 @@ GetOptions ('reads|sra|database|db=s' => \$atram_db,
             'bitscore=i' => \$bitscore,
             'evalue=f' => \$evalue,
             'length=i' => \$contiglength,
+            'max_memory|memory=i' => \$max_memory,
             'help|?' => \$help) or pod2usage(-msg => "GetOptions failed.", -exitval => 2);
 
 if ($help) {
@@ -169,6 +171,18 @@ unless ((-e "$atram_db.$max_shard.1.fasta") && (-e "$atram_db.$max_shard.2.fasta
 }
 
 printlog ("Using $shards of $total_shards_available total shards.");
+
+if ($max_memory > 0) {
+	# max_memory should be in GB
+	my $max_target_millions = ((4.28 * $max_memory) - 21.85) / (2 * $shards);
+	if ($max_target_millions < 0) {
+		#we're dealing with less than 5 GB of memory; we should probably cap reads at something like 500,000 total reads.
+		$max_target_seqs = int (250000 / $shards);
+	} else {
+		$max_target_seqs = int (1000000 * $max_target_millions);
+	}
+	printlog ("Based on a cap of $max_memory GB of memory, we can find up to $max_target_seqs reads per shard.");
+}
 
 open CONTIGS_FH, ">", "$output_file.all.fasta";
 truncate CONTIGS_FH, 0;
