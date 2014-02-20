@@ -57,6 +57,9 @@ sub wait_for_forks {
      	debug ("waiting for " . join(", ", @{$_[0]}) . "\n");
 		my $item = pop @{$_[0]};
         waitpid $item, 0;
+        if ($? != 0) {
+        	printlog ("child process $item died with error $?");
+        }
     }
     return;
 }
