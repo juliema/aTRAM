@@ -137,6 +137,9 @@ foreach my $contigfile (@contigfiles) {
 		`rm $blastfile`;
 	}
 }
+
+printlog ("Finished $runline");
+
 close RESULTS_FH;
 
 
