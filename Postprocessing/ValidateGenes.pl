@@ -134,6 +134,7 @@ foreach my $contigfile (@contigfiles) {
 			}
 		}
 		close FH;
+		`rm $blastfile`;
 	}
 }
 close RESULTS_FH;

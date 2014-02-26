@@ -24,7 +24,6 @@ sub initialize {
 	my $libpath = File::Spec->catfile("aTRAM", "lib");
 	foreach my $path (@INC) {
 		$path = realpath ($path);
-		print "looking at $path\n";
 		if ($path =~ /$libpath/) {
 			$config_file = File::Spec->catfile($path, "config.txt");
 			last;
