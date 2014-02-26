@@ -143,22 +143,22 @@ __END__
 
 =head1 NAME
 
-Validate.pl
+ValidateGenes.pl
 
 =head1 SYNOPSIS
 
-Validate.pl -input inputdir [-reference reffile | -db blastdb] -output outputdir
+ValidateGenes.pl -input inputdir [-reference reffile | -db blastdb] -output outputdir
 
 Given a fasta file of CDS sequences that were used as bait for aTRAM,
-validates that the aTRAM results are in fact good matches for the
+validates that the aTRAM results are in fact good matches for the target gene used.
 
 =head1 OPTIONS
 
  -input:      directory containing aTRAM results to be validated against the original bait set.
  -reference:  FASTA file of the gene bait sequences used to aTRAM the input files.
- -processes:  optional: number of processes for the .
+ -processes:  optional: number of processes to be used.
  -output:     output directory (will be created if it doesn't exist).
- -database:   optional: if Validate.pl has been run before on this reffile, this is the name of the blastdb that was created from that run.
+ -database:   optional: if ValidateGenes.pl has been run before on this reffile, this is the name of the blastdb that was created from that run.
 
 =cut
 
