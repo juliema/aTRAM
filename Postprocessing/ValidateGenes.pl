@@ -51,8 +51,8 @@ if (!(-e $reffile)) {
 if ($blastdb ne "") {
 	my $info = `blastdbcmd -db $blastdb -info`;
 	$info =~ /Database: (.+?)\n/;
-	if ($1 ne $reffile) {
-		pod2usage(-msg => "$blastdb is not a database created from $reffile.", -verbose => 1);
+	if ($reffile !~ /$1/) {
+		pod2usage(-msg => "$1 is not a database created from $reffile.", -verbose => 1);
 		exit;
 	}
 }
