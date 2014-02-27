@@ -120,7 +120,7 @@ foreach my $contigfile (@contigfiles) {
 			my ($sseqid, $qseqid, $slen, $evalue, $length) = ($1, $2, $3, $4, $5);
 			my $hit_string = "";
 			if ($genename eq $sseqid) {
-				$hit_string = "self";
+				$hit_string = "self\t$qseqid";
 				print "best hit for $genename is itself\n";
 			} elsif (exists $cross_matrix->{$genename}->{$sseqid}) {
 				delete $cross_matrix->{$genename}->{$sseqid};
