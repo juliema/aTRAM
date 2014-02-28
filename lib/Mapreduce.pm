@@ -36,15 +36,21 @@ sub get_multiplier {
 
 sub map_to_shard {
 	my $name = shift;
+	my $debug = shift;
 
 	$name =~ s/\/\d//;
 	$name =~ s/#.+$//;
 	$name =~ tr/0-9//dc;
-
 	$name =~ /.*(\d{8})$/;
-	$name = $1 * get_multiplier();
+	my $multname = $1 * get_multiplier();
+	my $key = $multname % $total_shards;
 
-	return $name % $total_shards;
+	if ($debug == 1) {
+		my $debugstr = "$name > $1 * " . get_multiplier() . " > $multname % $total_shards > $key";
+		return ($key, $debugstr);
+	}
+
+	return $key;
 }
 
 sub set_total_shards {

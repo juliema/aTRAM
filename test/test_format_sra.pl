@@ -16,11 +16,13 @@ my $help = 0;
 my $numshards = 0;
 my $srasize = 0;
 my $multiplier = 0;
+my $debug = 0;
 
 GetOptions ('input=s' => \$short_read_archive,
             'number=i' => \$numshards,
             'size=i' => \$srasize,
             'multiplier=i' => \$multiplier,
+            'debug|verbose' => \$debug,
             'help|?' => \$help) or pod2usage(-msg => "GetOptions failed.", -exitval => 2);
 
 if ($help) {
@@ -75,7 +77,10 @@ my $totalkeys = 0;
 foreach my $line (<FH>) {
 	if ($line =~ /^[@>](.*)$/) {
 		my $name = $1;
-		my $key = map_to_shard ($name);
+		my ($key, $calc) = map_to_shard ($name, $debug);
+		if ($debug) {
+			print "$name maps to $key: $calc\n";
+		}
 		$keys[$key]++;
 		$totalkeys++;
 	}
