@@ -53,7 +53,6 @@ unless (-d $output_path) {
 # Look in the config.txt file to find the correct paths to binaries.
 Configuration::initialize();
 
-my $tempdir = dirname ("$output_file");
 my $log_file = "$output_file.log";
 set_log ($log_file);
 
@@ -163,7 +162,7 @@ printlog ("starting sort.");
 for (my $i=0; $i<$numshards; $i++) {
 	close $out1_fhs[$i];
 	close $out2_fhs[$i];
-	push @pids, fork_cmd ("sort -t',' -k 1 -T $tempdir $out1_bucketfiles[$i] > $out1_sortedfiles[$i]");
+	push @pids, fork_cmd ("sort -t',' -k 1 -T $output_path $out1_bucketfiles[$i] > $out1_sortedfiles[$i]");
 	if (@pids >= ($max_processes - 1)) {
 		# don't spawn off too many threads at once.
 		wait_for_forks(\@pids);
@@ -172,7 +171,7 @@ for (my $i=0; $i<$numshards; $i++) {
 wait_for_forks(\@pids);
 
 for (my $i=0; $i<$numshards; $i++) {
-    push @pids, fork_cmd ("sort -t',' -k 1 -T $tempdir $out2_bucketfiles[$i] > $out2_sortedfiles[$i]");
+    push @pids, fork_cmd ("sort -t',' -k 1 -T $output_path $out2_bucketfiles[$i] > $out2_sortedfiles[$i]");
 	if (@pids >= ($max_processes - 1)) {
 		# don't spawn off too many threads at once.
 		wait_for_forks(\@pids);
