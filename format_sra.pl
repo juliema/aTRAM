@@ -42,6 +42,13 @@ unless ($output_file) {
 
 # make the output file an absolute path, just to be safe.
 $output_file = File::Spec->rel2abs($output_file);
+my $output_path = dirname ($output_file);
+
+# check to see if the path for the output_file exists; if not, create it.
+unless (-d $output_path) {
+	make_path ($output_path);
+}
+
 
 # Look in the config.txt file to find the correct paths to binaries.
 Configuration::initialize();
