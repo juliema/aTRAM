@@ -152,9 +152,6 @@ set_log($log_file);
 
 printlog ($runline);
 
-my $executing_path = dirname(__FILE__);
-my $cmd;
-
 # set up the number of partial libraries we'll be using.
 my $total_shards_available = get_total_shards("$atram_db");
 my $max_shard = get_max_shard();
