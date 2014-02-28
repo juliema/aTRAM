@@ -20,7 +20,7 @@ BEGIN {
 }
 
 our $binaries = {};
-our @req_software = qw(blastn tblastn blastx tblastx makeblastdb gawk);
+our @req_software = qw(blastn tblastn blastx tblastx makeblastdb);
 our @assemblers = ();
 our $assembler_dir = "";
 our $config_file = "";
