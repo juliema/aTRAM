@@ -1,6 +1,5 @@
 #!/usr/bin/env perl
 use strict;
-use File::Spec;
 use FindBin;
 use lib "$FindBin::Bin/lib";
 use Configuration;
