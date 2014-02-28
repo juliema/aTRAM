@@ -1,18 +1,19 @@
 #!/usr/bin/env perl
 use strict;
-use File::Basename;
 use File::Spec;
-use File::Find;
-use Module::Load;
 use FindBin;
 use lib "$FindBin::Bin/lib";
 use Configuration;
 
 # find or make config.txt:
 my $config_file = "$FindBin::Bin/lib/config.txt";
-if (-e $config_file) {
-	Configuration::initialize();
+unless (-e $config_file) {
+	# if the config_file isn't existing, make an empty one for filling.
+	open CONFIG_FH, ">", $config_file;
+	close CONFIG_FH;
 }
+
+Configuration::initialize();
 open CONFIG_FH, ">", $config_file;
 print CONFIG_FH "# Enter the full path for the software binary below:\n";
 
@@ -22,15 +23,10 @@ my $result = 0;
 print "==== aTRAM checklist ====\n\n";
 
 print $i++ .". Checking for required software...\n";
-my @req_software = qw(blastn tblastn blastx tblastx makeblastdb gawk);
+my @req_software = @Configuration::req_software;
 
 foreach my $sw (@req_software) {
 	my $fullpath = Configuration::find_bin($sw); # see if $sw has already been located.
-
-	if ($fullpath eq "") {
-		# if we don't have a path for $sw, ask the system.
-		$fullpath = which ($sw);
-	}
 
 	if ($fullpath eq "") {
 		print "   ...$sw couldn't be found on this system.\n";
@@ -49,38 +45,43 @@ foreach my $sw (@req_software) {
 }
 
 print $i++ .". Checking for assembly software...\n";
-my $assembler_dir = "$FindBin::Bin/lib/Assembler";
-my @assembly_software = ();
+my @assemblers = @{Configuration::get_assemblers()};
+my $assembler_present = 0;
+foreach my $assembler (@assemblers) {
+	my $assembler_ready = 0;
+	print "   For assembler $assembler->{'name'}:\n";
+	my $assembly_software = $assembler->{'bins'};
+	foreach my $sw (@$assembly_software) {
+		my $fullpath = Configuration::find_bin($sw); # see if $sw has already been located.
 
-find ( {wanted => \&list_bins, no_chdir => 1} , "$assembler_dir");
-
-foreach my $sw (@assembly_software) {
-	my $fullpath = Configuration::find_bin($sw); # see if $sw has already been located.
-
-	if ($fullpath eq "") {
-		# if we don't have a path for $sw, ask the system.
-		$fullpath = which ($sw);
-	}
-
-	if ($fullpath eq "") {
-		print "   ...$sw couldn't be found on this system.\n";
-		$sw_ready = 0;
-	} else {
-		$result = system_call("$fullpath 2>&1 1>/dev/null");
-		if ($result == 127) {
-			print "   ...$sw was not found at $fullpath.\n";
-			$sw_ready = 0;
+		if ($fullpath eq "") {
+			print "      ...$sw couldn't be found on this system.\n";
 		} else {
-			print "   ...$sw is present.\n";
+			$result = system_call("$fullpath 2>&1 1>/dev/null");
+			if ($result == 127) {
+				print "      ...$sw was not found at $fullpath.\n";
+			} else {
+				print "      ...$sw is present.\n";
+				$assembler_ready++;
+			}
 		}
-	}
 
-	print CONFIG_FH "$sw=$fullpath\n";
+		print CONFIG_FH "$sw=$fullpath\n";
+	}
+	if ($assembler_ready == @$assembly_software) {
+		print "   Assembler $assembler->{'name'} is ready to use.\n";
+		$assembler_present++;
+	} else {
+		print "   Assembler $assembler->{'name'} cannot find all its binaries.\n";
+	}
+}
+if ($assembler_present == 0) {
+	$sw_ready == 0;
 }
 
 close CONFIG_FH;
 if ($sw_ready == 0) {
-	print "You need to install some software before you can run aTRAM. \n";
+	print "Software required by some parts of aTRAM were not found on this system.\n";
 	print "If software is installed but not included in \$PATH, edit the appropriate line in config.txt.\n";
 	print "\nContinue checks? [Y/n]\n";
 	my $userpath = <STDIN>;
@@ -88,7 +89,7 @@ if ($sw_ready == 0) {
 		exit;
 	}
 }
-my $executing_path = dirname(__FILE__);
+my $executing_path = $FindBin::Bin;
 
 print $i++ .". Checking that format_sra works correctly...\n";
 unless (system_call ("cp $executing_path/test/test_good.fastq $executing_path/test_inst.fastq") == 0) {
@@ -132,27 +133,3 @@ sub system_call {
 	return $exit_val;
 }
 
-sub which {
-	my $cmd = shift;
-
-	my @pathlist = File::Spec->path();
-	foreach my $path (@pathlist) {
-		my $cmdpath = File::Spec->catpath("", $path, $cmd);
-		if (-x $cmdpath) {
-			return "$cmdpath";
-		}
-	}
-	return "";
-}
-
-sub list_bins {
-	if ( $File::Find::name ne $assembler_dir) {
-		my $modname = basename ($_);
-		$modname =~ s/\.pm//;
-		load "Assembler::$modname";
-		my $bins = $modname->get_binaries();
-		push @assembly_software, (values %$bins);
-	}
-
-	return;
-}

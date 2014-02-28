@@ -2,6 +2,9 @@
 package Configuration;
 use strict;
 use File::Spec;
+use File::Find;
+use File::Basename;
+use Module::Load;
 use Cwd qw(realpath);
 
 BEGIN {
@@ -17,31 +20,47 @@ BEGIN {
 }
 
 our $binaries = {};
+our @req_software = qw(blastn tblastn blastx tblastx makeblastdb gawk);
+our @assemblers = ();
+our $assembler_dir = "";
+our $config_file = "";
 
 sub initialize {
 	# find the lib path in @INC:
-	my $config_file = "";
 	my $libpath = File::Spec->catfile("aTRAM", "lib");
 	foreach my $path (@INC) {
 		$path = realpath ($path);
 		if ($path =~ /$libpath/) {
 			$config_file = File::Spec->catfile($path, "config.txt");
+			$assembler_dir = File::Spec->catdir($path, "Assembler");
 			last;
 		}
 	}
 
-	my $fh;
-	if (!(defined (open $fh, "<", $config_file))) {
-		die "Couldn't find $config_file. Did you run configure.pl?";
-	}
-	foreach my $line (<$fh>) {
-		$line =~ s/(#.*)$//;
-		if ($line =~ /(.*)=(.*)$/) {
-			my $name = $1;
-			my $path = $2;
-			$binaries->{$name} = "$path";
+	if ((-s $config_file) > 0) {
+		open my $fh, "<", $config_file or die "Couldn't find $config_file. Did you run configure.pl?";
+		foreach my $line (<$fh>) {
+			$line =~ s/(#.*)$//;
+			if ($line =~ /(.*)=(.*)$/) {
+				my $name = $1;
+				my $path = $2;
+				$binaries->{$name} = "$path";
+			}
 		}
 	}
+}
+
+sub get_req_software {
+	return \@req_software;
+}
+
+sub get_assemblers {
+	if (@assemblers > 0) {
+		return \@assemblers;
+	}
+
+	find ( {wanted => \&assembler_bins, no_chdir => 1} , "$assembler_dir");
+	return \@assemblers;
 }
 
 sub find_bin {
@@ -49,8 +68,32 @@ sub find_bin {
 
 	if (exists $binaries->{$bin}) {
 		return "$binaries->{$bin}";
+	} else {
+		# if we don't have a path for $sw, ask the system.
+		my @pathlist = File::Spec->path();
+		foreach my $path (@pathlist) {
+			my $cmdpath = File::Spec->catpath("", $path, $bin);
+			if (-x $cmdpath) {
+				return "$cmdpath";
+			}
+		}
 	}
 	return "";
+}
+
+sub assembler_bins {
+	if ( $File::Find::name ne $assembler_dir) {
+		my $modname = basename ($_);
+		$modname =~ s/\.pm//;
+		load "Assembler::$modname";
+		my $bins = $modname->get_binaries();
+		my $module = {};
+		$module->{'name'} = $modname;
+		my @binnames = values %$bins;
+		$module->{'bins'} = \@binnames;
+		push @assemblers, $module;
+	}
+	return;
 }
 
 sub init_module {
