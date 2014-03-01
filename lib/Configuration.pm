@@ -26,6 +26,11 @@ our $assembler_dir = "";
 our $config_file = "";
 
 sub initialize {
+	if (%$binaries) {
+		# we've already initialized.
+		return;
+	}
+
 	# find the lib path in @INC:
 	my $libpath = File::Spec->catfile("aTRAM", "lib");
 	foreach my $path (@INC) {
