@@ -96,8 +96,8 @@ sub assembler_bins {
 sub init_module {
 	my $mod_bins = shift;
 	foreach my $b (keys %$mod_bins) {
-		$mod_bins->{$b} = find_bin($mod_bins->{$b});
-		if ($mod_bins->{$b} eq "") {
+		my $bin = find_bin($mod_bins->{$b});
+		if ($bin eq "") {
 			return 0;
 		}
 	}
