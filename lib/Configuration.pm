@@ -21,7 +21,7 @@ BEGIN {
 
 our $binaries = {};
 our @req_software = qw(blastn tblastn blastx tblastx makeblastdb);
-our @assemblers = ();
+our $assemblers = {};
 our $assembler_dir = "";
 our $config_file = "";
 
@@ -55,12 +55,12 @@ sub get_req_software {
 }
 
 sub get_assemblers {
-	if (@assemblers > 0) {
-		return \@assemblers;
+	if (%$assemblers) {
+		return $assemblers;
 	}
 
 	find ( {wanted => \&assembler_bins, no_chdir => 1} , "$assembler_dir");
-	return \@assemblers;
+	return $assemblers;
 }
 
 sub find_bin {
@@ -87,11 +87,8 @@ sub assembler_bins {
 		$modname =~ s/\.pm//;
 		load "Assembler::$modname";
 		my $bins = $modname->get_binaries();
-		my $module = {};
-		$module->{'name'} = $modname;
 		my @binnames = values %$bins;
-		$module->{'bins'} = \@binnames;
-		push @assemblers, $module;
+		$assemblers->{$modname} = \@binnames;
 	}
 	return;
 }
