@@ -44,12 +44,12 @@ foreach my $sw (@req_software) {
 }
 
 print $i++ .". Checking for assembly software...\n";
-my @assemblers = @{Configuration::get_assemblers()};
+my $assemblers = Configuration::get_assemblers();
 my $assembler_present = 0;
-foreach my $assembler (@assemblers) {
+foreach my $assembler (keys %$assemblers) {
 	my $assembler_ready = 0;
-	print "   For assembler $assembler->{'name'}:\n";
-	my $assembly_software = $assembler->{'bins'};
+	print "   For assembler $assembler:\n";
+	my $assembly_software = $assemblers->{$assembler};
 	foreach my $sw (@$assembly_software) {
 		my $fullpath = Configuration::find_bin($sw); # see if $sw has already been located.
 
@@ -68,10 +68,10 @@ foreach my $assembler (@assemblers) {
 		print CONFIG_FH "$sw=$fullpath\n";
 	}
 	if ($assembler_ready == @$assembly_software) {
-		print "   Assembler $assembler->{'name'} is ready to use.\n";
+		print "   Assembler $assembler is ready to use.\n";
 		$assembler_present++;
 	} else {
-		print "   Assembler $assembler->{'name'} cannot find all its binaries.\n";
+		print "   Assembler $assembler cannot find all its binaries.\n";
 	}
 }
 if ($assembler_present == 0) {
