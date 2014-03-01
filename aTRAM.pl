@@ -97,14 +97,14 @@ my $assembler_dir = "$FindBin::Bin/lib/Assembler";
 
 my $assembly_software = Configuration::get_assemblers();
 my $assembler_available = 0;
-	if (exists $assembly_software->{$assembler}) {
-		$assembler_available = 1;
-		load "Assembler::$assembler";
-		my $binary_names = join (", ", values %{$assembler->get_binaries()});
-		if (Configuration::check_module($assembler) == 0) {
-			pod2usage(-msg => "Binaries required for $assembler ($binary_names) are not available on this system. Please update the config.txt file if this is incorrect.");
-		}
+if (exists $assembly_software->{$assembler}) {
+	$assembler_available = 1;
+	load "Assembler::$assembler";
+	my $binary_names = join (", ", values %{$assembler->get_binaries()});
+	if (Configuration::check_module($assembler) == 0) {
+		pod2usage(-msg => "Binaries required for $assembler ($binary_names) are not available on this system. Please update the config.txt file if this is incorrect.");
 	}
+}
 
 if ($assembler_available == 0) {
 	pod2usage(-msg => "Assembler module $assembler.pm is not available in the Assembler directory.");
