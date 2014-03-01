@@ -93,10 +93,11 @@ sub assembler_bins {
 	return;
 }
 
-sub init_module {
-	my $mod_bins = shift;
-	foreach my $b (keys %$mod_bins) {
-		my $bin = find_bin($mod_bins->{$b});
+sub check_module {
+	my $mod = shift;
+	my $mod_bins = $assemblers->{$mod};
+	foreach my $b (@$mod_bins) {
+		my $bin = find_bin($b);
 		if ($bin eq "") {
 			return 0;
 		}
