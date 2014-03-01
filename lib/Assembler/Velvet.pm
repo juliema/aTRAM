@@ -3,6 +3,7 @@ package Velvet;
 use strict;
 use System;
 use Parsing;
+use Configuration;
 
 # Assembler modules need to know:
 	# where to find the short reads (pass this in as a file name)
@@ -56,11 +57,11 @@ sub assembler {
 	truncate "$tempdir/Log", 0;
 
 	if ($longreads ne "") {
-		system_call ("$binaries->{velveth} $tempdir $kmer -fasta -shortPaired $short_read_file -long $longreads", $log_file);
+		system_call (Configuration::find_bin($binaries->{velveth})." $tempdir $kmer -fasta -shortPaired $short_read_file -long $longreads", $log_file);
 	} else {
-		system_call ("$binaries->{velveth} $tempdir $kmer -fasta -shortPaired $short_read_file", $log_file);
+		system_call (Configuration::find_bin($binaries->{velveth})." $tempdir $kmer -fasta -shortPaired $short_read_file", $log_file);
 	}
-	system_call ("$binaries->{velvetg} $tempdir -ins_length $ins_length -exp_cov $exp_cov -min_contig_lgth $min_contig_len", $log_file);
+	system_call (Configuration::find_bin($binaries->{velvetg})." $tempdir -ins_length $ins_length -exp_cov $exp_cov -min_contig_lgth $min_contig_len", $log_file);
 	my ($contigs, undef) = parsefasta ("$tempdir/contigs.fa");
 
 	# copy Velvet log output to logfile.
