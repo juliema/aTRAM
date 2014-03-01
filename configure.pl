@@ -56,7 +56,7 @@ foreach my $assembler (keys %$assemblers) {
 		if ($fullpath eq "") {
 			print "      ...$sw couldn't be found on this system.\n";
 		} else {
-			$result = system_call("$fullpath 2>&1 1>/dev/null");
+			$result = system_call("$fullpath --version");
 			if ($result == 127) {
 				print "      ...$sw was not found at $fullpath.\n";
 			} else {
