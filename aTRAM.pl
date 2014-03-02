@@ -133,6 +133,12 @@ if ($output_file eq "") {
 }
 
 $output_file = File::Spec->rel2abs($output_file);
+my $output_path = dirname ($output_file);
+
+# check to see if the path for the output_file exists; if not, create it.
+unless (-d $output_path) {
+	make_path ($output_path);
+}
 
 if ($log_file eq "") {
 	$log_file = "$output_file.log";
