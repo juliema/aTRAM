@@ -3,6 +3,7 @@ use strict;
 use Getopt::Long;
 use Pod::Usage;
 use File::Basename;
+use File::Path;
 use File::Temp qw/ tempfile tempdir /;
 use FindBin;
 use lib "$FindBin::Bin/lib";
