@@ -1,4 +1,4 @@
-##     Manual for aTRAM
+#     Manual for aTRAM
 
 Here are the required commands for running aTRAM as well as a few things to keep in mind for maximum efficiency.
 
@@ -6,7 +6,7 @@ Here are the required commands for running aTRAM as well as a few things to keep
 ## Setup:
 To determine if aTRAM can run on your computer:
 
-# configure.pl
+### configure.pl
 
 perl configure.pl 
   
@@ -15,10 +15,10 @@ Furthermore, configure.pl will check for the necessary de novo alignment program
 
 ## Running aTRAM
 
-# Input File
+### Input File
 The two paired end reads should be in one file either fasta or fasq. Concatenate the two files together if necessary.
 
-# aTRAM.pl
+### aTRAM.pl
 
 
 
