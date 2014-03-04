@@ -79,7 +79,7 @@ print FH "complete\t$executing_path/completeref.fasta\n";
 close FH;
 
 $result = system_call ("perl $executing_path/../Pipelines/AlignmentPipeline.pl -samples $temp_dir/test.samples -targets $temp_dir/test.targets -out $temp_dir/test_ap -iter 5 $debug_flag", 1);
-if ($result == 1) {
+if ($result != 0) {
 	print "\nAlignmentPipeline died in execution. Please contact the developers with details of this failure at https://github.com/juliema/aTRAM/issues.\n";
 	exit;
 }
@@ -103,7 +103,7 @@ print "OK\n";
 
 print ++$i . ". Checking that BasicPipeline works correctly...";
 $result = system_call ("perl $executing_path/../Pipelines/BasicPipeline.pl -samples $temp_dir/test.samples -targets $temp_dir/test.targets -out $temp_dir/test_bp -iter 5 $debug_flag", 1);
-if ($result == 1) {
+if ($result != 0) {
 	print "\nBasicPipeline died in execution. Please contact the developers with details of this failure at https://github.com/juliema/aTRAM/issues.\n";
 	exit;
 }
