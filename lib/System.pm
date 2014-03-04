@@ -112,13 +112,14 @@ sub system_call {
 	if ($? == 2) {
 		# user signaled kill, so we should die.
 		print "System call \"$cmd\" exited with $exit_val\n";
-		exit;
+		exit $exit_val >> 8;
 	}
 
 	if (($exit_val != 0) && !(defined $log_me)) {
 		print "System call \"$cmd\" exited with $exit_val\n";
-		exit;
+		exit $exit_val >> 8;
 	}
+	debug ("System call \"$cmd\" is returning with ". ($exit_val >> 8) . "\n");
 	return $exit_val >> 8;
 }
 
@@ -143,6 +144,9 @@ sub set_log {
 }
 
 sub get_log_file {
+	if ($log_file eq "") {
+		return undef;
+	}
 	return $log_file;
 }
 
