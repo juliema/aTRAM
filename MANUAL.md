@@ -18,8 +18,15 @@ Furthermore, configure.pl will check for the necessary de novo alignment program
 ### Input File
 The two paired end reads should be in one file either fasta or fasq. Concatenate the two files together if necessary.
 
+### format_SRA.pl
+
+perl format_SRA.pl inputfile.fastq
+
+  This script will create aTRAM blast formatted databases of your Illumina run. 
+
 ### aTRAM.pl
 
+perl  aTRAM.pl 
 
 
 
