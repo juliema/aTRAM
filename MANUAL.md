@@ -5,22 +5,30 @@ Here are the required commands for running aTRAM as well as a few things to keep
 
 ## Setup:
 To determine if aTRAM can run on your computer:
-  perl configure.pl 
+
+# configure.pl
+
+perl configure.pl 
   
   This script will tell you if you need to download any new programs. If you do make sure they are in your $PATH. You can either add them directly to your /usr/bin directory or add the path to the programs to your $PATH. 
-configure.pl will check for de novo aligners including velvet, trinity and SOAPdenovo, you only need to have one of these available. It will aslo check that you have muscle and blast, these programs are required.
+Furthermore, configure.pl will check for the necessary de novo alignment programs including velvet, trinity and SOAPdenovo, you need to have at least one of these available. It will aslo check that you have muscle and blast, these programs are required.
 
-configure.pl
+## Running aTRAM
+
+# Input File
+The two paired end reads should be in one file either fasta or fasq. Concatenate the two files together if necessary.
+
+# aTRAM.pl
 
 
 
 
 
-Running on a cluster:
+## Running on a cluster:
 
 max_processes should equal number of threads
 
 format_sra.pl max processes is set to 4
 
-concatenate the two reads into one file. 
+
 
