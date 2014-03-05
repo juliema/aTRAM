@@ -32,16 +32,16 @@ perl  aTRAM.pl -reads DatabaseName -target TargetSequence.fasta -fraction Fracti
 aTRAM.pl -reads shortreadfile -target target.fasta 
 
 Optional Parameters:
-- help will give program parameters
-- log_file  filename,    will create one file for all the log output
-- output_file filename,  will create the output file
-- shards number,  number of shards to search
-- fraction number between 0-1,   identifies fraction of the database to search
-- temp_name filename, names a temporary file to store XXXX
-- save_temp filename, saves the temp file
-- complete,  turns on the autocomplete [on/off]
-- max_processes  maximum  number of processes to run for each search
-- max_memory maximum amount of memory to allocate to aTRAM
+  * - help will give program parameters
+  * - log_file  filename,    will create one file for all the log output
+  * - output_file filename,  will create the output file
+  * - shards number,  number of shards to search
+  * - fraction number between 0-1,   identifies fraction of the database to search
+  * - temp_name filename, names a temporary file to store XXXX
+  * - save_temp filename, saves the temp file
+  * - complete,  turns on the autocomplete [on/off]
+  * - max_processes  maximum  number of processes to run for each search
+  * - max_memory maximum amount of memory to allocate to aTRAM
 
 
 
