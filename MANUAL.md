@@ -29,7 +29,42 @@ perl format_SRA.pl inputfile.fastq
 perl  aTRAM.pl -reads DatabaseName -target TargetSequence.fasta -fraction Fraction 
 
 
-aTRAM.pl -reads shortreadfile -target target.fasta [-ins_length int] [-exp_coverage int] [-iterations int] [-start_iteration int] [-log_file filename] [-use_ends] [-output filename]
+aTRAM.pl -reads shortreadfile -target target.fasta 
+
+Optional Parameters:
+- help will give program parameters
+- log_file  filename,    will create one file for all the log output
+- output_file filename,  will create the output file
+- shards number,  number of shards to search
+- fraction number between 0-1,   identifies fraction of the database to search
+- temp_name filename, names a temporary file to store XXXX
+- save_temp filename, saves the temp file
+- complete,  turns on the autocomplete [on/off]
+- max_processes  maximum  number of processes to run for each search
+- max_memory maximum amount of memory to allocate to aTRAM
+
+
+
+my $protflag = 0;
+
+
+### 
+ - bitscore = 70;  shouldnt this bee in the parameters with modifiable default values?
+my $contiglength = 100;
+
+#parameters with modifiable default values                                                                                                              
+my $ins_length = 300;
+my $iterations = 5;
+my $start_iter = 1;
+my $exp_cov = 30;
+my $evalue = 10e-10;
+my $max_target_seqs = 100000000;
+my $assembler = "Velvet";
+my $kmer = 31;
+
+
+
+[-ins_length int] [-exp_coverage int] [-iterations int] [-start_iteration int] [-log_file filename] [-use_ends] [-output filename]
 
 * -reads:           short read archive (already run through format_sra.pl).
 * -target:          fasta file with sequences of interest.
