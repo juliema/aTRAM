@@ -1,15 +1,18 @@
-##	aTRAM: Automated Target Restricted Assembly Method
+##	aTRAM: automated Target Restricted Assembly Method
 
-aTRAM consists of two scripts:
+aTRAM does targeted de novo assembly of loci from paired-end Illumina runs.
 
-1.	fomrat_sra.pl: this script takes a concatenated paired-end short-read archive and prepares it for aTRAMming.
-2.	aTRAM.pl: this script runs the pipeline on a prepared short-read archive.
+aTRAM consists of three scripts:
+
+1. 	configure.pl:  this script determines that the computer has the proper dependencies for aTRAM.
+2.	fomrat_sra.pl: this script takes a concatenated paired-end short-read archive and prepares it for aTRAMming.
+3.	aTRAM.pl: this script runs aTRAM with a target sequence and the formatted short-read archive.
 
 		aTRAM.pl -reads shortreadfile -target target.fasta [-ins_length int] [-exp_coverage int] [-iterations int] [-start_iteration int] [-log_file filename] [-use_ends] [-output filename]
 
-		* -reads:     		short read archive (already run through format_sra.pl).
+		* -reads:     	    short read archive (already run through format_sra.pl).
 		* -target:          fasta file with sequences of interest.
-		* -output:	        optional: the prefix for the pipeline's output files (default name is the same as -reads).
+		* -output:	    optional: the prefix for the pipeline's output files (default name is the same as -reads).
 		* -ins_length:	    optional: the size of the fragments used in the short-read library (default 300).
 		* -exp_coverage:    optional: the expected coverage of the region for velvetg (default 30).
 		* -iterations:      optional: the number of pipeline iterations (default 5).
