@@ -39,8 +39,13 @@ sub percentcoverage {
 		$result = system_call ("muscle -in $catfile -out $outname.align.fasta");
 	}
 
+	if ($result == -1) {
+		printlog ("Aligner $aligner could not be found.");
+		exit -1;
+	}
+
 	if ($result != 0) {
-		printlog ("Aligner $aligner failed or could not be found.\n");
+		printlog ("Aligner $aligner failed.");
 		return undef;
 	}
 

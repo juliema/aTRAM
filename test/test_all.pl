@@ -15,6 +15,8 @@ if (@ARGV[0] eq "debug") {
 	$temp_dir = $ARGV[0];
 	make_path ($temp_dir);
 	set_debug(1);
+	open FH, ">", "debug.log";
+	close FH;
 	set_log("debug.log");
 	$debug_flag = "-debug";
 }
@@ -78,7 +80,7 @@ print FH "bad\t$executing_path/badref.fasta\n";
 print FH "complete\t$executing_path/completeref.fasta\n";
 close FH;
 
-$result = system_call ("perl $executing_path/../Pipelines/AlignmentPipeline.pl -samples $temp_dir/test.samples -targets $temp_dir/test.targets -out $temp_dir/test_ap -iter 5 $debug_flag", 1);
+$result = system_call ("perl $executing_path/../Pipelines/AlignmentPipeline.pl -samples $temp_dir/test.samples -targets $temp_dir/test.targets -out $temp_dir/test_ap -iter 5 $debug_flag -log " . System::get_log_file());
 if ($result != 0) {
 	print "\nAlignmentPipeline died in execution. Please contact the developers with details of this failure at https://github.com/juliema/aTRAM/issues.\n";
 	exit;
