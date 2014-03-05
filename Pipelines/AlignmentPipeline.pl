@@ -170,7 +170,7 @@ foreach my $target (@targetnames) {
 
 		if (!(defined $contigs)) {
 			printlog ("percentcoverage failed for $targets->{$target}, $comparefile.\n");
-			exit;
+			exit -1;
 		}
 
 		my $refseq = delete $contigs->{reference};
