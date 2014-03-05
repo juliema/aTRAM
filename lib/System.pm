@@ -54,7 +54,7 @@ sub fork_cmd {
 
 sub wait_for_forks {
     while (@{$_[0]} > 0) {
-     	debug ("waiting for " . join(", ", @{$_[0]}) . "\n");
+     	debug ("waiting for " . join(", ", @{$_[0]}) );
 		my $item = pop @{$_[0]};
         waitpid $item, 0;
         if ($? != 0) {
@@ -62,19 +62,6 @@ sub wait_for_forks {
         }
     }
     return;
-}
-
-sub printlog {
-	my $msg = shift;
-
-	$msg = timestamp() . ": " . $msg . "\n";
-	print $msg;
-	if ($log_fh) {
-        select($log_fh);
-        $| = 1;
-		print $log_fh $msg;
-		select(STDOUT);
-	}
 }
 
 sub system_call {
@@ -148,6 +135,20 @@ sub get_log_file {
 		return undef;
 	}
 	return $log_file;
+}
+
+sub printlog {
+	my $msg = shift;
+
+	$msg = timestamp() . ": " . $msg . "\n";
+	if ($log_fh) {
+        select($log_fh);
+        $| = 1;
+		print $log_fh $msg;
+		select(STDOUT);
+	} else {
+		print $msg;
+	}
 }
 
 return 1;
