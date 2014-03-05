@@ -84,9 +84,7 @@ sub system_call {
 		open STDERR, ">>", get_log_file();
 	}
 
-	my $exit_val = eval {
-		system ($cmd);
-	};
+	my $result = `$cmd`;
 
 	# unwind the redirects.
 	if (defined get_log_file()) {
