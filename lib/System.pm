@@ -68,33 +68,35 @@ sub system_call {
 	my $cmd = shift;
 	my $log_me = shift;
 
-	my ($saveout, $saveerr);
-	open $saveout, ">&STDOUT";
-	open $saveerr, ">&STDERR";
+	open my $saveout, ">&STDOUT";
+	open my $saveerr, ">&STDERR";
+
 	if ($debug == 0) {
+		# if we're not debugging, dump the system's output to devnull.
 		open STDOUT, '>', File::Spec->devnull();
 		open STDERR, '>', File::Spec->devnull();
 	}
 
-	if ((defined $log_me) && ($log_file ne "")) {
-		printlog ("$cmd\n");
-		open STDOUT, ">>", $log_file;
-		open STDERR, ">>", $log_file;
+	if (defined get_log_file()) {
+		# if a log file has been specified, dump to that.
+		printlog ("Running command \"$cmd\"");
+		open STDOUT, ">>", get_log_file();
+		open STDERR, ">>", get_log_file();
 	}
+
 	my $exit_val = eval {
 		system ($cmd);
 	};
-	if ((defined $log_me) && ($log_file ne "")) {
+
+	# unwind the redirects.
+	if (defined get_log_file()) {
 		close STDOUT;
 		close STDERR;
-		open STDOUT, ">&", $saveout;
-		open STDERR, ">&", $saveerr;
+		printlog ("Returning ".($exit_val >> 8)." from \"$cmd\"");
 	}
 
-	if ($debug == 0) {
-		open STDOUT, ">&", $saveout;
-		open STDERR, ">&", $saveerr;
-	}
+	open STDOUT, ">&", $saveout;
+	open STDERR, ">&", $saveerr;
 
 	if ($? == 2) {
 		# user signaled kill, so we should die.
@@ -106,7 +108,6 @@ sub system_call {
 		print "System call \"$cmd\" exited with $exit_val\n";
 		exit $exit_val >> 8;
 	}
-	debug ("System call \"$cmd\" is returning with ". ($exit_val >> 8) . "\n");
 	return $exit_val >> 8;
 }
 
@@ -127,6 +128,7 @@ sub set_log {
 	$log_file = $log_new;
 	open my $temp_fh, ">>", $log_file or print "Couldn't open $log_file\n";
 	$log_fh = $temp_fh;
+	debug ("Setting log file to $log_new");
 }
 
 sub get_log_file {
