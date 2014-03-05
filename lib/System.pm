@@ -66,7 +66,7 @@ sub wait_for_forks {
 
 sub system_call {
 	my $cmd = shift;
-	my $log_me = shift;
+	my $no_exit = shift;
 
 	open my $saveout, ">&STDOUT";
 	open my $saveerr, ">&STDERR";
@@ -102,9 +102,9 @@ sub system_call {
 		# user signaled kill, so we should die.
 		print "System call \"$cmd\" exited with $exit_val\n";
 		exit $exit_val >> 8;
+	if (($exit_val != 0) && !(defined $no_exit)) {
 	}
 
-	if (($exit_val != 0) && !(defined $log_me)) {
 		print "System call \"$cmd\" exited with $exit_val\n";
 		exit $exit_val >> 8;
 	}
