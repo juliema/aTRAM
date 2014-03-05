@@ -32,6 +32,7 @@ my $complete = 0;
 my $processes = 0;
 my $assembler = "";
 my $aligner = "";
+my $log_file = "";
 my $max_memory = 0;
 
 GetOptions ('samples=s' => \$samplefile,
@@ -47,6 +48,7 @@ GetOptions ('samples=s' => \$samplefile,
 			'assembler=s' => \$assembler,
 			'aligner=s' => \$aligner,
 			'max_memory|memory=i' => \$max_memory,
+            'log_file=s' => \$log_file,
             'help|?' => \$help) or pod2usage(-msg => "GetOptions failed.", -exitval => 2);
 
 if ($help) {
@@ -61,13 +63,16 @@ set_debug ($debug);
 
 if (($targetfile eq "") || ($samplefile eq "")) {
     pod2usage(-msg => "Must specify a list of aTRAM databases and a list of target sequences.", -verbose => 1);
-	exit;
+	exit 2;
 }
 
 $outdir = File::Spec->rel2abs($outdir);
 make_path($outdir);
 
-my $log_file = File::Spec->catfile($outdir, "pipeline.log");
+if ($log_file eq "") {
+	$log_file = File::Spec->catfile($outdir, "pipeline.log");
+}
+
 set_log($log_file);
 
 printlog ("Running $runline");
