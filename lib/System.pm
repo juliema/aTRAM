@@ -113,8 +113,7 @@ sub system_call {
 sub debug {
 	my $msg = shift;
 	if ($debug) {
-		print "$msg";
-		print $log_fh ("DEBUG: $msg");
+		printlog ("DEBUG: $msg");
 	}
 }
 
