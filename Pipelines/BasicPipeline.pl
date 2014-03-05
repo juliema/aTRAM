@@ -20,6 +20,7 @@ my $help = 0;
 my $samplefile = "";
 my $targetfile = "";
 my $outdir = ".";
+my $log_file = "";
 my $kmer = 31;
 my $iter = 20;
 my $frac = 1;
@@ -42,6 +43,7 @@ GetOptions ('samples=s' => \$samplefile,
 			'complete' => \$complete,
 			'processes=i' => \$processes,
 			'max_memory|memory=i' => \$max_memory,
+            'log_file=s' => \$log_file,
             'help|?' => \$help) or pod2usage(-msg => "GetOptions failed.", -exitval => 2);
 
 if ($help) {
@@ -58,7 +60,10 @@ if (($targetfile eq "") || ($samplefile eq "")) {
 	exit;
 }
 
-my $log_file = File::Spec->catfile($outdir, "pipeline.log");
+if ($log_file eq "") {
+	$log_file = File::Spec->catfile($outdir, "pipeline.log");
+}
+
 set_log($log_file);
 
 printlog ("Running $runline");
