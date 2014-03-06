@@ -56,7 +56,7 @@ unless (-d $output_path) {
 Configuration::initialize();
 
 if ($log_file eq "") {
-	$log_file = File::Spec->catfile($outdir, "output_file.log");
+	$log_file = "$output_file.log";
 }
 
 set_log($log_file);
