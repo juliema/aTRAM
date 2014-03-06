@@ -144,16 +144,16 @@ unless (-d $output_path) {
 if ($log_file eq "") {
 	$log_file = "$output_file.log";
 }
+set_log($log_file);
+
+printlog ($runline);
+
 if ($temp_name eq "") {
     $temp_name = $output_file;
     $save_temp = 0;
 } else {
 	$save_temp = 1;
 }
-
-set_log($log_file);
-
-printlog ($runline);
 
 # set up the number of partial libraries we'll be using.
 my $total_shards_available = get_total_shards("$atram_db");

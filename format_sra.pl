@@ -16,6 +16,7 @@ if (@ARGV == 0) {
 
 my $short_read_archive = "";
 my $output_file = "";
+my $log_file = "";
 my $help = 0;
 my $debug = 0;
 my $numshards = 0;
@@ -26,6 +27,7 @@ GetOptions ('input=s' => \$short_read_archive,
             'number=i' => \$numshards,
             'debug' => \$debug,
 			'max_processes|processes=i' => \$max_processes,
+            'log_file=s' => \$log_file,
             'help|?' => \$help) or pod2usage(-msg => "GetOptions failed.", -exitval => 2);
 
 if ($help) {
@@ -53,8 +55,12 @@ unless (-d $output_path) {
 # Look in the config.txt file to find the correct paths to binaries.
 Configuration::initialize();
 
-my $log_file = "$output_file.log";
-set_log ($log_file);
+if ($log_file eq "") {
+	$log_file = File::Spec->catfile($outdir, "output_file.log");
+}
+
+set_log($log_file);
+
 
 # making a redirect file to make it easier for users to have something to specify.
 my $db_file = "$output_file.atram";
