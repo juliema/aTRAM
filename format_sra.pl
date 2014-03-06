@@ -81,6 +81,11 @@ if ($numshards == 0) {
 		$srasize = $srasize/2;
 	}
 	$numshards = int($srasize / 5e8);
+
+	# but if it's smaller than the minimum, make at least one shard.
+	if ($numshards == 0) {
+		$numshards = 1;
+	}
 	printlog ("$short_read_archive is $srasizeMB MB; we will make $numshards shards.");
 } else {
 	printlog ("making $numshards shards from $short_read_archive.");
