@@ -125,7 +125,7 @@ unless($atram_db and $target_fasta) {
 
 # check to make sure that the specified short read archive exists:
 unless ((-e "$atram_db.0.1.fasta") && (-e "$atram_db.0.2.fasta")) {
-	pod2usage(-msg => "Short read archive does not seem to be in the format made by makelibrary.pl. Did you specify the name correctly?");
+	pod2usage(-msg => "Short read archive $atram_db does not seem to be in the format made by makelibrary.pl. Did you specify the name correctly?");
 }
 
 
