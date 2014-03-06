@@ -137,9 +137,14 @@ sub set_debug {
 sub set_log {
 	my $log_new = shift;
 	$log_file = $log_new;
-	open my $temp_fh, ">>", $log_file or print "Couldn't open $log_file\n";
-	$log_fh = $temp_fh;
-	debug ("Setting log file to $log_new");
+	if ($log_new ne "") {
+		open my $temp_fh, ">>", $log_file or print "Couldn't open $log_file\n";
+		$log_fh = $temp_fh;
+		debug ("Setting log file to $log_new");
+	} else {
+		$log_file = "";
+		$log_fh = 0;
+	}
 }
 
 sub get_log_file {
