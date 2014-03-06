@@ -80,7 +80,7 @@ if ($numshards == 0) {
 	if ($short_read_archive =~ /\.f.*q/) {
 		$srasize = $srasize/2;
 	}
-	$numshards = int($srasize / 5e8);
+	$numshards = int($srasize / 2.5e8);
 
 	# but if it's smaller than the minimum, make at least one shard.
 	if ($numshards == 0) {
