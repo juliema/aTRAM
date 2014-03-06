@@ -151,15 +151,21 @@ sub get_log_file {
 
 sub printlog {
 	my $msg = shift;
+	my $echo = shift;
 
+	if (defined $echo) {
+		my $oldpipe = $|;
+		select(STDOUT);
+        $| = 1;
+		print $msg. "\n";
+		$| = $oldpipe;
+	}
 	$msg = timestamp() . ": " . $msg . "\n";
 	if ($log_fh) {
         select($log_fh);
         $| = 1;
 		print $log_fh $msg;
 		select(STDOUT);
-	} else {
-		print $msg;
 	}
 }
 
