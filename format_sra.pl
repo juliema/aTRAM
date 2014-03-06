@@ -195,9 +195,17 @@ for (my $i=0; $i<$numshards; $i++) {
 	printlog ("Making $output_file.$i.1.fasta.");
 	open my $in_fh, "<", "$out1_sortedfiles[$i]" or exit_with_msg ("couldn't read $out1_sortedfiles[$i]");
 	open my $out_fh, ">", "$output_file.$i.1.fasta" or exit_with_msg ("couldn't create $output_file.$i.1.fasta");
+	my $prevname = "";
 	while (my $line = readline $in_fh) {
 		chomp $line;
 		my ($name, $seq) = split(/,/,$line);
+
+		# if the new sequence is the same name as the last sequence, something is wrong.
+		if ($prevname eq $name) {
+			printlog ("Error detected in $short_read_archive: Sequence $name occurred at least twice.");
+			exit 2;
+		}
+		$prevname = $name;
 		print $out_fh "$name\n$seq\n";
 	}
 	close $in_fh;
@@ -206,9 +214,16 @@ for (my $i=0; $i<$numshards; $i++) {
 	printlog ("Making $output_file.$i.2.fasta.");
 	open $in_fh, "<", "$out2_sortedfiles[$i]" or exit_with_msg ("couldn't read $out2_sortedfiles[$i]");
 	open $out_fh, ">", "$output_file.$i.2.fasta" or exit_with_msg ("couldn't create $output_file.$i.2.fasta");
+	$prevname = "";
 	while (my $line = readline $in_fh) {
 		chomp $line;
 		my ($name, $seq) = split(/,/,$line);
+		# if the new sequence is the same name as the last sequence, something is wrong.
+		if ($prevname eq $name) {
+			printlog ("Error detected in $short_read_archive: Sequence $name occurred at least twice.");
+			exit 2;
+		}
+		$prevname = $name;
 		print $out_fh "$name\n$seq\n";
 	}
 	close $in_fh;
