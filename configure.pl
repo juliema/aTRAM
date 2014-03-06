@@ -3,6 +3,7 @@ use strict;
 use FindBin;
 use lib "$FindBin::Bin/lib";
 use Configuration;
+use System;
 
 # find or make config.txt:
 my $config_file = "$FindBin::Bin/lib/config.txt";
@@ -15,7 +16,6 @@ unless (-e $config_file) {
 Configuration::initialize();
 open CONFIG_FH, ">", $config_file;
 print CONFIG_FH "# Enter the full path for the software binary below:\n";
-
 my $sw_ready = 1;
 my $i = 1;
 my $result = 0;
@@ -31,7 +31,7 @@ foreach my $sw (@req_software) {
 		print "   ...$sw couldn't be found on this system.\n";
 		$sw_ready = 0;
 	} else {
-		$result = system_call("$fullpath 2>&1 1>/dev/null");
+		$result = system_call("$fullpath 2>&1 1>/dev/null",1);
 		if ($result == 127) {
 			print "   ...$sw was not found at $fullpath.\n";
 			$sw_ready = 0;
@@ -56,7 +56,7 @@ foreach my $assembler (keys %$assemblers) {
 		if ($fullpath eq "") {
 			print "      ...$sw couldn't be found on this system.\n";
 		} else {
-			$result = system_call("$fullpath --version");
+			$result = system_call("$fullpath --version",1);
 			if ($result == 127) {
 				print "      ...$sw was not found at $fullpath.\n";
 			} else {
@@ -114,21 +114,3 @@ if ($result == 0) {
 
 print "Looks good! You are ready to aTRAM it up!\n";
 system_call("rm $executing_path/test_inst.*");
-
-sub system_call {
-	my $cmd = shift;
-	open my $saveout, ">&STDOUT";
-	open my $saveerr, ">&STDERR";
-	open STDOUT, '>', File::Spec->devnull();
-	open STDERR, '>', File::Spec->devnull();
-
-	my $exit_val = eval {
-		system ($cmd);
-	} >> 8;
-
-	open STDOUT, ">&", $saveout;
-	open STDERR, ">&", $saveerr;
-
-	return $exit_val;
-}
-
