@@ -43,11 +43,11 @@ sub exit_with_msg {
 
 sub fork_cmd {
 	my $cmd = shift;
-	print $log_fh ("\t$cmd\n");
     my $child_pid = fork();
     unless ($child_pid) { #child process
 		exec ($cmd);
     } else { #parent process
+		printlog ("Forking pid $child_pid: $cmd");
         return $child_pid;
     }
 }
