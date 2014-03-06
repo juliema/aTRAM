@@ -82,35 +82,23 @@ close CONFIG_FH;
 if ($sw_ready == 0) {
 	print "Software required by some parts of aTRAM were not found on this system.\n";
 	print "If software is installed but not included in \$PATH, edit the appropriate line in config.txt.\n";
-	print "\nContinue checks? [Y/n]\n";
-	my $userpath = <STDIN>;
+}
+
+print "\nWould you like to run aTRAM functionality tests (may take a few minutes)? [Y/n]\n";
+my $userpath = <STDIN>;
+while ($userpath !~ /[yY]\n/) {
 	if ($userpath =~ /[nN]\n/) {
 		exit;
 	}
+	if ($userpath =~ /^\n/) {
+		last;
+	}
+	$userpath = <STDIN>;
 }
+
 my $executing_path = $FindBin::Bin;
 
-print $i++ .". Checking that format_sra works correctly...\n";
-unless (system_call ("cp $executing_path/test/test_good.fastq $executing_path/test_inst.fastq") == 0) {
-	die "Couldn't find test_good.fastq";
-}
-
-$result = system_call ("perl $executing_path/format_sra.pl $executing_path/test_inst.fastq");
-if ($result == 1) {
-	print "Test failed. Please contact the developers with details of this failure at https://github.com/juliema/aTRAM/issues.\n";
-	exit;
-}
-
-print $i++ .". Checking a defective file...\n";
-unless (system_call ("cp $executing_path/test/test_bad.fasta $executing_path/test_inst.fasta") == 0) {
-	die "Couldn't find test_bad.fasta";
-}
-
-$result = system_call ("perl $executing_path/format_sra.pl $executing_path/test_inst.fasta");
-if ($result == 0) {
-	print "Test failed. Please contact the developers with details of this failure at https://github.com/juliema/aTRAM/issues.\n";
-	exit;
-}
+print $i++ .". Verifying aTRAM functionality, please wait...\n";
+print `$executing_path/test/test_all.pl`;
 
 print "Looks good! You are ready to aTRAM it up!\n";
-system_call("rm $executing_path/test_inst.*");
