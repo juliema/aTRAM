@@ -10,8 +10,7 @@ To determine if aTRAM can run on your computer:
 
 ######perl configure.pl 
   
-  This script will tell you if you need to download any new programs. If you do make sure they are in your $PATH. You can either add them directly to your /usr/bin directory or add the path to the programs to your $PATH. 
-Furthermore, configure.pl will check for the necessary de novo alignment programs including velvet, trinity and SOAPdenovo, you need to have at least one of these available. It will aslo check that you have muscle and blast, these programs are required.
+  This script will determine if BLAST and de novo assembly software are available. It will create a text file called configure.txt with the paths to the programs. They can be available in your $PATH by adding them directly ou can either add them directly to your /usr/bin directory or add the path to the programs to your $PATH. Alternatively, the configure.txt file can be edited directly with the path to the programs. BLAST is required and at least one of the de novo assemblers are required Trinity or Velvet.
 
 ## Running aTRAM
 
@@ -20,13 +19,13 @@ The two paired end reads should be in one file either fasta or fasq. Concatenate
 
 ### format_SRA.pl
 
-perl format_SRA.pl -input inputfile.fastq [-output Database Name | -int Number of Shards ]
+######perl format_SRA.pl -input inputfile.fastq [-output Database Name | -int Number of Shards ]
 
   This script will create an aTRAM blast formatted database of your Illumina run. By default it will split the short read archive into shards for every 250 MB. The final aTRAM database will have roughly (Number of GB of a fasta file)/4 blast formatted databases. You can specify a different number of shards with -int.  We calculated 250 MB based on the memory allocated to BLAST and time necessary to search through each database. 
 
 ### aTRAM.pl
 
-perl  aTRAM.pl -reads DatabaseName -target TargetSequence.fasta -fraction Fraction 
+######perl  aTRAM.pl -reads DatabaseName -target TargetSequence.fasta -fraction Fraction 
 
 
 aTRAM.pl -reads shortreadfile -target target.fasta 
