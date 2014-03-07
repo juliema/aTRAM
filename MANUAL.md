@@ -8,7 +8,7 @@ To determine if aTRAM can run on your computer:
 
 ### configure.pl
 
-  ######perl configure.pl 
+######perl configure.pl 
   
   This script will tell you if you need to download any new programs. If you do make sure they are in your $PATH. You can either add them directly to your /usr/bin directory or add the path to the programs to your $PATH. 
 Furthermore, configure.pl will check for the necessary de novo alignment programs including velvet, trinity and SOAPdenovo, you need to have at least one of these available. It will aslo check that you have muscle and blast, these programs are required.
