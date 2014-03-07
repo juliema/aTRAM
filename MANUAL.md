@@ -20,9 +20,9 @@ The two paired end reads should be in one file either fasta or fasq. Concatenate
 
 ### format_SRA.pl
 
-perl format_SRA.pl inputfile.fastq
+perl format_SRA.pl -input inputfile.fastq [-output Database Name | -int Number of Shards ]
 
-  This script will create aTRAM blast formatted databases of your Illumina run. 
+  This script will create aTRAM blast formatted databases of your Illumina run. It will split the short read archive into shards for every 250 MB. The final aTRAM database will have ~ # of GB (of a fasta file)/4 blast formatted databases. 
 
 ### aTRAM.pl
 
