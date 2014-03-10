@@ -453,16 +453,16 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 
 	# save off these resulting contigs to the ongoing contigs file.
 	open CONTIGS_FH, ">>", "$output_file.all.fasta";
-	printlog ("\twriting contigs to $output_file.all.fasta:", 1);
+	printlog ("\twriting contigs to $output_file.all.fasta:");
 	foreach my $contig_name (@contig_names) {
 		my $seq = $contig_seqs->{$contig_name};
 		# revcomping contigs with negative strand directions:
 		if ($hit_matrix->{$contig_name}->{"strand"} < 0) {
-			printlog ("\t\twriting out reverse-complement of $contig_name", 1);
+			printlog ("\t\twriting out reverse-complement of $contig_name");
 			$seq = reverse_complement($seq);
 			print CONTIGS_FH ">$i.$contig_name\n$seq\n";
 		} else {
-			printlog ("\t\twriting out $contig_name", 1);
+			printlog ("\t\twriting out $contig_name");
 			print CONTIGS_FH ">$i.$contig_name\n$seq\n";
 		}
 		$hit_matrix->{$contig_name}->{"seq"} = $seq;
