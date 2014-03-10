@@ -61,7 +61,6 @@ if ($log_file eq "") {
 
 set_log($log_file);
 
-
 # making a redirect file to make it easier for users to have something to specify.
 my $db_file = "$output_file.atram";
 open DB_FH, ">", $db_file;
@@ -74,7 +73,7 @@ $srasizeMB =~ s/(\d*)\.(\d{2}).*/$1.$2/;
 
 set_multiplier ($srasize);
 
-# if the user didn't specify how many shards to make, we should make as many as we need so that they average 500MB each.
+# if the user didn't specify how many shards to make, we should make as many as we need so that they average 250MB each.
 if ($numshards == 0) {
 	# if it's a fastq file, the file is twice the size that it would be if it were a fasta.
 	if ($short_read_archive =~ /\.f.*q/) {
@@ -274,7 +273,7 @@ Takes a fasta or fastq file of paired-end short reads and creates an aTRAM datab
 
  -input:   short read archive.
  -output:  optional: prefix of aTRAM database (default is the same as -input).
- -number:  optional: number of shards to create (default is however many are required for each to be ~500MB).
+ -number:  optional: number of shards to create (default is however many are required for each to be ~250MB).
 
 =cut
 

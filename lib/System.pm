@@ -158,7 +158,7 @@ sub printlog {
 	my $msg = shift;
 	my $echo = shift;
 
-	if (defined $echo) {
+	if ($echo == 1) {
 		my $oldpipe = $|;
 		select(STDOUT);
         $| = 1;
