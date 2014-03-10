@@ -170,7 +170,7 @@ unless ((-e "$atram_db.$max_shard.1.fasta") && (-e "$atram_db.$max_shard.2.fasta
 	pod2usage(-msg => "aTRAM database was improperly formatted.");
 }
 
-printlog ("Using $shards of $total_shards_available total shards.");
+printlog ("Using $shards of $total_shards_available total shards.", 1);
 
 if ($max_memory > 0) {
 	# max_memory should be in GB
@@ -181,7 +181,7 @@ if ($max_memory > 0) {
 	} else {
 		$max_target_seqs = int (1000000 * $max_target_millions);
 	}
-	printlog ("Based on a cap of $max_memory GB of memory, we can find up to $max_target_seqs reads per shard.");
+	printlog ("Based on a cap of $max_memory GB of memory, we can find up to $max_target_seqs reads per shard.", 1);
 }
 
 open CONTIGS_FH, ">", "$output_file.all.fasta";
@@ -296,7 +296,7 @@ if ($save_temp) {
 
 # STARTING ITERATIONS:
 for (my $i=$start_iter; $i<=$iterations; $i++) {
-	printlog ("iteration $i starting...");
+	printlog ("iteration $i starting...", 1);
 
 	my @shardfiles = ();
 	my @pids = ();
@@ -353,7 +353,7 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 
 	# SHUTDOWN CHECK: did we not find any reads? Go ahead and quit.
 	if ((-s "$temp_name.$i.blast.fasta") == 0) {
-		printlog ("No similar reads were found.");
+		printlog ("No similar reads were found.", 1);
 		system_call ("rm $temp_name.$i.blast.fasta");
 		last;
 	}
@@ -426,13 +426,13 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 
 	# SHUTDOWN CHECK:
 	if ((keys %$hit_matrix) == $old_matrix_size) {
-		printlog ("No new contigs were found.");
+		printlog ("No new contigs were found.", 1);
 		last;
 	}
 
 	# SHUTDOWN CHECK:
 	if (@contig_names == 0) {
-		printlog ("No contigs had a bitscore greater than $bitscore and longer than $contiglength in iteration $i: the highest bitscore this time was $high_score.");
+		printlog ("No contigs had a bitscore greater than $bitscore and longer than $contiglength in iteration $i: the highest bitscore this time was $high_score.", 1);
 		last;
 	}
 
@@ -453,16 +453,16 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 
 	# save off these resulting contigs to the ongoing contigs file.
 	open CONTIGS_FH, ">>", "$output_file.all.fasta";
-	printlog ("\twriting contigs to $output_file.all.fasta:");
+	printlog ("\twriting contigs to $output_file.all.fasta:", 1);
 	foreach my $contig_name (@contig_names) {
 		my $seq = $contig_seqs->{$contig_name};
 		# revcomping contigs with negative strand directions:
 		if ($hit_matrix->{$contig_name}->{"strand"} < 0) {
-			printlog ("\t\twriting out reverse-complement of $contig_name");
+			printlog ("\t\twriting out reverse-complement of $contig_name", 1);
 			$seq = reverse_complement($seq);
 			print CONTIGS_FH ">$i.$contig_name\n$seq\n";
 		} else {
-			printlog ("\t\twriting out $contig_name");
+			printlog ("\t\twriting out $contig_name", 1);
 			print CONTIGS_FH ">$i.$contig_name\n$seq\n";
 		}
 		$hit_matrix->{$contig_name}->{"seq"} = $seq;
@@ -493,7 +493,7 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 	# SHUTDOWN CHECK:
 	if ($complete == 1) {
 		if (@complete_contigs > 0) {
-			printlog ("Contigs that cover the entire target sequence were found; quitting at iteration $i.");
+			printlog ("Contigs that cover the entire target sequence were found; quitting at iteration $i.", 1);
 			last;
 		}
 	}
