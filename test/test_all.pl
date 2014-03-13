@@ -13,9 +13,9 @@ my $debug_flag = "";
 my $log_flag = "";
 my $executing_path = "$FindBin::Bin";
 my $temp_dir = tempdir(CLEANUP => 1);
-if (@ARGV[0] eq "debug") {
+if (@ARGV[0] =~ /debug/) {
 	$temp_dir = $ARGV[0];
-	make_path ($temp_dir);
+	make_path ("debug");
 	set_debug(1);
 	open FH, ">", "debug.log";
 	close FH;
