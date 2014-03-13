@@ -62,6 +62,7 @@ if ($log_file eq "") {
 }
 
 set_log($log_file);
+set_debug($debug);
 printlog ("Running $runline");
 
 # making a redirect file to make it easier for users to have something to specify.
