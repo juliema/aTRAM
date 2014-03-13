@@ -52,6 +52,9 @@ sub initialize {
 				$binaries->{$name} = "$path";
 			}
 		}
+	} else {
+		printlog ("Your config.txt file seems to be truncated. Did you run configure.pl?");
+		die 2;
 	}
 }
 
