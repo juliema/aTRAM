@@ -59,9 +59,11 @@ sub wait_for_forks {
         waitpid $item, 0;
         if ($? != 0) {
         	printlog ("child process $item died with error $?");
+        	@{$_} = ();
+        	die 3;
         }
     }
-    return;
+    return 0;
 }
 
 sub system_call {
@@ -84,7 +86,7 @@ sub system_call {
 		open STDERR, ">>", get_log_file();
 	}
 
-	my $result = `$cmd`;
+	my $result = system($cmd);
 
 	# First, check to see if the command was not found by the shell.
  	if ($? == -1) {
@@ -94,7 +96,7 @@ sub system_call {
  	}
 
 	# Now we should unpack the exit value.
-	my $exit_val = $? >> 8;
+	my $exit_val = $result >> 8;
 	my $signal = $? & 255;
 
 	# unwind the redirects if we had pointed them at the log file.
