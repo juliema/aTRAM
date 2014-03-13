@@ -13,9 +13,9 @@ my $debug_flag = "";
 my $log_flag = "";
 my $executing_path = "$FindBin::Bin";
 my $temp_dir = tempdir(CLEANUP => 1);
-if (@ARGV[0] eq "debug") {
+if (@ARGV[0] =~ /debug/) {
 	$temp_dir = $ARGV[0];
-	make_path ($temp_dir);
+	make_path ("debug");
 	set_debug(1);
 	open FH, ">", "debug.log";
 	close FH;
@@ -31,7 +31,7 @@ $temp_dir = File::Spec->rel2abs($temp_dir);
 ##########################################################################################
 printlog (++$i .". Checking that format_sra works correctly...", ECHO);
 $result = system_call ("perl $executing_path/../format_sra.pl -in $executing_path/test_sra.fasta -out $temp_dir/test_db -num 7 $debug_flag $log_flag", 1);
-if ($result == 1) {
+if ($result != 0) {
 	print "\nFormat_sra failed. Please contact the developers with details of this failure at https://github.com/juliema/aTRAM/issues.\n";
 	exit;
 }
@@ -61,7 +61,7 @@ print "OK\n";
 
 printlog (++$i .". Checking that aTRAM works correctly...", ECHO);
 $result = system_call ("perl $executing_path/../aTRAM.pl -db $temp_dir/test_db -target $executing_path/testref.fasta -out $temp_dir/test_atram $debug_flag $log_flag", 1);
-if ($result == 1) {
+if ($result != 0) {
 	print "\aTRAM failed. Please contact the developers with details of this failure at https://github.com/juliema/aTRAM/issues.\n";
 	exit;
 }

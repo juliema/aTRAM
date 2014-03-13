@@ -14,6 +14,8 @@ if (@ARGV == 0) {
     pod2usage(-verbose => 1);
 }
 
+my $runline = "$0 " . join (" ", @ARGV) . "\n";
+
 my $short_read_archive = "";
 my $output_file = "";
 my $log_file = "";
@@ -60,6 +62,8 @@ if ($log_file eq "") {
 }
 
 set_log($log_file);
+set_debug($debug);
+printlog ("Running $runline");
 
 # making a redirect file to make it easier for users to have something to specify.
 my $db_file = "$output_file.atram";
