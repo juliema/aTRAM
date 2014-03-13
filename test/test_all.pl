@@ -6,6 +6,10 @@ use File::Temp qw(tempdir);
 use lib "$FindBin::Bin/../lib";
 use System;
 use constant ECHO => 1;
+use Configuration;
+
+Configuration::initialize();
+
 
 my $i = 0;
 my $result = 0;
@@ -25,6 +29,16 @@ if (@ARGV[0] =~ /debug/) {
 }
 
 $temp_dir = File::Spec->rel2abs($temp_dir);
+
+##########################################################################################
+## Testing Configuration
+##########################################################################################
+printlog (++$i .". Checking that configuration is correct...", ECHO);
+unless (defined ($Configuration::binaries->{"blastn"})) {
+	print "\nConfiguration is not valid...did you run configure.pl?\n";
+	exit;
+}
+print "OK\n";
 
 ##########################################################################################
 ## Testing format_sra.pl
