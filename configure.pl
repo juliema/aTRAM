@@ -22,9 +22,9 @@ my $result = 0;
 print "==== aTRAM checklist ====\n\n";
 
 print $i++ .". Checking for required software...\n";
-my @req_software = @Configuration::req_software;
+my $req_software = Configuration::get_req_software();
 
-foreach my $sw (@req_software) {
+foreach my $sw (@$req_software) {
 	my $fullpath = Configuration::find_bin($sw); # see if $sw has already been located.
 
 	if ($fullpath eq "") {
@@ -32,6 +32,28 @@ foreach my $sw (@req_software) {
 		$sw_ready = 0;
 	} else {
 		$result = system_call("$fullpath 2>&1 1>/dev/null",1);
+		if ($result == 127) {
+			print "   ...$sw was not found at $fullpath.\n";
+			$sw_ready = 0;
+		} else {
+			print "   ...$sw is present.\n";
+		}
+	}
+
+	print CONFIG_FH "$sw=$fullpath\n";
+}
+
+print $i++ .". Checking for optional software...\n";
+my $opt_software = Configuration::get_optional_software();
+
+foreach my $sw (@$opt_software) {
+	my $fullpath = Configuration::find_bin($sw); # see if $sw has already been located.
+
+	if ($fullpath eq "") {
+		print "   ...$sw couldn't be found on this system.\n";
+		$sw_ready = 0;
+	} else {
+		$result = system_call("$fullpath --version 2>&1 1>/dev/null",1);
 		if ($result == 127) {
 			print "   ...$sw was not found at $fullpath.\n";
 			$sw_ready = 0;

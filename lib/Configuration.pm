@@ -14,13 +14,14 @@ BEGIN {
 	# Inherit from Exporter to export functions and variables
 	our @ISA         = qw(Exporter);
 	# Functions and variables which are exported by default
-	our @EXPORT      = qw();
+	our @EXPORT      = qw(get_req_software get_optional_software get_assemblers find_bin);
 	# Functions and variables which can be optionally exported
 	our @EXPORT_OK   = qw();
 }
 
 our $binaries = {};
 our @req_software = qw(blastn tblastn blastx tblastx makeblastdb);
+our @opt_software = qw(muscle mafft);
 our $assemblers = {};
 our $assembler_dir = "";
 our $config_file = "";
@@ -57,6 +58,10 @@ sub initialize {
 
 sub get_req_software {
 	return \@req_software;
+}
+
+sub get_optional_software {
+	return \@opt_software;
 }
 
 sub get_assemblers {

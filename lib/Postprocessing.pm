@@ -4,6 +4,7 @@ use strict;
 use File::Temp qw/ tempfile /;
 use System;
 use Parsing;
+use Configuration;
 
 BEGIN {
 	require Exporter;
