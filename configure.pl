@@ -99,6 +99,9 @@ while ($userpath !~ /[yY]\n/) {
 my $executing_path = $FindBin::Bin;
 
 print $i++ .". Verifying aTRAM functionality, please wait...\n";
-print `$executing_path/test/test_all.pl`;
+if (`$executing_path/test/test_all.pl` == 0) {
+	print "Looks good! You are ready to aTRAM it up!\n";
+} else {
+	print "Something went wrong in testing...run \"aTRAM/test/test_all.pl debug\" and examine the results of debug.log.\n";
+}
 
-print "Looks good! You are ready to aTRAM it up!\n";
