@@ -6,7 +6,6 @@ use File::Find;
 use File::Basename;
 use Module::Load;
 use Cwd qw(realpath);
-use System;
 
 BEGIN {
 	require Exporter;
@@ -53,9 +52,6 @@ sub initialize {
 				$binaries->{$name} = "$path";
 			}
 		}
-	} else {
-		printlog ("Your config.txt file seems to be truncated. Did you run configure.pl?", 1);
-		die 2;
 	}
 }
 
