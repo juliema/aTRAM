@@ -57,7 +57,6 @@ make_path($outdir);
 
 if (($targetfile eq "") || ($samplefile eq "")) {
     pod2usage(-msg => "Must specify a list of aTRAM databases and a list of target sequences.", -verbose => 1);
-	exit;
 }
 
 if ($log_file eq "") {

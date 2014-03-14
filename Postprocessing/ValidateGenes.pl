@@ -40,12 +40,10 @@ if ($help) {
 
 if (!(-e $inputdir)) {
     pod2usage(-msg => "Must specify a directory of fasta files.", -verbose => 1);
-	exit;
 }
 
 if (!(-e $reffile)) {
     pod2usage(-msg => "Must specify a valid reference fasta file.", -verbose => 1);
-	exit;
 }
 
 if ($blastdb ne "") {
@@ -53,7 +51,6 @@ if ($blastdb ne "") {
 	$info =~ /Database: (.+?)\n/;
 	if ($reffile !~ /$1/) {
 		pod2usage(-msg => "$1 is not a database created from $reffile.", -verbose => 1);
-		exit;
 	}
 }
 
