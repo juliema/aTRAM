@@ -37,7 +37,7 @@ if ($help) {
     pod2usage(-verbose => 1);
 }
 
-unless($short_read_archive) {
+unless(-e $short_read_archive) {
     pod2usage(-msg => "Must specify a short read archive in fasta or fastq form.");
 }
 
