@@ -52,11 +52,10 @@ foreach my $assembler (keys %$assemblers) {
 	my $assembly_software = $assemblers->{$assembler};
 	foreach my $sw (@$assembly_software) {
 		my $fullpath = Configuration::find_bin($sw); # see if $sw has already been located.
-
 		if ($fullpath eq "") {
 			print "      ...$sw couldn't be found on this system.\n";
 		} else {
-			$result = system_call("$fullpath --version",1);
+			$result = system_call("$fullpath",1);
 			if ($result == 127) {
 				print "      ...$sw was not found at $fullpath.\n";
 			} else {
