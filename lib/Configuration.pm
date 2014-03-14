@@ -54,7 +54,7 @@ sub initialize {
 			}
 		}
 	} else {
-		printlog ("Your config.txt file seems to be truncated. Did you run configure.pl?");
+		printlog ("Your config.txt file seems to be truncated. Did you run configure.pl?", 1);
 		die 2;
 	}
 }
