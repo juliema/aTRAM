@@ -88,26 +88,24 @@ sub system_call {
 
 	my $result = system($cmd);
 
+	# unwind the redirects if we had pointed them at the log file.
+	if (defined get_log_file()) {
+		close STDOUT;
+		close STDERR;
+	}
+
+	open STDOUT, ">&", $saveout;
+	open STDERR, ">&", $saveerr;
+
 	# First, check to see if the command was not found by the shell.
- 	if ($? == -1) {
+ 	if ($result == -1) {
  		$cmd =~ /^(.+?)\s/;
 		printlog ("\nCommand $1 was not found by the shell.");
-		return -1;
  	}
 
 	# Now we should unpack the exit value.
 	my $exit_val = $result >> 8;
 	my $signal = $? & 255;
-
-	# unwind the redirects if we had pointed them at the log file.
-	if (defined get_log_file()) {
-		close STDOUT;
-		close STDERR;
-		printlog ("Returning $exit_val from \"$cmd\"");
-	}
-
-	open STDOUT, ">&", $saveout;
-	open STDERR, ">&", $saveerr;
 
 	if (($exit_val != 0) && !(defined $no_exit)) {
 		# if the command returned nonzero and the user didn't specify no_exit, print message and die.
@@ -120,7 +118,7 @@ sub system_call {
 		print "\nSignal $signal ($?) caught on command \"$cmd\"\n";
 		exit $exit_val;
 	}
-
+	printlog ("Returning $exit_val from \"$cmd\"");
 	return $exit_val;
 }
 
