@@ -22,7 +22,7 @@ sub assembler {
 	my $short_read_file = shift;
 	my $params = shift;
 
-	my ($kmer, $tempdir, $ins_length, $exp_cov, $min_contig_len, $output_file, $log_file) = 0;
+	my ($kmer, $tempdir, $ins_length, $exp_cov, $min_contig_len, $output_file) = 0;
 	my $longreads = "";
 
 	if ((ref $params) =~ /HASH/) {
@@ -48,7 +48,7 @@ sub assembler {
 			$output_file = $params->{"output"};
 		}
 		if (exists $params->{"log_file"}) {
-			$log_file = $params->{"log_file"};
+			set_log($params->{"log_file"});
 		}
 	}
 	# using velvet
@@ -57,11 +57,11 @@ sub assembler {
 	truncate "$tempdir/Log", 0;
 
 	if ($longreads ne "") {
-		system_call (Configuration::find_bin($binaries->{velveth})." $tempdir $kmer -fasta -shortPaired $short_read_file -long $longreads", $log_file);
+		system_call (Configuration::find_bin($binaries->{velveth})." $tempdir $kmer -fasta -shortPaired $short_read_file -long $longreads", 1);
 	} else {
-		system_call (Configuration::find_bin($binaries->{velveth})." $tempdir $kmer -fasta -shortPaired $short_read_file", $log_file);
+		system_call (Configuration::find_bin($binaries->{velveth})." $tempdir $kmer -fasta -shortPaired $short_read_file", 1);
 	}
-	system_call (Configuration::find_bin($binaries->{velvetg})." $tempdir -ins_length $ins_length -exp_cov $exp_cov -min_contig_lgth $min_contig_len", $log_file);
+	system_call (Configuration::find_bin($binaries->{velvetg})." $tempdir -ins_length $ins_length -exp_cov $exp_cov -min_contig_lgth $min_contig_len", 1);
 	my ($contigs, undef) = parsefasta ("$tempdir/contigs.fa");
 
 	# copy Velvet log output to logfile.

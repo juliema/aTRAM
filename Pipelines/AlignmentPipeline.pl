@@ -10,6 +10,7 @@ use lib "$FindBin::Bin/../lib";
 use System;
 use Parsing;
 use Postprocessing;
+use Configuration;
 
 if (@ARGV == 0) {
     pod2usage(-verbose => 1);
@@ -154,7 +155,7 @@ foreach my $target (@targetnames) {
 		if ($assembler ne "") { $assembler = "-assemble $assembler"; }
 
 		my $atram_outname = File::Spec->catfile($atram_dir, $outname);
-		my $atram_result = system_call ("perl $atrampath/aTRAM.pl -reads $samples->{$sample} -target $targets->{$target} -iter $iter -ins_length $ins_length -frac $frac $assembler -out $atram_outname -kmer $kmer $complete_flag $processes_flag $memory_flag $debug_flag -log $log_file", $log_file);
+		my $atram_result = system_call ("$atrampath/aTRAM.pl -reads $samples->{$sample} -target $targets->{$target} -iter $iter -ins_length $ins_length -frac $frac $assembler -out $atram_outname -kmer $kmer $complete_flag $processes_flag $memory_flag $debug_flag -log $log_file", 1); # don't exit because we want to capture a nonzero result.
 
 		if ($atram_result) {
 			printlog ("aTRAM found no contigs matching $target for $sample.");
@@ -195,7 +196,7 @@ foreach my $target (@targetnames) {
 
 		# find the one best contig (one with fewest gaps)
 		if ($protein == 0) {
-			system_call ("blastn -task blastn -query $atram_outname.trimmed.fasta -subject $targets->{$target} -outfmt '6 qseqid bitscore' -out $atram_outname.blast");
+			system_call (Configuration::find_bin("blastn") . " -task blastn -query $atram_outname.trimmed.fasta -subject $targets->{$target} -outfmt '6 qseqid bitscore' -out $atram_outname.blast");
 		}
 		open FH, "<", "$atram_outname.blast";
 		my $contig = "";
