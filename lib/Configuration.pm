@@ -19,12 +19,12 @@ BEGIN {
 	our @EXPORT_OK   = qw();
 }
 
-our $binaries = {};
-our @req_software = qw(blastn tblastn blastx tblastx makeblastdb);
-our @opt_software = qw(muscle mafft);
-our $assemblers = {};
-our $assembler_dir = "";
-our $config_file = "";
+my $binaries = {};
+my @req_software = qw(blastn tblastn blastx tblastx makeblastdb);
+my @opt_software = qw(muscle mafft);
+my $assemblers = {};
+my $assembler_dir = "";
+my $config_file = "";
 
 sub initialize {
 	if (%$binaries) {

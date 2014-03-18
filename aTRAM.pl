@@ -269,9 +269,9 @@ foreach my $line (@target_seqs) {
 # make a database from the target so that we can compare contigs to the target.
 my (undef, $targetdb) = tempfile(UNLINK => 1);
 if ($protein == 1) {
-	system_call ("$Configuration::binaries->{makeblastdb} -in $assembled_target -dbtype prot -out $targetdb.db -input_type fasta");
+	system_call (Configuration::find_bin("makeblastdb") ." -in $assembled_target -dbtype prot -out $targetdb.db -input_type fasta");
 } else {
-	system_call ("$Configuration::binaries->{makeblastdb} -in $assembled_target -dbtype nucl -out $targetdb.db -input_type fasta");
+	system_call (Configuration::find_bin("makeblastdb") ." -in $assembled_target -dbtype nucl -out $targetdb.db -input_type fasta");
 }
 
 if ($start_iter > 1) {
@@ -312,9 +312,9 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 		push @shardfiles, $current_shard;
 		# 1. blast to find any short reads that match the target.
 		if (($protein == 1) && ($i == 1)) {
-			push @pids, fork_cmd ("$Configuration::binaries->{tblastn} -max_target_seqs $max_target_seqs -db $atram_db.$s.db -query $search_fasta -outfmt '6 sseqid' -out $current_shard");
+			push @pids, fork_cmd (Configuration::find_bin("tblastn") . " -max_target_seqs $max_target_seqs -db $atram_db.$s.db -query $search_fasta -outfmt '6 sseqid' -out $current_shard");
 		} else {
-			push @pids, fork_cmd ("$Configuration::binaries->{blastn} -task blastn -evalue $evalue -max_target_seqs $max_target_seqs -db $atram_db.$s.db -query $search_fasta -outfmt '6 sseqid' -out $current_shard");
+			push @pids, fork_cmd (Configuration::find_bin("blastn") ." -task blastn -evalue $evalue -max_target_seqs $max_target_seqs -db $atram_db.$s.db -query $search_fasta -outfmt '6 sseqid' -out $current_shard");
 		}
 		if (($max_processes > 0) && (@pids >= ($max_processes - 1))) {
 			# don't spawn off too many threads at once.
@@ -401,9 +401,9 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 	}
 
 	if ($protein == 1) {
-		system_call ("$Configuration::binaries->{blastx} -db $targetdb.db -query $contigs_file -out $blast_file -outfmt '6 qseqid sseqid bitscore qstart qend sstart send qlen'", $log_file);
+		system_call (Configuration::find_bin("blastx") ." -db $targetdb.db -query $contigs_file -out $blast_file -outfmt '6 qseqid sseqid bitscore qstart qend sstart send qlen'", $log_file);
 	} else {
-		system_call ("$Configuration::binaries->{tblastx} -db $targetdb.db -query $contigs_file -out $blast_file -outfmt '6 qseqid sseqid bitscore qstart qend sstart send qlen'", $log_file);
+		system_call (Configuration::find_bin("tblastx") ." -db $targetdb.db -query $contigs_file -out $blast_file -outfmt '6 qseqid sseqid bitscore qstart qend sstart send qlen'", $log_file);
 	}
 
 	# we want to keep the contigs that have a bitscore higher than $bitscore.

@@ -34,7 +34,7 @@ $temp_dir = File::Spec->rel2abs($temp_dir);
 ## Testing Configuration
 ##########################################################################################
 printlog (++$i .". Checking that configuration is correct...", ECHO);
-unless (defined ($Configuration::binaries->{"blastn"})) {
+unless (Configuration::find_bin("blastn") ne "") {
 	printlog ("\nConfiguration is not valid...did you run configure.pl?", ECHO);
 	exit 1;
 }
