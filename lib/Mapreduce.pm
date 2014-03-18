@@ -15,9 +15,9 @@ BEGIN {
 	our @EXPORT_OK   = qw();
 }
 
-our $total_shards = 0;
-our @primes = (29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97, 101, 103, 107, 109, 113, 127, 131, 137, 139, 149, 151);
-our $multiplier = 0;
+my $total_shards = 0;
+my @primes = (29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97, 101, 103, 107, 109, 113, 127, 131, 137, 139, 149, 151);
+my $multiplier = 0;
 
 #### MAPREDUCE FUNCTIONS
 

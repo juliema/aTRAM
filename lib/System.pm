@@ -16,9 +16,9 @@ BEGIN {
 	our @EXPORT_OK   = qw();
 }
 
-our $debug = 0;
-our $log_fh = 0;
-our $log_file = "";
+my $debug = 0;
+my $log_fh = 0;
+my $log_file = "";
 
 sub timestamp {
     my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime(time);
