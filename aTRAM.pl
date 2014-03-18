@@ -401,9 +401,9 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 	}
 
 	if ($protein == 1) {
-		system_call (Configuration::find_bin("blastx") ." -db $targetdb.db -query $contigs_file -out $blast_file -outfmt '6 qseqid sseqid bitscore qstart qend sstart send qlen'", $log_file);
+		system_call (Configuration::find_bin("blastx") ." -db $targetdb.db -query $contigs_file -out $blast_file -outfmt '6 qseqid sseqid bitscore qstart qend sstart send qlen'");
 	} else {
-		system_call (Configuration::find_bin("tblastx") ." -db $targetdb.db -query $contigs_file -out $blast_file -outfmt '6 qseqid sseqid bitscore qstart qend sstart send qlen'", $log_file);
+		system_call (Configuration::find_bin("tblastx") ." -db $targetdb.db -query $contigs_file -out $blast_file -outfmt '6 qseqid sseqid bitscore qstart qend sstart send qlen'");
 	}
 
 	# we want to keep the contigs that have a bitscore higher than $bitscore.
