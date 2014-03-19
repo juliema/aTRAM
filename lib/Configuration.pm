@@ -47,7 +47,7 @@ sub initialize {
 		open my $fh, "<", $config_file or die "Couldn't find $config_file. Did you run configure.pl?";
 		foreach my $line (<$fh>) {
 			$line =~ s/(#.*)$//;
-			if ($line =~ /(.*)=(.*)$/) {
+			if ($line =~ /(.+)=(.+)$/) {
 				my $name = $1;
 				my $path = $2;
 				$binaries->{$name} = "$path";
