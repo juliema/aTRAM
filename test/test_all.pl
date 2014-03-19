@@ -50,10 +50,10 @@ if ($result != 0) {
 	exit 1;
 }
 
-$result = `tail -n +2 $temp_dir/test_db.atram > $temp_dir/test_db.test`;
-$result = `diff $executing_path/test_atram.txt $temp_dir/test_db.test > $executing_path/test.results.$i.diff`;
-if ($result == 1) {
-	printlog ("\nFormat_sra returned incorrect results. Please contact the developers with details of this failure at https://github.com/juliema/aTRAM/issues.", ECHO);
+`tail -n +2 $temp_dir/test_db.atram > $temp_dir/test_db.test`;
+`diff $executing_path/test_format.txt $temp_dir/test_db.test > $executing_path/test.results.$i.diff`;
+if ($? != 0) {
+	printlog ("\nFormat_sra returned incorrect results. Please contact the developers with contents of the file $executing_path/test.results.$i.diff at https://github.com/juliema/aTRAM/issues.", ECHO);
 	exit 1;
 }
 
@@ -61,7 +61,7 @@ printlog ("OK", ECHO);
 
 printlog (++$i .". Checking a defective file...", ECHO);
 
-$result = system_call ("$executing_path/../format_sra.pl -in $executing_path/test_bad.fasta -out $temp_dir/test_db $debug_flag $log_flag", 1);
+$result = system_call ("$executing_path/../format_sra.pl -in $executing_path/test_bad.fasta -out $temp_dir/test_db_bad $debug_flag $log_flag", 1);
 if ($result == 0) {
 	printlog ("Test failed. Please contact the developers with details of this failure at https://github.com/juliema/aTRAM/issues.", ECHO);
 	exit 1;
@@ -80,9 +80,9 @@ if ($result != 0) {
 	exit 1;
 }
 
-$result = `diff $executing_path/test_results_atram.txt $temp_dir/test_atram.results.txt > $executing_path/test.results.$i.diff`;
-if ($result == 1) {
-	printlog ("\aTRAM returned incorrect results. Please contact the developers with details of this failure at https://github.com/juliema/aTRAM/issues.", ECHO);
+`diff $executing_path/test_results_atram.txt $temp_dir/test_atram.results.txt > $executing_path/test.results.$i.diff`;
+if ($? != 0) {
+	printlog ("\aTRAM returned incorrect results. Please contact the developers with contents of the file $executing_path/test.results.$i.diff at https://github.com/juliema/aTRAM/issues.", ECHO);
 	exit 1;
 }
 
@@ -113,9 +113,9 @@ if ($result != 0) {
 }
 
 if (-e "$temp_dir/test_ap/results.txt") {
-	$result = `diff $executing_path/test_results_ap.txt $temp_dir/test_ap/results.txt > $executing_path/test.results.$i.diff`;
-	if ($result == 1) {
-		printlog ("\nAlignmentPipeline returned incorrect results. Please contact the developers with details of this failure at https://github.com/juliema/aTRAM/issues.", ECHO);
+	`diff $executing_path/test_results_ap.txt $temp_dir/test_ap/results.txt > $executing_path/test.results.$i.diff`;
+	if ($? != 0) {
+		printlog ("\nAlignmentPipeline returned incorrect results. Please contact the developers with contents of the file $executing_path/test.results.$i.diff at https://github.com/juliema/aTRAM/issues.", ECHO);
 		exit 1;
 	}
 } else {
@@ -138,9 +138,9 @@ if ($result != 0) {
 
 $result = `grep -h '>' $temp_dir/test_bp/test/*.best.fasta > $temp_dir/test_bp/results.txt`;
 if ((-s "$temp_dir/test_bp/results.txt") > 0) {
-	$result = `diff $executing_path/test_results_bp.txt $temp_dir/test_bp/results.txt > $executing_path/test.results.$i.diff`;
-	if ($result == 1) {
-		printlog ("\nBasicPipeline returned incorrect results. Please contact the developers with details of this failure at https://github.com/juliema/aTRAM/issues.", ECHO);
+	`diff $executing_path/test_results_bp.txt $temp_dir/test_bp/results.txt > $executing_path/test.results.$i.diff`;
+	if ($? != 0) {
+		printlog ("\nBasicPipeline returned incorrect results. Please contact the developers with contents of the file $executing_path/test.results.$i.diff at https://github.com/juliema/aTRAM/issues.", ECHO);
 		exit 1;
 	}
 } else {
