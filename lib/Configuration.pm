@@ -73,6 +73,15 @@ sub get_assemblers {
 	return $assemblers;
 }
 
+sub get_bin {
+	my $bin = shift;
+	if (exists $binaries->{$bin}) {
+		return "$binaries->{$bin}";
+	} else {
+		return "";
+	}
+}
+
 sub find_bin {
 	my $bin = shift;
 
