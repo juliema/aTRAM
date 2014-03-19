@@ -46,7 +46,7 @@ sub fork_cmd {
 	my $args = shift;
 
 	# check to make sure the command even exists.
-	`which -s $cmd`;
+	`which $cmd`;
 	if ($? != 0) {
 		printlog ("Can't fork: command $cmd was not found by the shell.");
 		die $?;
@@ -88,7 +88,7 @@ sub run_command {
 	}
 
 	# check to make sure the command even exists.
-	`which -s $cmd`;
+	`which $cmd`;
 	if ($? != 0) {
 		printlog ("Command $cmd was not found by the shell.");
 		die $?;
