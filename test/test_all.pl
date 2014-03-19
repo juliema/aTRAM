@@ -62,6 +62,7 @@ printlog ("OK", ECHO);
 printlog (++$i .". Checking a defective file...", ECHO);
 
 $result = run_command ("$executing_path/../format_sra.pl", "-in $executing_path/test_bad.fasta -out $temp_dir/test_db_bad $debug_flag $log_flag", {"no_exit"=>1});
+
 if ($result == 0) {
 	printlog ("Test failed. Please contact the developers with details of this failure at https://github.com/juliema/aTRAM/issues.", ECHO);
 	exit 1;
