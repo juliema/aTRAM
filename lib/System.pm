@@ -77,9 +77,7 @@ sub system_call {
 		# if we're not debugging, dump the system's output to devnull.
 		open STDOUT, '>', File::Spec->devnull();
 		open STDERR, '>', File::Spec->devnull();
-	}
-
-	if (defined get_log_file()) {
+	} elsif (defined get_log_file()) {
 		# if a log file has been specified, dump to that.
 		printlog ("Running command \"$cmd\"");
 		open STDOUT, ">>", get_log_file();
@@ -94,6 +92,7 @@ sub system_call {
 		close STDERR;
 	}
 
+	# make sure that we return STDOUT and STDERR to their original states.
 	open STDOUT, ">&", $saveout;
 	open STDERR, ">&", $saveerr;
 
