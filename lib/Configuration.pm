@@ -80,9 +80,11 @@ sub find_bin {
 		return "$binaries->{$bin}";
 	} else {
 		# if we don't have a path for $sw, ask the system.
+		my $min_bin = basename($bin);
 		my @pathlist = File::Spec->path();
+
 		foreach my $path (@pathlist) {
-			my $cmdpath = File::Spec->catpath("", $path, $bin);
+			my $cmdpath = File::Spec->catpath("", $path, $min_bin);
 			if (-x $cmdpath) {
 				return "$cmdpath";
 			}
