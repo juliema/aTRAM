@@ -72,8 +72,8 @@ my $crossfile = "$blastdb.crossref";
 if ($blastdb eq "") {
 	$blastdb = File::Spec->catfile($outdir, "$refname.blastdb");
 	$crossfile = File::Spec->catfile($outdir, "$refname.blastdb.crossref");
-	system_call (Configuration::find_bin('makeblastdb') . " -in $reffile -dbtype nucl -out $blastdb");
-	system_call (Configuration::find_bin('blastn') . " -query $reffile -db $blastdb -num_threads $processes -evalue 1e-50 -out $crossfile -outfmt '6 qseqid sseqid evalue length'");
+	run_command (Configuration::find_bin('makeblastdb'), "-in $reffile -dbtype nucl -out $blastdb");
+	run_command (Configuration::find_bin('blastn'), "-query $reffile -db $blastdb -num_threads $processes -evalue 1e-50 -out $crossfile -outfmt '6 qseqid sseqid evalue length'");
 }
 
 open CROSS_FH, "<", $crossfile;
@@ -108,7 +108,7 @@ foreach my $contigfile (@contigfiles) {
 	if ($contigfile =~ /(.+)\.(.+)\.fasta/) {
 		my $genename = $1;
 		my $blastfile = File::Spec->rel2abs (File::Spec->catfile ($outdir, "$contigfile.blast"));
-		system_call (Configuration::find_bin('blastn') . " -query $filepath -db $blastdb -num_threads $processes -evalue 1e-50 -out $blastfile -outfmt '6 sseqid qseqid slen evalue length'");
+		run_command (Configuration::find_bin('blastn'), "-query $filepath -db $blastdb -num_threads $processes -evalue 1e-50 -out $blastfile -outfmt '6 sseqid qseqid slen evalue length'");
 		my $matchmatrix = {};
 		my @matrixkeys = ();
 		open FH, "<", $blastfile;

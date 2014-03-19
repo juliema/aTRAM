@@ -57,11 +57,11 @@ sub assembler {
 	truncate "$tempdir/Log", 0;
 
 	if ($longreads ne "") {
-		system_call (Configuration::find_bin($binaries->{velveth})." $tempdir $kmer -fasta -shortPaired $short_read_file -long $longreads", 1);
+		run_command (Configuration::find_bin($binaries->{velveth}), "$tempdir $kmer -fasta -shortPaired $short_read_file -long $longreads", 1);
 	} else {
-		system_call (Configuration::find_bin($binaries->{velveth})." $tempdir $kmer -fasta -shortPaired $short_read_file", 1);
+		run_command (Configuration::find_bin($binaries->{velveth}), "$tempdir $kmer -fasta -shortPaired $short_read_file", 1);
 	}
-	system_call (Configuration::find_bin($binaries->{velvetg})." $tempdir -ins_length $ins_length -exp_cov $exp_cov -min_contig_lgth $min_contig_len", 1);
+	run_command (Configuration::find_bin($binaries->{velvetg}), "$tempdir -ins_length $ins_length -exp_cov $exp_cov -min_contig_lgth $min_contig_len", 1);
 	my ($contigs, undef) = parsefasta ("$tempdir/contigs.fa");
 
 	# copy Velvet log output to logfile.

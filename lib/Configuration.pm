@@ -47,7 +47,7 @@ sub initialize {
 		open my $fh, "<", $config_file or die "Couldn't find $config_file. Did you run configure.pl?";
 		foreach my $line (<$fh>) {
 			$line =~ s/(#.*)$//;
-			if ($line =~ /(.*)=(.*)$/) {
+			if ($line =~ /(.+)=(.+)$/) {
 				my $name = $1;
 				my $path = $2;
 				$binaries->{$name} = "$path";
@@ -73,6 +73,15 @@ sub get_assemblers {
 	return $assemblers;
 }
 
+sub get_bin {
+	my $bin = shift;
+	if (exists $binaries->{$bin}) {
+		return "$binaries->{$bin}";
+	} else {
+		return "";
+	}
+}
+
 sub find_bin {
 	my $bin = shift;
 
@@ -80,9 +89,11 @@ sub find_bin {
 		return "$binaries->{$bin}";
 	} else {
 		# if we don't have a path for $sw, ask the system.
+		my $min_bin = basename($bin);
 		my @pathlist = File::Spec->path();
+
 		foreach my $path (@pathlist) {
-			my $cmdpath = File::Spec->catpath("", $path, $bin);
+			my $cmdpath = File::Spec->catpath("", $path, $min_bin);
 			if (-x $cmdpath) {
 				return "$cmdpath";
 			}

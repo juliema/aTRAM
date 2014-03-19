@@ -4,6 +4,7 @@ use File::Temp qw/ tempfile /;
 use FindBin;
 use lib "$FindBin::Bin/../lib";
 use System;
+use Configuration;
 use Parsing;
 
 if (@ARGV < 2) {
@@ -15,24 +16,18 @@ my $contigs_fasta = shift;
 my $target_fasta = shift;
 my $blast_file = shift;
 
-my $blast_asn = "";
+Configuration::initialize();
 
 # make a database from the target so that we can compare contigs to the target.
 my (undef, $targetdb) = tempfile(UNLINK => 1);
 my (undef, $targets) = tempfile(UNLINK => 1);
 
-if (defined $blast_file) {
-	$blast_asn = "$blast_file.asn";
-} else {
+unless (defined $blast_file) {
 	(undef, $blast_file) = tempfile(UNLINK => 1);
-	(undef, $blast_asn) = tempfile(UNLINK => 1);
 }
 
-system_call ("makeblastdb -in $target_fasta -dbtype nucl -out $targetdb.db -input_type fasta");
-system_call ("tblastx -db $targetdb.db -query $contigs_fasta -out $blast_asn -outfmt 11");
-
-system_call ("blast_formatter -archive $blast_asn -out $blast_file -outfmt '6 qseqid sseqid bitscore qstart qend sstart send qlen'");
-
+run_command (Configuration::get_bin("makeblastdb"), "-in $target_fasta -dbtype nucl -out $targetdb.db -input_type fasta");
+run_command (Configuration::get_bin("tblastx"), "-db $targetdb.db -query $contigs_fasta -out $blast_file -outfmt '6 qseqid sseqid bitscore qstart qend sstart send qlen'");
 
 sortfasta ($target_fasta, $targets, "#");
 open FH, "<", $targets;

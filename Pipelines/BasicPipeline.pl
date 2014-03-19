@@ -122,7 +122,7 @@ foreach my $sample (@samplenames) {
 			if ($complete == 1) { $complete_flag = "-complete"; }
 			my $memory_flag = "";
 			if ($max_memory > 0) { $memory_flag = "-max_memory $max_memory"; }
-			my $atram_result = system_call ("$atrampath/aTRAM.pl -reads $samples->{$sample} -target $targets->{$target} -iter $iter -ins_length $ins_length -frac $frac -assemble Velvet -out $outname -kmer $kmer $complete_flag $protein_flag $processes_flag $memory_flag $debug_flag -log $log_file", 1); # don't exit because we want to capture a nonzero result.
+			my $atram_result = run_command ("$atrampath/aTRAM.pl", "-reads $samples->{$sample} -target $targets->{$target} -iter $iter -ins_length $ins_length -frac $frac -assemble Velvet -out $outname -kmer $kmer $complete_flag $protein_flag $processes_flag $memory_flag $debug_flag -log $log_file", {"no_exit"=>1}); # don't exit because we want to capture a nonzero result.
 
 			if ($atram_result == 255) {
 				printlog ("aTRAM of $outname found no contigs.");

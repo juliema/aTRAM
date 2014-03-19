@@ -42,7 +42,7 @@ sub assembler {
 		}
 	}
 	# using Trinity.pl
-	system_call (Configuration::find_bin($binaries->{trinity})." --seqType fa --single $short_read_file --run_as_paired --JM $jm --output $tempdir");
+	run_command (Configuration::find_bin($binaries->{trinity}), "--seqType fa --single $short_read_file --run_as_paired --JM $jm --output $tempdir");
 
 	my ($contigs, undef) = parsefasta ("$tempdir/Trinity.fasta");
 

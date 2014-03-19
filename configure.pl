@@ -31,8 +31,8 @@ foreach my $sw (@$req_software) {
 		print "   ...$sw couldn't be found on this system.\n";
 		$sw_ready = 0;
 	} else {
-		$result = system_call("which -s $fullpath",1);
-		if ($result == 1) {
+		`which -s $fullpath`;
+		if ($? != 0) {
 			print "   ...$sw was not found at $fullpath.\n";
 			$sw_ready = 0;
 		} else {
@@ -53,8 +53,8 @@ foreach my $sw (@$opt_software) {
 		print "   ...$sw couldn't be found on this system.\n";
 		$sw_ready = 0;
 	} else {
-		$result = system_call("$fullpath --version 2>&1 1>/dev/null",1);
-		if ($result == 127) {
+		`which -s $fullpath`;
+		if ($? != 0) {
 			print "   ...$sw was not found at $fullpath.\n";
 			$sw_ready = 0;
 		} else {
@@ -77,9 +77,9 @@ foreach my $assembler (keys %$assemblers) {
 		if ($fullpath eq "") {
 			print "      ...$sw couldn't be found on this system.\n";
 		} else {
-			$result = system_call("$fullpath",1);
-			if ($result == 127) {
-				print "      ...$sw was not found at $fullpath.\n";
+			`which -s $fullpath`;
+			if ($? != 0) {
+				print "      ...$sw was not found at $fullpath. $?\n";
 			} else {
 				print "      ...$sw is present.\n";
 				$assembler_ready++;
@@ -120,7 +120,8 @@ while ($userpath !~ /[yY]\n/) {
 my $executing_path = $FindBin::Bin;
 
 print $i++ .". Verifying aTRAM functionality, please wait...\n";
-if (`$executing_path/test/test_all.pl` == 0) {
+`$executing_path/test/test_all.pl`;
+if ($? == 0) {
 	print "Looks good! You are ready to aTRAM it up!\n";
 } else {
 	print "Something went wrong in testing...run \"aTRAM/test/test_all.pl debug\" and examine the results of debug.log.\n";

@@ -269,9 +269,9 @@ foreach my $line (@target_seqs) {
 # make a database from the target so that we can compare contigs to the target.
 my (undef, $targetdb) = tempfile(UNLINK => 1);
 if ($protein == 1) {
-	system_call (Configuration::find_bin("makeblastdb") ." -in $assembled_target -dbtype prot -out $targetdb.db -input_type fasta");
+	run_command (Configuration::find_bin("makeblastdb"), "-in $assembled_target -dbtype prot -out $targetdb.db -input_type fasta");
 } else {
-	system_call (Configuration::find_bin("makeblastdb") ." -in $assembled_target -dbtype nucl -out $targetdb.db -input_type fasta");
+	run_command (Configuration::find_bin("makeblastdb"), "-in $assembled_target -dbtype nucl -out $targetdb.db -input_type fasta");
 }
 
 if ($start_iter > 1) {
@@ -342,19 +342,19 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 
 	#   join the fasta results of each shard into a single fasta file:
 	my $fastafiles = join (" ", map {$_ . ".fasta"} @shardfiles);
-	system_call ("cat $fastafiles > $temp_name.$i.blast.fasta");
+	run_command ("cat", "$fastafiles > $temp_name.$i.blast.fasta");
 
 	#   remove shards' fasta results
-	system_call ("rm $fastafiles");
+	`rm $fastafiles`;
 
 	#   remove shards' blast results
 	my $readfiles = join (" ", @shardfiles);
-	system_call ("rm $readfiles");
+	`rm $readfiles`;
 
 	# SHUTDOWN CHECK: did we not find any reads? Go ahead and quit.
 	if ((-s "$temp_name.$i.blast.fasta") == 0) {
 		printlog ("No similar reads were found.", 1);
-		system_call ("rm $temp_name.$i.blast.fasta");
+		`rm $temp_name.$i.blast.fasta`;
 		last;
 	}
 	my $contigs_file = "";
@@ -386,7 +386,7 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 	"$assembler"->assembler ("$temp_name.$i.blast.fasta", $assembly_params);
 
 	if ($save_temp == 0) {
-		system_call ("rm $temp_name.$i.blast.fasta");
+		`rm $temp_name.$i.blast.fasta`;
 
 	}
 
@@ -401,9 +401,9 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 	}
 
 	if ($protein == 1) {
-		system_call (Configuration::find_bin("blastx") ." -db $targetdb.db -query $contigs_file -out $blast_file -outfmt '6 qseqid sseqid bitscore qstart qend sstart send qlen'");
+		run_command (Configuration::find_bin("blastx"), "-db $targetdb.db -query $contigs_file -out $blast_file -outfmt '6 qseqid sseqid bitscore qstart qend sstart send qlen'");
 	} else {
-		system_call (Configuration::find_bin("tblastx") ." -db $targetdb.db -query $contigs_file -out $blast_file -outfmt '6 qseqid sseqid bitscore qstart qend sstart send qlen'");
+		run_command (Configuration::find_bin("tblastx"), "-db $targetdb.db -query $contigs_file -out $blast_file -outfmt '6 qseqid sseqid bitscore qstart qend sstart send qlen'");
 	}
 
 	# we want to keep the contigs that have a bitscore higher than $bitscore.
@@ -414,7 +414,7 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 	}
 
 	if ($save_temp == 0) {
-		system_call ("rm $blast_file");
+		`rm $blast_file`;
 	}
 	my @contig_names = ();
 	my $old_matrix_size = (keys %$hit_matrix);
@@ -504,7 +504,7 @@ if ((keys %$hit_matrix) == 0) {
 	open RESULTS_FH, ">", "$output_file.results.txt";
 	print RESULTS_FH "no results\n";
 	close RESULTS_FH;
-	system_call ("rm $output_file.all.fasta");
+	`rm $output_file.all.fasta`;
 	exit NO_CONTIGS;
 }
 
