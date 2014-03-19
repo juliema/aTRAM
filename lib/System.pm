@@ -11,7 +11,7 @@ BEGIN {
 	# Inherit from Exporter to export functions and variables
 	our @ISA         = qw(Exporter);
 	# Functions and variables which are exported by default
-	our @EXPORT      = qw(timestamp exit_with_msg fork_cmd wait_for_forks printlog system_call debug set_debug set_log);
+	our @EXPORT      = qw(timestamp exit_with_msg fork_cmd wait_for_forks printlog system_call run_command debug set_debug set_log);
 	# Functions and variables which can be optionally exported
 	our @EXPORT_OK   = qw();
 }
@@ -43,6 +43,14 @@ sub exit_with_msg {
 
 sub fork_cmd {
 	my $cmd = shift;
+
+	# check to make sure the command even exists.
+	my $result = `which -s $cmd`;
+ 	if ($result != 0) {
+		printlog ("\nCommand $cmd was not found by the shell.");
+		exit $result;
+ 	}
+
     my $child_pid = fork();
     unless ($child_pid) { #child process
 		exec ($cmd);
@@ -84,6 +92,8 @@ sub system_call {
 		open STDERR, ">>", get_log_file();
 	}
 
+	# check to make sure the command even exists.
+
 	my $result = system($cmd);
 
 	# unwind the redirects if we had pointed them at the log file.
@@ -101,6 +111,70 @@ sub system_call {
  		$cmd =~ /^(.+?)\s/;
 		printlog ("\nCommand $1 was not found by the shell.");
  	}
+
+	# Now we should unpack the exit value.
+	my $exit_val = $result >> 8;
+	my $signal = $? & 255;
+
+	if (($exit_val != 0) && !(defined $no_exit)) {
+		# if the command returned nonzero and the user didn't specify no_exit, print message and die.
+		print "\nCommand \"$cmd\" exited with $exit_val\n";
+		exit $exit_val;
+	}
+
+	if ($signal != 0) {
+		# signal caught, so we should die.
+		print "\nSignal $signal ($?) caught on command \"$cmd\"\n";
+		exit $exit_val;
+	}
+	printlog ("Returning $exit_val from \"$cmd\"");
+	return $exit_val;
+}
+
+sub run_command {
+	my $cmd = shift;
+	my $args = shift;
+	my $params = shift;
+
+	my $no_exit = 0;
+
+	if ((defined $params) && ((ref $params) =~ /HASH/)) {
+		if (defined $params=>{"NO_EXIT"}) {
+			$no_exit = 1;
+		}
+	}
+
+	open my $saveout, ">&STDOUT";
+	open my $saveerr, ">&STDERR";
+
+	if ($debug == 0) {
+		# if we're not debugging, dump the system's output to devnull.
+		open STDOUT, '>', File::Spec->devnull();
+		open STDERR, '>', File::Spec->devnull();
+	} elsif (defined get_log_file()) {
+		# if a log file has been specified, dump to that.
+		printlog ("Running command \"$cmd $args\"");
+		open STDOUT, ">>", get_log_file();
+		open STDERR, ">>", get_log_file();
+	}
+
+	# check to make sure the command even exists.
+	my $result = `which -s $cmd`;
+ 	if ($result != 0) {
+		printlog ("\nCommand $cmd was not found by the shell.");
+		exit $result;
+ 	}
+	$result = system("$cmd $args");
+
+	# unwind the redirects if we had pointed them at the log file.
+	if (defined get_log_file()) {
+		close STDOUT;
+		close STDERR;
+	}
+
+	# make sure that we return STDOUT and STDERR to their original states.
+	open STDOUT, ">&", $saveout;
+	open STDERR, ">&", $saveerr;
 
 	# Now we should unpack the exit value.
 	my $exit_val = $result >> 8;
