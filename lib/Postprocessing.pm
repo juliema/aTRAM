@@ -32,13 +32,13 @@ sub percentcoverage {
 	Configuration::initialize();
 	my (undef, $catfile) = tempfile(UNLINK => 1);
 	my $result = 0;
-	$result = system_call ("cat $reffile $contigfile > $catfile");
+	$result = run_command ("cat", "$reffile $contigfile > $catfile");
 
 	if ($aligner eq "mafft") {
-		$result = system_call (Configuration::find_bin("mafft") ." $catfile > $outname.align.fasta");
+		$result = run_command (Configuration::find_bin("mafft"), "$catfile > $outname.align.fasta");
 	} else {
 		$aligner = "muscle";
-		$result = system_call (Configuration::find_bin("muscle") . " -in $catfile -out $outname.align.fasta");
+		$result = run_command (Configuration::find_bin("muscle"), "-in $catfile -out $outname.align.fasta");
 	}
 
 	if ($result == -1) {
