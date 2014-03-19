@@ -31,8 +31,8 @@ foreach my $sw (@$req_software) {
 		print "   ...$sw couldn't be found on this system.\n";
 		$sw_ready = 0;
 	} else {
-		$result = system_call("$fullpath 2>&1 1>/dev/null",1);
-		if ($result == 127) {
+		$result = system_call("which -s $fullpath",1);
+		if ($result == 1) {
 			print "   ...$sw was not found at $fullpath.\n";
 			$sw_ready = 0;
 		} else {
