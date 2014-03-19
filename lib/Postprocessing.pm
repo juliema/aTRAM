@@ -29,6 +29,7 @@ sub percentcoverage {
 		return undef;
 	}
 
+	Configuration::initialize();
 	my (undef, $catfile) = tempfile(UNLINK => 1);
 	my $result = 0;
 	$result = system_call ("cat $reffile $contigfile > $catfile");
