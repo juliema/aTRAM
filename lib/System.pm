@@ -43,6 +43,7 @@ sub exit_with_msg {
 
 sub fork_cmd {
 	my $cmd = shift;
+	my $args = shift;
 
 	# check to make sure the command even exists.
 	`which -s $cmd`;
@@ -53,7 +54,7 @@ sub fork_cmd {
 
     my $child_pid = fork();
     unless ($child_pid) { #child process
-		exec ($cmd);
+		exec ("$cmd $args");
     } else { #parent process
 		printlog ("Forking pid $child_pid: $cmd");
         return $child_pid;

@@ -312,9 +312,9 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 		push @shardfiles, $current_shard;
 		# 1. blast to find any short reads that match the target.
 		if (($protein == 1) && ($i == 1)) {
-			push @pids, fork_cmd (Configuration::find_bin("tblastn") . " -max_target_seqs $max_target_seqs -db $atram_db.$s.db -query $search_fasta -outfmt '6 sseqid' -out $current_shard");
+			push @pids, fork_cmd (Configuration::find_bin("tblastn"), "-max_target_seqs $max_target_seqs -db $atram_db.$s.db -query $search_fasta -outfmt '6 sseqid' -out $current_shard");
 		} else {
-			push @pids, fork_cmd (Configuration::find_bin("blastn") ." -task blastn -evalue $evalue -max_target_seqs $max_target_seqs -db $atram_db.$s.db -query $search_fasta -outfmt '6 sseqid' -out $current_shard");
+			push @pids, fork_cmd (Configuration::find_bin("blastn"), "-task blastn -evalue $evalue -max_target_seqs $max_target_seqs -db $atram_db.$s.db -query $search_fasta -outfmt '6 sseqid' -out $current_shard");
 		}
 		if (($max_processes > 0) && (@pids >= ($max_processes - 1))) {
 			# don't spawn off too many threads at once.
