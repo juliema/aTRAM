@@ -61,9 +61,9 @@ sub pairedsequenceretrieval {
 
 	system ("sort $sequencelist | uniq -u > $seq_names");
 
-	open LIST_FH, "<", "$seq_names";
-	open FA1_FH, "<", "$fastafile_1";
-	open FA2_FH, "<", "$fastafile_2";
+	open LIST_FH, "<:crlf", "$seq_names";
+	open FA1_FH, "<:crlf", "$fastafile_1";
+	open FA2_FH, "<:crlf", "$fastafile_2";
 	open OUT_FH, ">", "$outfile";
 
 	my $line = readline LIST_FH;

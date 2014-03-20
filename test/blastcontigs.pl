@@ -30,7 +30,7 @@ run_command (get_bin("makeblastdb"), "-in $target_fasta -dbtype nucl -out $targe
 run_command (get_bin("tblastx"), "-db $targetdb.db -query $contigs_fasta -out $blast_file -outfmt '6 qseqid sseqid bitscore qstart qend sstart send qlen'");
 
 sortfasta ($target_fasta, $targets, "#");
-open FH, "<", $targets;
+open FH, "<:crlf", $targets;
 my @targets = ();
 foreach (my $line = readline FH) {
 	$line =~ />(.*?)#/;

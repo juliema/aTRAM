@@ -56,7 +56,7 @@ my $key = 0;
 
 open OUT_FH, ">", "$output_file.fasta";
 
-open SEARCH_FH, "<", $short_read_archive;
+open SEARCH_FH, "<:crlf", $short_read_archive;
 while (my $line = readline SEARCH_FH) {
 	chomp $line;
 	if ($line =~ /^[@>](.*?)([\s\/])([12])/) {

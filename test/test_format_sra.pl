@@ -67,7 +67,7 @@ if ($total_shards == 0) {
 	print ("Making $total_shards shards.\n");
 }
 
-open FH, "<", $short_read_archive;
+open FH, "<:crlf", $short_read_archive;
 my @keys = ();
 for (my $i=0;$i<$numshards; $i++) {
 	$keys[$i] = 0;

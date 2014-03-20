@@ -46,7 +46,7 @@ unless ($output_file) {
 
 # find the path specified in the .atram file, if provided.
 if ($atram_db =~ /\.atram$/) {
-	open ATRAM_FH, "<", $atram_db;
+	open ATRAM_FH, "<:crlf", $atram_db;
 	$atram_db = readline ATRAM_FH;
 	chomp $atram_db;
 	close ATRAM_FH;
@@ -147,7 +147,7 @@ if ($original_numshards != $numshards) {
 
 	for (my $i=0; $i < $original_numshards; $i++) {
 		my $short_read_archive = "$atram_db.$i.1.fasta";
-		open SEARCH_FH, "<", $short_read_archive;
+		open SEARCH_FH, "<:crlf", $short_read_archive;
 		while (my $line = readline SEARCH_FH) {
 			chomp $line;
 			if ($line =~ /^[@>](.*?)([\s\/])([12])/) {
@@ -179,7 +179,7 @@ if ($original_numshards != $numshards) {
 		close SEARCH_FH;
 
 		$short_read_archive = "$atram_db.$i.2.fasta";
-		open SEARCH_FH, "<", $short_read_archive;
+		open SEARCH_FH, "<:crlf", $short_read_archive;
 		while (my $line = readline SEARCH_FH) {
 			chomp $line;
 			if ($line =~ /^[@>](.*?)([\s\/])([12])/) {
