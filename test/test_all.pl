@@ -21,22 +21,22 @@ if (@ARGV[0] =~ /debug/) {
 	$temp_dir = "debug";
 	make_path ("debug");
 	set_debug(1);
-	open FH, ">", "debug.log";
-	close FH;
-	set_log("debug.log");
-	$debug_flag = "-debug";
-	$log_flag = "-log " . System::get_log_file();
 }
 
 $temp_dir = File::Spec->rel2abs($temp_dir);
+
+open FH, ">", "$temp_dir/debug.log";
+close FH;
+set_log("$temp_dir/debug.log");
+$debug_flag = "-debug";
+$log_flag = "-log " . get_log_file();
 
 ##########################################################################################
 ## Testing Configuration
 ##########################################################################################
 printlog (++$i .". Checking that configuration is correct...", ECHO);
 unless (get_bin("blastn") ne "") {
-	printlog ("\nConfiguration is not valid...did you run configure.pl?", ECHO);
-	exit 1;
+	fail_with_msg ("Configuration is not valid...did you run configure.pl?");
 }
 printlog ("OK", ECHO);
 
@@ -46,15 +46,13 @@ printlog ("OK", ECHO);
 printlog (++$i .". Checking that format_sra works correctly...", ECHO);
 $result = run_command ("$executing_path/../format_sra.pl", "-in $executing_path/test_sra.fasta -out $temp_dir/test_db -num 7 $debug_flag $log_flag", {"no_exit"=>1});
 if ($result != 0) {
-	printlog ("\nFormat_sra failed.", ECHO);
-	exit 1;
+	fail_with_msg ("Format_sra failed.");
 }
 
 `tail -n +2 $temp_dir/test_db.atram > $temp_dir/test_db.test`;
 `diff $executing_path/test_format.txt $temp_dir/test_db.test > $executing_path/test.results.$i.diff`;
 if ($? != 0) {
-	printlog ("\nFormat_sra returned incorrect results.", ECHO);
-	exit 1;
+	fail_with_msg ("Format_sra returned incorrect results.");
 }
 `rm $executing_path/test.results.$i.diff`;
 
@@ -65,8 +63,7 @@ printlog (++$i .". Checking a defective file...", ECHO);
 $result = run_command ("$executing_path/../format_sra.pl", "-in $executing_path/test_bad.fasta -out $temp_dir/test_db_bad $debug_flag $log_flag", {"no_exit"=>1});
 
 if ($result == 0) {
-	printlog ("Test failed.", ECHO);
-	exit 1;
+	fail_with_msg ("Test failed.");
 }
 
 printlog ("OK", ECHO);
@@ -78,15 +75,13 @@ printlog ("OK", ECHO);
 printlog (++$i .". Checking that aTRAM works correctly...", ECHO);
 $result = run_command ("$executing_path/../aTRAM.pl" ,"-db $temp_dir/test_db -target $executing_path/testref.fasta -out $temp_dir/test_atram $debug_flag $log_flag", {"no_exit"=>1});
 if ($result != 0) {
-	printlog ("\aTRAM failed.", ECHO);
-	exit 1;
+	fail_with_msg ("aTRAM failed.");
 }
 
 $result = `grep -c "." $temp_dir/test_atram.results.txt`;
 chomp $result;
 if ($result != 10) {
-	printlog ("\aTRAM returned incorrect results.", ECHO);
-	exit 1;
+	fail_with_msg ("aTRAM returned incorrect results.");
 }
 
 printlog ("OK", ECHO);
@@ -110,8 +105,7 @@ close FH;
 printlog (++$i .". Checking that BasicPipeline works correctly...", ECHO);
 $result = run_command ("$executing_path/../Pipelines/BasicPipeline.pl", "-samples $temp_dir/test.samples -targets $temp_dir/test.targets -out $temp_dir/test_bp -iter 5 $debug_flag $log_flag", {"no_exit"=>1});
 if ($result != 0) {
-	printlog ("\nBasicPipeline died in execution.", ECHO);
-	exit 1;
+	fail_with_msg ("BasicPipeline died in execution.");
 }
 
 $result = `grep -h '>' $temp_dir/test_bp/test/*.best.fasta > $temp_dir/test_bp/results.txt`;
@@ -119,12 +113,10 @@ if ((-s "$temp_dir/test_bp/results.txt") > 0) {
 	$result = `grep -c "." $temp_dir/test_bp/results.txt`;
 	chomp $result;
 	if ($result != 12) {
-		printlog ("\nBasicPipeline returned incorrect results.", ECHO);
-		exit 1;
+		fail_with_msg ("BasicPipeline returned incorrect results.");
 	}
 } else {
-	printlog ("\nBasicPipeline did not execute.", ECHO);
-	exit 1;
+	fail_with_msg ("BasicPipeline did not execute.");
 }
 
 printlog ("OK", ECHO);
@@ -137,23 +129,33 @@ printlog (++$i .". Checking that AlignmentPipeline works correctly...", ECHO);
 
 $result = run_command ("$executing_path/../Pipelines/AlignmentPipeline.pl", "-samples $temp_dir/test.samples -targets $temp_dir/test.targets -out $temp_dir/test_ap -iter 5 $debug_flag $log_flag", {"no_exit"=>1});
 if ($result != 0) {
-	printlog ("\nAlignmentPipeline died in execution.", ECHO);
-	exit 1;
+	fail_with_msg ("AlignmentPipeline died in execution.");
 }
 
 if (-e "$temp_dir/test_ap/results.txt") {
 	$result = `grep -c "." $temp_dir/test_ap/results.txt`;
 	chomp $result;
 	if ($result != 3) {
-		printlog ("\n$result AlignmentPipeline returned incorrect results.", ECHO);
-		exit 1;
+		fail_with_msg ("AlignmentPipeline returned incorrect results.");
 	}
 } else {
-	printlog ("\nAlignmentPipeline did not execute.", ECHO);
-	exit 1;
+	fail_with_msg ("AlignmentPipeline did not execute.");
 }
 
 printlog ("OK", ECHO);
 
 printlog ("\nAll tests successfully passed.\n", ECHO);
 exit 0;
+
+sub fail_with_msg {
+	my $msg = shift;
+
+	close_log();
+	print "$msg\nLast logged output:\n";
+
+	my $result = `tail $temp_dir/debug.log`;
+	$result =~ s/.*: $i\..*?$//ms;
+	print $result;
+
+	exit 1;
+}
