@@ -82,9 +82,36 @@ if ($result != 0) {
 	exit 1;
 }
 
-`diff $executing_path/test_results_atram.txt $temp_dir/test_atram.results.txt > $executing_path/test.results.$i.diff`;
-if ($? != 0) {
+$result = `grep -c "." $temp_dir/test_atram.results.txt`;
+chomp $result;
+if ($result != 10) {
 	printlog ("\aTRAM returned incorrect results. Please contact the developers with contents of the file $executing_path/test.results.$i.diff at https://github.com/juliema/aTRAM/issues.", ECHO);
+	exit 1;
+}
+
+printlog ("OK", ECHO);
+
+##########################################################################################
+## Testing BasicPipeline.pl
+##########################################################################################
+
+printlog (++$i .". Checking that BasicPipeline works correctly...", ECHO);
+$result = run_command ("$executing_path/../Pipelines/BasicPipeline.pl", "-samples $temp_dir/test.samples -targets $temp_dir/test.targets -out $temp_dir/test_bp -iter 5 $debug_flag $log_flag", {"no_exit"=>1});
+if ($result != 0) {
+	printlog ("\nBasicPipeline died in execution. Please contact the developers with details of this failure at https://github.com/juliema/aTRAM/issues.", ECHO);
+	exit 1;
+}
+
+$result = `grep -h '>' $temp_dir/test_bp/test/*.best.fasta > $temp_dir/test_bp/results.txt`;
+if ((-s "$temp_dir/test_bp/results.txt") > 0) {
+	$result = `grep -c "." $temp_dir/test_bp/results.txt`;
+	chomp $result;
+	if ($result != 12) {
+		printlog ("\nBasicPipeline returned incorrect results. Please contact the developers with contents of the file $executing_path/test.results.$i.diff at https://github.com/juliema/aTRAM/issues.", ECHO);
+		exit 1;
+	}
+} else {
+	printlog ("\nBasicPipeline did not execute. Please contact the developers with details of this failure at https://github.com/juliema/aTRAM/issues.", ECHO);
 	exit 1;
 }
 
@@ -115,12 +142,12 @@ if ($result != 0) {
 }
 
 if (-e "$temp_dir/test_ap/results.txt") {
-	`diff $executing_path/test_results_ap.txt $temp_dir/test_ap/results.txt > $executing_path/test.results.$i.diff`;
-	if ($? != 0) {
-		printlog ("\nAlignmentPipeline returned incorrect results. Please contact the developers with contents of the file $executing_path/test.results.$i.diff at https://github.com/juliema/aTRAM/issues.", ECHO);
+	$result = `grep -c "." $temp_dir/test_ap/results.txt`;
+	chomp $result;
+	if ($result != 3) {
+		printlog ("\n$result AlignmentPipeline returned incorrect results. Please contact the developers with contents of the file $executing_path/test.results.$i.diff at https://github.com/juliema/aTRAM/issues.", ECHO);
 		exit 1;
 	}
-	`rm $executing_path/test.results.$i.diff`;
 } else {
 	printlog ("\nAlignmentPipeline did not execute. Please contact the developers with details of this failure at https://github.com/juliema/aTRAM/issues.", ECHO);
 	exit 1;
@@ -128,33 +155,5 @@ if (-e "$temp_dir/test_ap/results.txt") {
 
 printlog ("OK", ECHO);
 
-##########################################################################################
-## Testing BasicPipeline.pl
-##########################################################################################
-
-printlog (++$i .". Checking that BasicPipeline works correctly...", ECHO);
-$result = run_command ("$executing_path/../Pipelines/BasicPipeline.pl", "-samples $temp_dir/test.samples -targets $temp_dir/test.targets -out $temp_dir/test_bp -iter 5 $debug_flag $log_flag", {"no_exit"=>1});
-if ($result != 0) {
-	printlog ("\nBasicPipeline died in execution. Please contact the developers with details of this failure at https://github.com/juliema/aTRAM/issues.", ECHO);
-	exit 1;
-}
-
-$result = `grep -h '>' $temp_dir/test_bp/test/*.best.fasta > $temp_dir/test_bp/results.txt`;
-if ((-s "$temp_dir/test_bp/results.txt") > 0) {
-	`diff $executing_path/test_results_bp.txt $temp_dir/test_bp/results.txt > $executing_path/test.results.$i.diff`;
-	if ($? != 0) {
-		printlog ("\nBasicPipeline returned incorrect results. Please contact the developers with contents of the file $executing_path/test.results.$i.diff at https://github.com/juliema/aTRAM/issues.", ECHO);
-		exit 1;
-	}
-	`rm $executing_path/test.results.$i.diff`;
-} else {
-	printlog ("\nBasicPipeline did not execute. Please contact the developers with details of this failure at https://github.com/juliema/aTRAM/issues.", ECHO);
-	exit 1;
-}
-
-printlog ("OK", ECHO);
-
-
 printlog ("\nAll tests successfully passed.\n", ECHO);
-`rm -r $executing_path/test.results.*`;
 exit 0;
