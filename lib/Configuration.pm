@@ -6,6 +6,7 @@ use File::Find;
 use File::Basename;
 use Module::Load;
 use Cwd qw(realpath);
+use System;
 
 BEGIN {
 	require Exporter;
@@ -78,6 +79,7 @@ sub get_bin {
 	if (exists $binaries->{$bin}) {
 		return "$binaries->{$bin}";
 	} else {
+		printlog ("The binary \"$bin\" was not found in the config.txt file.");
 		return "";
 	}
 }

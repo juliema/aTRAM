@@ -46,10 +46,8 @@ sub fork_cmd {
 	my $args = shift;
 
 	# check to make sure the command even exists.
-	`which $cmd`;
-	if ($? != 0) {
-		printlog ("Can't fork: command $cmd was not found by the shell.");
-		die $?;
+	if ($cmd eq "") {
+		die "Can't fork: no command given";
 	}
 
     my $child_pid = fork();
@@ -88,10 +86,8 @@ sub run_command {
 	}
 
 	# check to make sure the command even exists.
-	`which $cmd`;
-	if ($? != 0) {
-		printlog ("Command $cmd was not found by the shell.");
-		die $?;
+	if ($cmd eq "") {
+		die "No command given";
 	}
 
 	open my $saveout, ">&STDOUT";
