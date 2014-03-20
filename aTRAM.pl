@@ -342,7 +342,7 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 
 	#   join the fasta results of each shard into a single fasta file:
 	my $fastafiles = join (" ", map {$_ . ".fasta"} @shardfiles);
-	run_command ("cat", "$fastafiles > $temp_name.$i.blast.fasta");
+	`cat $fastafiles > $temp_name.$i.blast.fasta`;
 
 	#   remove shards' fasta results
 	`rm $fastafiles`;

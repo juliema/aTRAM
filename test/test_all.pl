@@ -20,15 +20,15 @@ my $temp_dir = tempdir(CLEANUP => 1);
 if (@ARGV[0] =~ /debug/) {
 	$temp_dir = "debug";
 	make_path ("debug");
+set_debug(1);
+$debug_flag = "-debug";
 }
 
 $temp_dir = File::Spec->rel2abs($temp_dir);
-set_debug(1);
 
 open FH, ">", "$temp_dir/debug.log";
 close FH;
 set_log("$temp_dir/debug.log");
-$debug_flag = "-debug";
 $log_flag = "-log " . get_log_file();
 
 ##########################################################################################

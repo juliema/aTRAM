@@ -32,7 +32,7 @@ sub percentcoverage {
 	Configuration::initialize();
 	my (undef, $catfile) = tempfile(UNLINK => 1);
 	my $result = 0;
-	$result = run_command ("cat", "$reffile $contigfile > $catfile");
+	`cat $reffile $contigfile > $catfile`;
 
 	if ($aligner eq "mafft") {
 		$result = run_command (get_bin("mafft"), "$catfile > $outname.align.fasta");
