@@ -67,7 +67,7 @@ sub assembler {
 	my ($contigs, undef) = parsefasta ("$tempdir/contigs.fa");
 
 	# copy Velvet log output to logfile.
-	open LOGFH, "<", "$tempdir/Log";
+	open LOGFH, "<:crlf", "$tempdir/Log";
 	printlog ("Velvet log:");
 	foreach my $line (<LOGFH>) {
 		chomp $line;

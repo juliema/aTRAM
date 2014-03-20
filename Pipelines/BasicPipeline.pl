@@ -69,7 +69,7 @@ printlog ("Running $runline");
 
 my $samples = {};
 my @samplenames = ();
-open FH, "<", "$samplefile" or die "Couldn't open sample file $samplefile";
+open FH, "<:crlf", "$samplefile" or die "Couldn't open sample file $samplefile";
 foreach my $line (<FH>) {
 	if ($line =~ /(.+?)\t(.+)/) {
 		$samples->{$1} = $2;
@@ -85,7 +85,7 @@ if (@samplenames == 0) {
 
 my $targets = {};
 my @targetnames = ();
-open FH, "<", $targetfile or die "Couldn't open target file $targetfile";
+open FH, "<:crlf", $targetfile or die "Couldn't open target file $targetfile";
 foreach my $line (<FH>) {
 	if ($line =~ /(.+?)\t(.+)/) {
 		$targets->{$1} = $2;

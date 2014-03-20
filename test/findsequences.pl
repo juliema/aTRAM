@@ -16,7 +16,7 @@ unless (-e $sequencelist) {
 	die "File $sequencelist does not exist.\n";
 }
 
-open FH, "<", $sequencelist;
+open FH, "<:crlf", $sequencelist;
 my @sequences = ();
 while (my $line = readline FH) {
 	chomp $line;

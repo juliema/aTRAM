@@ -45,7 +45,7 @@ sub initialize {
 	}
 
 	if ((-s $config_file) > 0) {
-		open my $fh, "<", $config_file or die "Couldn't find $config_file. Did you run configure.pl?";
+		open my $fh, "<:crlf", $config_file or die "Couldn't find $config_file. Did you run configure.pl?";
 		foreach my $line (<$fh>) {
 			$line =~ s/(#.*)$//;
 			if ($line =~ /(.+)=(.+)$/) {

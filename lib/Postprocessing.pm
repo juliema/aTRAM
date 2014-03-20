@@ -51,7 +51,7 @@ sub percentcoverage {
 		return undef;
 	}
 
-	open REF_FH, "<", $reffile;
+	open REF_FH, "<:crlf", $reffile;
 	my $ref = readline REF_FH;
 	$ref =~ />(.+)$/;
 	my $refname = $1;

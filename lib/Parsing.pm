@@ -20,7 +20,7 @@ sub parsefasta {
 
 	my $taxa = {};
 	my @taxanames = ();
-	open fileIN, "<", "$fastafile";
+	open fileIN, "<:crlf", "$fastafile";
 	my $input = readline fileIN;
 	my $taxonlabel = "";
 	my $sequence = "";
@@ -81,7 +81,7 @@ sub make_hit_matrix {
 	my $hit_matrix = shift;
 	my $iter = shift;
 
-	open BLAST_FH, "<", $blast_file;
+	open BLAST_FH, "<:crlf", $blast_file;
 	while (my $line = readline BLAST_FH) {
 		my ($contig, $baitseq, $score, $qstart, $qend, $sstart, $send, $qlen, undef) = split(/\s+/,$line);
 		if (!(defined $contig)) {

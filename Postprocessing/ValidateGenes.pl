@@ -76,7 +76,7 @@ if ($blastdb eq "") {
 	run_command (get_bin('blastn'), "-query $reffile -db $blastdb -num_threads $processes -evalue 1e-50 -out $crossfile -outfmt '6 qseqid sseqid evalue length'");
 }
 
-open CROSS_FH, "<", $crossfile;
+open CROSS_FH, "<:crlf", $crossfile;
 my $curr_gene = "";
 my $cross_matrix = {};
 my @cross_keys = ();
@@ -111,7 +111,7 @@ foreach my $contigfile (@contigfiles) {
 		run_command (get_bin('blastn'), "-query $filepath -db $blastdb -num_threads $processes -evalue 1e-50 -out $blastfile -outfmt '6 sseqid qseqid slen evalue length'");
 		my $matchmatrix = {};
 		my @matrixkeys = ();
-		open FH, "<", $blastfile;
+		open FH, "<:crlf", $blastfile;
 		my $line = readline FH;
 		if ($line =~ /(.+?)\t(.+?)\t(.+?)\t(.+?)\t(.+)$/) {
 			my ($sseqid, $qseqid, $slen, $evalue, $length) = ($1, $2, $3, $4, $5);

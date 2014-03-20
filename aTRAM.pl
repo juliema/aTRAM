@@ -113,7 +113,7 @@ if ($assembler_available == 0) {
 
 # find the path specified in the .atram file, if provided.
 if ($atram_db =~ /\.atram$/) {
-	open ATRAM_FH, "<", $atram_db;
+	open ATRAM_FH, "<:crlf", $atram_db;
 	$atram_db = readline ATRAM_FH;
 	chomp $atram_db;
 	close ATRAM_FH;
@@ -196,7 +196,7 @@ my @complete_contigs = ();
 my $search_fasta = $target_fasta;
 my @target_seqs = ();
 
-open SEARCH_FH, "<", $search_fasta;
+open SEARCH_FH, "<:crlf", $search_fasta;
 my $name = "";
 my $seq = "";
 my $fullseq = "";
