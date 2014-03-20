@@ -79,7 +79,7 @@ foreach my $assembler (keys %$assemblers) {
 		} else {
 			`which $fullpath`;
 			if ($? != 0) {
-				print "      ...$sw was not found at $fullpath. $?\n";
+				print "      ...$sw was not found at $fullpath.\n";
 			} else {
 				print "      ...$sw is present.\n";
 				$assembler_ready++;
