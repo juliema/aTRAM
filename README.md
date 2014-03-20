@@ -3,7 +3,7 @@
 aTRAM does targeted de novo assembly of loci from paired-end Illumina runs and consists of three scripts:
 
 	1. configure.pl:  this script determines that the computer has the proper dependencies for aTRAM.
-	2. fomrat_sra.pl: this script creates an aTRAM database from an Illumina paired-end short-read archive.
+	2. format_sra.pl: this script creates an aTRAM database from an Illumina paired-end short-read archive.
 	3. aTRAM.pl: this script runs aTRAM with a target sequence and the formatted short-read archive.
 
 
