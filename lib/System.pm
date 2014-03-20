@@ -47,7 +47,8 @@ sub fork_cmd {
 
 	# check to make sure the command even exists.
 	if ($cmd eq "") {
-		die "Can't fork: no command given";
+		printlog ("Can't fork: no command given.");
+		die;
 	}
 
     my $child_pid = fork();
@@ -86,7 +87,8 @@ sub run_command {
 
 	# check to make sure the command even exists.
 	if ($cmd eq "") {
-		die "No command given";
+		printlog ("No command given.");
+		die;
 	}
 
 	open my $saveout, ">&STDOUT";

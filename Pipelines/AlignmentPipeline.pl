@@ -92,7 +92,8 @@ foreach my $line (<FH>) {
 close FH;
 
 if (@samplenames == 0) {
-	die "Sample file $samplefile doesn't contain a list";
+	printlog ("Sample file $samplefile doesn't contain a list.");
+	die;
 }
 
 my $targets = {};
@@ -107,7 +108,8 @@ foreach my $line (<FH>) {
 close FH;
 
 if (@targetnames == 0) {
-	die "Target file $targetfile doesn't contain a list";
+	printlog ("Target file $targetfile doesn't contain a list.");
+	die;
 }
 
 my $atram_dir = File::Spec->catfile($outdir, "aTRAM");

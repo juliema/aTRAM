@@ -79,7 +79,8 @@ foreach my $line (<FH>) {
 close FH;
 
 if (@samplenames == 0) {
-	die "Sample file $samplefile doesn't contain a list";
+	printlog ("Sample file $samplefile doesn't contain a list.");
+	die;
 }
 
 my $targets = {};
@@ -94,7 +95,8 @@ foreach my $line (<FH>) {
 close FH;
 
 if (@targetnames == 0) {
-	die "Target file $targetfile doesn't contain a list";
+	printlog ("Target file $targetfile doesn't contain a list.");
+	die;
 }
 
 
@@ -128,7 +130,8 @@ foreach my $sample (@samplenames) {
 				printlog ("aTRAM of $outname found no contigs.");
 				next;
 			} elsif ($atram_result != 0) {
-				die "unexpected error $atram_result";
+				printlog ("unexpected error $atram_result.");
+				die;
 			}
 		}
 	}
