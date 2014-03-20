@@ -31,7 +31,7 @@ foreach my $sw (@$req_software) {
 		print "   ...$sw couldn't be found on this system.\n";
 		$sw_ready = 0;
 	} else {
-		`which -s $fullpath`;
+		`which $fullpath`;
 		if ($? != 0) {
 			print "   ...$sw was not found at $fullpath.\n";
 			$sw_ready = 0;
@@ -53,7 +53,7 @@ foreach my $sw (@$opt_software) {
 		print "   ...$sw couldn't be found on this system.\n";
 		$sw_ready = 0;
 	} else {
-		`which -s $fullpath`;
+		`which $fullpath`;
 		if ($? != 0) {
 			print "   ...$sw was not found at $fullpath.\n";
 			$sw_ready = 0;
@@ -77,7 +77,7 @@ foreach my $assembler (keys %$assemblers) {
 		if ($fullpath eq "") {
 			print "      ...$sw couldn't be found on this system.\n";
 		} else {
-			`which -s $fullpath`;
+			`which $fullpath`;
 			if ($? != 0) {
 				print "      ...$sw was not found at $fullpath. $?\n";
 			} else {
