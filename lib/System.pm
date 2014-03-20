@@ -11,7 +11,7 @@ BEGIN {
 	# Inherit from Exporter to export functions and variables
 	our @ISA         = qw(Exporter);
 	# Functions and variables which are exported by default
-	our @EXPORT      = qw(timestamp exit_with_msg fork_cmd wait_for_forks printlog run_command debug set_debug set_log);
+	our @EXPORT      = qw(timestamp exit_with_msg fork_cmd wait_for_forks printlog run_command debug set_debug set_log get_log_file close_log);
 	# Functions and variables which can be optionally exported
 	our @EXPORT_OK   = qw();
 }
@@ -164,6 +164,12 @@ sub get_log_file {
 		return undef;
 	}
 	return $log_file;
+}
+
+sub close_log {
+	if ($log_fh) {
+		close $log_fh;
+	}
 }
 
 sub printlog {
