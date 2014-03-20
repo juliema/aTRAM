@@ -78,6 +78,8 @@ set_log($log_file);
 
 printlog ("Running $runline");
 
+Configuration::initialize();
+
 my $samples = {};
 my @samplenames = ();
 open FH, "<", "$samplefile" or die "Couldn't open sample file $samplefile";
@@ -196,7 +198,7 @@ foreach my $target (@targetnames) {
 
 		# find the one best contig (one with fewest gaps)
 		if ($protein == 0) {
-			run_command (Configuration::find_bin("blastn"), "-task blastn -query $atram_outname.trimmed.fasta -subject $targets->{$target} -outfmt '6 qseqid bitscore' -out $atram_outname.blast");
+			run_command (get_bin("blastn"), "-task blastn -query $atram_outname.trimmed.fasta -subject $targets->{$target} -outfmt '6 qseqid bitscore' -out $atram_outname.blast");
 		}
 		open FH, "<", "$atram_outname.blast";
 		my $contig = "";

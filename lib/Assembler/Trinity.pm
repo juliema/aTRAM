@@ -12,7 +12,7 @@ use Configuration;
 # Assembler modules should return a hash of the resulting contigs.
 
 # Hash of assembler's required binaries
-our $binaries = {trinity => "Trinity.pl"};
+my $binaries = {trinity => "Trinity.pl"};
 
 sub get_binaries {
 	return $binaries;
@@ -25,6 +25,7 @@ sub assembler {
 
 	my $jm = "1G";
 
+	Configuration::initialize();
 
 	my ($kmer, $tempdir, $longreads, $ins_length, $exp_cov, $min_contig_len, $output_file) = 0;
 	if ((ref $params) =~ /HASH/) {
@@ -42,7 +43,7 @@ sub assembler {
 		}
 	}
 	# using Trinity.pl
-	run_command (Configuration::find_bin($binaries->{trinity}), "--seqType fa --single $short_read_file --run_as_paired --JM $jm --output $tempdir");
+	run_command (get_bin($binaries->{trinity}), "--seqType fa --single $short_read_file --run_as_paired --JM $jm --output $tempdir");
 
 	my ($contigs, undef) = parsefasta ("$tempdir/Trinity.fasta");
 

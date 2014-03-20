@@ -34,7 +34,7 @@ $temp_dir = File::Spec->rel2abs($temp_dir);
 ## Testing Configuration
 ##########################################################################################
 printlog (++$i .". Checking that configuration is correct...", ECHO);
-unless (Configuration::find_bin("blastn") ne "") {
+unless (get_bin("blastn") ne "") {
 	printlog ("\nConfiguration is not valid...did you run configure.pl?", ECHO);
 	exit 1;
 }
@@ -56,6 +56,7 @@ if ($? != 0) {
 	printlog ("\nFormat_sra returned incorrect results. Please contact the developers with contents of the file $executing_path/test.results.$i.diff at https://github.com/juliema/aTRAM/issues.", ECHO);
 	exit 1;
 }
+`rm $executing_path/test.results.$i.diff`;
 
 printlog ("OK", ECHO);
 
@@ -119,6 +120,7 @@ if (-e "$temp_dir/test_ap/results.txt") {
 		printlog ("\nAlignmentPipeline returned incorrect results. Please contact the developers with contents of the file $executing_path/test.results.$i.diff at https://github.com/juliema/aTRAM/issues.", ECHO);
 		exit 1;
 	}
+	`rm $executing_path/test.results.$i.diff`;
 } else {
 	printlog ("\nAlignmentPipeline did not execute. Please contact the developers with details of this failure at https://github.com/juliema/aTRAM/issues.", ECHO);
 	exit 1;
@@ -144,6 +146,7 @@ if ((-s "$temp_dir/test_bp/results.txt") > 0) {
 		printlog ("\nBasicPipeline returned incorrect results. Please contact the developers with contents of the file $executing_path/test.results.$i.diff at https://github.com/juliema/aTRAM/issues.", ECHO);
 		exit 1;
 	}
+	`rm $executing_path/test.results.$i.diff`;
 } else {
 	printlog ("\nBasicPipeline did not execute. Please contact the developers with details of this failure at https://github.com/juliema/aTRAM/issues.", ECHO);
 	exit 1;

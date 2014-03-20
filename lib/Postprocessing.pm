@@ -35,10 +35,10 @@ sub percentcoverage {
 	$result = run_command ("cat", "$reffile $contigfile > $catfile");
 
 	if ($aligner eq "mafft") {
-		$result = run_command (Configuration::find_bin("mafft"), "$catfile > $outname.align.fasta");
+		$result = run_command (get_bin("mafft"), "$catfile > $outname.align.fasta");
 	} else {
 		$aligner = "muscle";
-		$result = run_command (Configuration::find_bin("muscle"), "-in $catfile -out $outname.align.fasta");
+		$result = run_command (get_bin("muscle"), "-in $catfile -out $outname.align.fasta");
 	}
 
 	if ($result == -1) {

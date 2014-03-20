@@ -11,7 +11,7 @@ use Configuration;
 # Assembler modules should return a hash of the resulting contigs.
 
 # Hash of assembler's required binaries
-our $binaries = {velveth => "velveth", velvetg => "velvetg"};
+my $binaries = {velveth => "velveth", velvetg => "velvetg"};
 
 sub get_binaries {
 	return $binaries;
@@ -21,6 +21,8 @@ sub assembler {
 	my $self = shift;
 	my $short_read_file = shift;
 	my $params = shift;
+
+	Configuration::initialize();
 
 	my ($kmer, $tempdir, $ins_length, $exp_cov, $min_contig_len, $output_file) = 0;
 	my $longreads = "";
@@ -57,11 +59,11 @@ sub assembler {
 	truncate "$tempdir/Log", 0;
 
 	if ($longreads ne "") {
-		run_command (Configuration::find_bin($binaries->{velveth}), "$tempdir $kmer -fasta -shortPaired $short_read_file -long $longreads", 1);
+		run_command (get_bin($binaries->{velveth}), "$tempdir $kmer -fasta -shortPaired $short_read_file -long $longreads", 1);
 	} else {
-		run_command (Configuration::find_bin($binaries->{velveth}), "$tempdir $kmer -fasta -shortPaired $short_read_file", 1);
+		run_command (get_bin($binaries->{velveth}), "$tempdir $kmer -fasta -shortPaired $short_read_file", 1);
 	}
-	run_command (Configuration::find_bin($binaries->{velvetg}), "$tempdir -ins_length $ins_length -exp_cov $exp_cov -min_contig_lgth $min_contig_len", 1);
+	run_command (get_bin($binaries->{velvetg}), "$tempdir -ins_length $ins_length -exp_cov $exp_cov -min_contig_lgth $min_contig_len", 1);
 	my ($contigs, undef) = parsefasta ("$tempdir/contigs.fa");
 
 	# copy Velvet log output to logfile.

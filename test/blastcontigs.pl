@@ -26,8 +26,8 @@ unless (defined $blast_file) {
 	(undef, $blast_file) = tempfile(UNLINK => 1);
 }
 
-run_command (Configuration::get_bin("makeblastdb"), "-in $target_fasta -dbtype nucl -out $targetdb.db -input_type fasta");
-run_command (Configuration::get_bin("tblastx"), "-db $targetdb.db -query $contigs_fasta -out $blast_file -outfmt '6 qseqid sseqid bitscore qstart qend sstart send qlen'");
+run_command (get_bin("makeblastdb"), "-in $target_fasta -dbtype nucl -out $targetdb.db -input_type fasta");
+run_command (get_bin("tblastx"), "-db $targetdb.db -query $contigs_fasta -out $blast_file -outfmt '6 qseqid sseqid bitscore qstart qend sstart send qlen'");
 
 sortfasta ($target_fasta, $targets, "#");
 open FH, "<", $targets;
