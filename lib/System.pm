@@ -11,7 +11,7 @@ BEGIN {
 	# Inherit from Exporter to export functions and variables
 	our @ISA         = qw(Exporter);
 	# Functions and variables which are exported by default
-	our @EXPORT      = qw(timestamp exit_with_msg fork_cmd wait_for_forks printlog run_command debug set_debug set_log get_log_file close_log);
+	our @EXPORT      = qw(timestamp exit_with_msg fork_cmd wait_for_forks printlog run_command debug set_debug set_log get_log_file close_log get_version);
 	# Functions and variables which can be optionally exported
 	our @EXPORT_OK   = qw();
 }
@@ -19,6 +19,11 @@ BEGIN {
 my $debug = 0;
 my $log_fh = 0;
 my $log_file = "";
+my $version = "v1.0";
+
+sub get_version {
+	return $version;
+}
 
 sub timestamp {
     my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime(time);

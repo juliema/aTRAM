@@ -29,7 +29,7 @@ if (@ARGV == 0) {
     pod2usage(-verbose => 1);
 }
 
-my $runline = "running " . basename($0) . " " . join (" ", @ARGV) . "\n";
+my $runline = "Running " . basename($0) . " " . join (" ", @ARGV) . ", " . get_version() . "\n";
 
 #required: input file names
 my $atram_db = 0;
