@@ -215,7 +215,7 @@ if ($original_numshards != $numshards) {
 	for (my $i=0; $i<$numshards; $i++) {
 		close $out1_fhs[$i];
 		close $out2_fhs[$i];
-		push @pids, fork_cmd ("sort -t',' -k 1 -T $output_path $out1_bucketfiles[$i] > $out1_sortedfiles[$i]");
+		push @pids, fork_cmd ("sort", "-t',' -k 1 -T $output_path $out1_bucketfiles[$i] > $out1_sortedfiles[$i]");
 		if (@pids >= ($max_processes - 1)) {
 			# don't spawn off too many threads at once.
 			wait_for_forks(\@pids);
@@ -224,7 +224,7 @@ if ($original_numshards != $numshards) {
 	wait_for_forks(\@pids);
 	#
 	for (my $i=0; $i<$numshards; $i++) {
-		push @pids, fork_cmd ("sort -t',' -k 1 -T $output_path $out2_bucketfiles[$i] > $out2_sortedfiles[$i]");
+		push @pids, fork_cmd ("sort", "-t',' -k 1 -T $output_path $out2_bucketfiles[$i] > $out2_sortedfiles[$i]");
 		if (@pids >= ($max_processes - 1)) {
 			# don't spawn off too many threads at once.
 			wait_for_forks(\@pids);
@@ -268,7 +268,7 @@ if ($original_numshards != $numshards) {
 printlog ("Making blastdbs.");
 for (my $i=0; $i<$numshards; $i++) {
 	# make the blast db from the first of the paired end files
-	push @pids, fork_cmd ("$Configuration::binaries->{makeblastdb} -in $output_file.$i.1.fasta -dbtype nucl -out $output_file.$i.db");
+	push @pids, fork_cmd (get_bin("makeblastdb"), "-in $output_file.$i.1.fasta -dbtype nucl -out $output_file.$i.db");
 	if (@pids >= ($max_processes - 1)) {
 		# don't spawn off too many threads at once.
 		wait_for_forks(\@pids);

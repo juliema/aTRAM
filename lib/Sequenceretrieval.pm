@@ -119,7 +119,8 @@ sub findsequences {
 	my $names = shift;
 
 	unless (-e $fastafile) {
-		die "File $fastafile does not exist.\n";
+		printlog ("File $fastafile does not exist.");
+		die;
 	}
 
 	my $hashed_seqs = {};

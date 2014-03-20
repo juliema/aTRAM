@@ -78,6 +78,8 @@ set_log($log_file);
 
 printlog ("Running $runline");
 
+Configuration::initialize();
+
 my $samples = {};
 my @samplenames = ();
 open FH, "<", "$samplefile" or die "Couldn't open sample file $samplefile";
@@ -90,7 +92,8 @@ foreach my $line (<FH>) {
 close FH;
 
 if (@samplenames == 0) {
-	die "Sample file $samplefile doesn't contain a list";
+	printlog ("Sample file $samplefile doesn't contain a list.");
+	die;
 }
 
 my $targets = {};
@@ -105,7 +108,8 @@ foreach my $line (<FH>) {
 close FH;
 
 if (@targetnames == 0) {
-	die "Target file $targetfile doesn't contain a list";
+	printlog ("Target file $targetfile doesn't contain a list.");
+	die;
 }
 
 my $atram_dir = File::Spec->catfile($outdir, "aTRAM");
@@ -155,7 +159,7 @@ foreach my $target (@targetnames) {
 		if ($assembler ne "") { $assembler = "-assemble $assembler"; }
 
 		my $atram_outname = File::Spec->catfile($atram_dir, $outname);
-		my $atram_result = system_call ("$atrampath/aTRAM.pl -reads $samples->{$sample} -target $targets->{$target} -iter $iter -ins_length $ins_length -frac $frac $assembler -out $atram_outname -kmer $kmer $complete_flag $processes_flag $memory_flag $debug_flag -log $log_file", 1); # don't exit because we want to capture a nonzero result.
+		my $atram_result = run_command ("$atrampath/aTRAM.pl", "-reads $samples->{$sample} -target $targets->{$target} -iter $iter -ins_length $ins_length -frac $frac $assembler -out $atram_outname -kmer $kmer $complete_flag $processes_flag $memory_flag $debug_flag -log $log_file", {"no_exit"=>1}); # don't exit because we want to capture a nonzero result.
 
 		if ($atram_result) {
 			printlog ("aTRAM found no contigs matching $target for $sample.");
@@ -196,7 +200,7 @@ foreach my $target (@targetnames) {
 
 		# find the one best contig (one with fewest gaps)
 		if ($protein == 0) {
-			system_call (Configuration::find_bin("blastn") . " -task blastn -query $atram_outname.trimmed.fasta -subject $targets->{$target} -outfmt '6 qseqid bitscore' -out $atram_outname.blast");
+			run_command (get_bin("blastn"), "-task blastn -query $atram_outname.trimmed.fasta -subject $targets->{$target} -outfmt '6 qseqid bitscore' -out $atram_outname.blast");
 		}
 		open FH, "<", "$atram_outname.blast";
 		my $contig = "";
@@ -213,7 +217,7 @@ foreach my $target (@targetnames) {
 			}
 		}
 		close FH;
-		system_call ("rm $atram_outname.blast");
+		`rm $atram_outname.blast`;
 
 		$contig = "";
 		my $percent = 0;

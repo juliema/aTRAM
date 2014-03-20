@@ -6,6 +6,7 @@ use File::Find;
 use File::Basename;
 use Module::Load;
 use Cwd qw(realpath);
+use System;
 
 BEGIN {
 	require Exporter;
@@ -14,7 +15,7 @@ BEGIN {
 	# Inherit from Exporter to export functions and variables
 	our @ISA         = qw(Exporter);
 	# Functions and variables which are exported by default
-	our @EXPORT      = qw(get_req_software get_optional_software get_assemblers find_bin);
+	our @EXPORT      = qw(get_req_software get_optional_software check_module get_assemblers get_bin);
 	# Functions and variables which can be optionally exported
 	our @EXPORT_OK   = qw();
 }
@@ -78,6 +79,7 @@ sub get_bin {
 	if (exists $binaries->{$bin}) {
 		return "$binaries->{$bin}";
 	} else {
+		printlog ("The binary \"$bin\" was not found in the config.txt file.");
 		return "";
 	}
 }
