@@ -81,7 +81,6 @@ sub run_command {
 	my $no_exit = 0;
 	# handle params, if provided.
 	if ((ref $params) =~ /HASH/) {
-	printlog ("howdy $cmd $params\n");
 		$no_exit = $params->{"no_exit"};
 	}
 
