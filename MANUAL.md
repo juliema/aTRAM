@@ -10,7 +10,7 @@ To determine if aTRAM can run on your computer:
 
 ######perl configure.pl 
   
-  This script will determine if BLAST and de novo assembly software are available. It will create a text file called configure.txt with the paths to the programs. They can be available in your $PATH by adding them directly to the appropriate folder (e.g. /usr/bin) or add the path to the programs to your $PATH. Alternatively, the configure.txt file can be edited directly with the path to the programs after configure.pl is run. BLAST is required and at least one of the de novo assemblers are required Trinity or Velvet.
+  This script will determine if BLAST and de novo assembly software and muscle and mafft are available. It will create a text file called configure.txt in the lib folder with the paths to the programs. They can be available in your $PATH by adding them directly to the appropriate folder (e.g. /usr/bin) or add the path to the programs to your $PATH. Alternatively, the configure.txt file can be edited directly with the path to the programs after configure.pl is run. BLAST is required and at least one of the de novo assemblers are required Trinity or Velvet.
 
 ## Running aTRAM
 
