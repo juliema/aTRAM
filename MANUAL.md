@@ -16,11 +16,11 @@ To determine if aTRAM can run on your computer:
 
 ### format_SRA.pl
 
-######perl format_SRA.pl -input inputfile.fastq [-output Database Name | -int Number of Shards ]
+######perl format_SRA.pl -in inputfile.fastq [-output Database Name | -int Number of Shards ]
 
 This script will create an aTRAM blast formatted database of your Illumina run. By default it will split the short read archive into shards for every 250 MB. The final aTRAM database will have roughly (Number of GB of a fasta file)/4 blast formatted databases. You can specify a different number of shards with -int.  We calculated 250 MB based on the memory allocated to BLAST and time necessary to search through each database. 
   
-The input File can be either fastq or fasta, the two paired end reads should be in one file either fasta or fasta. Concatenate the two files together if necessary.
+The input file (-in) can be either fastq or fasta, the two paired end reads should be in one file. Concatenate the two files together if necessary.
 
 ### aTRAM.pl
 
