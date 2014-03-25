@@ -25,33 +25,38 @@ The -input file can be either fastq or fasta, the two paired end reads should be
 
 ### aTRAM.pl
 
-######perl  aTRAM.pl -reads DatabaseName -target TargetSequence.fasta -fraction Fraction 
+######perl  aTRAM.pl -sra DatabaseName -target TargetSequence.fasta  [-fraction Fraction | -complete | -protein | -max_processes | -max_memory | -shards number | -log_file filename | -help | -output_file filename | -temp_name | -save_temp ]
 
+Required Parameters:
+  * - sra DatabaseName, the name of the formatted short read archive from format_sra.pl
+  * - target  TargetSequence.fasta, the target gene in either DNA or Amino Acid format, if AA turn on -protein
 
-aTRAM.pl -reads shortreadfile -target target.fasta 
-
-Optional Parameters:
+Important Optional Parameters:
+  * - complete  [on/off], will autocomplete if the atram output blasts back to both the beginning and end of the target sequence, indicates the full target has been recovered.
+  * - fraction number bewteen 0-1,  fraction of the full Illumina database to search, a good starting point would be to aim for 20X coverage
+  * - protein  [on/off], turns on if the target sequence is in Amino Acids
+  
+Other Optional Parameters:
   * - help will give program parameters
   * - log_file  filename,    will create one file for all the log output
   * - output_file filename,  will create the output file
   * - shards number,  number of shards to search
-  * - fraction number between 0-1,   identifies fraction of the database to search
   * - temp_name filename, names a temporary file to store XXXX
   * - save_temp filename, saves the temp file
-  * - complete,  turns on the autocomplete [on/off]
+
+Running on a Cluster:
   * - max_processes  maximum  number of processes to run for each search
   * - max_memory maximum amount of memory to allocate to aTRAM
 
 
+Parameters with modifiable default values:    
+  * -ins_length number
+  * -iterations number, number of iterations before the program stops, default 5
+  * -start_iter number, iteration to start on if continuing running aTRAM from a previous run
+  * -exp_cov
+  * -evalue  number, can allow for different e-values in blast search
+  * 
 
-my $protflag = 0;
-
-
-### 
- - bitscore = 70;  shouldnt this bee in the parameters with modifiable default values?
-my $contiglength = 100;
-
-#parameters with modifiable default values                                                                                                              
 my $ins_length = 300;
 my $iterations = 5;
 my $start_iter = 1;
