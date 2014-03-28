@@ -53,7 +53,7 @@ Parameters with modifiable default values:
   * -ins_length number
   * -iterations number, number of iterations before the program stops, default 5
   * -start_iter number, iteration to start on if continuing running aTRAM from a previous run
-  * -exp_cov
+  * -exp_coverage number, the expected coverage of the region for velvetg (default 30).
   * -evalue  number, can allow for different e-values in blast search
   * -max_target_seqs, maxumum number of hits BLAST will identify
   * -assembler,  by default this is Velvet but it can be set to run Trinity -assembler = "Trinity"
