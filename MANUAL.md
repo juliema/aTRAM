@@ -55,38 +55,11 @@ Parameters with modifiable default values:
   * -start_iter number, iteration to start on if continuing running aTRAM from a previous run
   * -exp_cov
   * -evalue  number, can allow for different e-values in blast search
-  * 
-
-my $ins_length = 300;
-my $iterations = 5;
-my $start_iter = 1;
-my $exp_cov = 30;
-my $evalue = 10e-10;
-my $max_target_seqs = 100000000;
-my $assembler = "Velvet";
-my $kmer = 31;
+  * -max_target_seqs, maxumum number of hits BLAST will identify
+  * -assembler,  by default this is Velvet but it can be set to run Trinity -assembler = "Trinity"
+  * -kmer, kmer number for assemblers
 
 
-
-[-ins_length int] [-exp_coverage int] [-iterations int] [-start_iteration int] [-log_file filename] [-use_ends] [-output filename]
-
-* -reads:           short read archive (already run through format_sra.pl).
-* -target:          fasta file with sequences of interest.
-* -output:          optional: the prefix for the pipeline's output files (default name is the same as -reads).
-* -ins_length:      optional: the size of the fragments used in the short-read library (default 300).
-* -exp_coverage:    optional: the expected coverage of the region for velvetg (default 30).
-* -iterations:      optional: the number of pipeline iterations (default 5).
-* -start_iteration: optional: if resuming from previous run, which iteration number to start from (default 0).
-* -log_file:        optional: a file to store output of the pipeline.
-* -use_ends:        optional: if this flag is present, use the first and last $ins_length of long contigs in the search.
-
-
-
-## Running on a cluster:
-
-max_processes should equal number of threads
-
-format_sra.pl max processes is set to 4
 
 
 
