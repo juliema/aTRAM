@@ -34,10 +34,11 @@ sub initialize {
 	}
 
 	# find the lib path in @INC:
-	my $libpath = File::Spec->catfile("aTRAM", "lib");
 	foreach my $path (@INC) {
 		$path = realpath ($path);
-		if ($path =~ /$libpath/) {
+		$path = File::Spec->canonpath($path);
+		$path =~ s/\\/\//g;
+		if ($path =~ /TRAM.*lib/) {
 			$config_file = File::Spec->catfile($path, "config.txt");
 			$assembler_dir = File::Spec->catdir($path, "Assembler");
 			last;
