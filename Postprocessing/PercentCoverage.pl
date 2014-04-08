@@ -5,6 +5,8 @@ use FindBin;
 use File::Basename qw(basename);
 use lib "$FindBin::Bin/../lib";
 use Postprocessing;
+use Parsing qw(parsefasta);
+use File::Temp qw(tempfile);
 
 my $ref_file = shift @ARGV;
 my $contigs_file = shift @ARGV;
@@ -24,7 +26,15 @@ if (!(-e $contigs_file)) {
 	die "Couldn't find contigs file $contigs_file";
 }
 
-my $contigs = percentcoverage ($ref_file, $contigs_file, $out_name, $aligner);
+my ($reffasta, $reffastaarray) = parsefasta ($ref_file);
+my ($fh, $filename) = tempfile();
+print $fh ">reference\n";
+foreach my $r (@$reffastaarray) {
+	print $fh "$reffasta->{$r}\n";
+}
+close $fh;
+
+my $contigs = percentcoverage ($filename, $contigs_file, $out_name, $aligner);
 
 if (defined $contigs) {
 	my $refseq = delete $contigs->{reference};
