@@ -390,6 +390,13 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 
 	}
 
+	# SHUTDOWN CHECK:
+	if (-z $contigs_file) {
+		printlog ("No new contigs were found.", 1);
+		last;
+	}
+
+
 	# filter out the contigs to look for just the best ones:
 	print "\tfiltering contigs...\n";
 
