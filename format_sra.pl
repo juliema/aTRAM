@@ -3,7 +3,6 @@ use strict;
 use File::Basename;
 use File::Temp qw(tempfile cleanup);
 use File::Path qw (make_path);
-use File::Basename;
 use Getopt::Long;
 use Pod::Usage;
 use FindBin;
