@@ -24,7 +24,7 @@ sub parsefasta {
 	my $input = readline fileIN;
 	my $taxonlabel = "";
 	my $sequence = "";
-	while ($input !~ /^\s*$/) {
+	while (defined $input) {
 		if ($input =~ /^>(.+)\s*$/) {
 			$taxonlabel = $1;
 			$taxonlabel =~ s/\s+/_/g;
