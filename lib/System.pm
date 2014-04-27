@@ -93,7 +93,7 @@ sub run_command {
 	# check to make sure the command even exists.
 	if ($cmd eq "") {
 		printlog ("No command given.");
-		die;
+		die "No command given.";
 	}
 
 	open my $saveout, ">&STDOUT";
