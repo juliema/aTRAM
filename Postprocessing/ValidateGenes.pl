@@ -108,13 +108,13 @@ foreach my $contigfile (@contigfiles) {
 	if ($contigfile =~ /(.+)\.(.+)\.fasta/) {
 		my $genename = $1;
 		my $blastfile = File::Spec->rel2abs (File::Spec->catfile ($outdir, "$contigfile.blast"));
-		run_command (get_bin('blastn'), "-query $filepath -db $blastdb -num_threads $processes -evalue 1e-50 -out $blastfile -outfmt '6 sseqid qseqid slen evalue length'");
+		run_command (get_bin('blastn'), "-query $filepath -db $blastdb -num_threads $processes -evalue 1e-50 -out $blastfile -outfmt '6 sseqid qseqid slen evalue length pident'");
 		my $matchmatrix = {};
 		my @matrixkeys = ();
 		open FH, "<:crlf", $blastfile;
 		my $line = readline FH;
-		if ($line =~ /(.+?)\t(.+?)\t(.+?)\t(.+?)\t(.+)$/) {
-			my ($sseqid, $qseqid, $slen, $evalue, $length) = ($1, $2, $3, $4, $5);
+		if ($line =~ /(.+?)\t(.+?)\t(.+?)\t(.+?)\t(.+?)\t(.+)$/) {
+			my ($sseqid, $qseqid, $slen, $evalue, $length, $pident) = ($1, $2, $3, $4, $5, $6);
 			my $hit_string = "";
 			if ($genename eq $sseqid) {
 				$hit_string = "self\t$qseqid";
@@ -127,7 +127,7 @@ foreach my $contigfile (@contigfiles) {
 				print "$sseqid is not a match for the bait $genename\n";
 			}
 			if ($hit_string ne "") {
-				print RESULTS_FH "$genename\t$evalue\t$hit_string\n";
+				print RESULTS_FH "$genename\t$evalue\t$length\t$slen\t$pident\t$hit_string\n";
 			}
 		}
 		close FH;
