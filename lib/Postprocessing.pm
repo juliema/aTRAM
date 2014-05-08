@@ -15,10 +15,23 @@ BEGIN {
 	# Functions and variables which are exported by default
 	our @EXPORT      = qw(percentcoverage);
 	# Functions and variables which can be optionally exported
-	our @EXPORT_OK   = qw();
+	our @EXPORT_OK   = qw(align_to_ref trim_to_ref align_to_seq);
+	Configuration::initialize();
 }
 
 sub percentcoverage {
+	my $reffile = shift;
+	my $contigfile = shift;
+	my $outname = shift;
+	my $aligner = shift;
+
+	my ($contigs, undef) = align_to_ref ($reffile, $contigfile, $outname, $aligner);
+
+	trim_to_ref ($contigs, "reference");
+	return $contigs;
+}
+
+sub align_to_ref {
 	my $reffile = shift;
 	my $contigfile = shift;
 	my $outname = shift;
@@ -29,11 +42,26 @@ sub percentcoverage {
 		return undef;
 	}
 
+	open REF_FH, "<:crlf", $reffile;
+	my $ref = readline REF_FH;
+	$ref =~ />(.+)$/;
+	my $refname = $1;
+	close REF_FH;
+
 	Configuration::initialize();
 	my (undef, $catfile) = tempfile(UNLINK => 1);
-	my $result = 0;
 	`cat $reffile $contigfile > $catfile`;
 
+	return align_to_seq ($catfile, $refname, $outname, $aligner);
+}
+
+sub align_to_seq {
+	my $catfile = shift;
+	my $refname = shift;
+	my $outname = shift;
+	my $aligner = shift;
+
+	my $result = 0;
 	if ($aligner eq "mafft") {
 		$result = run_command (get_bin("mafft"), "$catfile > $outname.align.fasta");
 	} else {
@@ -51,46 +79,50 @@ sub percentcoverage {
 		return undef;
 	}
 
-	open REF_FH, "<:crlf", $reffile;
-	my $ref = readline REF_FH;
-	$ref =~ />(.+)$/;
-	my $refname = $1;
-	close REF_FH;
+	my ($seq_hash, undef) = parsefasta ("$outname.align.fasta");
+	my $gappedrefseq = delete $seq_hash->{"$refname"};
+	$seq_hash->{"reference"} = $gappedrefseq;
 
-	# parse the output file: save the reference as a separate sequence, put the others into an array.
-	my ($contigs, $taxa) = parsefasta ("$outname.align.fasta");
-	my $refseq = delete $contigs->{"$refname"};
+	return ($seq_hash);
+}
 
+sub trim_to_ref {
+	my $seq_hash = shift;
+	my $refseq_key = shift;
+
+	my $gappedrefseq = delete $seq_hash->{$refseq_key};
+
+	my $result = 0;
 	# as long as there are still gaps in the reference sequence, keep removing the corresponding positions from the contigs.
-	while ($refseq =~ /(\w*)(-+)(.*)/) {
+	while ($gappedrefseq =~ /(\w*)(-+)(.*)/) {
 		my $left = $1;
 		my $gap = $2;
 		my $remainder = $3;
 		my $leftlength = length $left;
 		my $gaplength = length $gap;
 
-		foreach my $contig (keys %$contigs) {
+		foreach my $contig (keys %$seq_hash) {
 			my $end = $leftlength + $gaplength;
 			my $start = $leftlength + 1;
-			my ($startseq, $regionseq, $endseq) = split_seq ($contigs->{$contig}, $start, $end);
-			$contigs->{$contig} = "$startseq$endseq";
+			my ($startseq, $regionseq, $endseq) = split_seq ($seq_hash->{$contig}, $start, $end);
+			$seq_hash->{$contig} = "$startseq$endseq";
 		}
 
-		$refseq = "$left$remainder";
+		$gappedrefseq = "$left$remainder";
 	}
 	# align the ends of the contig seqs
-	foreach my $contig (keys %$contigs) {
-		if ((length $contigs->{$contig}) > (length $refseq)) {
-			# if the contig seq is longer than the refseq, truncate it
-			$contigs->{$contig} = substr($contigs ->{$contig}, 0, length $refseq);
+	foreach my $contig (keys %$seq_hash) {
+		if ((length $seq_hash->{$contig}) > (length $gappedrefseq)) {
+			# if the contig seq is longer than the gappedrefseq, truncate it
+			$seq_hash->{$contig} = substr($seq_hash->{$contig}, 0, length $gappedrefseq);
 		} else {
-			# if the contig seq is shorter than the refseq, pad it with gaps.
-			$contigs->{$contig} .= "-" x ((length $contigs->{$contig}) - (length $refseq));
+			# if the contig seq is shorter than the gappedrefseq, pad it with gaps.
+			$seq_hash->{$contig} .= "-" x ((length $seq_hash->{$contig}) - (length $gappedrefseq));
 		}
 	}
 
-	$contigs->{"reference"} = $refseq;
-	return $contigs;
+	$seq_hash->{$refseq_key} = $gappedrefseq;
+	return $seq_hash;
 }
 
 return 1;
