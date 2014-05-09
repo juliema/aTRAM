@@ -21,10 +21,9 @@ sub parsefasta {
 	my $taxa = {};
 	my @taxanames = ();
 	open fileIN, "<:crlf", "$fastafile";
-	my $input = readline fileIN;
 	my $taxonlabel = "";
 	my $sequence = "";
-	while (defined $input) {
+	while (my $input = readline fileIN) {
 		if ($input =~ /^>(.+)\s*$/) {
 			$taxonlabel = $1;
 			$taxonlabel =~ s/\s+/_/g;
@@ -33,8 +32,6 @@ sub parsefasta {
 			$input =~ /^\s*(.+)\s*$/;
 			$taxa->{$taxonlabel} .= $1;
 		}
-		$input = readline fileIN;
-		if (!(defined $input)) { last; }
 	}
 
 	close fileIN;
