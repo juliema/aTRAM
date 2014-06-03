@@ -22,8 +22,8 @@ my $targetfile = "";
 my $outdir = ".";
 my $log_file = "";
 my $kmer = 31;
-my $iter = 20;
-my $frac = 1;
+my $iterations = 20;
+my $fraction = 1;
 my $ins_length = 400;
 my $debug = 0;
 my $protein = 0;
@@ -34,8 +34,8 @@ my $max_memory = 0;
 GetOptions ('samples=s' => \$samplefile,
             'targets=s' => \$targetfile,
             'kmer=i' => \$kmer,
-            'iter=i' => \$iter,
-			'frac=f' => \$frac,
+            'iter=i' => \$iterations,
+			'frac=f' => \$fraction,
 			'ins_length=i' =>  \$ins_length,
 			'output|outdir=s' => \$outdir,
 			'debug|verbose' => \$debug,
@@ -124,7 +124,7 @@ foreach my $sample (@samplenames) {
 			if ($complete == 1) { $complete_flag = "-complete"; }
 			my $memory_flag = "";
 			if ($max_memory > 0) { $memory_flag = "-max_memory $max_memory"; }
-			my $atram_result = run_command ("$atrampath/aTRAM.pl", "-reads $samples->{$sample} -target $targets->{$target} -iter $iter -ins_length $ins_length -frac $frac -assemble Velvet -out $outname -kmer $kmer $complete_flag $protein_flag $processes_flag $memory_flag $debug_flag -log $log_file", {"no_exit"=>1}); # don't exit because we want to capture a nonzero result.
+			my $atram_result = run_command ("$atrampath/aTRAM.pl", "-reads $samples->{$sample} -target $targets->{$target} -iter $iterations -ins_length $ins_length -frac $fraction -assemble Velvet -out $outname -kmer $kmer $complete_flag $protein_flag $processes_flag $memory_flag $debug_flag -log $log_file", {"no_exit"=>1}); # don't exit because we want to capture a nonzero result.
 
 			if ($atram_result == 255) {
 				printlog ("aTRAM of $outname found no contigs.");
@@ -159,8 +159,8 @@ Runs aTRAM on a list of aTRAM databases and a list of target sequences.
  -samples:    tab-delimited list of aTRAM databases: for each row, "aTRAM_db_name   aTRAM_db_location".
  -targets:    tab-delimited list of target FASTA sequences: for each row, "gene_name   fasta_location".
  -kmer:       optional: kmer value for Velvet (default is 31).
- -iter:       optional: number of aTRAM iterations (default is 5).
- -frac:       optional: fraction of aTRAM database to use (default is 1.0).
+ -iteration:       optional: number of aTRAM iterations (default is 5).
+ -fraction:       optional: fraction of aTRAM database to use (default is 1.0).
  -ins_length: optional: insert length of Illumina short read library (default is 400).
  -output:     output directory.
 
