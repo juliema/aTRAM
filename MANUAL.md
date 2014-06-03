@@ -62,7 +62,7 @@ Parameters with modifiable default values:
   * -kmer, kmer number for assemblers
 
 
-### Pipelines
+## Pipelines
 
 #### BasicPipeline.pl
 Runs aTRAM on a list of genes on a number of aTRAM formatted databases.
@@ -75,8 +75,14 @@ genename  path/gene.fasta
 SampleName  path/atram_db
 
 
-
 #### AlignmentPipeline.pl 
+aTRAM on a list of genes on a number of aTRAM formatted databases then aligns the aTRAM contigs back to the target
 
+######perl AlignmentPipeline.pl -samples SampleFile.txt -targets -TargetFile.txt [atram parameters -complete -protein]
+##### TargetFile.txt  tab delimited file 
+genename  path/gene.fasta
+
+##### SampleFile.txt  tab delimited file, will create a directory for each sample  
+SampleName  path/atram_db
 
 
