@@ -39,8 +39,8 @@ my $max_memory = 0;
 GetOptions ('samples=s' => \$samplefile,
             'targets=s' => \$targetfile,
             'kmer=i' => \$kmer,
-            'iter=i' => \$iterations,
-			'frac=f' => \$fraction,
+            'iterations=i' => \$iterations,
+			'fraction=f' => \$fraction,
 			'ins_length=i' =>  \$ins_length,
 			'output|outdir=s' => \$outdir,
 			'processes=i' => \$processes,
@@ -275,8 +275,8 @@ re-blasting the aligned contigs against the target sequence to find the best-sco
  -samples:    tab-delimited list of aTRAM databases: for each row, "aTRAM_db_name   aTRAM_db_location".
  -targets:    tab-delimited list of target FASTA sequences: for each row, "gene_name   fasta_location".
  -kmer:       optional: kmer value for Velvet (default is 31).
- -iterations:       optional: number of aTRAM iterations (default is 5).
- -fraction:       optional: fraction of aTRAM database to use (default is 1.0).
+ -iterations: optional: number of aTRAM iterations (default is 5).
+ -fraction:   optional: fraction of aTRAM database to use (default is 1.0).
  -ins_length: optional: insert length of Illumina short read library (default is 400).
  -output:     output file prefix.
 
