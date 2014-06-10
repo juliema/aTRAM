@@ -19,7 +19,7 @@ BEGIN {
 my $debug = 0;
 my $log_fh = 0;
 my $log_file = "";
-my $version = "v1.0";
+my $version = "v1.01";
 
 sub get_version {
 	return $version;
