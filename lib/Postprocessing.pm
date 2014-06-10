@@ -48,7 +48,6 @@ sub align_to_ref {
 	my $refname = $1;
 	close REF_FH;
 
-	Configuration::initialize();
 	my (undef, $catfile) = tempfile(UNLINK => 1);
 	`cat $reffile $contigfile > $catfile`;
 
