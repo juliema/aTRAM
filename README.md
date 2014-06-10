@@ -1,4 +1,5 @@
 ##	aTRAM: automated Target Restricted Assembly Method
+doi:10.5281/zenodo.10431
 
 aTRAM does targeted de novo assembly of loci from paired-end Illumina runs and consists of three scripts:
 
