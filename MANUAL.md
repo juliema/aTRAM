@@ -14,6 +14,13 @@ To determine if aTRAM can run on your computer:
   
 If you have problems running configure.pl for the first time, delete lib/config.txt.
 
+URLs for software:
+* BLAST: http://blast.ncbi.nlm.nih.gov/Blast.cgi?PAGE_TYPE=BlastDocs&DOC_TYPE=Download
+* Velvet: https://www.ebi.ac.uk/~zerbino/velvet/
+* Trinity: http://trinityrnaseq.sourceforge.net
+* MAFFT: http://mafft.cbrc.jp/alignment/software/
+* muscle: http://www.drive5.com/muscle/
+
 ## Running aTRAM
 
 ### format_SRA.pl
