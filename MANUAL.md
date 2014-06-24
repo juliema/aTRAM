@@ -19,7 +19,7 @@ URLs for software:
 * Velvet: https://www.ebi.ac.uk/~zerbino/velvet/
 * Trinity: http://trinityrnaseq.sourceforge.net
 * MAFFT: http://mafft.cbrc.jp/alignment/software/
-* muscle: http://www.drive5.com/muscle/
+* MUSCLE: http://www.drive5.com/muscle/
 
 ## Running aTRAM
 
