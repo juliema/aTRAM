@@ -5,6 +5,8 @@ use lib "$FindBin::Bin/lib";
 use Configuration;
 use System;
 
+my $no_interactive = shift;
+
 # find or make config.txt:
 my $config_file = "$FindBin::Bin/lib/config.txt";
 unless (-e $config_file) {
@@ -105,25 +107,28 @@ if ($sw_ready == 0) {
 	print "If software is installed but not included in \$PATH, edit the appropriate line in config.txt.\n";
 }
 
-print "\nWould you like to run aTRAM functionality tests (may take a few minutes)? [Y/n]\n";
-my $userpath = <STDIN>;
-while ($userpath !~ /[yY]\n/) {
-	if ($userpath =~ /[nN]\n/) {
-		exit;
+
+if (!(defined $no_interactive)) {
+	print "\nWould you like to run aTRAM functionality tests (may take a few minutes)? [Y/n]\n";
+	my $userpath = <STDIN>;
+	while ($userpath !~ /[yY]\n/) {
+		if ($userpath =~ /[nN]\n/) {
+			exit;
+		}
+		if ($userpath =~ /^\n/) {
+			last;
+		}
+		$userpath = <STDIN>;
 	}
-	if ($userpath =~ /^\n/) {
-		last;
+
+	my $executing_path = $FindBin::Bin;
+
+	print $i++ .". Verifying aTRAM functionality, please wait...\n";
+	`$executing_path/test/test_all.pl`;
+	if ($? == 0) {
+		print "Looks good! You are ready to aTRAM it up!\n";
+	} else {
+		print "Something went wrong in testing...run \"aTRAM/test/test_all.pl debug\" and examine the results of debug.log.\n";
 	}
-	$userpath = <STDIN>;
+
 }
-
-my $executing_path = $FindBin::Bin;
-
-print $i++ .". Verifying aTRAM functionality, please wait...\n";
-`$executing_path/test/test_all.pl`;
-if ($? == 0) {
-	print "Looks good! You are ready to aTRAM it up!\n";
-} else {
-	print "Something went wrong in testing...run \"aTRAM/test/test_all.pl debug\" and examine the results of debug.log.\n";
-}
-
