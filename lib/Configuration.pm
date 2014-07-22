@@ -96,7 +96,7 @@ sub find_bin {
 		my @pathlist = File::Spec->path();
 
 		foreach my $path (@pathlist) {
-			print "looking at $path...\n";
+			print "looking for $min_bin at $path...\n";
 			my $cmdpath = File::Spec->catpath("", $path, $min_bin);
 			if (-x $cmdpath) {
 			print "found $cmdpath...\n";
