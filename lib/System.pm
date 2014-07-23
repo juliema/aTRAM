@@ -19,7 +19,7 @@ BEGIN {
 my $debug = 0;
 my $log_fh = 0;
 my $log_file = "";
-my $version = "v1.01";
+my $version = "v1.02";
 
 sub get_version {
 	return $version;
@@ -93,7 +93,7 @@ sub run_command {
 	# check to make sure the command even exists.
 	if ($cmd eq "") {
 		printlog ("No command given.");
-		die;
+		die "No command given.";
 	}
 
 	open my $saveout, ">&STDOUT";
