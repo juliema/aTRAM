@@ -41,6 +41,7 @@ foreach my $sw (@$req_software) {
 			print "   ...$sw is present.\n";
 		}
 	}
+		print "writing $sw=$fullpath to $config_file\n";
 
 	print CONFIG_FH "$sw=$fullpath\n";
 }
@@ -87,6 +88,7 @@ foreach my $assembler (keys %$assemblers) {
 				$assembler_ready++;
 			}
 		}
+		print "writing $sw=$fullpath to $config_file\n";
 
 		print CONFIG_FH "$sw=$fullpath\n";
 	}
