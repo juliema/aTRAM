@@ -38,7 +38,7 @@ sub initialize {
 		$path = realpath ($path);
 		$path = File::Spec->canonpath($path);
 		$path =~ s/\\/\//g;
-		if ($path =~ /TRAM.*lib/) {
+		if ($path =~ /TRAM.*lib/i) {
 			$config_file = File::Spec->catfile($path, "config.txt");
 			$assembler_dir = File::Spec->catdir($path, "Assembler");
 			last;
