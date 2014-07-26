@@ -8,7 +8,7 @@ use System;
 my $no_interactive = shift;
 
 # find or make config.txt:
-my $config_file = "$FindBin::Bin/lib/config.txt";
+my $config_file = get_config_file();
 unless (-e $config_file) {
 	# if the config_file isn't existing, make an empty one for filling.
 	open CONFIG_FH, ">", $config_file;

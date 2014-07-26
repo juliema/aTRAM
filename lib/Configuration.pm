@@ -15,7 +15,7 @@ BEGIN {
 	# Inherit from Exporter to export functions and variables
 	our @ISA         = qw(Exporter);
 	# Functions and variables which are exported by default
-	our @EXPORT      = qw(get_req_software get_optional_software check_module get_assemblers get_bin);
+	our @EXPORT      = qw(get_req_software get_optional_software check_module get_assemblers get_bin get_config_file get_atram_path);
 	# Functions and variables which can be optionally exported
 	our @EXPORT_OK   = qw();
 }
@@ -26,25 +26,16 @@ my @opt_software = qw(muscle mafft);
 my $assemblers = {};
 my $assembler_dir = "";
 my $config_file = "";
+my $atrampath = "";
 
 sub initialize {
 	if (%$binaries) {
 		# we've already initialized.
 		return;
 	}
-
-	# find the lib path in @INC:
-	foreach my $path (@INC) {
-		$path = realpath ($path);
-		$path = File::Spec->canonpath($path);
-		$path =~ s/\\/\//g;
-		if ($path =~ /TRAM.*lib/i) {
-			$config_file = File::Spec->catfile($path, "config.txt");
-			$assembler_dir = File::Spec->catdir($path, "Assembler");
-			last;
-		}
-	}
-
+	$config_file = get_config_file();
+	$atrampath = get_atram_path();
+	$assembler_dir = File::Spec->catdir($atrampath, "lib", "Assembler");
 	if ((-s $config_file) > 0) {
 		open my $fh, "<:crlf", $config_file or die "Couldn't find $config_file. Did you run configure.pl?";
 		foreach my $line (<$fh>) {
@@ -56,6 +47,38 @@ sub initialize {
 			}
 		}
 	}
+}
+
+sub get_config_file {
+	if ($atrampath eq "") {
+		$atrampath = get_atram_path();
+	}
+	$config_file = File::Spec->catfile($atrampath, "config.txt");
+
+	# perhaps it is in the old location in lib: move it to here, then carry on.
+	if (!(-e $config_file)) {
+		my $oldconfigfile = File::Spec->catfile($atrampath, "lib", "config.txt");
+		if (-e $oldconfigfile) {
+			print "moving old config\n";
+			run_command ("mv", "$oldconfigfile $config_file");
+		}
+	}
+
+	return $config_file;
+}
+
+sub get_atram_path {
+	# find this module's path in %INC:
+	my $modpath = realpath($INC{'Configuration.pm'});
+
+	# we know that this module is in the lib directory, which is one dir inside the main aTRAM dir.
+	my @pathpieces = File::Spec->splitdir($modpath);
+	pop @pathpieces; # this is the file Configuration.pm
+	pop @pathpieces; # this is lib
+	print "this path has " . join(",", @pathpieces) . "\n";
+	$atrampath = File::Spec->catdir(@pathpieces);
+	print "aTRAM path is $atrampath\n";
+	return $atrampath;
 }
 
 sub get_req_software {
