@@ -59,7 +59,6 @@ sub get_config_file {
 	if (!(-e $config_file)) {
 		my $oldconfigfile = File::Spec->catfile($atrampath, "lib", "config.txt");
 		if (-e $oldconfigfile) {
-			print "moving old config\n";
 			run_command ("mv", "$oldconfigfile $config_file");
 		}
 	}
@@ -75,9 +74,7 @@ sub get_atram_path {
 	my @pathpieces = File::Spec->splitdir($modpath);
 	pop @pathpieces; # this is the file Configuration.pm
 	pop @pathpieces; # this is lib
-	print "this path has " . join(",", @pathpieces) . "\n";
 	$atrampath = File::Spec->catdir(@pathpieces);
-	print "aTRAM path is $atrampath\n";
 	return $atrampath;
 }
 
