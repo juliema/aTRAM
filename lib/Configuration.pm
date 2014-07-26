@@ -55,6 +55,14 @@ sub get_config_file {
 	}
 	$config_file = File::Spec->catfile($atrampath, "config.txt");
 
+	# perhaps it is in the old location in lib: move it to here, then carry on.
+	if (!(-e $config_file)) {
+		my $oldconfigfile = File::Spec->catfile($atrampath, "lib", "config.txt");
+		print "moving old config\n";
+		if (-e $oldconfigfile) {
+			run_command ("mv", "$oldconfigfile $config_file");
+		}
+	}
 
 	return $config_file;
 }
