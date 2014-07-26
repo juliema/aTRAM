@@ -58,8 +58,8 @@ sub get_config_file {
 	# perhaps it is in the old location in lib: move it to here, then carry on.
 	if (!(-e $config_file)) {
 		my $oldconfigfile = File::Spec->catfile($atrampath, "lib", "config.txt");
-		print "moving old config\n";
 		if (-e $oldconfigfile) {
+			print "moving old config\n";
 			run_command ("mv", "$oldconfigfile $config_file");
 		}
 	}
@@ -68,25 +68,16 @@ sub get_config_file {
 }
 
 sub get_atram_path {
-	# find the atram path in @INC:
-	foreach my $path (@INC) {
-		$path = realpath ($path);
-		$path = File::Spec->canonpath($path);
-		$path =~ s/\\/\//g;
-		if ($path =~ /TRAM/i) {
-			my @pathpieces = File::Spec->splitpath($path);
-			# pop off the end bits until we're at the base aTRAM path:
-			while (@pathpieces > 0) {
-				my $lastpiece = pop @pathpieces;
-				if ($lastpiece =~ /TRAM/i) {
-					push @pathpieces, $lastpiece;
-					$atrampath = File::Spec->catdir(@pathpieces);
-					last;
-				}
-			}
-			last;
-		}
-	}
+	# find this module's path in %INC:
+	my $modpath = realpath($INC{'Configuration.pm'});
+
+	# we know that this module is in the lib directory, which is one dir inside the main aTRAM dir.
+	my @pathpieces = File::Spec->splitdir($modpath);
+	pop @pathpieces; # this is the file Configuration.pm
+	pop @pathpieces; # this is lib
+	print "this path has " . join(",", @pathpieces) . "\n";
+	$atrampath = File::Spec->catdir(@pathpieces);
+	print "aTRAM path is $atrampath\n";
 	return $atrampath;
 }
 
