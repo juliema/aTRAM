@@ -83,7 +83,7 @@ GetOptions ('reads|sra|database|db=s' => \$atram_db,
             'help|?' => \$help) or pod2usage(-msg => "GetOptions failed.", -exitval => 2);
 
 if ($help) {
-    pod2usage(-verbose => 1);
+    pod2usage(-verbose => 2);
 }
 
 if ($debug) {
