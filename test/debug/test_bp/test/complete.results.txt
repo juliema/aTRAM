@@ -1,0 +1,4 @@
+contig	aTRAM_target_start	testref	aTRAM_target_end	total score
+1.1_len_858_cov_3.2	-	156	77.6	233.6
+2.2_len_516_cov_5.4	-	156	77.6	233.6
+3.2_len_486_cov_5.0	-	156	77.6	233.6

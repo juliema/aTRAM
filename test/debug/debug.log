@@ -1,0 +1,3243 @@
+140528 11:06:41: DEBUG: Setting log file to /Users/jallen/Documents/GitHub/aTRAM/test/debug/debug.log
+140528 11:06:41: 1. Checking that configuration is correct...
+140528 11:06:41: OK
+140528 11:06:41: 2. Checking that format_sra works correctly...
+140528 11:06:41: Running command "/Users/jallen/Documents/GitHub/aTRAM/test/../format_sra.pl -in /Users/jallen/Documents/GitHub/aTRAM/test/test_sra.fasta -out /Users/jallen/Documents/GitHub/aTRAM/test/debug/test_db -num 7 -debug -log /Users/jallen/Documents/GitHub/aTRAM/test/debug/debug.log"
+140528 11:06:41: Running format_sra.pl -in /Users/jallen/Documents/GitHub/aTRAM/test/test_sra.fasta -out /Users/jallen/Documents/GitHub/aTRAM/test/debug/test_db -num 7 -debug -log /Users/jallen/Documents/GitHub/aTRAM/test/debug/debug.log, v1.01+
+
+140528 11:06:41: making 7 shards from /Users/jallen/Documents/GitHub/aTRAM/test/test_sra.fasta.
+140528 11:06:41: Dividing fasta/fastq file into buckets for sorting.
+140528 11:06:43: starting sort.
+140528 11:06:43: Forking pid 86752: sort
+140528 11:06:43: Forking pid 86753: sort
+140528 11:06:43: Forking pid 86754: sort
+140528 11:06:43: DEBUG: waiting for 86752, 86753, 86754
+140528 11:06:43: DEBUG: waiting for 86752, 86753
+140528 11:06:43: DEBUG: waiting for 86752
+140528 11:06:43: Forking pid 86758: sort
+140528 11:06:43: Forking pid 86759: sort
+140528 11:06:43: Forking pid 86760: sort
+140528 11:06:43: DEBUG: waiting for 86758, 86759, 86760
+140528 11:06:43: DEBUG: waiting for 86758, 86759
+140528 11:06:43: DEBUG: waiting for 86758
+140528 11:06:43: Forking pid 86764: sort
+140528 11:06:43: DEBUG: waiting for 86764
+140528 11:06:43: Forking pid 86766: sort
+140528 11:06:43: Forking pid 86767: sort
+140528 11:06:43: Forking pid 86768: sort
+140528 11:06:43: DEBUG: waiting for 86766, 86767, 86768
+140528 11:06:44: DEBUG: waiting for 86766, 86767
+140528 11:06:44: DEBUG: waiting for 86766
+140528 11:06:44: Forking pid 86772: sort
+140528 11:06:44: Forking pid 86773: sort
+140528 11:06:44: Forking pid 86776: sort
+140528 11:06:44: DEBUG: waiting for 86772, 86773, 86776
+140528 11:06:44: DEBUG: waiting for 86772, 86773
+140528 11:06:44: DEBUG: waiting for 86772
+140528 11:06:44: Forking pid 86778: sort
+140528 11:06:44: DEBUG: waiting for 86778
+140528 11:06:44: sorted.
+140528 11:06:44: Making /Users/jallen/Documents/GitHub/aTRAM/test/debug/test_db.0.1.fasta.
+140528 11:06:44: Making /Users/jallen/Documents/GitHub/aTRAM/test/debug/test_db.0.2.fasta.
+140528 11:06:44: Making /Users/jallen/Documents/GitHub/aTRAM/test/debug/test_db.1.1.fasta.
+140528 11:06:44: Making /Users/jallen/Documents/GitHub/aTRAM/test/debug/test_db.1.2.fasta.
+140528 11:06:44: Making /Users/jallen/Documents/GitHub/aTRAM/test/debug/test_db.2.1.fasta.
+140528 11:06:44: Making /Users/jallen/Documents/GitHub/aTRAM/test/debug/test_db.2.2.fasta.
+140528 11:06:44: Making /Users/jallen/Documents/GitHub/aTRAM/test/debug/test_db.3.1.fasta.
+140528 11:06:44: Making /Users/jallen/Documents/GitHub/aTRAM/test/debug/test_db.3.2.fasta.
+140528 11:06:44: Making /Users/jallen/Documents/GitHub/aTRAM/test/debug/test_db.4.1.fasta.
+140528 11:06:44: Making /Users/jallen/Documents/GitHub/aTRAM/test/debug/test_db.4.2.fasta.
+140528 11:06:44: Making /Users/jallen/Documents/GitHub/aTRAM/test/debug/test_db.5.1.fasta.
+140528 11:06:44: Making /Users/jallen/Documents/GitHub/aTRAM/test/debug/test_db.5.2.fasta.
+140528 11:06:44: Making /Users/jallen/Documents/GitHub/aTRAM/test/debug/test_db.6.1.fasta.
+140528 11:06:44: Making /Users/jallen/Documents/GitHub/aTRAM/test/debug/test_db.6.2.fasta.
+140528 11:06:44: Making blastdbs.
+140528 11:06:44: Forking pid 86780: /usr/local/bin/makeblastdb
+140528 11:06:44: Forking pid 86781: /usr/local/bin/makeblastdb
+140528 11:06:44: Forking pid 86782: /usr/local/bin/makeblastdb
+140528 11:06:44: DEBUG: waiting for 86780, 86781, 86782
+
+
+Building a new DB, current time: 05/28/2014 11:06:45
+
+
+Building a new DB, current time: 05/28/2014 11:06:45
+New DB name:   /Users/jallen/Documents/GitHub/aTRAM/test/debug/test_db.1.db
+
+
+Building a new DB, current time: 05/28/2014 11:06:45
+New DB title:  /Users/jallen/Documents/GitHub/aTRAM/test/debug/test_db.1.1.fasta
+Sequence type: Nucleotide
+New DB name:   /Users/jallen/Documents/GitHub/aTRAM/test/debug/test_db.2.db
+New DB name:   /Users/jallen/Documents/GitHub/aTRAM/test/debug/test_db.0.db
+New DB title:  /Users/jallen/Documents/GitHub/aTRAM/test/debug/test_db.2.1.fasta
+New DB title:  /Users/jallen/Documents/GitHub/aTRAM/test/debug/test_db.0.1.fasta
+Sequence type: Nucleotide
+Sequence type: Nucleotide
+Keep Linkouts: T
+Keep Linkouts: T
+Keep MBits: T
+Keep Linkouts: T
+Keep MBits: T
+Maximum file size: 1073741824B
+Keep MBits: T
+Maximum file size: 1073741824B
+Maximum file size: 1073741824B
+Adding sequences from FASTA; added 4988 sequences in 0.47405 seconds.
+Adding sequences from FASTA; added 5137 sequences in 0.577533 seconds.
+Adding sequences from FASTA; added 5074 sequences in 0.582795 seconds.
+140528 11:06:45: DEBUG: waiting for 86780, 86781
+140528 11:06:45: DEBUG: waiting for 86780
+140528 11:06:45: Forking pid 86784: /usr/local/bin/makeblastdb
+140528 11:06:45: Forking pid 86785: /usr/local/bin/makeblastdb
+140528 11:06:45: Forking pid 86786: /usr/local/bin/makeblastdb
+140528 11:06:45: DEBUG: waiting for 86784, 86785, 86786
+
+
+Building a new DB, current time: 05/28/2014 11:06:45
+New DB name:   /Users/jallen/Documents/GitHub/aTRAM/test/debug/test_db.4.db
+New DB title:  /Users/jallen/Documents/GitHub/aTRAM/test/debug/test_db.4.1.fasta
+Sequence type: Nucleotide
+Keep Linkouts: T
+Keep MBits: T
+Maximum file size: 1073741824B
+
+
+Building a new DB, current time: 05/28/2014 11:06:45
+New DB name:   /Users/jallen/Documents/GitHub/aTRAM/test/debug/test_db.5.db
+New DB title:  /Users/jallen/Documents/GitHub/aTRAM/test/debug/test_db.5.1.fasta
+Sequence type: Nucleotide
+
+
+Building a new DB, current time: 05/28/2014 11:06:45
+New DB name:   /Users/jallen/Documents/GitHub/aTRAM/test/debug/test_db.3.db
+New DB title:  /Users/jallen/Documents/GitHub/aTRAM/test/debug/test_db.3.1.fasta
+Sequence type: Nucleotide
+Keep Linkouts: T
+Keep Linkouts: T
+Keep MBits: T
+Keep MBits: T
+Maximum file size: 1073741824B
+Maximum file size: 1073741824B
+Adding sequences from FASTA; added 4920 sequences in 0.282534 seconds.
+Adding sequences from FASTA; added 5118 sequences in 0.299141 seconds.
+Adding sequences from FASTA; added 4999 sequences in 0.304621 seconds.
+140528 11:06:46: DEBUG: waiting for 86784, 86785
+140528 11:06:46: DEBUG: waiting for 86784
+140528 11:06:46: Forking pid 86787: /usr/local/bin/makeblastdb
+140528 11:06:46: DEBUG: waiting for 86787
+
+
+Building a new DB, current time: 05/28/2014 11:06:46
+New DB name:   /Users/jallen/Documents/GitHub/aTRAM/test/debug/test_db.6.db
+New DB title:  /Users/jallen/Documents/GitHub/aTRAM/test/debug/test_db.6.1.fasta
+Sequence type: Nucleotide
+Keep Linkouts: T
+Keep MBits: T
+Maximum file size: 1073741824B
+Adding sequences from FASTA; added 4942 sequences in 0.209095 seconds.
+140528 11:06:46: Finished: aTRAM database /Users/jallen/Documents/GitHub/aTRAM/test/debug/test_db has 7 shards.
+140528 11:06:46: Returning 0 from "/Users/jallen/Documents/GitHub/aTRAM/test/../format_sra.pl"
+140528 11:06:46: OK
+140528 11:06:46: 3. Checking a defective file...
+140528 11:06:46: Running command "/Users/jallen/Documents/GitHub/aTRAM/test/../format_sra.pl -in /Users/jallen/Documents/GitHub/aTRAM/test/test_bad.fasta -out /Users/jallen/Documents/GitHub/aTRAM/test/debug/test_db_bad -debug -log /Users/jallen/Documents/GitHub/aTRAM/test/debug/debug.log"
+140528 11:06:46: Running format_sra.pl -in /Users/jallen/Documents/GitHub/aTRAM/test/test_bad.fasta -out /Users/jallen/Documents/GitHub/aTRAM/test/debug/test_db_bad -debug -log /Users/jallen/Documents/GitHub/aTRAM/test/debug/debug.log, v1.01+
+
+140528 11:06:46: /Users/jallen/Documents/GitHub/aTRAM/test/test_bad.fasta is 0.00 MB; we will make 1 shards.
+140528 11:06:46: Dividing fasta/fastq file into buckets for sorting.
+140528 11:06:46: starting sort.
+140528 11:06:46: Forking pid 86794: sort
+140528 11:06:46: DEBUG: waiting for 86794
+140528 11:06:46: Forking pid 86796: sort
+140528 11:06:46: DEBUG: waiting for 86796
+140528 11:06:46: sorted.
+140528 11:06:46: Making /Users/jallen/Documents/GitHub/aTRAM/test/debug/test_db_bad.0.1.fasta.
+140528 11:06:46: Error detected in /Users/jallen/Documents/GitHub/aTRAM/test/test_bad.fasta: Sequence >DBRHHJN1_0173:3:1:10183:148184#ACAGTG/1 occurred at least twice.
+140528 11:06:46: Returning 2 from "/Users/jallen/Documents/GitHub/aTRAM/test/../format_sra.pl"
+140528 11:06:46: OK
+140528 11:06:46: 4. Checking that aTRAM works correctly...
+140528 11:06:46: Running command "/Users/jallen/Documents/GitHub/aTRAM/test/../aTRAM.pl -db /Users/jallen/Documents/GitHub/aTRAM/test/debug/test_db -target /Users/jallen/Documents/GitHub/aTRAM/test/testref.fasta -out /Users/jallen/Documents/GitHub/aTRAM/test/debug/test_atram -debug -log /Users/jallen/Documents/GitHub/aTRAM/test/debug/debug.log"
+140528 11:06:46: DEBUG: Setting log file to /Users/jallen/Documents/GitHub/aTRAM/test/debug/debug.log
+140528 11:06:46: Running aTRAM.pl -db /Users/jallen/Documents/GitHub/aTRAM/test/debug/test_db -target /Users/jallen/Documents/GitHub/aTRAM/test/testref.fasta -out /Users/jallen/Documents/GitHub/aTRAM/test/debug/test_atram -debug -log /Users/jallen/Documents/GitHub/aTRAM/test/debug/debug.log, v1.01+
+
+Using 7 of 7 total shards.
+140528 11:06:46: Using 7 of 7 total shards.
+140528 11:06:46: Running command "/usr/local/bin/makeblastdb -in /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/hG2zv4h2By -dbtype nucl -out /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/iHfvy4pFoE.db -input_type fasta"
+
+
+Building a new DB, current time: 05/28/2014 11:06:46
+New DB name:   /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/iHfvy4pFoE.db
+New DB title:  /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/hG2zv4h2By
+Sequence type: Nucleotide
+Keep Linkouts: T
+Keep MBits: T
+Maximum file size: 1073741824B
+Adding sequences from FASTA; added 3 sequences in 0.001544 seconds.
+140528 11:06:46: Returning 0 from "/usr/local/bin/makeblastdb"
+iteration 1 starting...
+140528 11:06:46: iteration 1 starting...
+	blasting short reads...
+140528 11:06:46: Forking pid 86800: /usr/local/bin/blastn
+140528 11:06:46: Forking pid 86801: /usr/local/bin/blastn
+140528 11:06:46: Forking pid 86802: /usr/local/bin/blastn
+140528 11:06:46: Forking pid 86803: /usr/local/bin/blastn
+140528 11:06:46: Forking pid 86804: /usr/local/bin/blastn
+140528 11:06:46: Forking pid 86805: /usr/local/bin/blastn
+140528 11:06:46: Forking pid 86806: /usr/local/bin/blastn
+140528 11:06:46: DEBUG: waiting for 86800, 86801, 86802, 86803, 86804, 86805, 86806
+140528 11:06:47: DEBUG: waiting for 86800, 86801, 86802, 86803, 86804, 86805
+140528 11:06:47: DEBUG: waiting for 86800, 86801, 86802, 86803, 86804
+140528 11:06:47: DEBUG: waiting for 86800, 86801, 86802, 86803
+140528 11:06:47: DEBUG: waiting for 86800, 86801, 86802
+140528 11:06:47: DEBUG: waiting for 86800, 86801
+140528 11:06:47: DEBUG: waiting for 86800
+	getting paired ends...
+140528 11:06:47: DEBUG: waiting for 86807, 86808, 86809, 86810, 86811, 86812, 86813
+140528 11:06:48: DEBUG: waiting for 86807, 86808, 86809, 86810, 86811, 86812
+140528 11:06:48: DEBUG: waiting for 86807, 86808, 86809, 86810, 86811
+140528 11:06:48: DEBUG: waiting for 86807, 86808, 86809, 86810
+140528 11:06:48: DEBUG: waiting for 86807, 86808, 86809
+140528 11:06:48: DEBUG: waiting for 86807, 86808
+140528 11:06:48: DEBUG: waiting for 86807
+140528 11:06:48: DEBUG: Setting log file to /Users/jallen/Documents/GitHub/aTRAM/test/debug/debug.log
+	assembling pairs with Velvet...
+140528 11:06:48: Running command "/usr/local/bin/velveth /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/FOzdcQZ76t 31 -fasta -shortPaired /Users/jallen/Documents/GitHub/aTRAM/test/debug/test_atram.1.blast.fasta"
+[0.000000] Reading FastA file /Users/jallen/Documents/GitHub/aTRAM/test/debug/test_atram.1.blast.fasta;
+[0.000658] 216 sequences found
+[0.000659] Done
+[0.000746] Reading read set file /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/FOzdcQZ76t/Sequences;
+[0.001255] 216 sequences found
+[0.001586] Done
+[0.001588] 216 sequences in total.
+[0.001679] Writing into roadmap file /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/FOzdcQZ76t/Roadmaps...
+[0.002030] Inputting sequences...
+[0.002032] Inputting sequence 0 / 216
+[0.015056]  === Sequences loaded in 0.013026 s
+[0.015156] Done inputting sequences
+[0.015158] Destroying splay table
+[0.017367] Splay table destroyed
+140528 11:06:48: Returning 0 from "/usr/local/bin/velveth"
+140528 11:06:48: Running command "/usr/local/bin/velvetg /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/FOzdcQZ76t -ins_length 300 -exp_cov 30 -min_contig_lgth 200"
+[0.000000] Reading roadmap file /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/FOzdcQZ76t/Roadmaps
+[0.000569] 216 roadmaps read
+[0.000587] Creating insertion markers
+[0.000616] Ordering insertion markers
+[0.000700] Counting preNodes
+[0.000731] 397 preNodes counted, creating them now
+[0.001442] Adjusting marker info...
+[0.001459] Connecting preNodes
+[0.001567] Cleaning up memory
+[0.001569] Done creating preGraph
+[0.001570] Concatenation...
+[0.001762] Renumbering preNodes
+[0.001763] Initial preNode count 397
+[0.001774] Destroyed 350 preNodes
+[0.001775] Concatenation over!
+[0.001776] Clipping short tips off preGraph
+[0.001788] Concatenation...
+[0.001812] Renumbering preNodes
+[0.001813] Initial preNode count 47
+[0.001817] Destroyed 25 preNodes
+[0.001818] Concatenation over!
+[0.001818] 14 tips cut off
+[0.001819] 22 nodes left
+[0.001913] Writing into pregraph file /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/FOzdcQZ76t/PreGraph...
+[0.002351] Reading read set file /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/FOzdcQZ76t/Sequences;
+[0.002447] 216 sequences found
+[0.002800] Done
+[0.003500] Reading pre-graph file /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/FOzdcQZ76t/PreGraph
+[0.003512] Graph has 22 nodes and 216 sequences
+[0.003656] Scanning pre-graph file /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/FOzdcQZ76t/PreGraph for k-mers
+[0.003691] 3037 kmers found
+[0.003878] Sorting kmer occurence table ... 
+[0.004611] Sorting done.
+[0.004612] Computing acceleration table... 
+[0.043085] Computing offsets... 
+[0.043116] Ghost Threading through reads 0 / 216
+[0.044206]  === Ghost-Threaded in 0.001090 s
+[0.044207] Threading through reads 0 / 216
+[0.045599]  === Threaded in 0.001392 s
+[0.055885] Correcting graph with cutoff 0.200000
+[0.055953] Determining eligible starting points
+[0.055978] Done listing starting nodes
+[0.055979] Initializing todo lists
+[0.055986] Done with initilization
+[0.055987] Activating arc lookup table
+[0.055988] Done activating arc lookup table
+[0.056592] Concatenation...
+[0.056595] Renumbering nodes
+[0.056595] Initial node count 22
+[0.056597] Removed 6 null nodes
+[0.056598] Concatenation over!
+[0.056598] Clipping short tips off graph, drastic
+[0.056601] Concatenation...
+[0.056605] Renumbering nodes
+[0.056605] Initial node count 16
+[0.056607] Removed 5 null nodes
+[0.056608] Concatenation over!
+[0.056608] 11 nodes left
+[0.056721] Writing into graph file /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/FOzdcQZ76t/Graph2...
+[0.057206] WARNING: NO COVERAGE CUTOFF PROVIDED
+[0.057207] Velvet will probably leave behind many detectable errors
+[0.057207] See manual for instructions on how to set the coverage cutoff parameter
+[0.057208] Removing contigs with coverage < -1.000000...
+[0.057210] Concatenation...
+[0.057211] Renumbering nodes
+[0.057211] Initial node count 11
+[0.057212] Removed 0 null nodes
+[0.057212] Concatenation over!
+[0.057213] Concatenation...
+[0.057213] Renumbering nodes
+[0.057214] Initial node count 11
+[0.057214] Removed 0 null nodes
+[0.057215] Concatenation over!
+[0.057218] Clipping short tips off graph, drastic
+[0.057219] Concatenation...
+[0.057219] Renumbering nodes
+[0.057219] Initial node count 11
+[0.057220] Removed 0 null nodes
+[0.057220] Concatenation over!
+[0.057221] 11 nodes left
+[0.057221] Read coherency...
+[0.057222] Identifying unique nodes
+[0.057223] Done, 7 unique nodes counted
+[0.057223] Trimming read tips
+[0.057224] Renumbering nodes
+[0.057225] Initial node count 11
+[0.057225] Removed 0 null nodes
+[0.057226] Confronted to 0 multiple hits and 0 null over 0
+[0.057226] Read coherency over!
+[0.057779] Starting pebble resolution...
+[0.057787] Computing read to node mapping array sizes
+[0.057792] Computing read to node mappings
+[0.057796] Estimating library insert lengths...
+[0.057801] Done
+[0.057804] Computing direct node to node mappings
+[0.057826] Scaffolding node 0
+[0.057846]  === Nodes Scaffolded in 0.000041 s
+[0.057861] Preparing to correct graph with cutoff 0.200000
+[0.057970] Cleaning memory
+[0.058144] Deactivating local correction settings
+[0.058198] Pebble done.
+[0.058199] Starting pebble resolution...
+[0.058201] Computing read to node mapping array sizes
+[0.058205] Computing read to node mappings
+[0.058209] Estimating library insert lengths...
+[0.058212] Done
+[0.058213] Computing direct node to node mappings
+[0.058224] Scaffolding node 0
+[0.058233]  === Nodes Scaffolded in 0.000019 s
+[0.058237] Preparing to correct graph with cutoff 0.200000
+[0.058257] Cleaning memory
+[0.058322] Deactivating local correction settings
+[0.058336] Pebble done.
+[0.058337] Concatenation...
+[0.058338] Renumbering nodes
+[0.058338] Initial node count 11
+[0.058340] Removed 2 null nodes
+[0.058341] Concatenation over!
+[0.058344] Removing reference contigs with coverage < -1.000000...
+[0.058346] Concatenation...
+[0.058347] Renumbering nodes
+[0.058347] Initial node count 9
+[0.058348] Removed 0 null nodes
+[0.058349] Concatenation over!
+[0.058423] Writing contigs into /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/FOzdcQZ76t/contigs.fa...
+[0.058975] Writing into stats file /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/FOzdcQZ76t/stats.txt...
+[0.059121] Writing into graph file /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/FOzdcQZ76t/LastGraph...
+Final graph has 9 nodes and n50 of 1958, max 1958, total 2926, using 195/216 reads
+140528 11:06:48: Returning 0 from "/usr/local/bin/velvetg"
+140528 11:06:48: Velvet log:
+140528 11:06:48: Wed May 28 11:06:48 2014
+140528 11:06:48:  /usr/local/bin/velveth /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/FOzdcQZ76t 31 -fasta -shortPaired /Users/jallen/Documents/GitHub/aTRAM/test/debug/test_atram.1.blast.fasta
+140528 11:06:48: Version 1.2.10
+140528 11:06:48: Copyright 2007, 2008 Daniel Zerbino (zerbino@ebi.ac.uk)
+140528 11:06:48: This is free software; see the source for copying conditions.  There is NO
+140528 11:06:48: warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+140528 11:06:48: Compilation settings:
+140528 11:06:48: CATEGORIES = 2
+140528 11:06:48: MAXKMERLENGTH = 31
+140528 11:06:48: 
+140528 11:06:48: Wed May 28 11:06:48 2014
+140528 11:06:48:  /usr/local/bin/velvetg /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/FOzdcQZ76t -ins_length 300 -exp_cov 30 -min_contig_lgth 200
+140528 11:06:48: Version 1.2.10
+140528 11:06:48: Copyright 2007, 2008 Daniel Zerbino (zerbino@ebi.ac.uk)
+140528 11:06:48: This is free software; see the source for copying conditions.  There is NO
+140528 11:06:48: warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+140528 11:06:48: Compilation settings:
+140528 11:06:48: CATEGORIES = 2
+140528 11:06:48: MAXKMERLENGTH = 31
+140528 11:06:48: 
+140528 11:06:48: Final graph has 9 nodes and n50 of 1958, max 1958, total 2926, using 195/216 reads
+140528 11:06:48: end Velvet log
+	filtering contigs...
+140528 11:06:48: Running command "/usr/local/bin/tblastx -db /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/iHfvy4pFoE.db -query /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/QMz_vjNnQK -out /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/Woz2XuiRcX -outfmt '6 qseqid sseqid bitscore qstart qend sstart send qlen'"
+140528 11:06:49: Returning 0 from "/usr/local/bin/tblastx"
+	saving best-scoring contigs...
+140528 11:06:49: 	writing contigs to /Users/jallen/Documents/GitHub/aTRAM/test/debug/test_atram.all.fasta:
+140528 11:06:49: 		writing out 3_len_516_cov_5.1
+140528 11:06:49: 		writing out reverse-complement of 1_len_1958_cov_4.8
+iteration 2 starting...
+140528 11:06:49: iteration 2 starting...
+	blasting short reads...
+140528 11:06:49: Forking pid 86844: /usr/local/bin/blastn
+140528 11:06:49: Forking pid 86845: /usr/local/bin/blastn
+140528 11:06:49: Forking pid 86846: /usr/local/bin/blastn
+140528 11:06:49: Forking pid 86847: /usr/local/bin/blastn
+140528 11:06:49: Forking pid 86848: /usr/local/bin/blastn
+140528 11:06:49: Forking pid 86849: /usr/local/bin/blastn
+140528 11:06:49: Forking pid 86850: /usr/local/bin/blastn
+140528 11:06:49: DEBUG: waiting for 86844, 86845, 86846, 86847, 86848, 86849, 86850
+140528 11:06:49: DEBUG: waiting for 86844, 86845, 86846, 86847, 86848, 86849
+140528 11:06:49: DEBUG: waiting for 86844, 86845, 86846, 86847, 86848
+140528 11:06:49: DEBUG: waiting for 86844, 86845, 86846, 86847
+140528 11:06:49: DEBUG: waiting for 86844, 86845, 86846
+140528 11:06:49: DEBUG: waiting for 86844, 86845
+140528 11:06:49: DEBUG: waiting for 86844
+	getting paired ends...
+140528 11:06:49: DEBUG: waiting for 86851, 86852, 86853, 86854, 86856, 86858, 86859
+140528 11:06:49: DEBUG: waiting for 86851, 86852, 86853, 86854, 86856, 86858
+140528 11:06:49: DEBUG: waiting for 86851, 86852, 86853, 86854, 86856
+140528 11:06:49: DEBUG: waiting for 86851, 86852, 86853, 86854
+140528 11:06:49: DEBUG: waiting for 86851, 86852, 86853
+140528 11:06:49: DEBUG: waiting for 86851, 86852
+140528 11:06:49: DEBUG: waiting for 86851
+140528 11:06:49: DEBUG: Setting log file to /Users/jallen/Documents/GitHub/aTRAM/test/debug/debug.log
+	assembling pairs with Velvet...
+140528 11:06:49: Running command "/usr/local/bin/velveth /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/FOzdcQZ76t 31 -fasta -shortPaired /Users/jallen/Documents/GitHub/aTRAM/test/debug/test_atram.2.blast.fasta -long /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/oN84KzWpCV"
+[0.000000] Reading FastA file /Users/jallen/Documents/GitHub/aTRAM/test/debug/test_atram.2.blast.fasta;
+[0.000659] 208 sequences found
+[0.000661] Done
+[0.000684] Reading FastA file /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/oN84KzWpCV;
+[0.000776] 2 sequences found
+[0.000778] Done
+[0.000854] Reading read set file /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/FOzdcQZ76t/Sequences;
+[0.001330] 210 sequences found
+[0.001698] Done
+[0.001700] 210 sequences in total.
+[0.001738] Writing into roadmap file /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/FOzdcQZ76t/Roadmaps...
+[0.002097] Inputting sequences...
+[0.002100] Inputting sequence 0 / 210
+[0.015249]  === Sequences loaded in 0.013153 s
+[0.015322] Done inputting sequences
+[0.015324] Destroying splay table
+[0.017826] Splay table destroyed
+140528 11:06:49: Returning 0 from "/usr/local/bin/velveth"
+140528 11:06:49: Running command "/usr/local/bin/velvetg /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/FOzdcQZ76t -ins_length 300 -exp_cov 30 -min_contig_lgth 200"
+[0.000000] Reading roadmap file /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/FOzdcQZ76t/Roadmaps
+[0.000401] 210 roadmaps read
+[0.000411] Creating insertion markers
+[0.000430] Ordering insertion markers
+[0.000498] Counting preNodes
+[0.000522] 382 preNodes counted, creating them now
+[0.001029] Adjusting marker info...
+[0.001043] Connecting preNodes
+[0.001124] Cleaning up memory
+[0.001125] Done creating preGraph
+[0.001126] Concatenation...
+[0.001273] Renumbering preNodes
+[0.001275] Initial preNode count 382
+[0.001285] Destroyed 342 preNodes
+[0.001286] Concatenation over!
+[0.001286] Clipping short tips off preGraph
+[0.001297] Concatenation...
+[0.001316] Renumbering preNodes
+[0.001317] Initial preNode count 40
+[0.001320] Destroyed 22 preNodes
+[0.001321] Concatenation over!
+[0.001321] 11 tips cut off
+[0.001322] 18 nodes left
+[0.001399] Writing into pregraph file /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/FOzdcQZ76t/PreGraph...
+[0.001822] Reading read set file /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/FOzdcQZ76t/Sequences;
+[0.001914] 210 sequences found
+[0.002254] Done
+[0.002630] Reading pre-graph file /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/FOzdcQZ76t/PreGraph
+[0.002641] Graph has 18 nodes and 210 sequences
+[0.002771] Scanning pre-graph file /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/FOzdcQZ76t/PreGraph for k-mers
+[0.002804] 3046 kmers found
+[0.002976] Sorting kmer occurence table ... 
+[0.003629] Sorting done.
+[0.003630] Computing acceleration table... 
+[0.040946] Computing offsets... 
+[0.040979] Ghost Threading through reads 0 / 210
+[0.042162]  === Ghost-Threaded in 0.001183 s
+[0.042164] Threading through reads 0 / 210
+[0.043544]  === Threaded in 0.001380 s
+[0.054366] Correcting graph with cutoff 0.200000
+[0.054421] Determining eligible starting points
+[0.054441] Done listing starting nodes
+[0.054442] Initializing todo lists
+[0.054448] Done with initilization
+[0.054449] Activating arc lookup table
+[0.054451] Done activating arc lookup table
+[0.054624] Concatenation...
+[0.054627] Renumbering nodes
+[0.054627] Initial node count 18
+[0.054629] Removed 6 null nodes
+[0.054630] Concatenation over!
+[0.054630] Clipping short tips off graph, drastic
+[0.054632] Concatenation...
+[0.054632] Renumbering nodes
+[0.054633] Initial node count 12
+[0.054634] Removed 0 null nodes
+[0.054634] Concatenation over!
+[0.054635] 12 nodes left
+[0.054760] Writing into graph file /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/FOzdcQZ76t/Graph2...
+[0.055507] WARNING: NO COVERAGE CUTOFF PROVIDED
+[0.055509] Velvet will probably leave behind many detectable errors
+[0.055509] See manual for instructions on how to set the coverage cutoff parameter
+[0.055510] Removing contigs with coverage < -1.000000...
+[0.055513] Concatenation...
+[0.055514] Renumbering nodes
+[0.055515] Initial node count 12
+[0.055516] Removed 0 null nodes
+[0.055517] Concatenation over!
+[0.055518] Concatenation...
+[0.055519] Renumbering nodes
+[0.055519] Initial node count 12
+[0.055520] Removed 0 null nodes
+[0.055520] Concatenation over!
+[0.055525] Clipping short tips off graph, drastic
+[0.055527] Concatenation...
+[0.055528] Renumbering nodes
+[0.055528] Initial node count 12
+[0.055529] Removed 0 null nodes
+[0.055529] Concatenation over!
+[0.055530] 12 nodes left
+[0.055531] Read coherency...
+[0.055532] Identifying unique nodes
+[0.055533] Done, 8 unique nodes counted
+[0.055533] Trimming read tips
+[0.055537] Renumbering nodes
+[0.055538] Initial node count 12
+[0.055539] Removed 0 null nodes
+[0.055540] Confronted to 0 multiple hits and 4 null over 4
+[0.055542] Read coherency over!
+[0.055548] Starting pebble resolution...
+[0.055553] Computing read to node mapping array sizes
+[0.055559] Computing read to node mappings
+[0.055565] Estimating library insert lengths...
+[0.055571] Done
+[0.055575] Computing direct node to node mappings
+[0.055602] Scaffolding node 0
+[0.055627]  === Nodes Scaffolded in 0.000052 s
+[0.055644] Preparing to correct graph with cutoff 0.200000
+[0.055771] Cleaning memory
+[0.055978] Deactivating local correction settings
+[0.056047] Pebble done.
+[0.056048] Starting pebble resolution...
+[0.056051] Computing read to node mapping array sizes
+[0.056056] Computing read to node mappings
+[0.056061] Estimating library insert lengths...
+[0.056065] Done
+[0.056066] Computing direct node to node mappings
+[0.056076] Scaffolding node 0
+[0.056089]  === Nodes Scaffolded in 0.000023 s
+[0.056094] Preparing to correct graph with cutoff 0.200000
+[0.056115] Cleaning memory
+[0.056200] Deactivating local correction settings
+[0.056217] Pebble done.
+[0.056219] Concatenation...
+[0.056220] Renumbering nodes
+[0.056220] Initial node count 12
+[0.056222] Removed 2 null nodes
+[0.056223] Concatenation over!
+[0.056227] Removing reference contigs with coverage < -1.000000...
+[0.056233] Concatenation...
+[0.056233] Renumbering nodes
+[0.056234] Initial node count 10
+[0.056235] Removed 0 null nodes
+[0.056235] Concatenation over!
+[0.056287] Writing contigs into /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/FOzdcQZ76t/contigs.fa...
+[0.056849] Writing into stats file /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/FOzdcQZ76t/stats.txt...
+[0.056923] Writing into graph file /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/FOzdcQZ76t/LastGraph...
+Final graph has 10 nodes and n50 of 2123, max 2123, total 3046, using 198/210 reads
+140528 11:06:49: Returning 0 from "/usr/local/bin/velvetg"
+140528 11:06:49: Velvet log:
+140528 11:06:49: Wed May 28 11:06:49 2014
+140528 11:06:49:  /usr/local/bin/velveth /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/FOzdcQZ76t 31 -fasta -shortPaired /Users/jallen/Documents/GitHub/aTRAM/test/debug/test_atram.2.blast.fasta -long /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/oN84KzWpCV
+140528 11:06:49: Version 1.2.10
+140528 11:06:49: Copyright 2007, 2008 Daniel Zerbino (zerbino@ebi.ac.uk)
+140528 11:06:49: This is free software; see the source for copying conditions.  There is NO
+140528 11:06:49: warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+140528 11:06:49: Compilation settings:
+140528 11:06:49: CATEGORIES = 2
+140528 11:06:49: MAXKMERLENGTH = 31
+140528 11:06:49: 
+140528 11:06:49: Wed May 28 11:06:49 2014
+140528 11:06:49:  /usr/local/bin/velvetg /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/FOzdcQZ76t -ins_length 300 -exp_cov 30 -min_contig_lgth 200
+140528 11:06:49: Version 1.2.10
+140528 11:06:49: Copyright 2007, 2008 Daniel Zerbino (zerbino@ebi.ac.uk)
+140528 11:06:49: This is free software; see the source for copying conditions.  There is NO
+140528 11:06:49: warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+140528 11:06:49: Compilation settings:
+140528 11:06:49: CATEGORIES = 2
+140528 11:06:49: MAXKMERLENGTH = 31
+140528 11:06:49: 
+140528 11:06:49: Final graph has 10 nodes and n50 of 2123, max 2123, total 3046, using 198/210 reads
+140528 11:06:49: end Velvet log
+	filtering contigs...
+140528 11:06:49: Running command "/usr/local/bin/tblastx -db /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/iHfvy4pFoE.db -query /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/nvURPPqiNc -out /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/nbf9b9dY_Q -outfmt '6 qseqid sseqid bitscore qstart qend sstart send qlen'"
+140528 11:06:50: Returning 0 from "/usr/local/bin/tblastx"
+	saving best-scoring contigs...
+140528 11:06:50: 	writing contigs to /Users/jallen/Documents/GitHub/aTRAM/test/debug/test_atram.all.fasta:
+140528 11:06:50: 		writing out 1_len_2123_cov_5.5
+140528 11:06:50: 		writing out reverse-complement of 2_len_516_cov_5.4
+iteration 3 starting...
+140528 11:06:50: iteration 3 starting...
+	blasting short reads...
+140528 11:06:50: Forking pid 86888: /usr/local/bin/blastn
+140528 11:06:50: Forking pid 86889: /usr/local/bin/blastn
+140528 11:06:50: Forking pid 86890: /usr/local/bin/blastn
+140528 11:06:50: Forking pid 86891: /usr/local/bin/blastn
+140528 11:06:50: Forking pid 86892: /usr/local/bin/blastn
+140528 11:06:50: Forking pid 86893: /usr/local/bin/blastn
+140528 11:06:50: Forking pid 86894: /usr/local/bin/blastn
+140528 11:06:50: DEBUG: waiting for 86888, 86889, 86890, 86891, 86892, 86893, 86894
+140528 11:06:50: DEBUG: waiting for 86888, 86889, 86890, 86891, 86892, 86893
+140528 11:06:50: DEBUG: waiting for 86888, 86889, 86890, 86891, 86892
+140528 11:06:50: DEBUG: waiting for 86888, 86889, 86890, 86891
+140528 11:06:50: DEBUG: waiting for 86888, 86889, 86890
+140528 11:06:50: DEBUG: waiting for 86888, 86889
+140528 11:06:50: DEBUG: waiting for 86888
+	getting paired ends...
+140528 11:06:50: DEBUG: waiting for 86895, 86896, 86899, 86904, 86905, 86906, 86907
+140528 11:06:50: DEBUG: waiting for 86895, 86896, 86899, 86904, 86905, 86906
+140528 11:06:50: DEBUG: waiting for 86895, 86896, 86899, 86904, 86905
+140528 11:06:50: DEBUG: waiting for 86895, 86896, 86899, 86904
+140528 11:06:50: DEBUG: waiting for 86895, 86896, 86899
+140528 11:06:50: DEBUG: waiting for 86895, 86896
+140528 11:06:50: DEBUG: waiting for 86895
+140528 11:06:50: DEBUG: Setting log file to /Users/jallen/Documents/GitHub/aTRAM/test/debug/debug.log
+	assembling pairs with Velvet...
+140528 11:06:50: Running command "/usr/local/bin/velveth /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/FOzdcQZ76t 31 -fasta -shortPaired /Users/jallen/Documents/GitHub/aTRAM/test/debug/test_atram.3.blast.fasta -long /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/qrn3c23qzs"
+[0.000000] Reading FastA file /Users/jallen/Documents/GitHub/aTRAM/test/debug/test_atram.3.blast.fasta;
+[0.000469] 226 sequences found
+[0.000471] Done
+[0.000485] Reading FastA file /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/qrn3c23qzs;
+[0.000551] 2 sequences found
+[0.000552] Done
+[0.000597] Reading read set file /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/FOzdcQZ76t/Sequences;
+[0.000861] 228 sequences found
+[0.001150] Done
+[0.001151] 228 sequences in total.
+[0.001173] Writing into roadmap file /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/FOzdcQZ76t/Roadmaps...
+[0.001471] Inputting sequences...
+[0.001472] Inputting sequence 0 / 228
+[0.014625]  === Sequences loaded in 0.013155 s
+[0.014704] Done inputting sequences
+[0.014705] Destroying splay table
+[0.016686] Splay table destroyed
+140528 11:06:50: Returning 0 from "/usr/local/bin/velveth"
+140528 11:06:50: Running command "/usr/local/bin/velvetg /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/FOzdcQZ76t -ins_length 300 -exp_cov 30 -min_contig_lgth 200"
+[0.000000] Reading roadmap file /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/FOzdcQZ76t/Roadmaps
+[0.000427] 228 roadmaps read
+[0.000438] Creating insertion markers
+[0.000460] Ordering insertion markers
+[0.000535] Counting preNodes
+[0.000560] 419 preNodes counted, creating them now
+[0.001108] Adjusting marker info...
+[0.001123] Connecting preNodes
+[0.001211] Cleaning up memory
+[0.001213] Done creating preGraph
+[0.001213] Concatenation...
+[0.001347] Renumbering preNodes
+[0.001347] Initial preNode count 419
+[0.001355] Destroyed 379 preNodes
+[0.001356] Concatenation over!
+[0.001356] Clipping short tips off preGraph
+[0.001362] Concatenation...
+[0.001375] Renumbering preNodes
+[0.001376] Initial preNode count 40
+[0.001378] Destroyed 20 preNodes
+[0.001378] Concatenation over!
+[0.001378] 10 tips cut off
+[0.001379] 20 nodes left
+[0.001441] Writing into pregraph file /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/FOzdcQZ76t/PreGraph...
+[0.001845] Reading read set file /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/FOzdcQZ76t/Sequences;
+[0.001928] 228 sequences found
+[0.002282] Done
+[0.002689] Reading pre-graph file /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/FOzdcQZ76t/PreGraph
+[0.002702] Graph has 20 nodes and 228 sequences
+[0.002856] Scanning pre-graph file /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/FOzdcQZ76t/PreGraph for k-mers
+[0.002889] 3256 kmers found
+[0.003031] Sorting kmer occurence table ... 
+[0.003626] Sorting done.
+[0.003627] Computing acceleration table... 
+[0.038947] Computing offsets... 
+[0.038983] Ghost Threading through reads 0 / 228
+[0.040525]  === Ghost-Threaded in 0.001542 s
+[0.040527] Threading through reads 0 / 228
+[0.042272]  === Threaded in 0.001745 s
+[0.052680] Correcting graph with cutoff 0.200000
+[0.052740] Determining eligible starting points
+[0.052762] Done listing starting nodes
+[0.052763] Initializing todo lists
+[0.052771] Done with initilization
+[0.052772] Activating arc lookup table
+[0.052773] Done activating arc lookup table
+[0.053032] Concatenation...
+[0.053033] Renumbering nodes
+[0.053034] Initial node count 20
+[0.053037] Removed 12 null nodes
+[0.053038] Concatenation over!
+[0.053038] Clipping short tips off graph, drastic
+[0.053040] Concatenation...
+[0.053040] Renumbering nodes
+[0.053041] Initial node count 8
+[0.053042] Removed 0 null nodes
+[0.053042] Concatenation over!
+[0.053043] 8 nodes left
+[0.053179] Writing into graph file /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/FOzdcQZ76t/Graph2...
+[0.053906] WARNING: NO COVERAGE CUTOFF PROVIDED
+[0.053907] Velvet will probably leave behind many detectable errors
+[0.053908] See manual for instructions on how to set the coverage cutoff parameter
+[0.053908] Removing contigs with coverage < -1.000000...
+[0.053911] Concatenation...
+[0.053911] Renumbering nodes
+[0.053912] Initial node count 8
+[0.053913] Removed 0 null nodes
+[0.053913] Concatenation over!
+[0.053914] Concatenation...
+[0.053914] Renumbering nodes
+[0.053914] Initial node count 8
+[0.053915] Removed 0 null nodes
+[0.053915] Concatenation over!
+[0.053919] Clipping short tips off graph, drastic
+[0.053920] Concatenation...
+[0.053920] Renumbering nodes
+[0.053920] Initial node count 8
+[0.053921] Removed 0 null nodes
+[0.053921] Concatenation over!
+[0.053922] 8 nodes left
+[0.053922] Read coherency...
+[0.053923] Identifying unique nodes
+[0.053923] Done, 6 unique nodes counted
+[0.053924] Trimming read tips
+[0.053926] Renumbering nodes
+[0.053926] Initial node count 8
+[0.053927] Removed 0 null nodes
+[0.053928] Confronted to 0 multiple hits and 2 null over 2
+[0.053929] Read coherency over!
+[0.053933] Starting pebble resolution...
+[0.053937] Computing read to node mapping array sizes
+[0.053940] Computing read to node mappings
+[0.053944] Estimating library insert lengths...
+[0.053948] Done
+[0.053950] Computing direct node to node mappings
+[0.053964] Scaffolding node 0
+[0.053979]  === Nodes Scaffolded in 0.000029 s
+[0.053990] Preparing to correct graph with cutoff 0.200000
+[0.054065] Cleaning memory
+[0.054605] Deactivating local correction settings
+[0.054615] Pebble done.
+[0.054615] Starting pebble resolution...
+[0.054617] Computing read to node mapping array sizes
+[0.054620] Computing read to node mappings
+[0.054623] Estimating library insert lengths...
+[0.054626] Done
+[0.054626] Computing direct node to node mappings
+[0.054633] Scaffolding node 0
+[0.054641]  === Nodes Scaffolded in 0.000015 s
+[0.054645] Preparing to correct graph with cutoff 0.200000
+[0.054657] Cleaning memory
+[0.054798] Deactivating local correction settings
+[0.054806] Pebble done.
+[0.054806] Concatenation...
+[0.054807] Renumbering nodes
+[0.054807] Initial node count 8
+[0.054808] Removed 1 null nodes
+[0.054809] Concatenation over!
+[0.054811] Removing reference contigs with coverage < -1.000000...
+[0.054813] Concatenation...
+[0.054814] Renumbering nodes
+[0.054814] Initial node count 7
+[0.054815] Removed 0 null nodes
+[0.054815] Concatenation over!
+[0.054846] Writing contigs into /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/FOzdcQZ76t/contigs.fa...
+[0.055222] Writing into stats file /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/FOzdcQZ76t/stats.txt...
+[0.055277] Writing into graph file /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/FOzdcQZ76t/LastGraph...
+Final graph has 7 nodes and n50 of 2346, max 2346, total 3163, using 218/228 reads
+140528 11:06:50: Returning 0 from "/usr/local/bin/velvetg"
+140528 11:06:50: Velvet log:
+140528 11:06:50: Wed May 28 11:06:50 2014
+140528 11:06:50:  /usr/local/bin/velveth /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/FOzdcQZ76t 31 -fasta -shortPaired /Users/jallen/Documents/GitHub/aTRAM/test/debug/test_atram.3.blast.fasta -long /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/qrn3c23qzs
+140528 11:06:50: Version 1.2.10
+140528 11:06:50: Copyright 2007, 2008 Daniel Zerbino (zerbino@ebi.ac.uk)
+140528 11:06:50: This is free software; see the source for copying conditions.  There is NO
+140528 11:06:50: warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+140528 11:06:50: Compilation settings:
+140528 11:06:50: CATEGORIES = 2
+140528 11:06:50: MAXKMERLENGTH = 31
+140528 11:06:50: 
+140528 11:06:50: Wed May 28 11:06:50 2014
+140528 11:06:50:  /usr/local/bin/velvetg /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/FOzdcQZ76t -ins_length 300 -exp_cov 30 -min_contig_lgth 200
+140528 11:06:50: Version 1.2.10
+140528 11:06:50: Copyright 2007, 2008 Daniel Zerbino (zerbino@ebi.ac.uk)
+140528 11:06:50: This is free software; see the source for copying conditions.  There is NO
+140528 11:06:50: warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+140528 11:06:50: Compilation settings:
+140528 11:06:50: CATEGORIES = 2
+140528 11:06:50: MAXKMERLENGTH = 31
+140528 11:06:50: 
+140528 11:06:50: Final graph has 7 nodes and n50 of 2346, max 2346, total 3163, using 218/228 reads
+140528 11:06:50: end Velvet log
+	filtering contigs...
+140528 11:06:50: Running command "/usr/local/bin/tblastx -db /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/iHfvy4pFoE.db -query /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/alB6bZTXBM -out /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/ueG5mNT9BQ -outfmt '6 qseqid sseqid bitscore qstart qend sstart send qlen'"
+140528 11:06:50: Returning 0 from "/usr/local/bin/tblastx"
+	saving best-scoring contigs...
+140528 11:06:50: 	writing contigs to /Users/jallen/Documents/GitHub/aTRAM/test/debug/test_atram.all.fasta:
+140528 11:06:50: 		writing out 4_len_2346_cov_5.7
+140528 11:06:50: 		writing out reverse-complement of 2_len_497_cov_5.7
+iteration 4 starting...
+140528 11:06:50: iteration 4 starting...
+	blasting short reads...
+140528 11:06:50: Forking pid 86932: /usr/local/bin/blastn
+140528 11:06:50: Forking pid 86933: /usr/local/bin/blastn
+140528 11:06:50: Forking pid 86934: /usr/local/bin/blastn
+140528 11:06:50: Forking pid 86935: /usr/local/bin/blastn
+140528 11:06:50: Forking pid 86936: /usr/local/bin/blastn
+140528 11:06:50: Forking pid 86937: /usr/local/bin/blastn
+140528 11:06:50: Forking pid 86938: /usr/local/bin/blastn
+140528 11:06:50: DEBUG: waiting for 86932, 86933, 86934, 86935, 86936, 86937, 86938
+140528 11:06:50: DEBUG: waiting for 86932, 86933, 86934, 86935, 86936, 86937
+140528 11:06:50: DEBUG: waiting for 86932, 86933, 86934, 86935, 86936
+140528 11:06:50: DEBUG: waiting for 86932, 86933, 86934, 86935
+140528 11:06:50: DEBUG: waiting for 86932, 86933, 86934
+140528 11:06:50: DEBUG: waiting for 86932, 86933
+140528 11:06:50: DEBUG: waiting for 86932
+	getting paired ends...
+140528 11:06:50: DEBUG: waiting for 86939, 86940, 86943, 86947, 86948, 86949, 86950
+140528 11:06:51: DEBUG: waiting for 86939, 86940, 86943, 86947, 86948, 86949
+140528 11:06:51: DEBUG: waiting for 86939, 86940, 86943, 86947, 86948
+140528 11:06:51: DEBUG: waiting for 86939, 86940, 86943, 86947
+140528 11:06:51: DEBUG: waiting for 86939, 86940, 86943
+140528 11:06:51: DEBUG: waiting for 86939, 86940
+140528 11:06:51: DEBUG: waiting for 86939
+140528 11:06:51: DEBUG: Setting log file to /Users/jallen/Documents/GitHub/aTRAM/test/debug/debug.log
+	assembling pairs with Velvet...
+140528 11:06:51: Running command "/usr/local/bin/velveth /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/FOzdcQZ76t 31 -fasta -shortPaired /Users/jallen/Documents/GitHub/aTRAM/test/debug/test_atram.4.blast.fasta -long /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/gve81zV8VU"
+[0.000000] Reading FastA file /Users/jallen/Documents/GitHub/aTRAM/test/debug/test_atram.4.blast.fasta;
+[0.000849] 248 sequences found
+[0.000851] Done
+[0.000873] Reading FastA file /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/gve81zV8VU;
+[0.000975] 2 sequences found
+[0.000977] Done
+[0.001045] Reading read set file /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/FOzdcQZ76t/Sequences;
+[0.001393] 250 sequences found
+[0.001850] Done
+[0.001852] 250 sequences in total.
+[0.001881] Writing into roadmap file /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/FOzdcQZ76t/Roadmaps...
+[0.002277] Inputting sequences...
+[0.002279] Inputting sequence 0 / 250
+[0.015121]  === Sequences loaded in 0.012845 s
+[0.015206] Done inputting sequences
+[0.015207] Destroying splay table
+[0.017317] Splay table destroyed
+140528 11:06:51: Returning 0 from "/usr/local/bin/velveth"
+140528 11:06:51: Running command "/usr/local/bin/velvetg /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/FOzdcQZ76t -ins_length 300 -exp_cov 30 -min_contig_lgth 200"
+[0.000000] Reading roadmap file /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/FOzdcQZ76t/Roadmaps
+[0.000658] 250 roadmaps read
+[0.000674] Creating insertion markers
+[0.000702] Ordering insertion markers
+[0.000809] Counting preNodes
+[0.000868] 461 preNodes counted, creating them now
+[0.001671] Adjusting marker info...
+[0.001692] Connecting preNodes
+[0.001817] Cleaning up memory
+[0.001819] Done creating preGraph
+[0.001820] Concatenation...
+[0.002030] Renumbering preNodes
+[0.002031] Initial preNode count 461
+[0.002041] Destroyed 419 preNodes
+[0.002041] Concatenation over!
+[0.002042] Clipping short tips off preGraph
+[0.002051] Concatenation...
+[0.002069] Renumbering preNodes
+[0.002070] Initial preNode count 42
+[0.002073] Destroyed 20 preNodes
+[0.002073] Concatenation over!
+[0.002074] 10 tips cut off
+[0.002075] 22 nodes left
+[0.002153] Writing into pregraph file /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/FOzdcQZ76t/PreGraph...
+[0.002648] Reading read set file /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/FOzdcQZ76t/Sequences;
+[0.002756] 250 sequences found
+[0.003161] Done
+[0.003597] Reading pre-graph file /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/FOzdcQZ76t/PreGraph
+[0.003609] Graph has 22 nodes and 250 sequences
+[0.003761] Scanning pre-graph file /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/FOzdcQZ76t/PreGraph for k-mers
+[0.003799] 3524 kmers found
+[0.004001] Sorting kmer occurence table ... 
+[0.004865] Sorting done.
+[0.004867] Computing acceleration table... 
+[0.044854] Computing offsets... 
+[0.044891] Ghost Threading through reads 0 / 250
+[0.046715]  === Ghost-Threaded in 0.001824 s
+[0.046719] Threading through reads 0 / 250
+[0.048805]  === Threaded in 0.002087 s
+[0.061680] Correcting graph with cutoff 0.200000
+[0.065539] Determining eligible starting points
+[0.065568] Done listing starting nodes
+[0.065569] Initializing todo lists
+[0.065577] Done with initilization
+[0.065578] Activating arc lookup table
+[0.065581] Done activating arc lookup table
+[0.065975] Concatenation...
+[0.065983] Renumbering nodes
+[0.065984] Initial node count 22
+[0.065988] Removed 12 null nodes
+[0.065989] Concatenation over!
+[0.065989] Clipping short tips off graph, drastic
+[0.065991] Concatenation...
+[0.065991] Renumbering nodes
+[0.065992] Initial node count 10
+[0.065992] Removed 0 null nodes
+[0.065993] Concatenation over!
+[0.065994] 10 nodes left
+[0.066186] Writing into graph file /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/FOzdcQZ76t/Graph2...
+[0.067052] WARNING: NO COVERAGE CUTOFF PROVIDED
+[0.067053] Velvet will probably leave behind many detectable errors
+[0.067054] See manual for instructions on how to set the coverage cutoff parameter
+[0.067055] Removing contigs with coverage < -1.000000...
+[0.067060] Concatenation...
+[0.067061] Renumbering nodes
+[0.067062] Initial node count 10
+[0.067064] Removed 0 null nodes
+[0.067064] Concatenation over!
+[0.067065] Concatenation...
+[0.067066] Renumbering nodes
+[0.067066] Initial node count 10
+[0.067067] Removed 0 null nodes
+[0.067068] Concatenation over!
+[0.067075] Clipping short tips off graph, drastic
+[0.067076] Concatenation...
+[0.067077] Renumbering nodes
+[0.067078] Initial node count 10
+[0.067079] Removed 0 null nodes
+[0.067079] Concatenation over!
+[0.067080] 10 nodes left
+[0.067081] Read coherency...
+[0.067082] Identifying unique nodes
+[0.067083] Done, 6 unique nodes counted
+[0.067083] Trimming read tips
+[0.067087] Renumbering nodes
+[0.067088] Initial node count 10
+[0.067089] Removed 0 null nodes
+[0.067091] Confronted to 0 multiple hits and 4 null over 4
+[0.067092] Read coherency over!
+[0.067097] Starting pebble resolution...
+[0.067102] Computing read to node mapping array sizes
+[0.067107] Computing read to node mappings
+[0.067113] Estimating library insert lengths...
+[0.067119] Done
+[0.067122] Computing direct node to node mappings
+[0.067148] Scaffolding node 0
+[0.067172]  === Nodes Scaffolded in 0.000050 s
+[0.067190] Preparing to correct graph with cutoff 0.200000
+[0.067309] Cleaning memory
+[0.067695] Deactivating local correction settings
+[0.067743] Pebble done.
+[0.067744] Starting pebble resolution...
+[0.067747] Computing read to node mapping array sizes
+[0.067751] Computing read to node mappings
+[0.067755] Estimating library insert lengths...
+[0.067759] Done
+[0.067760] Computing direct node to node mappings
+[0.067771] Scaffolding node 0
+[0.067783]  === Nodes Scaffolded in 0.000022 s
+[0.067788] Preparing to correct graph with cutoff 0.200000
+[0.067805] Cleaning memory
+[0.067917] Deactivating local correction settings
+[0.067931] Pebble done.
+[0.067932] Concatenation...
+[0.067933] Renumbering nodes
+[0.067933] Initial node count 10
+[0.067935] Removed 2 null nodes
+[0.067936] Concatenation over!
+[0.067939] Removing reference contigs with coverage < -1.000000...
+[0.067942] Concatenation...
+[0.067943] Renumbering nodes
+[0.067943] Initial node count 8
+[0.067944] Removed 0 null nodes
+[0.067945] Concatenation over!
+[0.067987] Writing contigs into /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/FOzdcQZ76t/contigs.fa...
+[0.068712] Writing into stats file /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/FOzdcQZ76t/stats.txt...
+[0.068794] Writing into graph file /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/FOzdcQZ76t/LastGraph...
+Final graph has 8 nodes and n50 of 2701, max 2701, total 3462, using 244/250 reads
+140528 11:06:51: Returning 0 from "/usr/local/bin/velvetg"
+140528 11:06:51: Velvet log:
+140528 11:06:51: Wed May 28 11:06:51 2014
+140528 11:06:51:  /usr/local/bin/velveth /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/FOzdcQZ76t 31 -fasta -shortPaired /Users/jallen/Documents/GitHub/aTRAM/test/debug/test_atram.4.blast.fasta -long /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/gve81zV8VU
+140528 11:06:51: Version 1.2.10
+140528 11:06:51: Copyright 2007, 2008 Daniel Zerbino (zerbino@ebi.ac.uk)
+140528 11:06:51: This is free software; see the source for copying conditions.  There is NO
+140528 11:06:51: warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+140528 11:06:51: Compilation settings:
+140528 11:06:51: CATEGORIES = 2
+140528 11:06:51: MAXKMERLENGTH = 31
+140528 11:06:51: 
+140528 11:06:51: Wed May 28 11:06:51 2014
+140528 11:06:51:  /usr/local/bin/velvetg /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/FOzdcQZ76t -ins_length 300 -exp_cov 30 -min_contig_lgth 200
+140528 11:06:51: Version 1.2.10
+140528 11:06:51: Copyright 2007, 2008 Daniel Zerbino (zerbino@ebi.ac.uk)
+140528 11:06:51: This is free software; see the source for copying conditions.  There is NO
+140528 11:06:51: warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+140528 11:06:51: Compilation settings:
+140528 11:06:51: CATEGORIES = 2
+140528 11:06:51: MAXKMERLENGTH = 31
+140528 11:06:51: 
+140528 11:06:51: Final graph has 8 nodes and n50 of 2701, max 2701, total 3462, using 244/250 reads
+140528 11:06:51: end Velvet log
+	filtering contigs...
+140528 11:06:51: Running command "/usr/local/bin/tblastx -db /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/iHfvy4pFoE.db -query /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/mr29rv9YQT -out /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/TyYqsjr_7S -outfmt '6 qseqid sseqid bitscore qstart qend sstart send qlen'"
+140528 11:06:51: Returning 0 from "/usr/local/bin/tblastx"
+	saving best-scoring contigs...
+140528 11:06:51: 	writing contigs to /Users/jallen/Documents/GitHub/aTRAM/test/debug/test_atram.all.fasta:
+140528 11:06:51: 		writing out reverse-complement of 2_len_497_cov_5.9
+140528 11:06:51: 		writing out 1_len_2701_cov_5.6
+iteration 5 starting...
+140528 11:06:51: iteration 5 starting...
+	blasting short reads...
+140528 11:06:51: Forking pid 86976: /usr/local/bin/blastn
+140528 11:06:51: Forking pid 86977: /usr/local/bin/blastn
+140528 11:06:51: Forking pid 86978: /usr/local/bin/blastn
+140528 11:06:51: Forking pid 86979: /usr/local/bin/blastn
+140528 11:06:51: Forking pid 86980: /usr/local/bin/blastn
+140528 11:06:51: Forking pid 86981: /usr/local/bin/blastn
+140528 11:06:51: Forking pid 86982: /usr/local/bin/blastn
+140528 11:06:51: DEBUG: waiting for 86976, 86977, 86978, 86979, 86980, 86981, 86982
+140528 11:06:51: DEBUG: waiting for 86976, 86977, 86978, 86979, 86980, 86981
+140528 11:06:51: DEBUG: waiting for 86976, 86977, 86978, 86979, 86980
+140528 11:06:51: DEBUG: waiting for 86976, 86977, 86978, 86979
+140528 11:06:51: DEBUG: waiting for 86976, 86977, 86978
+140528 11:06:51: DEBUG: waiting for 86976, 86977
+140528 11:06:51: DEBUG: waiting for 86976
+	getting paired ends...
+140528 11:06:51: DEBUG: waiting for 86983, 86984, 86985, 86992, 86993, 86994, 86995
+140528 11:06:52: DEBUG: waiting for 86983, 86984, 86985, 86992, 86993, 86994
+140528 11:06:52: DEBUG: waiting for 86983, 86984, 86985, 86992, 86993
+140528 11:06:52: DEBUG: waiting for 86983, 86984, 86985, 86992
+140528 11:06:52: DEBUG: waiting for 86983, 86984, 86985
+140528 11:06:52: DEBUG: waiting for 86983, 86984
+140528 11:06:52: DEBUG: waiting for 86983
+140528 11:06:52: DEBUG: Setting log file to /Users/jallen/Documents/GitHub/aTRAM/test/debug/debug.log
+	assembling pairs with Velvet...
+140528 11:06:52: Running command "/usr/local/bin/velveth /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/FOzdcQZ76t 31 -fasta -shortPaired /Users/jallen/Documents/GitHub/aTRAM/test/debug/test_atram.5.blast.fasta -long /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/C9Xg2YhdqJ"
+[0.000000] Reading FastA file /Users/jallen/Documents/GitHub/aTRAM/test/debug/test_atram.5.blast.fasta;
+[0.000899] 294 sequences found
+[0.000901] Done
+[0.000919] Reading FastA file /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/C9Xg2YhdqJ;
+[0.001020] 2 sequences found
+[0.001021] Done
+[0.001079] Reading read set file /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/FOzdcQZ76t/Sequences;
+[0.001448] 296 sequences found
+[0.001920] Done
+[0.001922] 296 sequences in total.
+[0.001949] Writing into roadmap file /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/FOzdcQZ76t/Roadmaps...
+[0.002425] Inputting sequences...
+[0.002426] Inputting sequence 0 / 296
+[0.016334]  === Sequences loaded in 0.013909 s
+[0.016425] Done inputting sequences
+[0.016426] Destroying splay table
+[0.019007] Splay table destroyed
+140528 11:06:52: Returning 0 from "/usr/local/bin/velveth"
+140528 11:06:52: Running command "/usr/local/bin/velvetg /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/FOzdcQZ76t -ins_length 300 -exp_cov 30 -min_contig_lgth 200"
+[0.000000] Reading roadmap file /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/FOzdcQZ76t/Roadmaps
+[0.000549] 296 roadmaps read
+[0.000560] Creating insertion markers
+[0.000584] Ordering insertion markers
+[0.000683] Counting preNodes
+[0.000714] 539 preNodes counted, creating them now
+[0.001567] Adjusting marker info...
+[0.001592] Connecting preNodes
+[0.001713] Cleaning up memory
+[0.001715] Done creating preGraph
+[0.001715] Concatenation...
+[0.001882] Renumbering preNodes
+[0.001883] Initial preNode count 539
+[0.001892] Destroyed 492 preNodes
+[0.001892] Concatenation over!
+[0.001893] Clipping short tips off preGraph
+[0.001900] Concatenation...
+[0.001915] Renumbering preNodes
+[0.001916] Initial preNode count 47
+[0.001918] Destroyed 22 preNodes
+[0.001919] Concatenation over!
+[0.001919] 11 tips cut off
+[0.001920] 25 nodes left
+[0.001990] Writing into pregraph file /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/FOzdcQZ76t/PreGraph...
+[0.002329] Reading read set file /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/FOzdcQZ76t/Sequences;
+[0.002411] 296 sequences found
+[0.002810] Done
+[0.003323] Reading pre-graph file /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/FOzdcQZ76t/PreGraph
+[0.003336] Graph has 25 nodes and 296 sequences
+[0.003507] Scanning pre-graph file /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/FOzdcQZ76t/PreGraph for k-mers
+[0.003549] 3800 kmers found
+[0.003741] Sorting kmer occurence table ... 
+[0.004538] Sorting done.
+[0.004539] Computing acceleration table... 
+[0.038566] Computing offsets... 
+[0.038606] Ghost Threading through reads 0 / 296
+[0.040636]  === Ghost-Threaded in 0.002030 s
+[0.040637] Threading through reads 0 / 296
+[0.042866]  === Threaded in 0.002229 s
+[0.053514] Correcting graph with cutoff 0.200000
+[0.053579] Determining eligible starting points
+[0.053600] Done listing starting nodes
+[0.053601] Initializing todo lists
+[0.053606] Done with initilization
+[0.053607] Activating arc lookup table
+[0.053608] Done activating arc lookup table
+[0.053930] Concatenation...
+[0.053932] Renumbering nodes
+[0.053932] Initial node count 25
+[0.053935] Removed 21 null nodes
+[0.053935] Concatenation over!
+[0.053936] Clipping short tips off graph, drastic
+[0.053936] Concatenation...
+[0.053937] Renumbering nodes
+[0.053937] Initial node count 4
+[0.053938] Removed 0 null nodes
+[0.053938] Concatenation over!
+[0.053938] 4 nodes left
+[0.054053] Writing into graph file /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/FOzdcQZ76t/Graph2...
+[0.054631] WARNING: NO COVERAGE CUTOFF PROVIDED
+[0.054632] Velvet will probably leave behind many detectable errors
+[0.054632] See manual for instructions on how to set the coverage cutoff parameter
+[0.054633] Removing contigs with coverage < -1.000000...
+[0.054635] Concatenation...
+[0.054635] Renumbering nodes
+[0.054636] Initial node count 4
+[0.054637] Removed 0 null nodes
+[0.054637] Concatenation over!
+[0.054637] Concatenation...
+[0.054638] Renumbering nodes
+[0.054638] Initial node count 4
+[0.054638] Removed 0 null nodes
+[0.054639] Concatenation over!
+[0.054642] Clipping short tips off graph, drastic
+[0.054643] Concatenation...
+[0.054643] Renumbering nodes
+[0.054643] Initial node count 4
+[0.054644] Removed 0 null nodes
+[0.054644] Concatenation over!
+[0.054644] 4 nodes left
+[0.054645] Read coherency...
+[0.054646] Identifying unique nodes
+[0.054646] Done, 4 unique nodes counted
+[0.054647] Trimming read tips
+[0.054647] Renumbering nodes
+[0.054648] Initial node count 4
+[0.054648] Removed 0 null nodes
+[0.054649] Confronted to 0 multiple hits and 0 null over 0
+[0.054649] Read coherency over!
+[0.054653] Starting pebble resolution...
+[0.054657] Computing read to node mapping array sizes
+[0.054660] Computing read to node mappings
+[0.054664] Estimating library insert lengths...
+[0.054668] Done
+[0.054670] Computing direct node to node mappings
+[0.054683] Scaffolding node 0
+[0.054694]  === Nodes Scaffolded in 0.000023 s
+[0.054699] Preparing to correct graph with cutoff 0.200000
+[0.054736] Cleaning memory
+[0.054908] Deactivating local correction settings
+[0.054917] Pebble done.
+[0.054917] Starting pebble resolution...
+[0.054919] Computing read to node mapping array sizes
+[0.054922] Computing read to node mappings
+[0.054926] Estimating library insert lengths...
+[0.054928] Done
+[0.054929] Computing direct node to node mappings
+[0.054935] Scaffolding node 0
+[0.054942]  === Nodes Scaffolded in 0.000013 s
+[0.054945] Preparing to correct graph with cutoff 0.200000
+[0.054956] Cleaning memory
+[0.055009] Deactivating local correction settings
+[0.055017] Pebble done.
+[0.055018] Concatenation...
+[0.055018] Renumbering nodes
+[0.055018] Initial node count 4
+[0.055019] Removed 0 null nodes
+[0.055020] Concatenation over!
+[0.055022] Removing reference contigs with coverage < -1.000000...
+[0.055023] Concatenation...
+[0.055024] Renumbering nodes
+[0.055024] Initial node count 4
+[0.055025] Removed 0 null nodes
+[0.055025] Concatenation over!
+[0.055051] Writing contigs into /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/FOzdcQZ76t/contigs.fa...
+[0.055495] Writing into stats file /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/FOzdcQZ76t/stats.txt...
+[0.055580] Writing into graph file /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/FOzdcQZ76t/LastGraph...
+Final graph has 4 nodes and n50 of 2946, max 2946, total 3583, using 287/296 reads
+140528 11:06:52: Returning 0 from "/usr/local/bin/velvetg"
+140528 11:06:52: Velvet log:
+140528 11:06:52: Wed May 28 11:06:52 2014
+140528 11:06:52:  /usr/local/bin/velveth /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/FOzdcQZ76t 31 -fasta -shortPaired /Users/jallen/Documents/GitHub/aTRAM/test/debug/test_atram.5.blast.fasta -long /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/C9Xg2YhdqJ
+140528 11:06:52: Version 1.2.10
+140528 11:06:52: Copyright 2007, 2008 Daniel Zerbino (zerbino@ebi.ac.uk)
+140528 11:06:52: This is free software; see the source for copying conditions.  There is NO
+140528 11:06:52: warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+140528 11:06:52: Compilation settings:
+140528 11:06:52: CATEGORIES = 2
+140528 11:06:52: MAXKMERLENGTH = 31
+140528 11:06:52: 
+140528 11:06:52: Wed May 28 11:06:52 2014
+140528 11:06:52:  /usr/local/bin/velvetg /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/FOzdcQZ76t -ins_length 300 -exp_cov 30 -min_contig_lgth 200
+140528 11:06:52: Version 1.2.10
+140528 11:06:52: Copyright 2007, 2008 Daniel Zerbino (zerbino@ebi.ac.uk)
+140528 11:06:52: This is free software; see the source for copying conditions.  There is NO
+140528 11:06:52: warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+140528 11:06:52: Compilation settings:
+140528 11:06:52: CATEGORIES = 2
+140528 11:06:52: MAXKMERLENGTH = 31
+140528 11:06:52: 
+140528 11:06:52: Final graph has 4 nodes and n50 of 2946, max 2946, total 3583, using 287/296 reads
+140528 11:06:52: end Velvet log
+	filtering contigs...
+140528 11:06:52: Running command "/usr/local/bin/tblastx -db /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/iHfvy4pFoE.db -query /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/MEui5Suvru -out /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/DkpelHY0CT -outfmt '6 qseqid sseqid bitscore qstart qend sstart send qlen'"
+140528 11:06:52: Returning 0 from "/usr/local/bin/tblastx"
+	saving best-scoring contigs...
+140528 11:06:52: 	writing contigs to /Users/jallen/Documents/GitHub/aTRAM/test/debug/test_atram.all.fasta:
+140528 11:06:52: 		writing out reverse-complement of 1_len_2946_cov_6.4
+
+
+Contigs by target coverage:
+contig	aTRAM_target_start	testref	aTRAM_target_end	total score
+1.3_len_516_cov_5.1	-	182	-	182
+1.1_len_1958_cov_4.8	-	374	76.2	450.2
+2.1_len_2123_cov_5.5	-	374	76.2	450.2
+2.2_len_516_cov_5.4	-	182	-	182
+3.4_len_2346_cov_5.7	-	374	76.2	450.2
+3.2_len_497_cov_5.7	-	182	-	182
+4.2_len_497_cov_5.9	-	182	-	182
+4.1_len_2701_cov_5.6	-	374	76.2	450.2
+5.1_len_2946_cov_6.4	-	374	76.2	450.2
+140528 11:06:52: Returning 0 from "/Users/jallen/Documents/GitHub/aTRAM/test/../aTRAM.pl"
+140528 11:06:52: OK
+140528 11:06:52: 5. Checking that BasicPipeline works correctly...
+140528 11:06:52: Running command "/Users/jallen/Documents/GitHub/aTRAM/test/../Pipelines/BasicPipeline.pl -samples /Users/jallen/Documents/GitHub/aTRAM/test/debug/test.samples -targets /Users/jallen/Documents/GitHub/aTRAM/test/debug/test.targets -out /Users/jallen/Documents/GitHub/aTRAM/test/debug/test_bp -iter 5 -debug -log /Users/jallen/Documents/GitHub/aTRAM/test/debug/debug.log"
+140528 11:06:52: DEBUG: Setting log file to /Users/jallen/Documents/GitHub/aTRAM/test/debug/debug.log
+140528 11:06:52: Running /Users/jallen/Documents/GitHub/aTRAM/test/../Pipelines/BasicPipeline.pl -samples /Users/jallen/Documents/GitHub/aTRAM/test/debug/test.samples -targets /Users/jallen/Documents/GitHub/aTRAM/test/debug/test.targets -out /Users/jallen/Documents/GitHub/aTRAM/test/debug/test_bp -iter 5 -debug -log /Users/jallen/Documents/GitHub/aTRAM/test/debug/debug.log
+
+140528 11:06:52: 1: protein.results.txt already exists.
+140528 11:06:52: 2: region.results.txt already exists.
+140528 11:06:52: 3: bad.results.txt already exists.
+140528 11:06:52: 4: complete.results.txt already exists.
+140528 11:06:52: Finished executing /Users/jallen/Documents/GitHub/aTRAM/test/../Pipelines/BasicPipeline.pl -samples /Users/jallen/Documents/GitHub/aTRAM/test/debug/test.samples -targets /Users/jallen/Documents/GitHub/aTRAM/test/debug/test.targets -out /Users/jallen/Documents/GitHub/aTRAM/test/debug/test_bp -iter 5 -debug -log /Users/jallen/Documents/GitHub/aTRAM/test/debug/debug.log
+
+made /Users/jallen/Documents/GitHub/aTRAM/test/debug/test_bp/test
+140528 11:06:52: Returning 0 from "/Users/jallen/Documents/GitHub/aTRAM/test/../Pipelines/BasicPipeline.pl"
+140528 11:06:52: OK
+140528 11:06:52: 6. Checking that AlignmentPipeline works correctly...
+140528 11:06:52: Running command "/Users/jallen/Documents/GitHub/aTRAM/test/../Pipelines/AlignmentPipeline.pl -samples /Users/jallen/Documents/GitHub/aTRAM/test/debug/test.samples -targets /Users/jallen/Documents/GitHub/aTRAM/test/debug/test.targets -out /Users/jallen/Documents/GitHub/aTRAM/test/debug/test_ap -iter 5 -debug -log /Users/jallen/Documents/GitHub/aTRAM/test/debug/debug.log"
+140528 11:06:52: DEBUG: Setting log file to /Users/jallen/Documents/GitHub/aTRAM/test/debug/debug.log
+140528 11:06:52: Running /Users/jallen/Documents/GitHub/aTRAM/test/../Pipelines/AlignmentPipeline.pl -samples /Users/jallen/Documents/GitHub/aTRAM/test/debug/test.samples -targets /Users/jallen/Documents/GitHub/aTRAM/test/debug/test.targets -out /Users/jallen/Documents/GitHub/aTRAM/test/debug/test_ap -iter 5 -debug -log /Users/jallen/Documents/GitHub/aTRAM/test/debug/debug.log
+
+140528 11:06:52: Target fasta file /Users/jallen/Documents/GitHub/aTRAM/test/protref.fasta is not a DNA sequence, cannot perform alignment.
+140528 11:06:52: Processing region.test...
+140528 11:06:52: Running command "/Users/jallen/Documents/GitHub/aTRAM/Pipelines/../aTRAM.pl -reads /Users/jallen/Documents/GitHub/aTRAM/test/debug/test_db.atram -target /Users/jallen/Documents/GitHub/aTRAM/test/testref.fasta -iter 5 -ins_length 400 -frac 1  -out /Users/jallen/Documents/GitHub/aTRAM/test/debug/test_ap/aTRAM/region.test -kmer 31    -debug -log /Users/jallen/Documents/GitHub/aTRAM/test/debug/debug.log"
+140528 11:06:52: DEBUG: Setting log file to /Users/jallen/Documents/GitHub/aTRAM/test/debug/debug.log
+140528 11:06:52: Running aTRAM.pl -reads /Users/jallen/Documents/GitHub/aTRAM/test/debug/test_db.atram -target /Users/jallen/Documents/GitHub/aTRAM/test/testref.fasta -iter 5 -ins_length 400 -frac 1 -out /Users/jallen/Documents/GitHub/aTRAM/test/debug/test_ap/aTRAM/region.test -kmer 31 -debug -log /Users/jallen/Documents/GitHub/aTRAM/test/debug/debug.log, v1.01+
+
+Using 7 of 7 total shards.
+140528 11:06:52: Using 7 of 7 total shards.
+140528 11:06:52: Running command "/usr/local/bin/makeblastdb -in /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/6CBLofCy_d -dbtype nucl -out /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/daU7cpIVc5.db -input_type fasta"
+
+
+Building a new DB, current time: 05/28/2014 11:06:52
+New DB name:   /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/daU7cpIVc5.db
+New DB title:  /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/6CBLofCy_d
+Sequence type: Nucleotide
+Keep Linkouts: T
+Keep MBits: T
+Maximum file size: 1073741824B
+Adding sequences from FASTA; added 3 sequences in 0.0123179 seconds.
+140528 11:06:52: Returning 0 from "/usr/local/bin/makeblastdb"
+iteration 1 starting...
+140528 11:06:52: iteration 1 starting...
+	blasting short reads...
+140528 11:06:52: Forking pid 87029: /usr/local/bin/blastn
+140528 11:06:52: Forking pid 87030: /usr/local/bin/blastn
+140528 11:06:52: Forking pid 87031: /usr/local/bin/blastn
+140528 11:06:53: Forking pid 87032: /usr/local/bin/blastn
+140528 11:06:53: Forking pid 87033: /usr/local/bin/blastn
+140528 11:06:53: Forking pid 87034: /usr/local/bin/blastn
+140528 11:06:53: Forking pid 87035: /usr/local/bin/blastn
+140528 11:06:53: DEBUG: waiting for 87029, 87030, 87031, 87032, 87033, 87034, 87035
+140528 11:06:53: DEBUG: waiting for 87029, 87030, 87031, 87032, 87033, 87034
+140528 11:06:53: DEBUG: waiting for 87029, 87030, 87031, 87032, 87033
+140528 11:06:53: DEBUG: waiting for 87029, 87030, 87031, 87032
+140528 11:06:53: DEBUG: waiting for 87029, 87030, 87031
+140528 11:06:53: DEBUG: waiting for 87029, 87030
+140528 11:06:53: DEBUG: waiting for 87029
+	getting paired ends...
+140528 11:06:53: DEBUG: waiting for 87036, 87037, 87038, 87039, 87040, 87041, 87042
+140528 11:06:53: DEBUG: waiting for 87036, 87037, 87038, 87039, 87040, 87041
+140528 11:06:53: DEBUG: waiting for 87036, 87037, 87038, 87039, 87040
+140528 11:06:53: DEBUG: waiting for 87036, 87037, 87038, 87039
+140528 11:06:53: DEBUG: waiting for 87036, 87037, 87038
+140528 11:06:53: DEBUG: waiting for 87036, 87037
+140528 11:06:53: DEBUG: waiting for 87036
+140528 11:06:53: DEBUG: Setting log file to /Users/jallen/Documents/GitHub/aTRAM/test/debug/debug.log
+	assembling pairs with Velvet...
+140528 11:06:53: Running command "/usr/local/bin/velveth /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/ksCPoqZKFg 31 -fasta -shortPaired /Users/jallen/Documents/GitHub/aTRAM/test/debug/test_ap/aTRAM/region.test.1.blast.fasta"
+[0.000001] Reading FastA file /Users/jallen/Documents/GitHub/aTRAM/test/debug/test_ap/aTRAM/region.test.1.blast.fasta;
+[0.000703] 216 sequences found
+[0.000704] Done
+[0.000764] Reading read set file /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/ksCPoqZKFg/Sequences;
+[0.001081] 216 sequences found
+[0.001440] Done
+[0.001441] 216 sequences in total.
+[0.001521] Writing into roadmap file /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/ksCPoqZKFg/Roadmaps...
+[0.001839] Inputting sequences...
+[0.001840] Inputting sequence 0 / 216
+[0.013748]  === Sequences loaded in 0.011910 s
+[0.013812] Done inputting sequences
+[0.013814] Destroying splay table
+[0.015360] Splay table destroyed
+140528 11:06:53: Returning 0 from "/usr/local/bin/velveth"
+140528 11:06:53: Running command "/usr/local/bin/velvetg /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/ksCPoqZKFg -ins_length 400 -exp_cov 30 -min_contig_lgth 200"
+[0.000000] Reading roadmap file /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/ksCPoqZKFg/Roadmaps
+[0.009016] 216 roadmaps read
+[0.009035] Creating insertion markers
+[0.009061] Ordering insertion markers
+[0.009145] Counting preNodes
+[0.009174] 397 preNodes counted, creating them now
+[0.009833] Adjusting marker info...
+[0.009849] Connecting preNodes
+[0.009954] Cleaning up memory
+[0.009957] Done creating preGraph
+[0.009958] Concatenation...
+[0.010142] Renumbering preNodes
+[0.010144] Initial preNode count 397
+[0.010155] Destroyed 350 preNodes
+[0.010156] Concatenation over!
+[0.010156] Clipping short tips off preGraph
+[0.010168] Concatenation...
+[0.010191] Renumbering preNodes
+[0.010192] Initial preNode count 47
+[0.010195] Destroyed 25 preNodes
+[0.010196] Concatenation over!
+[0.010197] 14 tips cut off
+[0.010197] 22 nodes left
+[0.010299] Writing into pregraph file /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/ksCPoqZKFg/PreGraph...
+[0.010581] Reading read set file /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/ksCPoqZKFg/Sequences;
+[0.010640] 216 sequences found
+[0.010889] Done
+[0.011174] Reading pre-graph file /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/ksCPoqZKFg/PreGraph
+[0.025073] Graph has 22 nodes and 216 sequences
+[0.025245] Scanning pre-graph file /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/ksCPoqZKFg/PreGraph for k-mers
+[0.025283] 3037 kmers found
+[0.025514] Sorting kmer occurence table ... 
+[0.026160] Sorting done.
+[0.026162] Computing acceleration table... 
+[0.057090] Computing offsets... 
+[0.057119] Ghost Threading through reads 0 / 216
+[0.058193]  === Ghost-Threaded in 0.001074 s
+[0.058194] Threading through reads 0 / 216
+[0.059164]  === Threaded in 0.000970 s
+[0.069386] Correcting graph with cutoff 0.200000
+[0.069447] Determining eligible starting points
+[0.069467] Done listing starting nodes
+[0.069468] Initializing todo lists
+[0.069473] Done with initilization
+[0.069474] Activating arc lookup table
+[0.069475] Done activating arc lookup table
+[0.069616] Concatenation...
+[0.069617] Renumbering nodes
+[0.069618] Initial node count 22
+[0.069619] Removed 6 null nodes
+[0.069620] Concatenation over!
+[0.069620] Clipping short tips off graph, drastic
+[0.069623] Concatenation...
+[0.069627] Renumbering nodes
+[0.069628] Initial node count 16
+[0.069629] Removed 5 null nodes
+[0.069630] Concatenation over!
+[0.069630] 11 nodes left
+[0.069735] Writing into graph file /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/ksCPoqZKFg/Graph2...
+[0.070373] WARNING: NO COVERAGE CUTOFF PROVIDED
+[0.070375] Velvet will probably leave behind many detectable errors
+[0.070375] See manual for instructions on how to set the coverage cutoff parameter
+[0.070376] Removing contigs with coverage < -1.000000...
+[0.070379] Concatenation...
+[0.070380] Renumbering nodes
+[0.070380] Initial node count 11
+[0.070382] Removed 0 null nodes
+[0.070382] Concatenation over!
+[0.070383] Concatenation...
+[0.070384] Renumbering nodes
+[0.070384] Initial node count 11
+[0.070385] Removed 0 null nodes
+[0.070386] Concatenation over!
+[0.070390] Clipping short tips off graph, drastic
+[0.070391] Concatenation...
+[0.070392] Renumbering nodes
+[0.070392] Initial node count 11
+[0.070393] Removed 0 null nodes
+[0.070394] Concatenation over!
+[0.070394] 11 nodes left
+[0.070395] Read coherency...
+[0.070396] Identifying unique nodes
+[0.070397] Done, 7 unique nodes counted
+[0.070398] Trimming read tips
+[0.070399] Renumbering nodes
+[0.070400] Initial node count 11
+[0.070401] Removed 0 null nodes
+[0.070402] Confronted to 0 multiple hits and 0 null over 0
+[0.070403] Read coherency over!
+[0.070408] Starting pebble resolution...
+[0.070412] Computing read to node mapping array sizes
+[0.070416] Computing read to node mappings
+[0.070421] Estimating library insert lengths...
+[0.070427] Done
+[0.070429] Computing direct node to node mappings
+[0.070452] Scaffolding node 0
+[0.070471]  === Nodes Scaffolded in 0.000041 s
+[0.070486] Preparing to correct graph with cutoff 0.200000
+[0.070602] Cleaning memory
+[0.070763] Deactivating local correction settings
+[0.070801] Pebble done.
+[0.070802] Starting pebble resolution...
+[0.070804] Computing read to node mapping array sizes
+[0.070808] Computing read to node mappings
+[0.070812] Estimating library insert lengths...
+[0.070816] Done
+[0.070816] Computing direct node to node mappings
+[0.070828] Scaffolding node 0
+[0.070838]  === Nodes Scaffolded in 0.000021 s
+[0.070843] Preparing to correct graph with cutoff 0.200000
+[0.070863] Cleaning memory
+[0.070935] Deactivating local correction settings
+[0.070947] Pebble done.
+[0.070948] Concatenation...
+[0.070948] Renumbering nodes
+[0.070949] Initial node count 11
+[0.070951] Removed 2 null nodes
+[0.070951] Concatenation over!
+[0.070955] Removing reference contigs with coverage < -1.000000...
+[0.070957] Concatenation...
+[0.070958] Renumbering nodes
+[0.070958] Initial node count 9
+[0.070959] Removed 0 null nodes
+[0.070960] Concatenation over!
+[0.071049] Writing contigs into /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/ksCPoqZKFg/contigs.fa...
+[0.071570] Writing into stats file /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/ksCPoqZKFg/stats.txt...
+[0.071710] Writing into graph file /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/ksCPoqZKFg/LastGraph...
+Final graph has 9 nodes and n50 of 1958, max 1958, total 2926, using 195/216 reads
+140528 11:06:53: Returning 0 from "/usr/local/bin/velvetg"
+140528 11:06:53: Velvet log:
+140528 11:06:53: Wed May 28 11:06:53 2014
+140528 11:06:53:  /usr/local/bin/velveth /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/ksCPoqZKFg 31 -fasta -shortPaired /Users/jallen/Documents/GitHub/aTRAM/test/debug/test_ap/aTRAM/region.test.1.blast.fasta
+140528 11:06:53: Version 1.2.10
+140528 11:06:53: Copyright 2007, 2008 Daniel Zerbino (zerbino@ebi.ac.uk)
+140528 11:06:53: This is free software; see the source for copying conditions.  There is NO
+140528 11:06:53: warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+140528 11:06:53: Compilation settings:
+140528 11:06:53: CATEGORIES = 2
+140528 11:06:53: MAXKMERLENGTH = 31
+140528 11:06:53: 
+140528 11:06:53: Wed May 28 11:06:53 2014
+140528 11:06:53:  /usr/local/bin/velvetg /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/ksCPoqZKFg -ins_length 400 -exp_cov 30 -min_contig_lgth 200
+140528 11:06:53: Version 1.2.10
+140528 11:06:53: Copyright 2007, 2008 Daniel Zerbino (zerbino@ebi.ac.uk)
+140528 11:06:53: This is free software; see the source for copying conditions.  There is NO
+140528 11:06:53: warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+140528 11:06:53: Compilation settings:
+140528 11:06:53: CATEGORIES = 2
+140528 11:06:53: MAXKMERLENGTH = 31
+140528 11:06:53: 
+140528 11:06:53: Final graph has 9 nodes and n50 of 1958, max 1958, total 2926, using 195/216 reads
+140528 11:06:53: end Velvet log
+	filtering contigs...
+140528 11:06:53: Running command "/usr/local/bin/tblastx -db /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/daU7cpIVc5.db -query /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/R_TC_TT8I_ -out /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/hUkyKyODKn -outfmt '6 qseqid sseqid bitscore qstart qend sstart send qlen'"
+140528 11:06:53: Returning 0 from "/usr/local/bin/tblastx"
+	saving best-scoring contigs...
+140528 11:06:53: 	writing contigs to /Users/jallen/Documents/GitHub/aTRAM/test/debug/test_ap/aTRAM/region.test.all.fasta:
+140528 11:06:53: 		writing out reverse-complement of 1_len_1958_cov_4.8
+140528 11:06:53: 		writing out 3_len_516_cov_5.1
+iteration 2 starting...
+140528 11:06:53: iteration 2 starting...
+	blasting short reads...
+140528 11:06:53: Forking pid 87073: /usr/local/bin/blastn
+140528 11:06:53: Forking pid 87074: /usr/local/bin/blastn
+140528 11:06:53: Forking pid 87075: /usr/local/bin/blastn
+140528 11:06:53: Forking pid 87076: /usr/local/bin/blastn
+140528 11:06:53: Forking pid 87077: /usr/local/bin/blastn
+140528 11:06:53: Forking pid 87078: /usr/local/bin/blastn
+140528 11:06:53: Forking pid 87079: /usr/local/bin/blastn
+140528 11:06:53: DEBUG: waiting for 87073, 87074, 87075, 87076, 87077, 87078, 87079
+140528 11:06:54: DEBUG: waiting for 87073, 87074, 87075, 87076, 87077, 87078
+140528 11:06:54: DEBUG: waiting for 87073, 87074, 87075, 87076, 87077
+140528 11:06:54: DEBUG: waiting for 87073, 87074, 87075, 87076
+140528 11:06:54: DEBUG: waiting for 87073, 87074, 87075
+140528 11:06:54: DEBUG: waiting for 87073, 87074
+140528 11:06:54: DEBUG: waiting for 87073
+	getting paired ends...
+140528 11:06:54: DEBUG: waiting for 87080, 87081, 87082, 87083, 87084, 87085, 87086
+140528 11:06:54: DEBUG: waiting for 87080, 87081, 87082, 87083, 87084, 87085
+140528 11:06:54: DEBUG: waiting for 87080, 87081, 87082, 87083, 87084
+140528 11:06:54: DEBUG: waiting for 87080, 87081, 87082, 87083
+140528 11:06:54: DEBUG: waiting for 87080, 87081, 87082
+140528 11:06:54: DEBUG: waiting for 87080, 87081
+140528 11:06:54: DEBUG: waiting for 87080
+140528 11:06:54: DEBUG: Setting log file to /Users/jallen/Documents/GitHub/aTRAM/test/debug/debug.log
+	assembling pairs with Velvet...
+140528 11:06:54: Running command "/usr/local/bin/velveth /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/ksCPoqZKFg 31 -fasta -shortPaired /Users/jallen/Documents/GitHub/aTRAM/test/debug/test_ap/aTRAM/region.test.2.blast.fasta -long /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/S6eI7MWuFX"
+[0.000000] Reading FastA file /Users/jallen/Documents/GitHub/aTRAM/test/debug/test_ap/aTRAM/region.test.2.blast.fasta;
+[0.000995] 208 sequences found
+[0.000997] Done
+[0.001015] Reading FastA file /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/S6eI7MWuFX;
+[0.001099] 2 sequences found
+[0.001100] Done
+[0.001160] Reading read set file /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/ksCPoqZKFg/Sequences;
+[0.001461] 210 sequences found
+[0.001854] Done
+[0.001856] 210 sequences in total.
+[0.001890] Writing into roadmap file /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/ksCPoqZKFg/Roadmaps...
+[0.002488] Inputting sequences...
+[0.002491] Inputting sequence 0 / 210
+[0.015440]  === Sequences loaded in 0.012953 s
+[0.015514] Done inputting sequences
+[0.015515] Destroying splay table
+[0.017455] Splay table destroyed
+140528 11:06:54: Returning 0 from "/usr/local/bin/velveth"
+140528 11:06:54: Running command "/usr/local/bin/velvetg /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/ksCPoqZKFg -ins_length 400 -exp_cov 30 -min_contig_lgth 200"
+[0.000000] Reading roadmap file /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/ksCPoqZKFg/Roadmaps
+[0.000650] 210 roadmaps read
+[0.000666] Creating insertion markers
+[0.000693] Ordering insertion markers
+[0.000791] Counting preNodes
+[0.000822] 382 preNodes counted, creating them now
+[0.001567] Adjusting marker info...
+[0.001586] Connecting preNodes
+[0.001700] Cleaning up memory
+[0.001702] Done creating preGraph
+[0.001703] Concatenation...
+[0.001887] Renumbering preNodes
+[0.001888] Initial preNode count 382
+[0.001897] Destroyed 342 preNodes
+[0.001899] Concatenation over!
+[0.001899] Clipping short tips off preGraph
+[0.001909] Concatenation...
+[0.001930] Renumbering preNodes
+[0.001931] Initial preNode count 40
+[0.001934] Destroyed 22 preNodes
+[0.001935] Concatenation over!
+[0.001935] 11 tips cut off
+[0.001936] 18 nodes left
+[0.002020] Writing into pregraph file /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/ksCPoqZKFg/PreGraph...
+[0.002449] Reading read set file /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/ksCPoqZKFg/Sequences;
+[0.002555] 210 sequences found
+[0.002933] Done
+[0.003323] Reading pre-graph file /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/ksCPoqZKFg/PreGraph
+[0.003335] Graph has 18 nodes and 210 sequences
+[0.003474] Scanning pre-graph file /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/ksCPoqZKFg/PreGraph for k-mers
+[0.003512] 3046 kmers found
+[0.003700] Sorting kmer occurence table ... 
+[0.004486] Sorting done.
+[0.004487] Computing acceleration table... 
+[0.045205] Computing offsets... 
+[0.045239] Ghost Threading through reads 0 / 210
+[0.046753]  === Ghost-Threaded in 0.001514 s
+[0.046755] Threading through reads 0 / 210
+[0.048350]  === Threaded in 0.001596 s
+[0.059471] Correcting graph with cutoff 0.200000
+[0.059530] Determining eligible starting points
+[0.059553] Done listing starting nodes
+[0.059554] Initializing todo lists
+[0.059561] Done with initilization
+[0.059562] Activating arc lookup table
+[0.059563] Done activating arc lookup table
+[0.059712] Concatenation...
+[0.059713] Renumbering nodes
+[0.059714] Initial node count 18
+[0.059716] Removed 6 null nodes
+[0.059717] Concatenation over!
+[0.059717] Clipping short tips off graph, drastic
+[0.059719] Concatenation...
+[0.059720] Renumbering nodes
+[0.059720] Initial node count 12
+[0.059721] Removed 0 null nodes
+[0.059722] Concatenation over!
+[0.059722] 12 nodes left
+[0.059840] Writing into graph file /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/ksCPoqZKFg/Graph2...
+[0.060628] WARNING: NO COVERAGE CUTOFF PROVIDED
+[0.060629] Velvet will probably leave behind many detectable errors
+[0.060630] See manual for instructions on how to set the coverage cutoff parameter
+[0.060631] Removing contigs with coverage < -1.000000...
+[0.060634] Concatenation...
+[0.060635] Renumbering nodes
+[0.060635] Initial node count 12
+[0.060636] Removed 0 null nodes
+[0.060637] Concatenation over!
+[0.060638] Concatenation...
+[0.060639] Renumbering nodes
+[0.060639] Initial node count 12
+[0.060640] Removed 0 null nodes
+[0.060641] Concatenation over!
+[0.060644] Clipping short tips off graph, drastic
+[0.060646] Concatenation...
+[0.060647] Renumbering nodes
+[0.060647] Initial node count 12
+[0.060648] Removed 0 null nodes
+[0.060649] Concatenation over!
+[0.060649] 12 nodes left
+[0.060650] Read coherency...
+[0.060651] Identifying unique nodes
+[0.060652] Done, 8 unique nodes counted
+[0.060653] Trimming read tips
+[0.060656] Renumbering nodes
+[0.060657] Initial node count 12
+[0.060658] Removed 0 null nodes
+[0.060659] Confronted to 0 multiple hits and 4 null over 4
+[0.060660] Read coherency over!
+[0.060666] Starting pebble resolution...
+[0.060670] Computing read to node mapping array sizes
+[0.060674] Computing read to node mappings
+[0.060680] Estimating library insert lengths...
+[0.060686] Done
+[0.060688] Computing direct node to node mappings
+[0.060713] Scaffolding node 0
+[0.060735]  === Nodes Scaffolded in 0.000046 s
+[0.060750] Preparing to correct graph with cutoff 0.200000
+[0.060860] Cleaning memory
+[0.061136] Deactivating local correction settings
+[0.061217] Pebble done.
+[0.061218] Starting pebble resolution...
+[0.061220] Computing read to node mapping array sizes
+[0.061225] Computing read to node mappings
+[0.061229] Estimating library insert lengths...
+[0.061233] Done
+[0.061233] Computing direct node to node mappings
+[0.061243] Scaffolding node 0
+[0.061255]  === Nodes Scaffolded in 0.000021 s
+[0.061260] Preparing to correct graph with cutoff 0.200000
+[0.061280] Cleaning memory
+[0.061370] Deactivating local correction settings
+[0.061385] Pebble done.
+[0.061386] Concatenation...
+[0.061387] Renumbering nodes
+[0.061387] Initial node count 12
+[0.061389] Removed 2 null nodes
+[0.061389] Concatenation over!
+[0.061393] Removing reference contigs with coverage < -1.000000...
+[0.061395] Concatenation...
+[0.061396] Renumbering nodes
+[0.061396] Initial node count 10
+[0.061397] Removed 0 null nodes
+[0.061398] Concatenation over!
+[0.061431] Writing contigs into /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/ksCPoqZKFg/contigs.fa...
+[0.061972] Writing into stats file /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/ksCPoqZKFg/stats.txt...
+[0.062059] Writing into graph file /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/ksCPoqZKFg/LastGraph...
+Final graph has 10 nodes and n50 of 2123, max 2123, total 3046, using 198/210 reads
+140528 11:06:54: Returning 0 from "/usr/local/bin/velvetg"
+140528 11:06:54: Velvet log:
+140528 11:06:54: Wed May 28 11:06:54 2014
+140528 11:06:54:  /usr/local/bin/velveth /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/ksCPoqZKFg 31 -fasta -shortPaired /Users/jallen/Documents/GitHub/aTRAM/test/debug/test_ap/aTRAM/region.test.2.blast.fasta -long /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/S6eI7MWuFX
+140528 11:06:54: Version 1.2.10
+140528 11:06:54: Copyright 2007, 2008 Daniel Zerbino (zerbino@ebi.ac.uk)
+140528 11:06:54: This is free software; see the source for copying conditions.  There is NO
+140528 11:06:54: warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+140528 11:06:54: Compilation settings:
+140528 11:06:54: CATEGORIES = 2
+140528 11:06:54: MAXKMERLENGTH = 31
+140528 11:06:54: 
+140528 11:06:54: Wed May 28 11:06:54 2014
+140528 11:06:54:  /usr/local/bin/velvetg /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/ksCPoqZKFg -ins_length 400 -exp_cov 30 -min_contig_lgth 200
+140528 11:06:54: Version 1.2.10
+140528 11:06:54: Copyright 2007, 2008 Daniel Zerbino (zerbino@ebi.ac.uk)
+140528 11:06:54: This is free software; see the source for copying conditions.  There is NO
+140528 11:06:54: warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+140528 11:06:54: Compilation settings:
+140528 11:06:54: CATEGORIES = 2
+140528 11:06:54: MAXKMERLENGTH = 31
+140528 11:06:54: 
+140528 11:06:54: Final graph has 10 nodes and n50 of 2123, max 2123, total 3046, using 198/210 reads
+140528 11:06:54: end Velvet log
+	filtering contigs...
+140528 11:06:54: Running command "/usr/local/bin/tblastx -db /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/daU7cpIVc5.db -query /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/tp1nXRsHAN -out /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/sLCB61MseB -outfmt '6 qseqid sseqid bitscore qstart qend sstart send qlen'"
+140528 11:06:54: Returning 0 from "/usr/local/bin/tblastx"
+	saving best-scoring contigs...
+140528 11:06:54: 	writing contigs to /Users/jallen/Documents/GitHub/aTRAM/test/debug/test_ap/aTRAM/region.test.all.fasta:
+140528 11:06:54: 		writing out 1_len_2123_cov_5.5
+140528 11:06:54: 		writing out reverse-complement of 2_len_516_cov_5.4
+iteration 3 starting...
+140528 11:06:54: iteration 3 starting...
+	blasting short reads...
+140528 11:06:54: Forking pid 87117: /usr/local/bin/blastn
+140528 11:06:54: Forking pid 87118: /usr/local/bin/blastn
+140528 11:06:54: Forking pid 87119: /usr/local/bin/blastn
+140528 11:06:54: Forking pid 87120: /usr/local/bin/blastn
+140528 11:06:54: Forking pid 87121: /usr/local/bin/blastn
+140528 11:06:54: Forking pid 87122: /usr/local/bin/blastn
+140528 11:06:54: Forking pid 87123: /usr/local/bin/blastn
+140528 11:06:54: DEBUG: waiting for 87117, 87118, 87119, 87120, 87121, 87122, 87123
+140528 11:06:54: DEBUG: waiting for 87117, 87118, 87119, 87120, 87121, 87122
+140528 11:06:54: DEBUG: waiting for 87117, 87118, 87119, 87120, 87121
+140528 11:06:54: DEBUG: waiting for 87117, 87118, 87119, 87120
+140528 11:06:54: DEBUG: waiting for 87117, 87118, 87119
+140528 11:06:54: DEBUG: waiting for 87117, 87118
+140528 11:06:54: DEBUG: waiting for 87117
+	getting paired ends...
+140528 11:06:54: DEBUG: waiting for 87124, 87125, 87126, 87127, 87128, 87132, 87133
+140528 11:06:55: DEBUG: waiting for 87124, 87125, 87126, 87127, 87128, 87132
+140528 11:06:55: DEBUG: waiting for 87124, 87125, 87126, 87127, 87128
+140528 11:06:55: DEBUG: waiting for 87124, 87125, 87126, 87127
+140528 11:06:55: DEBUG: waiting for 87124, 87125, 87126
+140528 11:06:55: DEBUG: waiting for 87124, 87125
+140528 11:06:55: DEBUG: waiting for 87124
+140528 11:06:55: DEBUG: Setting log file to /Users/jallen/Documents/GitHub/aTRAM/test/debug/debug.log
+	assembling pairs with Velvet...
+140528 11:06:55: Running command "/usr/local/bin/velveth /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/ksCPoqZKFg 31 -fasta -shortPaired /Users/jallen/Documents/GitHub/aTRAM/test/debug/test_ap/aTRAM/region.test.3.blast.fasta -long /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/Ij9bu_2KVs"
+[0.000000] Reading FastA file /Users/jallen/Documents/GitHub/aTRAM/test/debug/test_ap/aTRAM/region.test.3.blast.fasta;
+[0.000582] 226 sequences found
+[0.000583] Done
+[0.000597] Reading FastA file /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/Ij9bu_2KVs;
+[0.000660] 2 sequences found
+[0.000661] Done
+[0.000723] Reading read set file /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/ksCPoqZKFg/Sequences;
+[0.001000] 228 sequences found
+[0.001252] Done
+[0.001253] 228 sequences in total.
+[0.001275] Writing into roadmap file /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/ksCPoqZKFg/Roadmaps...
+[0.001578] Inputting sequences...
+[0.001579] Inputting sequence 0 / 228
+[0.012820]  === Sequences loaded in 0.011244 s
+[0.012901] Done inputting sequences
+[0.012903] Destroying splay table
+[0.014941] Splay table destroyed
+140528 11:06:55: Returning 0 from "/usr/local/bin/velveth"
+140528 11:06:55: Running command "/usr/local/bin/velvetg /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/ksCPoqZKFg -ins_length 400 -exp_cov 30 -min_contig_lgth 200"
+[0.000000] Reading roadmap file /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/ksCPoqZKFg/Roadmaps
+[0.000429] 228 roadmaps read
+[0.000439] Creating insertion markers
+[0.000460] Ordering insertion markers
+[0.000534] Counting preNodes
+[0.000559] 419 preNodes counted, creating them now
+[0.001109] Adjusting marker info...
+[0.001124] Connecting preNodes
+[0.001212] Cleaning up memory
+[0.001214] Done creating preGraph
+[0.001214] Concatenation...
+[0.001348] Renumbering preNodes
+[0.001348] Initial preNode count 419
+[0.001356] Destroyed 379 preNodes
+[0.001356] Concatenation over!
+[0.001357] Clipping short tips off preGraph
+[0.001363] Concatenation...
+[0.001376] Renumbering preNodes
+[0.001377] Initial preNode count 40
+[0.001379] Destroyed 20 preNodes
+[0.001379] Concatenation over!
+[0.001380] 10 tips cut off
+[0.001380] 20 nodes left
+[0.001447] Writing into pregraph file /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/ksCPoqZKFg/PreGraph...
+[0.001812] Reading read set file /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/ksCPoqZKFg/Sequences;
+[0.001914] 228 sequences found
+[0.002242] Done
+[0.002635] Reading pre-graph file /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/ksCPoqZKFg/PreGraph
+[0.002650] Graph has 20 nodes and 228 sequences
+[0.002799] Scanning pre-graph file /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/ksCPoqZKFg/PreGraph for k-mers
+[0.002834] 3256 kmers found
+[0.003023] Sorting kmer occurence table ... 
+[0.003681] Sorting done.
+[0.003682] Computing acceleration table... 
+[0.037803] Computing offsets... 
+[0.037838] Ghost Threading through reads 0 / 228
+[0.039341]  === Ghost-Threaded in 0.001503 s
+[0.039342] Threading through reads 0 / 228
+[0.040959]  === Threaded in 0.001617 s
+[0.051381] Correcting graph with cutoff 0.200000
+[0.051438] Determining eligible starting points
+[0.051460] Done listing starting nodes
+[0.051461] Initializing todo lists
+[0.051469] Done with initilization
+[0.051469] Activating arc lookup table
+[0.051471] Done activating arc lookup table
+[0.051717] Concatenation...
+[0.051719] Renumbering nodes
+[0.051720] Initial node count 20
+[0.051722] Removed 12 null nodes
+[0.051723] Concatenation over!
+[0.051724] Clipping short tips off graph, drastic
+[0.051725] Concatenation...
+[0.051725] Renumbering nodes
+[0.051726] Initial node count 8
+[0.051727] Removed 0 null nodes
+[0.051728] Concatenation over!
+[0.051728] 8 nodes left
+[0.051867] Writing into graph file /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/ksCPoqZKFg/Graph2...
+[0.052518] WARNING: NO COVERAGE CUTOFF PROVIDED
+[0.052519] Velvet will probably leave behind many detectable errors
+[0.052519] See manual for instructions on how to set the coverage cutoff parameter
+[0.052520] Removing contigs with coverage < -1.000000...
+[0.052522] Concatenation...
+[0.052523] Renumbering nodes
+[0.052523] Initial node count 8
+[0.052524] Removed 0 null nodes
+[0.052524] Concatenation over!
+[0.052525] Concatenation...
+[0.052525] Renumbering nodes
+[0.052526] Initial node count 8
+[0.052526] Removed 0 null nodes
+[0.052527] Concatenation over!
+[0.052530] Clipping short tips off graph, drastic
+[0.052531] Concatenation...
+[0.052531] Renumbering nodes
+[0.052531] Initial node count 8
+[0.052532] Removed 0 null nodes
+[0.052532] Concatenation over!
+[0.052533] 8 nodes left
+[0.052533] Read coherency...
+[0.052534] Identifying unique nodes
+[0.052535] Done, 6 unique nodes counted
+[0.052535] Trimming read tips
+[0.052537] Renumbering nodes
+[0.052537] Initial node count 8
+[0.052538] Removed 0 null nodes
+[0.052539] Confronted to 0 multiple hits and 2 null over 2
+[0.052540] Read coherency over!
+[0.052544] Starting pebble resolution...
+[0.052547] Computing read to node mapping array sizes
+[0.052550] Computing read to node mappings
+[0.052554] Estimating library insert lengths...
+[0.052558] Done
+[0.052560] Computing direct node to node mappings
+[0.052576] Scaffolding node 0
+[0.052590]  === Nodes Scaffolded in 0.000030 s
+[0.052602] Preparing to correct graph with cutoff 0.200000
+[0.052674] Cleaning memory
+[0.053029] Deactivating local correction settings
+[0.053038] Pebble done.
+[0.053038] Starting pebble resolution...
+[0.053040] Computing read to node mapping array sizes
+[0.053043] Computing read to node mappings
+[0.053046] Estimating library insert lengths...
+[0.053049] Done
+[0.053049] Computing direct node to node mappings
+[0.053056] Scaffolding node 0
+[0.053063]  === Nodes Scaffolded in 0.000013 s
+[0.053067] Preparing to correct graph with cutoff 0.200000
+[0.053079] Cleaning memory
+[0.053187] Deactivating local correction settings
+[0.053195] Pebble done.
+[0.053195] Concatenation...
+[0.053196] Renumbering nodes
+[0.053196] Initial node count 8
+[0.053197] Removed 1 null nodes
+[0.053197] Concatenation over!
+[0.053200] Removing reference contigs with coverage < -1.000000...
+[0.053202] Concatenation...
+[0.053202] Renumbering nodes
+[0.053202] Initial node count 7
+[0.053203] Removed 0 null nodes
+[0.053203] Concatenation over!
+[0.053230] Writing contigs into /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/ksCPoqZKFg/contigs.fa...
+[0.053596] Writing into stats file /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/ksCPoqZKFg/stats.txt...
+[0.053652] Writing into graph file /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/ksCPoqZKFg/LastGraph...
+Final graph has 7 nodes and n50 of 2346, max 2346, total 3163, using 218/228 reads
+140528 11:06:55: Returning 0 from "/usr/local/bin/velvetg"
+140528 11:06:55: Velvet log:
+140528 11:06:55: Wed May 28 11:06:55 2014
+140528 11:06:55:  /usr/local/bin/velveth /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/ksCPoqZKFg 31 -fasta -shortPaired /Users/jallen/Documents/GitHub/aTRAM/test/debug/test_ap/aTRAM/region.test.3.blast.fasta -long /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/Ij9bu_2KVs
+140528 11:06:55: Version 1.2.10
+140528 11:06:55: Copyright 2007, 2008 Daniel Zerbino (zerbino@ebi.ac.uk)
+140528 11:06:55: This is free software; see the source for copying conditions.  There is NO
+140528 11:06:55: warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+140528 11:06:55: Compilation settings:
+140528 11:06:55: CATEGORIES = 2
+140528 11:06:55: MAXKMERLENGTH = 31
+140528 11:06:55: 
+140528 11:06:55: Wed May 28 11:06:55 2014
+140528 11:06:55:  /usr/local/bin/velvetg /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/ksCPoqZKFg -ins_length 400 -exp_cov 30 -min_contig_lgth 200
+140528 11:06:55: Version 1.2.10
+140528 11:06:55: Copyright 2007, 2008 Daniel Zerbino (zerbino@ebi.ac.uk)
+140528 11:06:55: This is free software; see the source for copying conditions.  There is NO
+140528 11:06:55: warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+140528 11:06:55: Compilation settings:
+140528 11:06:55: CATEGORIES = 2
+140528 11:06:55: MAXKMERLENGTH = 31
+140528 11:06:55: 
+140528 11:06:55: Final graph has 7 nodes and n50 of 2346, max 2346, total 3163, using 218/228 reads
+140528 11:06:55: end Velvet log
+	filtering contigs...
+140528 11:06:55: Running command "/usr/local/bin/tblastx -db /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/daU7cpIVc5.db -query /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/Ye5gDk6R3x -out /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/xBHhn08yl3 -outfmt '6 qseqid sseqid bitscore qstart qend sstart send qlen'"
+140528 11:06:55: Returning 0 from "/usr/local/bin/tblastx"
+	saving best-scoring contigs...
+140528 11:06:55: 	writing contigs to /Users/jallen/Documents/GitHub/aTRAM/test/debug/test_ap/aTRAM/region.test.all.fasta:
+140528 11:06:55: 		writing out reverse-complement of 2_len_497_cov_5.7
+140528 11:06:55: 		writing out 4_len_2346_cov_5.7
+iteration 4 starting...
+140528 11:06:55: iteration 4 starting...
+	blasting short reads...
+140528 11:06:55: Forking pid 87161: /usr/local/bin/blastn
+140528 11:06:55: Forking pid 87162: /usr/local/bin/blastn
+140528 11:06:55: Forking pid 87163: /usr/local/bin/blastn
+140528 11:06:55: Forking pid 87164: /usr/local/bin/blastn
+140528 11:06:55: Forking pid 87165: /usr/local/bin/blastn
+140528 11:06:55: Forking pid 87166: /usr/local/bin/blastn
+140528 11:06:55: Forking pid 87167: /usr/local/bin/blastn
+140528 11:06:55: DEBUG: waiting for 87161, 87162, 87163, 87164, 87165, 87166, 87167
+140528 11:06:55: DEBUG: waiting for 87161, 87162, 87163, 87164, 87165, 87166
+140528 11:06:55: DEBUG: waiting for 87161, 87162, 87163, 87164, 87165
+140528 11:06:55: DEBUG: waiting for 87161, 87162, 87163, 87164
+140528 11:06:55: DEBUG: waiting for 87161, 87162, 87163
+140528 11:06:55: DEBUG: waiting for 87161, 87162
+140528 11:06:55: DEBUG: waiting for 87161
+	getting paired ends...
+140528 11:06:55: DEBUG: waiting for 87169, 87170, 87171, 87174, 87175, 87176, 87177
+140528 11:06:55: DEBUG: waiting for 87169, 87170, 87171, 87174, 87175, 87176
+140528 11:06:55: DEBUG: waiting for 87169, 87170, 87171, 87174, 87175
+140528 11:06:55: DEBUG: waiting for 87169, 87170, 87171, 87174
+140528 11:06:55: DEBUG: waiting for 87169, 87170, 87171
+140528 11:06:55: DEBUG: waiting for 87169, 87170
+140528 11:06:55: DEBUG: waiting for 87169
+140528 11:06:55: DEBUG: Setting log file to /Users/jallen/Documents/GitHub/aTRAM/test/debug/debug.log
+	assembling pairs with Velvet...
+140528 11:06:55: Running command "/usr/local/bin/velveth /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/ksCPoqZKFg 31 -fasta -shortPaired /Users/jallen/Documents/GitHub/aTRAM/test/debug/test_ap/aTRAM/region.test.4.blast.fasta -long /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/8kSMHUaXjO"
+[0.000000] Reading FastA file /Users/jallen/Documents/GitHub/aTRAM/test/debug/test_ap/aTRAM/region.test.4.blast.fasta;
+[0.000765] 248 sequences found
+[0.000766] Done
+[0.000784] Reading FastA file /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/8kSMHUaXjO;
+[0.000874] 2 sequences found
+[0.000875] Done
+[0.000935] Reading read set file /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/ksCPoqZKFg/Sequences;
+[0.001266] 250 sequences found
+[0.001705] Done
+[0.001706] 250 sequences in total.
+[0.001736] Writing into roadmap file /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/ksCPoqZKFg/Roadmaps...
+[0.002192] Inputting sequences...
+[0.002194] Inputting sequence 0 / 250
+[0.014944]  === Sequences loaded in 0.012754 s
+[0.015022] Done inputting sequences
+[0.015023] Destroying splay table
+[0.017156] Splay table destroyed
+140528 11:06:56: Returning 0 from "/usr/local/bin/velveth"
+140528 11:06:56: Running command "/usr/local/bin/velvetg /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/ksCPoqZKFg -ins_length 400 -exp_cov 30 -min_contig_lgth 200"
+[0.000000] Reading roadmap file /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/ksCPoqZKFg/Roadmaps
+[0.000666] 250 roadmaps read
+[0.000681] Creating insertion markers
+[0.000704] Ordering insertion markers
+[0.000785] Counting preNodes
+[0.000812] 461 preNodes counted, creating them now
+[0.001417] Adjusting marker info...
+[0.001434] Connecting preNodes
+[0.001542] Cleaning up memory
+[0.001544] Done creating preGraph
+[0.001544] Concatenation...
+[0.001690] Renumbering preNodes
+[0.001691] Initial preNode count 461
+[0.001699] Destroyed 419 preNodes
+[0.001700] Concatenation over!
+[0.001700] Clipping short tips off preGraph
+[0.001707] Concatenation...
+[0.001720] Renumbering preNodes
+[0.001720] Initial preNode count 42
+[0.001723] Destroyed 20 preNodes
+[0.001723] Concatenation over!
+[0.001724] 10 tips cut off
+[0.001724] 22 nodes left
+[0.001794] Writing into pregraph file /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/ksCPoqZKFg/PreGraph...
+[0.002245] Reading read set file /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/ksCPoqZKFg/Sequences;
+[0.002351] 250 sequences found
+[0.002719] Done
+[0.003146] Reading pre-graph file /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/ksCPoqZKFg/PreGraph
+[0.003161] Graph has 22 nodes and 250 sequences
+[0.003329] Scanning pre-graph file /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/ksCPoqZKFg/PreGraph for k-mers
+[0.003372] 3524 kmers found
+[0.003585] Sorting kmer occurence table ... 
+[0.004274] Sorting done.
+[0.004275] Computing acceleration table... 
+[0.039095] Computing offsets... 
+[0.039126] Ghost Threading through reads 0 / 250
+[0.040892]  === Ghost-Threaded in 0.001766 s
+[0.040894] Threading through reads 0 / 250
+[0.042714]  === Threaded in 0.001820 s
+[0.053620] Correcting graph with cutoff 0.200000
+[0.053675] Determining eligible starting points
+[0.053698] Done listing starting nodes
+[0.053699] Initializing todo lists
+[0.053706] Done with initilization
+[0.053707] Activating arc lookup table
+[0.053709] Done activating arc lookup table
+[0.053974] Concatenation...
+[0.053976] Renumbering nodes
+[0.053977] Initial node count 22
+[0.053979] Removed 12 null nodes
+[0.053980] Concatenation over!
+[0.053981] Clipping short tips off graph, drastic
+[0.053982] Concatenation...
+[0.053983] Renumbering nodes
+[0.053983] Initial node count 10
+[0.053984] Removed 0 null nodes
+[0.053985] Concatenation over!
+[0.053986] 10 nodes left
+[0.054111] Writing into graph file /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/ksCPoqZKFg/Graph2...
+[0.054940] WARNING: NO COVERAGE CUTOFF PROVIDED
+[0.054941] Velvet will probably leave behind many detectable errors
+[0.054941] See manual for instructions on how to set the coverage cutoff parameter
+[0.054942] Removing contigs with coverage < -1.000000...
+[0.054944] Concatenation...
+[0.054945] Renumbering nodes
+[0.054945] Initial node count 10
+[0.054946] Removed 0 null nodes
+[0.054947] Concatenation over!
+[0.054947] Concatenation...
+[0.054948] Renumbering nodes
+[0.054948] Initial node count 10
+[0.054948] Removed 0 null nodes
+[0.054949] Concatenation over!
+[0.054952] Clipping short tips off graph, drastic
+[0.054953] Concatenation...
+[0.054953] Renumbering nodes
+[0.054953] Initial node count 10
+[0.054954] Removed 0 null nodes
+[0.054954] Concatenation over!
+[0.054955] 10 nodes left
+[0.054956] Read coherency...
+[0.054956] Identifying unique nodes
+[0.054957] Done, 6 unique nodes counted
+[0.054957] Trimming read tips
+[0.054960] Renumbering nodes
+[0.054960] Initial node count 10
+[0.054961] Removed 0 null nodes
+[0.054962] Confronted to 0 multiple hits and 4 null over 4
+[0.054962] Read coherency over!
+[0.054966] Starting pebble resolution...
+[0.054970] Computing read to node mapping array sizes
+[0.054974] Computing read to node mappings
+[0.054978] Estimating library insert lengths...
+[0.054983] Done
+[0.054985] Computing direct node to node mappings
+[0.055003] Scaffolding node 0
+[0.055019]  === Nodes Scaffolded in 0.000034 s
+[0.055031] Preparing to correct graph with cutoff 0.200000
+[0.055153] Cleaning memory
+[0.055395] Deactivating local correction settings
+[0.055444] Pebble done.
+[0.055444] Starting pebble resolution...
+[0.055446] Computing read to node mapping array sizes
+[0.055450] Computing read to node mappings
+[0.055453] Estimating library insert lengths...
+[0.055456] Done
+[0.055456] Computing direct node to node mappings
+[0.055465] Scaffolding node 0
+[0.055474]  === Nodes Scaffolded in 0.000018 s
+[0.055478] Preparing to correct graph with cutoff 0.200000
+[0.055489] Cleaning memory
+[0.055564] Deactivating local correction settings
+[0.055572] Pebble done.
+[0.055573] Concatenation...
+[0.055573] Renumbering nodes
+[0.055574] Initial node count 10
+[0.055575] Removed 2 null nodes
+[0.055575] Concatenation over!
+[0.055578] Removing reference contigs with coverage < -1.000000...
+[0.055580] Concatenation...
+[0.055580] Renumbering nodes
+[0.055580] Initial node count 8
+[0.055581] Removed 0 null nodes
+[0.055581] Concatenation over!
+[0.055608] Writing contigs into /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/ksCPoqZKFg/contigs.fa...
+[0.056011] Writing into stats file /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/ksCPoqZKFg/stats.txt...
+[0.056068] Writing into graph file /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/ksCPoqZKFg/LastGraph...
+Final graph has 8 nodes and n50 of 2701, max 2701, total 3462, using 244/250 reads
+140528 11:06:56: Returning 0 from "/usr/local/bin/velvetg"
+140528 11:06:56: Velvet log:
+140528 11:06:56: Wed May 28 11:06:55 2014
+140528 11:06:56:  /usr/local/bin/velveth /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/ksCPoqZKFg 31 -fasta -shortPaired /Users/jallen/Documents/GitHub/aTRAM/test/debug/test_ap/aTRAM/region.test.4.blast.fasta -long /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/8kSMHUaXjO
+140528 11:06:56: Version 1.2.10
+140528 11:06:56: Copyright 2007, 2008 Daniel Zerbino (zerbino@ebi.ac.uk)
+140528 11:06:56: This is free software; see the source for copying conditions.  There is NO
+140528 11:06:56: warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+140528 11:06:56: Compilation settings:
+140528 11:06:56: CATEGORIES = 2
+140528 11:06:56: MAXKMERLENGTH = 31
+140528 11:06:56: 
+140528 11:06:56: Wed May 28 11:06:56 2014
+140528 11:06:56:  /usr/local/bin/velvetg /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/ksCPoqZKFg -ins_length 400 -exp_cov 30 -min_contig_lgth 200
+140528 11:06:56: Version 1.2.10
+140528 11:06:56: Copyright 2007, 2008 Daniel Zerbino (zerbino@ebi.ac.uk)
+140528 11:06:56: This is free software; see the source for copying conditions.  There is NO
+140528 11:06:56: warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+140528 11:06:56: Compilation settings:
+140528 11:06:56: CATEGORIES = 2
+140528 11:06:56: MAXKMERLENGTH = 31
+140528 11:06:56: 
+140528 11:06:56: Final graph has 8 nodes and n50 of 2701, max 2701, total 3462, using 244/250 reads
+140528 11:06:56: end Velvet log
+	filtering contigs...
+140528 11:06:56: Running command "/usr/local/bin/tblastx -db /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/daU7cpIVc5.db -query /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/FzO3e5LsGU -out /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/WJ4PRrzgwh -outfmt '6 qseqid sseqid bitscore qstart qend sstart send qlen'"
+140528 11:06:56: Returning 0 from "/usr/local/bin/tblastx"
+	saving best-scoring contigs...
+140528 11:06:56: 	writing contigs to /Users/jallen/Documents/GitHub/aTRAM/test/debug/test_ap/aTRAM/region.test.all.fasta:
+140528 11:06:56: 		writing out reverse-complement of 2_len_497_cov_5.9
+140528 11:06:56: 		writing out 1_len_2701_cov_5.6
+iteration 5 starting...
+140528 11:06:56: iteration 5 starting...
+	blasting short reads...
+140528 11:06:56: Forking pid 87206: /usr/local/bin/blastn
+140528 11:06:56: Forking pid 87207: /usr/local/bin/blastn
+140528 11:06:56: Forking pid 87208: /usr/local/bin/blastn
+140528 11:06:56: Forking pid 87209: /usr/local/bin/blastn
+140528 11:06:56: Forking pid 87210: /usr/local/bin/blastn
+140528 11:06:56: Forking pid 87211: /usr/local/bin/blastn
+140528 11:06:56: Forking pid 87212: /usr/local/bin/blastn
+140528 11:06:56: DEBUG: waiting for 87206, 87207, 87208, 87209, 87210, 87211, 87212
+140528 11:06:56: DEBUG: waiting for 87206, 87207, 87208, 87209, 87210, 87211
+140528 11:06:56: DEBUG: waiting for 87206, 87207, 87208, 87209, 87210
+140528 11:06:56: DEBUG: waiting for 87206, 87207, 87208, 87209
+140528 11:06:56: DEBUG: waiting for 87206, 87207, 87208
+140528 11:06:56: DEBUG: waiting for 87206, 87207
+140528 11:06:56: DEBUG: waiting for 87206
+	getting paired ends...
+140528 11:06:56: DEBUG: waiting for 87213, 87214, 87215, 87216, 87217, 87218, 87219
+140528 11:06:56: DEBUG: waiting for 87213, 87214, 87215, 87216, 87217, 87218
+140528 11:06:56: DEBUG: waiting for 87213, 87214, 87215, 87216, 87217
+140528 11:06:56: DEBUG: waiting for 87213, 87214, 87215, 87216
+140528 11:06:56: DEBUG: waiting for 87213, 87214, 87215
+140528 11:06:56: DEBUG: waiting for 87213, 87214
+140528 11:06:56: DEBUG: waiting for 87213
+140528 11:06:56: DEBUG: Setting log file to /Users/jallen/Documents/GitHub/aTRAM/test/debug/debug.log
+	assembling pairs with Velvet...
+140528 11:06:56: Running command "/usr/local/bin/velveth /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/ksCPoqZKFg 31 -fasta -shortPaired /Users/jallen/Documents/GitHub/aTRAM/test/debug/test_ap/aTRAM/region.test.5.blast.fasta -long /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/39YXPPR_hx"
+[0.000000] Reading FastA file /Users/jallen/Documents/GitHub/aTRAM/test/debug/test_ap/aTRAM/region.test.5.blast.fasta;
+[0.000907] 294 sequences found
+[0.000909] Done
+[0.000926] Reading FastA file /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/39YXPPR_hx;
+[0.000999] 2 sequences found
+[0.001000] Done
+[0.001051] Reading read set file /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/ksCPoqZKFg/Sequences;
+[0.001409] 296 sequences found
+[0.001925] Done
+[0.001927] 296 sequences in total.
+[0.001970] Writing into roadmap file /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/ksCPoqZKFg/Roadmaps...
+[0.002467] Inputting sequences...
+[0.002469] Inputting sequence 0 / 296
+[0.017660]  === Sequences loaded in 0.015196 s
+[0.017738] Done inputting sequences
+[0.017740] Destroying splay table
+[0.020174] Splay table destroyed
+140528 11:06:56: Returning 0 from "/usr/local/bin/velveth"
+140528 11:06:56: Running command "/usr/local/bin/velvetg /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/ksCPoqZKFg -ins_length 400 -exp_cov 30 -min_contig_lgth 200"
+[0.000000] Reading roadmap file /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/ksCPoqZKFg/Roadmaps
+[0.000662] 296 roadmaps read
+[0.000675] Creating insertion markers
+[0.000701] Ordering insertion markers
+[0.000796] Counting preNodes
+[0.000828] 539 preNodes counted, creating them now
+[0.001536] Adjusting marker info...
+[0.001554] Connecting preNodes
+[0.001672] Cleaning up memory
+[0.001673] Done creating preGraph
+[0.001674] Concatenation...
+[0.001841] Renumbering preNodes
+[0.001842] Initial preNode count 539
+[0.001850] Destroyed 492 preNodes
+[0.001851] Concatenation over!
+[0.001851] Clipping short tips off preGraph
+[0.001858] Concatenation...
+[0.001874] Renumbering preNodes
+[0.001874] Initial preNode count 47
+[0.001877] Destroyed 22 preNodes
+[0.001877] Concatenation over!
+[0.001878] 11 tips cut off
+[0.001878] 25 nodes left
+[0.001948] Writing into pregraph file /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/ksCPoqZKFg/PreGraph...
+[0.002287] Reading read set file /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/ksCPoqZKFg/Sequences;
+[0.002369] 296 sequences found
+[0.002829] Done
+[0.003322] Reading pre-graph file /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/ksCPoqZKFg/PreGraph
+[0.003333] Graph has 25 nodes and 296 sequences
+[0.003469] Scanning pre-graph file /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/ksCPoqZKFg/PreGraph for k-mers
+[0.003502] 3800 kmers found
+[0.003668] Sorting kmer occurence table ... 
+[0.004403] Sorting done.
+[0.004403] Computing acceleration table... 
+[0.035505] Computing offsets... 
+[0.035544] Ghost Threading through reads 0 / 296
+[0.037469]  === Ghost-Threaded in 0.001925 s
+[0.037471] Threading through reads 0 / 296
+[0.039087]  === Threaded in 0.001616 s
+[0.049355] Correcting graph with cutoff 0.200000
+[0.049424] Determining eligible starting points
+[0.049445] Done listing starting nodes
+[0.049446] Initializing todo lists
+[0.049451] Done with initilization
+[0.049452] Activating arc lookup table
+[0.049453] Done activating arc lookup table
+[0.049775] Concatenation...
+[0.049776] Renumbering nodes
+[0.049776] Initial node count 25
+[0.049778] Removed 21 null nodes
+[0.049779] Concatenation over!
+[0.049779] Clipping short tips off graph, drastic
+[0.049780] Concatenation...
+[0.049780] Renumbering nodes
+[0.049780] Initial node count 4
+[0.049781] Removed 0 null nodes
+[0.049781] Concatenation over!
+[0.049782] 4 nodes left
+[0.049901] Writing into graph file /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/ksCPoqZKFg/Graph2...
+[0.050763] WARNING: NO COVERAGE CUTOFF PROVIDED
+[0.050765] Velvet will probably leave behind many detectable errors
+[0.050766] See manual for instructions on how to set the coverage cutoff parameter
+[0.050767] Removing contigs with coverage < -1.000000...
+[0.050770] Concatenation...
+[0.050771] Renumbering nodes
+[0.050771] Initial node count 4
+[0.050773] Removed 0 null nodes
+[0.050774] Concatenation over!
+[0.050774] Concatenation...
+[0.050775] Renumbering nodes
+[0.050775] Initial node count 4
+[0.050776] Removed 0 null nodes
+[0.050777] Concatenation over!
+[0.050782] Clipping short tips off graph, drastic
+[0.050783] Concatenation...
+[0.050783] Renumbering nodes
+[0.050784] Initial node count 4
+[0.050785] Removed 0 null nodes
+[0.050785] Concatenation over!
+[0.050786] 4 nodes left
+[0.050787] Read coherency...
+[0.050787] Identifying unique nodes
+[0.050788] Done, 4 unique nodes counted
+[0.050789] Trimming read tips
+[0.050790] Renumbering nodes
+[0.050790] Initial node count 4
+[0.050791] Removed 0 null nodes
+[0.050792] Confronted to 0 multiple hits and 0 null over 0
+[0.050793] Read coherency over!
+[0.050800] Starting pebble resolution...
+[0.050805] Computing read to node mapping array sizes
+[0.050811] Computing read to node mappings
+[0.050815] Estimating library insert lengths...
+[0.050821] Done
+[0.050824] Computing direct node to node mappings
+[0.050838] Scaffolding node 0
+[0.050851]  === Nodes Scaffolded in 0.000027 s
+[0.050856] Preparing to correct graph with cutoff 0.200000
+[0.050895] Cleaning memory
+[0.050981] Deactivating local correction settings
+[0.050990] Pebble done.
+[0.050990] Starting pebble resolution...
+[0.050992] Computing read to node mapping array sizes
+[0.050995] Computing read to node mappings
+[0.050999] Estimating library insert lengths...
+[0.051001] Done
+[0.051002] Computing direct node to node mappings
+[0.051008] Scaffolding node 0
+[0.051014]  === Nodes Scaffolded in 0.000012 s
+[0.051018] Preparing to correct graph with cutoff 0.200000
+[0.051029] Cleaning memory
+[0.051060] Deactivating local correction settings
+[0.051068] Pebble done.
+[0.051069] Concatenation...
+[0.051069] Renumbering nodes
+[0.051070] Initial node count 4
+[0.051070] Removed 0 null nodes
+[0.051071] Concatenation over!
+[0.051074] Removing reference contigs with coverage < -1.000000...
+[0.051075] Concatenation...
+[0.051076] Renumbering nodes
+[0.051076] Initial node count 4
+[0.051076] Removed 0 null nodes
+[0.051077] Concatenation over!
+[0.051107] Writing contigs into /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/ksCPoqZKFg/contigs.fa...
+[0.051544] Writing into stats file /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/ksCPoqZKFg/stats.txt...
+[0.051596] Writing into graph file /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/ksCPoqZKFg/LastGraph...
+Final graph has 4 nodes and n50 of 2946, max 2946, total 3583, using 287/296 reads
+140528 11:06:56: Returning 0 from "/usr/local/bin/velvetg"
+140528 11:06:56: Velvet log:
+140528 11:06:56: Wed May 28 11:06:56 2014
+140528 11:06:56:  /usr/local/bin/velveth /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/ksCPoqZKFg 31 -fasta -shortPaired /Users/jallen/Documents/GitHub/aTRAM/test/debug/test_ap/aTRAM/region.test.5.blast.fasta -long /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/39YXPPR_hx
+140528 11:06:56: Version 1.2.10
+140528 11:06:56: Copyright 2007, 2008 Daniel Zerbino (zerbino@ebi.ac.uk)
+140528 11:06:56: This is free software; see the source for copying conditions.  There is NO
+140528 11:06:56: warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+140528 11:06:56: Compilation settings:
+140528 11:06:56: CATEGORIES = 2
+140528 11:06:56: MAXKMERLENGTH = 31
+140528 11:06:56: 
+140528 11:06:56: Wed May 28 11:06:56 2014
+140528 11:06:56:  /usr/local/bin/velvetg /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/ksCPoqZKFg -ins_length 400 -exp_cov 30 -min_contig_lgth 200
+140528 11:06:56: Version 1.2.10
+140528 11:06:56: Copyright 2007, 2008 Daniel Zerbino (zerbino@ebi.ac.uk)
+140528 11:06:56: This is free software; see the source for copying conditions.  There is NO
+140528 11:06:56: warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+140528 11:06:56: Compilation settings:
+140528 11:06:56: CATEGORIES = 2
+140528 11:06:56: MAXKMERLENGTH = 31
+140528 11:06:56: 
+140528 11:06:56: Final graph has 4 nodes and n50 of 2946, max 2946, total 3583, using 287/296 reads
+140528 11:06:56: end Velvet log
+	filtering contigs...
+140528 11:06:56: Running command "/usr/local/bin/tblastx -db /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/daU7cpIVc5.db -query /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/LV3WyRVD7T -out /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/Rjsq5OKp9j -outfmt '6 qseqid sseqid bitscore qstart qend sstart send qlen'"
+140528 11:06:57: Returning 0 from "/usr/local/bin/tblastx"
+	saving best-scoring contigs...
+140528 11:06:57: 	writing contigs to /Users/jallen/Documents/GitHub/aTRAM/test/debug/test_ap/aTRAM/region.test.all.fasta:
+140528 11:06:57: 		writing out reverse-complement of 1_len_2946_cov_6.4
+
+
+Contigs by target coverage:
+contig	aTRAM_target_start	testref	aTRAM_target_end	total score
+1.1_len_1958_cov_4.8	-	374	76.2	450.2
+1.3_len_516_cov_5.1	-	182	-	182
+2.1_len_2123_cov_5.5	-	374	76.2	450.2
+2.2_len_516_cov_5.4	-	182	-	182
+3.2_len_497_cov_5.7	-	182	-	182
+3.4_len_2346_cov_5.7	-	374	76.2	450.2
+4.2_len_497_cov_5.9	-	182	-	182
+4.1_len_2701_cov_5.6	-	374	76.2	450.2
+5.1_len_2946_cov_6.4	-	374	76.2	450.2
+140528 11:06:57: Returning 0 from "/Users/jallen/Documents/GitHub/aTRAM/Pipelines/../aTRAM.pl"
+140528 11:06:57: Running command "/usr/bin/muscle3.8.31_i86darwin64 -in /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/7w4ZqgnLlB -out /Users/jallen/Documents/GitHub/aTRAM/test/debug/test_ap/aTRAM/region.test.align.fasta"
+
+MUSCLE v3.8.31 by Robert C. Edgar
+
+http://www.drive5.com/muscle
+This software is donated to the public domain.
+Please cite: Edgar, R.C. Nucleic Acids Res 32(5), 1792-97.
+
+7w4ZqgnLlB 6 seqs, max length 2976, avg  length 2527
+00:00:00      1 MB(0%)  Iter   1    4.76%  K-mer dist pass 100:00:00      1 MB(0%)  Iter   1  100.00%  K-mer dist pass 1
+00:00:00      1 MB(0%)  Iter   1    4.76%  K-mer dist pass 200:00:00      1 MB(0%)  Iter   1  100.00%  K-mer dist pass 2
+00:00:00      5 MB(0%)  Iter   1   20.00%  Align node       00:00:00     13 MB(0%)  Iter   1   40.00%  Align node00:00:00     16 MB(0%)  Iter   1   60.00%  Align node00:00:00     17 MB(0%)  Iter   1   80.00%  Align node00:00:00     18 MB(0%)  Iter   1  100.00%  Align node00:00:00     19 MB(0%)  Iter   1  100.00%  Align node
+00:00:00     19 MB(0%)  Iter   1   16.67%  Root alignment00:00:00     19 MB(0%)  Iter   1   33.33%  Root alignment00:00:00     19 MB(0%)  Iter   1   50.00%  Root alignment00:00:00     19 MB(0%)  Iter   1   66.67%  Root alignment00:00:00     19 MB(0%)  Iter   1   83.33%  Root alignment00:00:00     19 MB(0%)  Iter   1  100.00%  Root alignment00:00:00     19 MB(0%)  Iter   1  100.00%  Root alignment
+00:00:00     19 MB(0%)  Iter   2   25.00%  Refine tree   00:00:00     20 MB(0%)  Iter   2   50.00%  Refine tree00:00:01     21 MB(0%)  Iter   2   75.00%  Refine tree00:00:01     21 MB(0%)  Iter   2  100.00%  Refine tree00:00:01     22 MB(0%)  Iter   2  100.00%  Refine tree
+00:00:01     22 MB(0%)  Iter   2   16.67%  Root alignment00:00:01     22 MB(0%)  Iter   2   33.33%  Root alignment00:00:01     22 MB(0%)  Iter   2   50.00%  Root alignment00:00:01     22 MB(0%)  Iter   2   66.67%  Root alignment00:00:01     22 MB(0%)  Iter   2   83.33%  Root alignment00:00:01     22 MB(0%)  Iter   2  100.00%  Root alignment00:00:01     22 MB(0%)  Iter   2  100.00%  Root alignment
+00:00:01     22 MB(0%)  Iter   2  100.00%  Root alignment
+00:00:01     29 MB(0%)  Iter   3   22.22%  Refine biparts00:00:01     29 MB(0%)  Iter   3   33.33%  Refine biparts00:00:01     29 MB(0%)  Iter   3   44.44%  Refine biparts00:00:02     29 MB(0%)  Iter   3   55.56%  Refine biparts00:00:02     29 MB(0%)  Iter   3   66.67%  Refine biparts00:00:02     29 MB(0%)  Iter   3   77.78%  Refine biparts00:00:02     29 MB(0%)  Iter   3   88.89%  Refine biparts00:00:02     29 MB(0%)  Iter   3  100.00%  Refine biparts00:00:03     29 MB(0%)  Iter   3  111.11%  Refine biparts00:00:03     29 MB(0%)  Iter   3  100.00%  Refine biparts
+140528 11:07:00: Returning 0 from "/usr/bin/muscle3.8.31_i86darwin64"
+140528 11:07:00: Running command "/usr/local/bin/blastn -task blastn -query /Users/jallen/Documents/GitHub/aTRAM/test/debug/test_ap/aTRAM/region.test.trimmed.fasta -subject /Users/jallen/Documents/GitHub/aTRAM/test/testref.fasta -outfmt '6 qseqid bitscore' -out /Users/jallen/Documents/GitHub/aTRAM/test/debug/test_ap/aTRAM/region.test.blast"
+140528 11:07:00: Returning 0 from "/usr/local/bin/blastn"
+140528 11:07:00: adding 5.1_len_2946_cov_6.4 to region.trimmed.fasta
+140528 11:07:00: adding 5.1_len_2946_cov_6.4 from /Users/jallen/Documents/GitHub/aTRAM/test/debug/test_ap/aTRAM/region.test.best.fasta to region.full.fasta
+140528 11:07:00: Processing bad.test...
+140528 11:07:00: Running command "/Users/jallen/Documents/GitHub/aTRAM/Pipelines/../aTRAM.pl -reads /Users/jallen/Documents/GitHub/aTRAM/test/debug/test_db.atram -target /Users/jallen/Documents/GitHub/aTRAM/test/badref.fasta -iter 5 -ins_length 400 -frac 1  -out /Users/jallen/Documents/GitHub/aTRAM/test/debug/test_ap/aTRAM/bad.test -kmer 31    -debug -log /Users/jallen/Documents/GitHub/aTRAM/test/debug/debug.log"
+140528 11:07:00: DEBUG: Setting log file to /Users/jallen/Documents/GitHub/aTRAM/test/debug/debug.log
+140528 11:07:00: Running aTRAM.pl -reads /Users/jallen/Documents/GitHub/aTRAM/test/debug/test_db.atram -target /Users/jallen/Documents/GitHub/aTRAM/test/badref.fasta -iter 5 -ins_length 400 -frac 1 -out /Users/jallen/Documents/GitHub/aTRAM/test/debug/test_ap/aTRAM/bad.test -kmer 31 -debug -log /Users/jallen/Documents/GitHub/aTRAM/test/debug/debug.log, v1.01+
+
+Using 7 of 7 total shards.
+140528 11:07:00: Using 7 of 7 total shards.
+140528 11:07:00: Running command "/usr/local/bin/makeblastdb -in /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/SHcZYur1Zv -dbtype nucl -out /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/ma0_No_l2N.db -input_type fasta"
+
+
+Building a new DB, current time: 05/28/2014 11:07:00
+New DB name:   /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/ma0_No_l2N.db
+New DB title:  /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/SHcZYur1Zv
+Sequence type: Nucleotide
+Keep Linkouts: T
+Keep MBits: T
+Maximum file size: 1073741824B
+Adding sequences from FASTA; added 3 sequences in 0.0021348 seconds.
+140528 11:07:00: Returning 0 from "/usr/local/bin/makeblastdb"
+iteration 1 starting...
+140528 11:07:00: iteration 1 starting...
+	blasting short reads...
+140528 11:07:00: Forking pid 87258: /usr/local/bin/blastn
+140528 11:07:00: Forking pid 87259: /usr/local/bin/blastn
+140528 11:07:00: Forking pid 87260: /usr/local/bin/blastn
+140528 11:07:00: Forking pid 87261: /usr/local/bin/blastn
+140528 11:07:00: Forking pid 87262: /usr/local/bin/blastn
+140528 11:07:00: Forking pid 87263: /usr/local/bin/blastn
+140528 11:07:00: Forking pid 87264: /usr/local/bin/blastn
+140528 11:07:00: DEBUG: waiting for 87258, 87259, 87260, 87261, 87262, 87263, 87264
+140528 11:07:00: DEBUG: waiting for 87258, 87259, 87260, 87261, 87262, 87263
+140528 11:07:00: DEBUG: waiting for 87258, 87259, 87260, 87261, 87262
+140528 11:07:00: DEBUG: waiting for 87258, 87259, 87260, 87261
+140528 11:07:00: DEBUG: waiting for 87258, 87259, 87260
+140528 11:07:00: DEBUG: waiting for 87258, 87259
+140528 11:07:00: DEBUG: waiting for 87258
+	getting paired ends...
+140528 11:07:00: DEBUG: waiting for 87265, 87266, 87267, 87268, 87269, 87270, 87271
+140528 11:07:00: DEBUG: waiting for 87265, 87266, 87267, 87268, 87269, 87270
+140528 11:07:00: DEBUG: waiting for 87265, 87266, 87267, 87268, 87269
+140528 11:07:00: DEBUG: waiting for 87265, 87266, 87267, 87268
+140528 11:07:00: DEBUG: waiting for 87265, 87266, 87267
+140528 11:07:00: DEBUG: waiting for 87265, 87266
+140528 11:07:00: DEBUG: waiting for 87265
+No similar reads were found.
+140528 11:07:00: No similar reads were found.
+aTRAM found nothing
+140528 11:07:00: Returning 255 from "/Users/jallen/Documents/GitHub/aTRAM/Pipelines/../aTRAM.pl"
+140528 11:07:00: aTRAM found no contigs matching bad for test.
+140528 11:07:00: Processing complete.test...
+140528 11:07:00: Running command "/Users/jallen/Documents/GitHub/aTRAM/Pipelines/../aTRAM.pl -reads /Users/jallen/Documents/GitHub/aTRAM/test/debug/test_db.atram -target /Users/jallen/Documents/GitHub/aTRAM/test/completeref.fasta -iter 5 -ins_length 400 -frac 1  -out /Users/jallen/Documents/GitHub/aTRAM/test/debug/test_ap/aTRAM/complete.test -kmer 31    -debug -log /Users/jallen/Documents/GitHub/aTRAM/test/debug/debug.log"
+140528 11:07:00: DEBUG: Setting log file to /Users/jallen/Documents/GitHub/aTRAM/test/debug/debug.log
+140528 11:07:00: Running aTRAM.pl -reads /Users/jallen/Documents/GitHub/aTRAM/test/debug/test_db.atram -target /Users/jallen/Documents/GitHub/aTRAM/test/completeref.fasta -iter 5 -ins_length 400 -frac 1 -out /Users/jallen/Documents/GitHub/aTRAM/test/debug/test_ap/aTRAM/complete.test -kmer 31 -debug -log /Users/jallen/Documents/GitHub/aTRAM/test/debug/debug.log, v1.01+
+
+Using 7 of 7 total shards.
+140528 11:07:00: Using 7 of 7 total shards.
+140528 11:07:00: Running command "/usr/local/bin/makeblastdb -in /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/FNenAnhFIQ -dbtype nucl -out /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/2oJ8xcP_My.db -input_type fasta"
+
+
+Building a new DB, current time: 05/28/2014 11:07:00
+New DB name:   /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/2oJ8xcP_My.db
+New DB title:  /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/FNenAnhFIQ
+Sequence type: Nucleotide
+Keep Linkouts: T
+Keep MBits: T
+Maximum file size: 1073741824B
+Adding sequences from FASTA; added 3 sequences in 0.00145984 seconds.
+140528 11:07:00: Returning 0 from "/usr/local/bin/makeblastdb"
+iteration 1 starting...
+140528 11:07:00: iteration 1 starting...
+	blasting short reads...
+140528 11:07:00: Forking pid 87301: /usr/local/bin/blastn
+140528 11:07:00: Forking pid 87302: /usr/local/bin/blastn
+140528 11:07:00: Forking pid 87303: /usr/local/bin/blastn
+140528 11:07:00: Forking pid 87304: /usr/local/bin/blastn
+140528 11:07:00: Forking pid 87305: /usr/local/bin/blastn
+140528 11:07:00: Forking pid 87306: /usr/local/bin/blastn
+140528 11:07:00: Forking pid 87307: /usr/local/bin/blastn
+140528 11:07:00: DEBUG: waiting for 87301, 87302, 87303, 87304, 87305, 87306, 87307
+140528 11:07:01: DEBUG: waiting for 87301, 87302, 87303, 87304, 87305, 87306
+140528 11:07:01: DEBUG: waiting for 87301, 87302, 87303, 87304, 87305
+140528 11:07:01: DEBUG: waiting for 87301, 87302, 87303, 87304
+140528 11:07:01: DEBUG: waiting for 87301, 87302, 87303
+140528 11:07:01: DEBUG: waiting for 87301, 87302
+140528 11:07:01: DEBUG: waiting for 87301
+	getting paired ends...
+140528 11:07:01: DEBUG: waiting for 87308, 87309, 87310, 87311, 87312, 87313, 87314
+140528 11:07:01: DEBUG: waiting for 87308, 87309, 87310, 87311, 87312, 87313
+140528 11:07:01: DEBUG: waiting for 87308, 87309, 87310, 87311, 87312
+140528 11:07:01: DEBUG: waiting for 87308, 87309, 87310, 87311
+140528 11:07:01: DEBUG: waiting for 87308, 87309, 87310
+140528 11:07:01: DEBUG: waiting for 87308, 87309
+140528 11:07:01: DEBUG: waiting for 87308
+140528 11:07:01: DEBUG: Setting log file to /Users/jallen/Documents/GitHub/aTRAM/test/debug/debug.log
+	assembling pairs with Velvet...
+140528 11:07:01: Running command "/usr/local/bin/velveth /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/IjP98Anfui 31 -fasta -shortPaired /Users/jallen/Documents/GitHub/aTRAM/test/debug/test_ap/aTRAM/complete.test.1.blast.fasta"
+[0.000000] Reading FastA file /Users/jallen/Documents/GitHub/aTRAM/test/debug/test_ap/aTRAM/complete.test.1.blast.fasta;
+[0.000116] 50 sequences found
+[0.000117] Done
+[0.000162] Reading read set file /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/IjP98Anfui/Sequences;
+[0.000273] 50 sequences found
+[0.000346] Done
+[0.000347] 50 sequences in total.
+[0.000399] Writing into roadmap file /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/IjP98Anfui/Roadmaps...
+[0.000462] Inputting sequences...
+[0.000462] Inputting sequence 0 / 50
+[0.002898]  === Sequences loaded in 0.002437 s
+[0.002996] Done inputting sequences
+[0.002998] Destroying splay table
+[0.003693] Splay table destroyed
+140528 11:07:01: Returning 0 from "/usr/local/bin/velveth"
+140528 11:07:01: Running command "/usr/local/bin/velvetg /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/IjP98Anfui -ins_length 400 -exp_cov 30 -min_contig_lgth 200"
+[0.000000] Reading roadmap file /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/IjP98Anfui/Roadmaps
+[0.000142] 50 roadmaps read
+[0.000159] Creating insertion markers
+[0.000169] Ordering insertion markers
+[0.000191] Counting preNodes
+[0.000198] 87 preNodes counted, creating them now
+[0.000362] Adjusting marker info...
+[0.000366] Connecting preNodes
+[0.000404] Cleaning up memory
+[0.000407] Done creating preGraph
+[0.000407] Concatenation...
+[0.000454] Renumbering preNodes
+[0.000455] Initial preNode count 87
+[0.000461] Destroyed 76 preNodes
+[0.000462] Concatenation over!
+[0.000463] Clipping short tips off preGraph
+[0.000467] Concatenation...
+[0.000473] Renumbering preNodes
+[0.000474] Initial preNode count 11
+[0.000475] Destroyed 4 preNodes
+[0.000476] Concatenation over!
+[0.000476] 2 tips cut off
+[0.000477] 7 nodes left
+[0.000578] Writing into pregraph file /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/IjP98Anfui/PreGraph...
+[0.000749] Reading read set file /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/IjP98Anfui/Sequences;
+[0.000778] 50 sequences found
+[0.000885] Done
+[0.000977] Reading pre-graph file /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/IjP98Anfui/PreGraph
+[0.000988] Graph has 7 nodes and 50 sequences
+[0.001047] Scanning pre-graph file /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/IjP98Anfui/PreGraph for k-mers
+[0.001063] 749 kmers found
+[0.001124] Sorting kmer occurence table ... 
+[0.001277] Sorting done.
+[0.001278] Computing acceleration table... 
+[0.033000] Computing offsets... 
+[0.033020] Ghost Threading through reads 0 / 50
+[0.033311]  === Ghost-Threaded in 0.000291 s
+[0.033313] Threading through reads 0 / 50
+[0.033525]  === Threaded in 0.000212 s
+[0.044047] Correcting graph with cutoff 0.200000
+[0.044092] Determining eligible starting points
+[0.044107] Done listing starting nodes
+[0.044108] Initializing todo lists
+[0.044112] Done with initilization
+[0.044113] Activating arc lookup table
+[0.044114] Done activating arc lookup table
+[0.044209] Concatenation...
+[0.044210] Renumbering nodes
+[0.044211] Initial node count 7
+[0.044212] Removed 3 null nodes
+[0.044213] Concatenation over!
+[0.044213] Clipping short tips off graph, drastic
+[0.044215] Concatenation...
+[0.044219] Renumbering nodes
+[0.044220] Initial node count 4
+[0.044221] Removed 2 null nodes
+[0.044221] Concatenation over!
+[0.044222] 2 nodes left
+[0.044326] Writing into graph file /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/IjP98Anfui/Graph2...
+[0.044484] WARNING: NO COVERAGE CUTOFF PROVIDED
+[0.044485] Velvet will probably leave behind many detectable errors
+[0.044485] See manual for instructions on how to set the coverage cutoff parameter
+[0.044486] Removing contigs with coverage < -1.000000...
+[0.044488] Concatenation...
+[0.044488] Renumbering nodes
+[0.044489] Initial node count 2
+[0.044489] Removed 0 null nodes
+[0.044490] Concatenation over!
+[0.044490] Concatenation...
+[0.044491] Renumbering nodes
+[0.044491] Initial node count 2
+[0.044491] Removed 0 null nodes
+[0.044492] Concatenation over!
+[0.044494] Clipping short tips off graph, drastic
+[0.044495] Concatenation...
+[0.044495] Renumbering nodes
+[0.044496] Initial node count 2
+[0.044496] Removed 0 null nodes
+[0.044497] Concatenation over!
+[0.044497] 2 nodes left
+[0.044498] Read coherency...
+[0.044498] Identifying unique nodes
+[0.044499] Done, 2 unique nodes counted
+[0.044499] Trimming read tips
+[0.044500] Renumbering nodes
+[0.044500] Initial node count 2
+[0.044501] Removed 0 null nodes
+[0.044501] Confronted to 0 multiple hits and 0 null over 0
+[0.044502] Read coherency over!
+[0.044505] Starting pebble resolution...
+[0.044507] Computing read to node mapping array sizes
+[0.044509] Computing read to node mappings
+[0.044510] Estimating library insert lengths...
+[0.044513] Done
+[0.044515] Computing direct node to node mappings
+[0.044523] Scaffolding node 0
+[0.044525]  === Nodes Scaffolded in 0.000010 s
+[0.044533] Preparing to correct graph with cutoff 0.200000
+[0.044592] Cleaning memory
+[0.044706] Deactivating local correction settings
+[0.044714] Pebble done.
+[0.044714] Starting pebble resolution...
+[0.044715] Computing read to node mapping array sizes
+[0.044716] Computing read to node mappings
+[0.044717] Estimating library insert lengths...
+[0.044719] Done
+[0.044719] Computing direct node to node mappings
+[0.044720] Scaffolding node 0
+[0.044722]  === Nodes Scaffolded in 0.000002 s
+[0.044724] Preparing to correct graph with cutoff 0.200000
+[0.044734] Cleaning memory
+[0.044735] Deactivating local correction settings
+[0.044742] Pebble done.
+[0.044743] Concatenation...
+[0.044743] Renumbering nodes
+[0.044744] Initial node count 2
+[0.044745] Removed 1 null nodes
+[0.044745] Concatenation over!
+[0.044748] Removing reference contigs with coverage < -1.000000...
+[0.044749] Concatenation...
+[0.044749] Renumbering nodes
+[0.044750] Initial node count 1
+[0.044750] Removed 0 null nodes
+[0.044751] Concatenation over!
+[0.044810] Writing contigs into /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/IjP98Anfui/contigs.fa...
+[0.044994] Writing into stats file /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/IjP98Anfui/stats.txt...
+[0.045079] Writing into graph file /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/IjP98Anfui/LastGraph...
+Final graph has 1 nodes and n50 of 858, max 858, total 858, using 47/50 reads
+140528 11:07:01: Returning 0 from "/usr/local/bin/velvetg"
+140528 11:07:01: Velvet log:
+140528 11:07:01: Wed May 28 11:07:01 2014
+140528 11:07:01:  /usr/local/bin/velveth /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/IjP98Anfui 31 -fasta -shortPaired /Users/jallen/Documents/GitHub/aTRAM/test/debug/test_ap/aTRAM/complete.test.1.blast.fasta
+140528 11:07:01: Version 1.2.10
+140528 11:07:01: Copyright 2007, 2008 Daniel Zerbino (zerbino@ebi.ac.uk)
+140528 11:07:01: This is free software; see the source for copying conditions.  There is NO
+140528 11:07:01: warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+140528 11:07:01: Compilation settings:
+140528 11:07:01: CATEGORIES = 2
+140528 11:07:01: MAXKMERLENGTH = 31
+140528 11:07:01: 
+140528 11:07:01: Wed May 28 11:07:01 2014
+140528 11:07:01:  /usr/local/bin/velvetg /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/IjP98Anfui -ins_length 400 -exp_cov 30 -min_contig_lgth 200
+140528 11:07:01: Version 1.2.10
+140528 11:07:01: Copyright 2007, 2008 Daniel Zerbino (zerbino@ebi.ac.uk)
+140528 11:07:01: This is free software; see the source for copying conditions.  There is NO
+140528 11:07:01: warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+140528 11:07:01: Compilation settings:
+140528 11:07:01: CATEGORIES = 2
+140528 11:07:01: MAXKMERLENGTH = 31
+140528 11:07:01: 
+140528 11:07:01: Final graph has 1 nodes and n50 of 858, max 858, total 858, using 47/50 reads
+140528 11:07:01: end Velvet log
+	filtering contigs...
+140528 11:07:01: Running command "/usr/local/bin/tblastx -db /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/2oJ8xcP_My.db -query /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/Iidt6UHjWd -out /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/2BC0SujRmO -outfmt '6 qseqid sseqid bitscore qstart qend sstart send qlen'"
+140528 11:07:01: Returning 0 from "/usr/local/bin/tblastx"
+	saving best-scoring contigs...
+140528 11:07:01: 	writing contigs to /Users/jallen/Documents/GitHub/aTRAM/test/debug/test_ap/aTRAM/complete.test.all.fasta:
+140528 11:07:01: 		writing out 1_len_858_cov_3.5
+iteration 2 starting...
+140528 11:07:01: iteration 2 starting...
+	blasting short reads...
+140528 11:07:01: Forking pid 87345: /usr/local/bin/blastn
+140528 11:07:01: Forking pid 87346: /usr/local/bin/blastn
+140528 11:07:01: Forking pid 87347: /usr/local/bin/blastn
+140528 11:07:01: Forking pid 87348: /usr/local/bin/blastn
+140528 11:07:01: Forking pid 87349: /usr/local/bin/blastn
+140528 11:07:01: Forking pid 87350: /usr/local/bin/blastn
+140528 11:07:01: Forking pid 87351: /usr/local/bin/blastn
+140528 11:07:01: DEBUG: waiting for 87345, 87346, 87347, 87348, 87349, 87350, 87351
+140528 11:07:01: DEBUG: waiting for 87345, 87346, 87347, 87348, 87349, 87350
+140528 11:07:01: DEBUG: waiting for 87345, 87346, 87347, 87348, 87349
+140528 11:07:01: DEBUG: waiting for 87345, 87346, 87347, 87348
+140528 11:07:01: DEBUG: waiting for 87345, 87346, 87347
+140528 11:07:01: DEBUG: waiting for 87345, 87346
+140528 11:07:01: DEBUG: waiting for 87345
+	getting paired ends...
+140528 11:07:01: DEBUG: waiting for 87352, 87353, 87354, 87355, 87356, 87357, 87358
+140528 11:07:01: DEBUG: waiting for 87352, 87353, 87354, 87355, 87356, 87357
+140528 11:07:01: DEBUG: waiting for 87352, 87353, 87354, 87355, 87356
+140528 11:07:01: DEBUG: waiting for 87352, 87353, 87354, 87355
+140528 11:07:01: DEBUG: waiting for 87352, 87353, 87354
+140528 11:07:01: DEBUG: waiting for 87352, 87353
+140528 11:07:01: DEBUG: waiting for 87352
+140528 11:07:01: DEBUG: Setting log file to /Users/jallen/Documents/GitHub/aTRAM/test/debug/debug.log
+	assembling pairs with Velvet...
+140528 11:07:01: Running command "/usr/local/bin/velveth /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/IjP98Anfui 31 -fasta -shortPaired /Users/jallen/Documents/GitHub/aTRAM/test/debug/test_ap/aTRAM/complete.test.2.blast.fasta -long /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/kuDvdkmZFg"
+[0.000000] Reading FastA file /Users/jallen/Documents/GitHub/aTRAM/test/debug/test_ap/aTRAM/complete.test.2.blast.fasta;
+[0.000194] 58 sequences found
+[0.000196] Done
+[0.000212] Reading FastA file /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/kuDvdkmZFg;
+[0.000250] 1 sequences found
+[0.000251] Done
+[0.000307] Reading read set file /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/IjP98Anfui/Sequences;
+[0.000427] 59 sequences found
+[0.000554] Done
+[0.000556] 59 sequences in total.
+[0.000588] Writing into roadmap file /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/IjP98Anfui/Roadmaps...
+[0.000686] Inputting sequences...
+[0.000688] Inputting sequence 0 / 59
+[0.004191]  === Sequences loaded in 0.003506 s
+[0.004281] Done inputting sequences
+[0.004282] Destroying splay table
+[0.004978] Splay table destroyed
+140528 11:07:01: Returning 0 from "/usr/local/bin/velveth"
+140528 11:07:01: Running command "/usr/local/bin/velvetg /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/IjP98Anfui -ins_length 400 -exp_cov 30 -min_contig_lgth 200"
+[0.000000] Reading roadmap file /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/IjP98Anfui/Roadmaps
+[0.000246] 59 roadmaps read
+[0.000266] Creating insertion markers
+[0.000279] Ordering insertion markers
+[0.000315] Counting preNodes
+[0.000328] 109 preNodes counted, creating them now
+[0.000545] Adjusting marker info...
+[0.000553] Connecting preNodes
+[0.000600] Cleaning up memory
+[0.000602] Done creating preGraph
+[0.000603] Concatenation...
+[0.000644] Renumbering preNodes
+[0.000645] Initial preNode count 109
+[0.000650] Destroyed 94 preNodes
+[0.000650] Concatenation over!
+[0.000651] Clipping short tips off preGraph
+[0.000653] Concatenation...
+[0.000657] Renumbering preNodes
+[0.000657] Initial preNode count 15
+[0.000658] Destroyed 2 preNodes
+[0.000659] Concatenation over!
+[0.000659] 1 tips cut off
+[0.000660] 13 nodes left
+[0.000729] Writing into pregraph file /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/IjP98Anfui/PreGraph...
+[0.000899] Reading read set file /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/IjP98Anfui/Sequences;
+[0.000933] 59 sequences found
+[0.001062] Done
+[0.001187] Reading pre-graph file /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/IjP98Anfui/PreGraph
+[0.001199] Graph has 13 nodes and 59 sequences
+[0.001272] Scanning pre-graph file /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/IjP98Anfui/PreGraph for k-mers
+[0.001293] 901 kmers found
+[0.001371] Sorting kmer occurence table ... 
+[0.001561] Sorting done.
+[0.001562] Computing acceleration table... 
+[0.039869] Computing offsets... 
+[0.039890] Ghost Threading through reads 0 / 59
+[0.040339]  === Ghost-Threaded in 0.000450 s
+[0.040341] Threading through reads 0 / 59
+[0.041034]  === Threaded in 0.000692 s
+[0.056610] Correcting graph with cutoff 0.200000
+[0.056678] Determining eligible starting points
+[0.056700] Done listing starting nodes
+[0.056701] Initializing todo lists
+[0.056709] Done with initilization
+[0.056710] Activating arc lookup table
+[0.056711] Done activating arc lookup table
+[0.056817] Concatenation...
+[0.056819] Renumbering nodes
+[0.056820] Initial node count 13
+[0.056821] Removed 3 null nodes
+[0.056822] Concatenation over!
+[0.056823] Clipping short tips off graph, drastic
+[0.056826] Concatenation...
+[0.056839] Renumbering nodes
+[0.056840] Initial node count 10
+[0.056841] Removed 4 null nodes
+[0.056842] Concatenation over!
+[0.056843] 6 nodes left
+[0.056996] Writing into graph file /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/IjP98Anfui/Graph2...
+[0.057388] WARNING: NO COVERAGE CUTOFF PROVIDED
+[0.057389] Velvet will probably leave behind many detectable errors
+[0.057390] See manual for instructions on how to set the coverage cutoff parameter
+[0.057391] Removing contigs with coverage < -1.000000...
+[0.057394] Concatenation...
+[0.057395] Renumbering nodes
+[0.057396] Initial node count 6
+[0.057397] Removed 0 null nodes
+[0.057398] Concatenation over!
+[0.057399] Concatenation...
+[0.057399] Renumbering nodes
+[0.057400] Initial node count 6
+[0.057401] Removed 0 null nodes
+[0.057401] Concatenation over!
+[0.057406] Clipping short tips off graph, drastic
+[0.057407] Concatenation...
+[0.057408] Renumbering nodes
+[0.057408] Initial node count 6
+[0.057409] Removed 0 null nodes
+[0.057410] Concatenation over!
+[0.057410] 6 nodes left
+[0.057411] Read coherency...
+[0.057412] Identifying unique nodes
+[0.057413] Done, 3 unique nodes counted
+[0.057414] Trimming read tips
+[0.057430] Renumbering nodes
+[0.057431] Initial node count 6
+[0.057432] Removed 0 null nodes
+[0.057433] Confronted to 0 multiple hits and 4 null over 4
+[0.057434] Read coherency over!
+[0.057439] Starting pebble resolution...
+[0.057443] Computing read to node mapping array sizes
+[0.057460] Computing read to node mappings
+[0.057476] Estimating library insert lengths...
+[0.057481] Done
+[0.057484] Computing direct node to node mappings
+[0.057495] Scaffolding node 0
+[0.057513]  === Nodes Scaffolded in 0.000029 s
+[0.057527] Preparing to correct graph with cutoff 0.200000
+[0.057707] Cleaning memory
+[0.057907] Deactivating local correction settings
+[0.057935] Pebble done.
+[0.057936] Starting pebble resolution...
+[0.057938] Computing read to node mapping array sizes
+[0.057940] Computing read to node mappings
+[0.057943] Estimating library insert lengths...
+[0.057945] Done
+[0.057946] Computing direct node to node mappings
+[0.057952] Scaffolding node 0
+[0.057957]  === Nodes Scaffolded in 0.000010 s
+[0.057961] Preparing to correct graph with cutoff 0.200000
+[0.057979] Cleaning memory
+[0.058050] Deactivating local correction settings
+[0.058064] Pebble done.
+[0.058065] Concatenation...
+[0.058066] Renumbering nodes
+[0.058067] Initial node count 6
+[0.058069] Removed 2 null nodes
+[0.058070] Concatenation over!
+[0.058074] Removing reference contigs with coverage < -1.000000...
+[0.058076] Concatenation...
+[0.058077] Renumbering nodes
+[0.058077] Initial node count 4
+[0.058078] Removed 0 null nodes
+[0.058079] Concatenation over!
+[0.058121] Writing contigs into /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/IjP98Anfui/contigs.fa...
+[0.058377] Writing into stats file /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/IjP98Anfui/stats.txt...
+[0.058500] Writing into graph file /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/IjP98Anfui/LastGraph...
+Final graph has 4 nodes and n50 of 764, max 764, total 827, using 56/59 reads
+140528 11:07:02: Returning 0 from "/usr/local/bin/velvetg"
+140528 11:07:02: Velvet log:
+140528 11:07:02: Wed May 28 11:07:01 2014
+140528 11:07:02:  /usr/local/bin/velveth /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/IjP98Anfui 31 -fasta -shortPaired /Users/jallen/Documents/GitHub/aTRAM/test/debug/test_ap/aTRAM/complete.test.2.blast.fasta -long /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/kuDvdkmZFg
+140528 11:07:02: Version 1.2.10
+140528 11:07:02: Copyright 2007, 2008 Daniel Zerbino (zerbino@ebi.ac.uk)
+140528 11:07:02: This is free software; see the source for copying conditions.  There is NO
+140528 11:07:02: warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+140528 11:07:02: Compilation settings:
+140528 11:07:02: CATEGORIES = 2
+140528 11:07:02: MAXKMERLENGTH = 31
+140528 11:07:02: 
+140528 11:07:02: Wed May 28 11:07:01 2014
+140528 11:07:02:  /usr/local/bin/velvetg /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/IjP98Anfui -ins_length 400 -exp_cov 30 -min_contig_lgth 200
+140528 11:07:02: Version 1.2.10
+140528 11:07:02: Copyright 2007, 2008 Daniel Zerbino (zerbino@ebi.ac.uk)
+140528 11:07:02: This is free software; see the source for copying conditions.  There is NO
+140528 11:07:02: warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+140528 11:07:02: Compilation settings:
+140528 11:07:02: CATEGORIES = 2
+140528 11:07:02: MAXKMERLENGTH = 31
+140528 11:07:02: 
+140528 11:07:02: Final graph has 4 nodes and n50 of 764, max 764, total 827, using 56/59 reads
+140528 11:07:02: end Velvet log
+	filtering contigs...
+140528 11:07:02: Running command "/usr/local/bin/tblastx -db /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/2oJ8xcP_My.db -query /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/ikE8qta52E -out /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/8vKgJh3SLl -outfmt '6 qseqid sseqid bitscore qstart qend sstart send qlen'"
+140528 11:07:02: Returning 0 from "/usr/local/bin/tblastx"
+	saving best-scoring contigs...
+140528 11:07:02: 	writing contigs to /Users/jallen/Documents/GitHub/aTRAM/test/debug/test_ap/aTRAM/complete.test.all.fasta:
+140528 11:07:02: 		writing out reverse-complement of 1_len_764_cov_5.4
+iteration 3 starting...
+140528 11:07:02: iteration 3 starting...
+	blasting short reads...
+140528 11:07:02: Forking pid 87389: /usr/local/bin/blastn
+140528 11:07:02: Forking pid 87390: /usr/local/bin/blastn
+140528 11:07:02: Forking pid 87391: /usr/local/bin/blastn
+140528 11:07:02: Forking pid 87392: /usr/local/bin/blastn
+140528 11:07:02: Forking pid 87393: /usr/local/bin/blastn
+140528 11:07:02: Forking pid 87394: /usr/local/bin/blastn
+140528 11:07:02: Forking pid 87395: /usr/local/bin/blastn
+140528 11:07:02: DEBUG: waiting for 87389, 87390, 87391, 87392, 87393, 87394, 87395
+140528 11:07:02: DEBUG: waiting for 87389, 87390, 87391, 87392, 87393, 87394
+140528 11:07:02: DEBUG: waiting for 87389, 87390, 87391, 87392, 87393
+140528 11:07:02: DEBUG: waiting for 87389, 87390, 87391, 87392
+140528 11:07:02: DEBUG: waiting for 87389, 87390, 87391
+140528 11:07:02: DEBUG: waiting for 87389, 87390
+140528 11:07:02: DEBUG: waiting for 87389
+	getting paired ends...
+140528 11:07:02: DEBUG: waiting for 87396, 87397, 87400, 87402, 87412, 87413, 87415
+140528 11:07:02: DEBUG: waiting for 87396, 87397, 87400, 87402, 87412, 87413
+140528 11:07:02: DEBUG: waiting for 87396, 87397, 87400, 87402, 87412
+140528 11:07:02: DEBUG: waiting for 87396, 87397, 87400, 87402
+140528 11:07:02: DEBUG: waiting for 87396, 87397, 87400
+140528 11:07:02: DEBUG: waiting for 87396, 87397
+140528 11:07:02: DEBUG: waiting for 87396
+140528 11:07:02: DEBUG: Setting log file to /Users/jallen/Documents/GitHub/aTRAM/test/debug/debug.log
+	assembling pairs with Velvet...
+140528 11:07:02: Running command "/usr/local/bin/velveth /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/IjP98Anfui 31 -fasta -shortPaired /Users/jallen/Documents/GitHub/aTRAM/test/debug/test_ap/aTRAM/complete.test.3.blast.fasta -long /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/CLZ2od9R7Q"
+[0.000000] Reading FastA file /Users/jallen/Documents/GitHub/aTRAM/test/debug/test_ap/aTRAM/complete.test.3.blast.fasta;
+[0.000191] 58 sequences found
+[0.000199] Done
+[0.000227] Reading FastA file /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/CLZ2od9R7Q;
+[0.000267] 1 sequences found
+[0.000268] Done
+[0.000339] Reading read set file /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/IjP98Anfui/Sequences;
+[0.000484] 59 sequences found
+[0.000622] Done
+[0.000624] 59 sequences in total.
+[0.000656] Writing into roadmap file /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/IjP98Anfui/Roadmaps...
+[0.000751] Inputting sequences...
+[0.000753] Inputting sequence 0 / 59
+[0.004675]  === Sequences loaded in 0.003925 s
+[0.004771] Done inputting sequences
+[0.004772] Destroying splay table
+[0.005529] Splay table destroyed
+140528 11:07:02: Returning 0 from "/usr/local/bin/velveth"
+140528 11:07:02: Running command "/usr/local/bin/velvetg /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/IjP98Anfui -ins_length 400 -exp_cov 30 -min_contig_lgth 200"
+[0.000000] Reading roadmap file /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/IjP98Anfui/Roadmaps
+[0.000151] 59 roadmaps read
+[0.000163] Creating insertion markers
+[0.000169] Ordering insertion markers
+[0.000189] Counting preNodes
+[0.000197] 107 preNodes counted, creating them now
+[0.000350] Adjusting marker info...
+[0.000354] Connecting preNodes
+[0.000386] Cleaning up memory
+[0.000387] Done creating preGraph
+[0.000388] Concatenation...
+[0.000430] Renumbering preNodes
+[0.000430] Initial preNode count 107
+[0.000434] Destroyed 94 preNodes
+[0.000435] Concatenation over!
+[0.000435] Clipping short tips off preGraph
+[0.000438] Concatenation...
+[0.000441] Renumbering preNodes
+[0.000442] Initial preNode count 13
+[0.000443] Destroyed 2 preNodes
+[0.000443] Concatenation over!
+[0.000444] 1 tips cut off
+[0.000444] 11 nodes left
+[0.000516] Writing into pregraph file /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/IjP98Anfui/PreGraph...
+[0.000684] Reading read set file /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/IjP98Anfui/Sequences;
+[0.000708] 59 sequences found
+[0.000805] Done
+[0.000895] Reading pre-graph file /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/IjP98Anfui/PreGraph
+[0.000903] Graph has 11 nodes and 59 sequences
+[0.000949] Scanning pre-graph file /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/IjP98Anfui/PreGraph for k-mers
+[0.000962] 901 kmers found
+[0.001011] Sorting kmer occurence table ... 
+[0.001151] Sorting done.
+[0.001151] Computing acceleration table... 
+[0.034606] Computing offsets... 
+[0.034625] Ghost Threading through reads 0 / 59
+[0.035047]  === Ghost-Threaded in 0.000422 s
+[0.035048] Threading through reads 0 / 59
+[0.035468]  === Threaded in 0.000420 s
+[0.047252] Correcting graph with cutoff 0.200000
+[0.047322] Determining eligible starting points
+[0.047341] Done listing starting nodes
+[0.047342] Initializing todo lists
+[0.047347] Done with initilization
+[0.047348] Activating arc lookup table
+[0.047349] Done activating arc lookup table
+[0.047506] Concatenation...
+[0.047507] Renumbering nodes
+[0.047508] Initial node count 11
+[0.047511] Removed 6 null nodes
+[0.047511] Concatenation over!
+[0.047512] Clipping short tips off graph, drastic
+[0.047514] Concatenation...
+[0.047528] Renumbering nodes
+[0.047528] Initial node count 5
+[0.047530] Removed 4 null nodes
+[0.047531] Concatenation over!
+[0.047531] 1 nodes left
+[0.047661] Writing into graph file /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/IjP98Anfui/Graph2...
+[0.047905] WARNING: NO COVERAGE CUTOFF PROVIDED
+[0.047907] Velvet will probably leave behind many detectable errors
+[0.047907] See manual for instructions on how to set the coverage cutoff parameter
+[0.047908] Removing contigs with coverage < -1.000000...
+[0.047910] Concatenation...
+[0.047911] Renumbering nodes
+[0.047911] Initial node count 1
+[0.047912] Removed 0 null nodes
+[0.047913] Concatenation over!
+[0.047913] Concatenation...
+[0.047914] Renumbering nodes
+[0.047914] Initial node count 1
+[0.047915] Removed 0 null nodes
+[0.047915] Concatenation over!
+[0.047919] Clipping short tips off graph, drastic
+[0.047920] Concatenation...
+[0.047921] Renumbering nodes
+[0.047921] Initial node count 1
+[0.047922] Removed 0 null nodes
+[0.047923] Concatenation over!
+[0.047923] 1 nodes left
+[0.047924] Read coherency...
+[0.047925] Identifying unique nodes
+[0.047925] Done, 1 unique nodes counted
+[0.047926] Trimming read tips
+[0.047927] Renumbering nodes
+[0.047927] Initial node count 1
+[0.047928] Removed 0 null nodes
+[0.047929] Confronted to 0 multiple hits and 0 null over 0
+[0.047929] Read coherency over!
+[0.047933] Starting pebble resolution...
+[0.047936] Computing read to node mapping array sizes
+[0.047937] Computing read to node mappings
+[0.047939] Estimating library insert lengths...
+[0.047942] Done
+[0.047944] Computing direct node to node mappings
+[0.047946] Scaffolding node 0
+[0.047948]  === Nodes Scaffolded in 0.000004 s
+[0.047950] Preparing to correct graph with cutoff 0.200000
+[0.048028] Cleaning memory
+[0.048030] Deactivating local correction settings
+[0.048042] Pebble done.
+[0.048043] Starting pebble resolution...
+[0.048044] Computing read to node mapping array sizes
+[0.048046] Computing read to node mappings
+[0.048047] Estimating library insert lengths...
+[0.048049] Done
+[0.048050] Computing direct node to node mappings
+[0.048052] Scaffolding node 0
+[0.048054]  === Nodes Scaffolded in 0.000003 s
+[0.048056] Preparing to correct graph with cutoff 0.200000
+[0.048071] Cleaning memory
+[0.048073] Deactivating local correction settings
+[0.048082] Pebble done.
+[0.048082] Concatenation...
+[0.048083] Renumbering nodes
+[0.048083] Initial node count 1
+[0.048084] Removed 0 null nodes
+[0.048084] Concatenation over!
+[0.048087] Removing reference contigs with coverage < -1.000000...
+[0.048088] Concatenation...
+[0.048088] Renumbering nodes
+[0.048088] Initial node count 1
+[0.048089] Removed 0 null nodes
+[0.048089] Concatenation over!
+[0.048116] Writing contigs into /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/IjP98Anfui/contigs.fa...
+[0.048264] Writing into stats file /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/IjP98Anfui/stats.txt...
+[0.048309] Writing into graph file /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/IjP98Anfui/LastGraph...
+Final graph has 1 nodes and n50 of 764, max 764, total 764, using 56/59 reads
+140528 11:07:02: Returning 0 from "/usr/local/bin/velvetg"
+140528 11:07:02: Velvet log:
+140528 11:07:02: Wed May 28 11:07:02 2014
+140528 11:07:02:  /usr/local/bin/velveth /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/IjP98Anfui 31 -fasta -shortPaired /Users/jallen/Documents/GitHub/aTRAM/test/debug/test_ap/aTRAM/complete.test.3.blast.fasta -long /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/CLZ2od9R7Q
+140528 11:07:02: Version 1.2.10
+140528 11:07:02: Copyright 2007, 2008 Daniel Zerbino (zerbino@ebi.ac.uk)
+140528 11:07:02: This is free software; see the source for copying conditions.  There is NO
+140528 11:07:02: warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+140528 11:07:02: Compilation settings:
+140528 11:07:02: CATEGORIES = 2
+140528 11:07:02: MAXKMERLENGTH = 31
+140528 11:07:02: 
+140528 11:07:02: Wed May 28 11:07:02 2014
+140528 11:07:02:  /usr/local/bin/velvetg /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/IjP98Anfui -ins_length 400 -exp_cov 30 -min_contig_lgth 200
+140528 11:07:02: Version 1.2.10
+140528 11:07:02: Copyright 2007, 2008 Daniel Zerbino (zerbino@ebi.ac.uk)
+140528 11:07:02: This is free software; see the source for copying conditions.  There is NO
+140528 11:07:02: warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+140528 11:07:02: Compilation settings:
+140528 11:07:02: CATEGORIES = 2
+140528 11:07:02: MAXKMERLENGTH = 31
+140528 11:07:02: 
+140528 11:07:02: Final graph has 1 nodes and n50 of 764, max 764, total 764, using 56/59 reads
+140528 11:07:02: end Velvet log
+	filtering contigs...
+140528 11:07:02: Running command "/usr/local/bin/tblastx -db /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/2oJ8xcP_My.db -query /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/19d_YxmlIf -out /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/VS944mdVPc -outfmt '6 qseqid sseqid bitscore qstart qend sstart send qlen'"
+140528 11:07:02: Returning 0 from "/usr/local/bin/tblastx"
+	saving best-scoring contigs...
+140528 11:07:02: 	writing contigs to /Users/jallen/Documents/GitHub/aTRAM/test/debug/test_ap/aTRAM/complete.test.all.fasta:
+140528 11:07:02: 		writing out reverse-complement of 1_len_764_cov_5.5
+iteration 4 starting...
+140528 11:07:02: iteration 4 starting...
+	blasting short reads...
+140528 11:07:02: Forking pid 87433: /usr/local/bin/blastn
+140528 11:07:02: Forking pid 87434: /usr/local/bin/blastn
+140528 11:07:02: Forking pid 87435: /usr/local/bin/blastn
+140528 11:07:02: Forking pid 87436: /usr/local/bin/blastn
+140528 11:07:02: Forking pid 87437: /usr/local/bin/blastn
+140528 11:07:02: Forking pid 87438: /usr/local/bin/blastn
+140528 11:07:02: Forking pid 87439: /usr/local/bin/blastn
+140528 11:07:02: DEBUG: waiting for 87433, 87434, 87435, 87436, 87437, 87438, 87439
+140528 11:07:03: DEBUG: waiting for 87433, 87434, 87435, 87436, 87437, 87438
+140528 11:07:03: DEBUG: waiting for 87433, 87434, 87435, 87436, 87437
+140528 11:07:03: DEBUG: waiting for 87433, 87434, 87435, 87436
+140528 11:07:03: DEBUG: waiting for 87433, 87434, 87435
+140528 11:07:03: DEBUG: waiting for 87433, 87434
+140528 11:07:03: DEBUG: waiting for 87433
+	getting paired ends...
+140528 11:07:03: DEBUG: waiting for 87440, 87441, 87442, 87443, 87444, 87445, 87446
+140528 11:07:03: DEBUG: waiting for 87440, 87441, 87442, 87443, 87444, 87445
+140528 11:07:03: DEBUG: waiting for 87440, 87441, 87442, 87443, 87444
+140528 11:07:03: DEBUG: waiting for 87440, 87441, 87442, 87443
+140528 11:07:03: DEBUG: waiting for 87440, 87441, 87442
+140528 11:07:03: DEBUG: waiting for 87440, 87441
+140528 11:07:03: DEBUG: waiting for 87440
+140528 11:07:03: DEBUG: Setting log file to /Users/jallen/Documents/GitHub/aTRAM/test/debug/debug.log
+	assembling pairs with Velvet...
+140528 11:07:03: Running command "/usr/local/bin/velveth /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/IjP98Anfui 31 -fasta -shortPaired /Users/jallen/Documents/GitHub/aTRAM/test/debug/test_ap/aTRAM/complete.test.4.blast.fasta -long /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/eLGOa6Nmd2"
+[0.000000] Reading FastA file /Users/jallen/Documents/GitHub/aTRAM/test/debug/test_ap/aTRAM/complete.test.4.blast.fasta;
+[0.000130] 58 sequences found
+[0.000131] Done
+[0.000142] Reading FastA file /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/eLGOa6Nmd2;
+[0.000168] 1 sequences found
+[0.000169] Done
+[0.000211] Reading read set file /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/IjP98Anfui/Sequences;
+[0.000344] 59 sequences found
+[0.000477] Done
+[0.000478] 59 sequences in total.
+[0.000514] Writing into roadmap file /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/IjP98Anfui/Roadmaps...
+[0.000618] Inputting sequences...
+[0.000620] Inputting sequence 0 / 59
+[0.004270]  === Sequences loaded in 0.003653 s
+[0.004378] Done inputting sequences
+[0.004379] Destroying splay table
+[0.005105] Splay table destroyed
+140528 11:07:03: Returning 0 from "/usr/local/bin/velveth"
+140528 11:07:03: Running command "/usr/local/bin/velvetg /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/IjP98Anfui -ins_length 400 -exp_cov 30 -min_contig_lgth 200"
+[0.000000] Reading roadmap file /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/IjP98Anfui/Roadmaps
+[0.000131] 59 roadmaps read
+[0.000143] Creating insertion markers
+[0.000148] Ordering insertion markers
+[0.000168] Counting preNodes
+[0.000176] 107 preNodes counted, creating them now
+[0.000328] Adjusting marker info...
+[0.000332] Connecting preNodes
+[0.000363] Cleaning up memory
+[0.000364] Done creating preGraph
+[0.000365] Concatenation...
+[0.000406] Renumbering preNodes
+[0.000407] Initial preNode count 107
+[0.000411] Destroyed 94 preNodes
+[0.000412] Concatenation over!
+[0.000412] Clipping short tips off preGraph
+[0.000415] Concatenation...
+[0.000418] Renumbering preNodes
+[0.000418] Initial preNode count 13
+[0.000420] Destroyed 2 preNodes
+[0.000420] Concatenation over!
+[0.000420] 1 tips cut off
+[0.000421] 11 nodes left
+[0.000483] Writing into pregraph file /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/IjP98Anfui/PreGraph...
+[0.000612] Reading read set file /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/IjP98Anfui/Sequences;
+[0.000636] 59 sequences found
+[0.000726] Done
+[0.000834] Reading pre-graph file /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/IjP98Anfui/PreGraph
+[0.000845] Graph has 11 nodes and 59 sequences
+[0.000909] Scanning pre-graph file /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/IjP98Anfui/PreGraph for k-mers
+[0.000927] 901 kmers found
+[0.000996] Sorting kmer occurence table ... 
+[0.001193] Sorting done.
+[0.001195] Computing acceleration table... 
+[0.036817] Computing offsets... 
+[0.036840] Ghost Threading through reads 0 / 59
+[0.037310]  === Ghost-Threaded in 0.000470 s
+[0.037312] Threading through reads 0 / 59
+[0.037782]  === Threaded in 0.000470 s
+[0.049302] Correcting graph with cutoff 0.200000
+[0.049347] Determining eligible starting points
+[0.049361] Done listing starting nodes
+[0.049362] Initializing todo lists
+[0.049368] Done with initilization
+[0.049369] Activating arc lookup table
+[0.049370] Done activating arc lookup table
+[0.049477] Concatenation...
+[0.049479] Renumbering nodes
+[0.049479] Initial node count 11
+[0.049480] Removed 6 null nodes
+[0.049481] Concatenation over!
+[0.049481] Clipping short tips off graph, drastic
+[0.049483] Concatenation...
+[0.049493] Renumbering nodes
+[0.049494] Initial node count 5
+[0.049495] Removed 4 null nodes
+[0.049495] Concatenation over!
+[0.049496] 1 nodes left
+[0.049613] Writing into graph file /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/IjP98Anfui/Graph2...
+[0.049786] WARNING: NO COVERAGE CUTOFF PROVIDED
+[0.049787] Velvet will probably leave behind many detectable errors
+[0.049788] See manual for instructions on how to set the coverage cutoff parameter
+[0.049788] Removing contigs with coverage < -1.000000...
+[0.049790] Concatenation...
+[0.049791] Renumbering nodes
+[0.049791] Initial node count 1
+[0.049792] Removed 0 null nodes
+[0.049792] Concatenation over!
+[0.049793] Concatenation...
+[0.049793] Renumbering nodes
+[0.049793] Initial node count 1
+[0.049794] Removed 0 null nodes
+[0.049794] Concatenation over!
+[0.049797] Clipping short tips off graph, drastic
+[0.049798] Concatenation...
+[0.049798] Renumbering nodes
+[0.049799] Initial node count 1
+[0.049799] Removed 0 null nodes
+[0.049799] Concatenation over!
+[0.049800] 1 nodes left
+[0.049801] Read coherency...
+[0.049801] Identifying unique nodes
+[0.049802] Done, 1 unique nodes counted
+[0.049802] Trimming read tips
+[0.049803] Renumbering nodes
+[0.049803] Initial node count 1
+[0.049803] Removed 0 null nodes
+[0.049804] Confronted to 0 multiple hits and 0 null over 0
+[0.049805] Read coherency over!
+[0.049808] Starting pebble resolution...
+[0.049810] Computing read to node mapping array sizes
+[0.049812] Computing read to node mappings
+[0.049813] Estimating library insert lengths...
+[0.049816] Done
+[0.049818] Computing direct node to node mappings
+[0.049820] Scaffolding node 0
+[0.049822]  === Nodes Scaffolded in 0.000004 s
+[0.049824] Preparing to correct graph with cutoff 0.200000
+[0.049870] Cleaning memory
+[0.049872] Deactivating local correction settings
+[0.049880] Pebble done.
+[0.049880] Starting pebble resolution...
+[0.049881] Computing read to node mapping array sizes
+[0.049882] Computing read to node mappings
+[0.049883] Estimating library insert lengths...
+[0.049885] Done
+[0.049885] Computing direct node to node mappings
+[0.049887] Scaffolding node 0
+[0.049888]  === Nodes Scaffolded in 0.000003 s
+[0.049890] Preparing to correct graph with cutoff 0.200000
+[0.049899] Cleaning memory
+[0.049900] Deactivating local correction settings
+[0.049908] Pebble done.
+[0.049908] Concatenation...
+[0.049908] Renumbering nodes
+[0.049909] Initial node count 1
+[0.049909] Removed 0 null nodes
+[0.049910] Concatenation over!
+[0.049912] Removing reference contigs with coverage < -1.000000...
+[0.049913] Concatenation...
+[0.049913] Renumbering nodes
+[0.049913] Initial node count 1
+[0.049914] Removed 0 null nodes
+[0.049914] Concatenation over!
+[0.049939] Writing contigs into /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/IjP98Anfui/contigs.fa...
+[0.050084] Writing into stats file /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/IjP98Anfui/stats.txt...
+[0.050130] Writing into graph file /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/IjP98Anfui/LastGraph...
+Final graph has 1 nodes and n50 of 764, max 764, total 764, using 56/59 reads
+140528 11:07:03: Returning 0 from "/usr/local/bin/velvetg"
+140528 11:07:03: Velvet log:
+140528 11:07:03: Wed May 28 11:07:03 2014
+140528 11:07:03:  /usr/local/bin/velveth /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/IjP98Anfui 31 -fasta -shortPaired /Users/jallen/Documents/GitHub/aTRAM/test/debug/test_ap/aTRAM/complete.test.4.blast.fasta -long /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/eLGOa6Nmd2
+140528 11:07:03: Version 1.2.10
+140528 11:07:03: Copyright 2007, 2008 Daniel Zerbino (zerbino@ebi.ac.uk)
+140528 11:07:03: This is free software; see the source for copying conditions.  There is NO
+140528 11:07:03: warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+140528 11:07:03: Compilation settings:
+140528 11:07:03: CATEGORIES = 2
+140528 11:07:03: MAXKMERLENGTH = 31
+140528 11:07:03: 
+140528 11:07:03: Wed May 28 11:07:03 2014
+140528 11:07:03:  /usr/local/bin/velvetg /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/IjP98Anfui -ins_length 400 -exp_cov 30 -min_contig_lgth 200
+140528 11:07:03: Version 1.2.10
+140528 11:07:03: Copyright 2007, 2008 Daniel Zerbino (zerbino@ebi.ac.uk)
+140528 11:07:03: This is free software; see the source for copying conditions.  There is NO
+140528 11:07:03: warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+140528 11:07:03: Compilation settings:
+140528 11:07:03: CATEGORIES = 2
+140528 11:07:03: MAXKMERLENGTH = 31
+140528 11:07:03: 
+140528 11:07:03: Final graph has 1 nodes and n50 of 764, max 764, total 764, using 56/59 reads
+140528 11:07:03: end Velvet log
+	filtering contigs...
+140528 11:07:03: Running command "/usr/local/bin/tblastx -db /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/2oJ8xcP_My.db -query /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/X4WklpLg3Y -out /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/vrKV7MmhSb -outfmt '6 qseqid sseqid bitscore qstart qend sstart send qlen'"
+140528 11:07:03: Returning 0 from "/usr/local/bin/tblastx"
+	saving best-scoring contigs...
+No new contigs were found.
+140528 11:07:03: No new contigs were found.
+
+
+Contigs by target coverage:
+contig	aTRAM_target_start	testref	aTRAM_target_end	total score
+1.1_len_858_cov_3.5	-	156	77.6	233.6
+2.1_len_764_cov_5.4	20.8	156	77.6	254.4
+3.1_len_764_cov_5.5	20.8	156	77.6	254.4
+
+
+Contigs containing the entire target sequence:
+	2.1_len_764_cov_5.4
+	3.1_len_764_cov_5.5
+140528 11:07:03: Returning 0 from "/Users/jallen/Documents/GitHub/aTRAM/Pipelines/../aTRAM.pl"
+140528 11:07:03: Running command "/usr/bin/muscle3.8.31_i86darwin64 -in /var/folders/5b/p44vl22s1wgcw2bjdrj81q1c0000gp/T/rW7mhtekuT -out /Users/jallen/Documents/GitHub/aTRAM/test/debug/test_ap/aTRAM/complete.test.align.fasta"
+
+MUSCLE v3.8.31 by Robert C. Edgar
+
+http://www.drive5.com/muscle
+This software is donated to the public domain.
+Please cite: Edgar, R.C. Nucleic Acids Res 32(5), 1792-97.
+
+rW7mhtekuT 4 seqs, max length 888, avg  length 829
+00:00:00      1 MB(0%)  Iter   1   10.00%  K-mer dist pass 100:00:00      1 MB(0%)  Iter   1  100.00%  K-mer dist pass 1
+00:00:00      1 MB(0%)  Iter   1   10.00%  K-mer dist pass 200:00:00      1 MB(0%)  Iter   1  100.00%  K-mer dist pass 2
+00:00:00      2 MB(0%)  Iter   1   33.33%  Align node       00:00:00      4 MB(0%)  Iter   1   66.67%  Align node00:00:00      4 MB(0%)  Iter   1  100.00%  Align node00:00:00      5 MB(0%)  Iter   1  100.00%  Align node
+00:00:00      5 MB(0%)  Iter   1   25.00%  Root alignment00:00:00      5 MB(0%)  Iter   1   50.00%  Root alignment00:00:00      5 MB(0%)  Iter   1   75.00%  Root alignment00:00:00      5 MB(0%)  Iter   1  100.00%  Root alignment00:00:00      5 MB(0%)  Iter   1  100.00%  Root alignment
+00:00:00      5 MB(0%)  Iter   2  100.00%  Root alignment
+00:00:00      5 MB(0%)  Iter   3   40.00%  Refine biparts00:00:00      5 MB(0%)  Iter   3   60.00%  Refine biparts00:00:00      5 MB(0%)  Iter   3   80.00%  Refine biparts00:00:00      5 MB(0%)  Iter   3  100.00%  Refine biparts00:00:00      6 MB(0%)  Iter   3  120.00%  Refine biparts00:00:00      6 MB(0%)  Iter   3  100.00%  Refine biparts
+140528 11:07:03: Returning 0 from "/usr/bin/muscle3.8.31_i86darwin64"
+140528 11:07:03: Running command "/usr/local/bin/blastn -task blastn -query /Users/jallen/Documents/GitHub/aTRAM/test/debug/test_ap/aTRAM/complete.test.trimmed.fasta -subject /Users/jallen/Documents/GitHub/aTRAM/test/completeref.fasta -outfmt '6 qseqid bitscore' -out /Users/jallen/Documents/GitHub/aTRAM/test/debug/test_ap/aTRAM/complete.test.blast"
+140528 11:07:03: Returning 0 from "/usr/local/bin/blastn"
+140528 11:07:03: adding 2.1_len_764_cov_5.4 to complete.trimmed.fasta
+140528 11:07:03: adding 2.1_len_764_cov_5.4 from /Users/jallen/Documents/GitHub/aTRAM/test/debug/test_ap/aTRAM/complete.test.best.fasta to complete.full.fasta
+140528 11:07:03: Finished executing /Users/jallen/Documents/GitHub/aTRAM/test/../Pipelines/AlignmentPipeline.pl -samples /Users/jallen/Documents/GitHub/aTRAM/test/debug/test.samples -targets /Users/jallen/Documents/GitHub/aTRAM/test/debug/test.targets -out /Users/jallen/Documents/GitHub/aTRAM/test/debug/test_ap -iter 5 -debug -log /Users/jallen/Documents/GitHub/aTRAM/test/debug/debug.log
+
+140528 11:07:03: Returning 0 from "/Users/jallen/Documents/GitHub/aTRAM/test/../Pipelines/AlignmentPipeline.pl"
+140528 11:07:03: OK
+140528 11:07:03: 
+All tests successfully passed.
+
