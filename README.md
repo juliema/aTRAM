@@ -12,12 +12,12 @@ On OSX, aTRAM is also available through [Homebrew](https://github.com/Homebrew/h
 ###Preparing an aTRAM database###
 Given an Illumina paired-end short-read archive in fastq or fasta form, create a master aTRAM database from the short reads:
 
-```format_sra.pl -sra my_pe_library.fa|fq -out my_atram_db```
+```format_sra.pl -input my_pe_library.fa|fq -out my_atram_db```
 
 ###Finding a homolog with aTRAM###
 Given an aTRAM database and a target sequence in fasta form, run the main aTRAM script:
 
-```aTRAM.pl -sra my_atram_db -target target.fasta [-ins_length int] [-exp_coverage int] [-iterations int] [-output filename]```
+```aTRAM.pl -reads my_atram_db -target target.fasta [-ins_length int] [-exp_coverage int] [-iterations int] [-output filename]```
 
 aTRAM has many command-line options as well:
 
