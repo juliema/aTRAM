@@ -8,6 +8,8 @@ aTRAM can be run directly from the downloaded Github repo. To make sure you have
 
 On OSX, aTRAM is also available through [Homebrew](https://github.com/Homebrew/homebrew-science). Run ```brew tap homebrew/science``` and then ```brew install atram``` to install version 1.04.
 
+if you get an error with gcc try ```brew install homebrew/versions/gcc48``` then ```brew install atram```
+
 
 ###Preparing an aTRAM database###
 Given an Illumina paired-end short-read archive in fastq or fasta form, create a master aTRAM database from the short reads:
