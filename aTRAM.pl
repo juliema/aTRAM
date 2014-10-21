@@ -112,7 +112,7 @@ if ($assembler_available == 0) {
 }
 
 # find the path specified in the .atram file, if provided.
-if ($atram_db =~ /\.atram$/) {
+if (($atram_db =~ /\.atram$/) && (-f $atram_db)){
 	open ATRAM_FH, "<:crlf", $atram_db;
 	$atram_db = readline ATRAM_FH;
 	chomp $atram_db;
