@@ -26,16 +26,139 @@ sub fork_pair_retrieval {
 
 
     my $child_pid = fork();
-    unless ($child_pid) { #child process
-		pairedsequenceretrieval ($fastafile, $sequencelist, $outfile);
+    #unless ($child_pid) { #child process
+    if ( $child_pid == 0 ) { #child process
+	pairedsequenceretrieval($fastafile, $sequencelist, $outfile);
 	print "Line 29 $child_pid child pid fork pair retrieval my files are  fastafile $fastafile , squencelist $sequencelist , outfile $outfile \n\n";
-		exit;
+        # DEBUG - without this line, some fasta files are not produced, it could have something to do with max_processes  11/11/2014
+        #return $child_pid;
+	exit;
     } else { #parent process
         return $child_pid;
     }
 }
 
+
 sub pairedsequenceretrieval {
+    my $read1=0;
+    my $read2=0;
+	  
+	my $fastafile = shift;
+	my $sequencelist = shift;
+	my $outfile = shift;
+
+	if ($fastafile !~ /#/) {
+		print "fasta file must have '#' in name, to be replaced by 1 or 2 for the paired end files.\n";
+		return 0;
+	}
+
+	unless (-e $sequencelist) {
+		print "File $sequencelist does not exist.\n";
+		return 0;
+	}
+
+	my $fastafile_1 = "$fastafile";
+	$fastafile_1 =~ s/#/1/;
+	my $fastafile_2 = "$fastafile";
+	$fastafile_2 =~ s/#/2/;
+
+	unless (-e $fastafile_2) {
+		print "Files $fastafile_1 and $fastafile_2 do not exist.\n";
+		return 0;
+	}
+
+
+	my (undef, $seq_names) = tempfile(UNLINK => 1);
+
+	system ("sort $sequencelist | uniq -u > $seq_names");
+	print "Line 65 sequence names are $seq_names\n\n";
+
+#	open LIST_FH, "<:crlf", "$seq_names";
+#	open FA1_FH, "<:crlf", "$fastafile_1";
+#	open FA2_FH, "<:crlf", "$fastafile_2";
+	open LIST_FH, "<$seq_names";
+	open FA1_FH, "<$fastafile_1";
+	open FA2_FH, "<$fastafile_2";
+	open OUT_FH, ">", "$outfile";
+# flush output buffer immediately
+$| = 1;
+	print "Line 71 fastafile1 $fastafile_1 fastafle2 $fastafile_2 outfile $outfile\n";
+
+#	my $line = readline LIST_FH;
+#	print "line 73  line $line  this is reading the line of LIST_FH which is the $seq_names\n";
+
+	my %fa_hash1 = {};
+	my %fa_hash2 = {};
+
+my $counter = 0;
+	my $name1;
+	my $fa_seq1;
+	while ( <FA1_FH> ) {
+		chomp( $_ );
+		if ( />(.*?)\/1$/ ) {
+			$name1 = $1;
+
+#print "name1: $name1\n";
+		} else {
+			$fa_seq1 = $_;
+#print "fa_seq1: $fa_seq1\n";
+			$fa_hash1{ $name1 } = $fa_seq1;
+		}
+#print "true?: ".($fa_hash1{ $name1 } eq $fa_seq1)."\n"
+#exit if ($counter > 3000 );
+#$counter++;
+#next;
+        }
+
+#print "print hash here...\n";
+#	foreach ( sort keys %fa_hash1 ) {
+#		print "line1: $_\nline2: $fa_hash1{ $_ }\n";
+# 
+#	}
+
+	my $name2;
+	my $fa_seq2;
+	while ( <FA2_FH> ) {
+		chomp;
+		if ( />(.*?)\/2/ ) {
+			$name2 = $1;
+#print "name2: $name2\n";
+		} else {
+			$fa_seq2 = $_;
+#print "fa_seq2: $fa_seq2\n";
+			$fa_hash2{ $name2 } = $fa_seq2;
+		}
+        }
+
+#print "print hash here...\n";
+#	foreach ( sort keys %fa_hash2 ) {
+#		print "line1: $_\nline2: $fa_hash2{ $_ }\n";
+# 
+#	}
+
+	while ( <LIST_FH> ) {
+		/(.*?)\/1/;
+		my $name = $1;
+#print "$name\n";
+		chomp;
+		$fa_seq1 = $fa_hash1{ $name };	
+		$fa_seq2 = $fa_hash2{ $name };	
+
+                if ( $fa_seq2 ne '' ) {
+			print OUT_FH ">$name\/1\n$fa_seq1\n>$name\/2\n$fa_seq2\n";
+			#print ">$name\/1\n$fa_seq1\n>$name\/2\n$fa_seq2\n";
+                }
+	}
+
+	close LIST_FH;
+	close FA1_FH;
+	close FA2_FH;
+	close OUT_FH;
+	return 1;
+}
+
+
+sub pairedsequenceretrieval_notused {
     my $read1=0;
     my $read2=0;
 	  
@@ -93,6 +216,8 @@ sub pairedsequenceretrieval {
 		my $name1 = $1;
 		$fa_seq2 =~ />(.*?)\/2/;
 		my $name2 = $1;
+# DEBUGGING 11/11/2014
+#print "fa_seq2: $fa_seq2\n";
 #	    print "$name1 $name2 \n";  
 		if ($name1 =~ /$curr_name/) {
 #		    print " we've gotten to the corresponding entry in fa1.\n";
@@ -107,6 +232,8 @@ sub pairedsequenceretrieval {
 			elsif ($name2 eq  $curr_name) {
                             $read2++;
 			    print " if they're equal, print them all out to OUT_FH, advance iterators, and loop.\n";
+# DEBUGGING 11/11/2014
+print "fa_seq2: $fa_seq2\n";
 			    print OUT_FH "$fa_seq1$fa_seq2";
 			    print "what is printing to the output file\n $fa_seq1$fa_seq2\n";
 			    print "$name2    $curr_name\n";
