@@ -46,6 +46,8 @@ sub assembler {
 	run_command (get_bin($binaries->{trinity}), "--seqType fa --single $short_read_file --run_as_paired --JM $jm --output $tempdir");
 
 	my ($contigs, undef) = parsefasta ("$tempdir/Trinity.fasta");
+	#### removing the trinity folder so trinity will now do more than one iteration
+	`rm -r $tempdir/`;
 
 	open OUTFH, ">", $output_file;
 	foreach my $contigname (keys %$contigs) {
