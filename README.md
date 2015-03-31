@@ -1,7 +1,10 @@
 ##	aTRAM: automated Target Restricted Assembly Method
 doi:10.5281/zenodo.10431
 
-aTRAM performs targeted de novo assembly of loci from paired-end Illumina runs.
+aTRAM performs targeted de novo assembly of loci from paired-end Illumina runs. 
+
+When using this software please cite:
+Allen, JM, DI Huang, QC Cronk, KP Johnson. 2015. aTRAM automated target restricted assembly method a fast method for assembling loci across divergent taxa from next-generation sequencing data. BMC Bioinformatics 16:98 DOI 10.1186/s12859-015-0515-2
 
 ###Installation###
 aTRAM can be run directly from the downloaded Github repo. To make sure you have all the software required by aTRAM, we provide ```configure.pl``` to check for dependencies.
