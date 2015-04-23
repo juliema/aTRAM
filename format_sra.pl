@@ -199,7 +199,6 @@ if ($short_read_archive ne "") {
 	my @out_fhs = (\@out1_fhs, \@out2_fhs);
 	
 	for (my $i=0; $i<2; $i++) {
-		print "looking at $sra_files[$i]\n";
 		open SEARCH_FH, "<:crlf", $sra_files[$i];
 		while (my $line = readline SEARCH_FH) {
 			chomp $line;
@@ -209,7 +208,6 @@ if ($short_read_archive ne "") {
 				}
 				$name = "$1\/" . ($i+1);
 				$shard = map_to_shard($name);
-				print "\t$name\t$shard\n";
 				$keys[$shard]++;
 				$seq = "";
 			} elsif ($line =~ /^\+/){
