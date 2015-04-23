@@ -18,6 +18,8 @@ if (@ARGV == 0) {
 my $runline = "Running " . basename($0) . " " . join (" ", @ARGV) . ", " . get_version() . "\n";
 
 my $short_read_archive = "";
+my $short_read_1 = "";
+my $short_read_2 = "";
 my $output_file = "";
 my $log_file = "";
 my $help = 0;
@@ -26,6 +28,8 @@ my $numshards = 0;
 my $max_processes = 4;
 
 GetOptions ('input=s' => \$short_read_archive,
+			'1input=s' => \$short_read_1,
+			'2input=s' => \$short_read_2,
             'output=s' => \$output_file,
             'number=i' => \$numshards,
             'debug' => \$debug,
@@ -37,8 +41,38 @@ if ($help) {
     pod2usage(-verbose => 1);
 }
 
+if ($log_file eq "") {
+	$log_file = "$output_file.log";
+}
+
+set_log($log_file);
+set_debug($debug);
+printlog ("$runline");
+
+my $is_fastq = 0;
+my $srasize = 0;
 unless(-e $short_read_archive) {
-    pod2usage(-msg => "Must specify a short read archive in fasta or fastq form.");
+	# check to see if 1input and 2input were specified:
+	unless ((-e $short_read_1) && (-e $short_read_2)) {
+    	pod2usage(-msg => "Must specify a short read archive in fasta or fastq form.");
+	} else {
+		printlog "Two input files: $short_read_1 and $short_read_2\n";
+		if ($short_read_1 =~ /\.f.*q/) {
+			$is_fastq = 1;
+		}
+		$srasize = (-s $short_read_1) * 2;
+	}
+} else {
+	printlog "One input file: $short_read_archive\n";
+	if ($short_read_archive =~ /\.f.*q/) {
+		$is_fastq = 1;
+	}
+	$srasize = (-s $short_read_archive);
+}
+
+# if it's a fastq file, the file is twice the size that it would be if it were a fasta.
+if ($is_fastq) {
+	$srasize = $srasize/2;
 }
 
 unless ($output_file) {
@@ -58,21 +92,12 @@ unless (-d $output_path) {
 # Look in the config.txt file to find the correct paths to binaries.
 Configuration::initialize();
 
-if ($log_file eq "") {
-	$log_file = "$output_file.log";
-}
-
-set_log($log_file);
-set_debug($debug);
-printlog ("$runline");
-
 # making a redirect file to make it easier for users to have something to specify.
 my $db_file = "$output_file.atram";
 open DB_FH, ">", $db_file;
 print DB_FH "$output_file\n";
 close DB_FH;
 
-my $srasize = (-s $short_read_archive);
 my $srasizeMB = $srasize / 1e6;
 $srasizeMB =~ s/(\d*)\.(\d{2}).*/$1.$2/;
 
@@ -80,19 +105,15 @@ set_multiplier ($srasize);
 
 # if the user didn't specify how many shards to make, we should make as many as we need so that they average 250MB each.
 if ($numshards == 0) {
-	# if it's a fastq file, the file is twice the size that it would be if it were a fasta.
-	if ($short_read_archive =~ /\.f.*q/) {
-		$srasize = $srasize/2;
-	}
 	$numshards = int($srasize / 2.5e8);
 
 	# but if it's smaller than the minimum, make at least one shard.
 	if ($numshards == 0) {
 		$numshards = 1;
 	}
-	printlog ("$short_read_archive is $srasizeMB MB; we will make $numshards shards.");
+	printlog ("Input is $srasizeMB MB; we will make $numshards shards.");
 } else {
-	printlog ("making $numshards shards from $short_read_archive.");
+	printlog ("making $numshards shards.");
 }
 
 # declare how many shards we'll be making.
@@ -137,40 +158,77 @@ my $seq = "";
 my $seqlen = 0;
 my $shard = 0;
 
-open SEARCH_FH, "<:crlf", $short_read_archive;
-while (my $line = readline SEARCH_FH) {
-	chomp $line;
-	if ($line =~ /^[@>](.*?)([\s\/])([12])/) {
-		if ($name ne "") {
-			if ($name =~ /\/1/) {
-				print {$out1_fhs[$shard]} ">$name,$seq\n";
-			} elsif ($name =~ /\/2/) {
-				print {$out2_fhs[$shard]} ">$name,$seq\n";
+if ($short_read_archive ne "") {
+	open SEARCH_FH, "<:crlf", $short_read_archive;
+	while (my $line = readline SEARCH_FH) {
+		chomp $line;
+		if ($line =~ /^[@>](.*?)([\s\/])([12])/) {
+			if ($name ne "") {
+				if ($name =~ /\/1/) {
+					print {$out1_fhs[$shard]} ">$name,$seq\n";
+				} elsif ($name =~ /\/2/) {
+					print {$out2_fhs[$shard]} ">$name,$seq\n";
+				}
+			}
+			$name = "$1\/$3";
+			$shard = map_to_shard($name);
+			$keys[$shard]++;
+			$seq = "";
+		} elsif ($line =~ /^\+/){
+			# is this a fastq quality line? eat chars to the length of the full sequence.
+			while ($seqlen > 0) {
+				$line = readline SEARCH_FH;
+				chomp $line;
+				$seqlen = $seqlen - length($line);
+			}
+		} else {
+			$seq .= $line;
+			$seqlen = length ($seq);
+		}
+	}
+
+	if ($name =~ /\/1/) {
+		print {$out1_fhs[$shard]} ">$name,$seq\n";
+	} elsif ($name =~ /\/2/) {
+		print {$out2_fhs[$shard]} ">$name,$seq\n";
+	}
+	close SEARCH_FH;
+} else {
+	# there are two files: process the first and then the second.
+	my @sra_files = ($short_read_1, $short_read_2);
+	my @out_fhs = (\@out1_fhs, \@out2_fhs);
+	
+	for (my $i=0; $i<2; $i++) {
+		print "looking at $sra_files[$i]\n";
+		open SEARCH_FH, "<:crlf", $sra_files[$i];
+		while (my $line = readline SEARCH_FH) {
+			chomp $line;
+			if ($line =~ /^[@>](.+?)(\/[12])*$/) {
+				if ($name ne "") {
+					print {@{$out_fhs[$i]}[$shard]} ">$name,$seq\n";
+				}
+				$name = "$1\/" . ($i+1);
+				$shard = map_to_shard($name);
+				print "\t$name\t$shard\n";
+				$keys[$shard]++;
+				$seq = "";
+			} elsif ($line =~ /^\+/){
+				# is this a fastq quality line? eat chars to the length of the full sequence.
+				while ($seqlen > 0) {
+					$line = readline SEARCH_FH;
+					chomp $line;
+					$seqlen = $seqlen - length($line);
+				}
+			} else {
+				$seq .= $line;
+				$seqlen = length ($seq);
 			}
 		}
-		$name = "$1\/$3";
-		$shard = map_to_shard($name);
-		$keys[$shard]++;
-		$seq = "";
-	} elsif ($line =~ /^\+/){
-		# is this a fastq quality line? eat chars to the length of the full sequence.
-		while ($seqlen > 0) {
-			$line = readline SEARCH_FH;
-			chomp $line;
-			$seqlen = $seqlen - length($line);
-		}
-	} else {
-		$seq .= $line;
-		$seqlen = length ($seq);
-	}
+		print {@{$out_fhs[$i]}[$shard]} ">$name,$seq\n";
+		close SEARCH_FH;
+	}	
 }
 
-if ($name =~ /\/1/) {
-	print {$out1_fhs[$shard]} ">$name,$seq\n";
-} elsif ($name =~ /\/2/) {
-	print {$out2_fhs[$shard]} ">$name,$seq\n";
-}
-close SEARCH_FH;
 my @pids = ();
 printlog ("starting sort.");
 
