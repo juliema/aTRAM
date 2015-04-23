@@ -60,7 +60,7 @@ unless(-e $short_read_archive) {
 		if ($short_read_1 =~ /\.f.*q/) {
 			$is_fastq = 1;
 		}
-		$srasize = (-s $short_read_1) * 2;
+		$srasize = (-s $short_read_1);
 	}
 } else {
 	printlog "One input file: $short_read_archive\n";
