@@ -199,6 +199,8 @@ if ($short_read_archive ne "") {
 	my @out_fhs = (\@out1_fhs, \@out2_fhs);
 	
 	for (my $i=0; $i<2; $i++) {
+		$name = "";
+		$seq = "";
 		open SEARCH_FH, "<:crlf", $sra_files[$i];
 		while (my $line = readline SEARCH_FH) {
 			chomp $line;
