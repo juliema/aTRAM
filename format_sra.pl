@@ -328,13 +328,14 @@ format_sra.pl
 
 =head1 SYNOPSIS
 
-format_sra.pl -input short_read_archive [-output aTRAM_db_name] [-number int]
+format_sra.pl [-input short_read_archive | -1input sra1 -2input sra2] [-output aTRAM_db_name] [-number int]
 
 Takes a fasta or fastq file of paired-end short reads and creates an aTRAM database for use by aTRAM.pl.
 
 =head1 OPTIONS
 
- -input:   short read archive.
+ -input:   short read archive in fasta or fastq format. Use this option if both ends are in a single file.
+ -1input, -2input: short read archives for 1st and 2nd paired-end reads, in fasta or fastq format.
  -output:  optional: prefix of aTRAM database (default is the same as -input).
  -number:  optional: number of shards to create (default is however many are required for each to be ~250MB).
 
