@@ -78,20 +78,51 @@ Parameters with modifiable default values:
 ## Pipelines
 
 ### BasicPipeline.pl
-Runs aTRAM on a list of genes on a number of aTRAM formatted databases.
+Runs aTRAM for a number of target sequences on a number of aTRAM databases.
 
 ```perl BasicPipeline.pl -samples SampleFile.txt -targets -TargetFile.txt [atram parameters -complete -protein]```
 
 * `TargetFile.txt`: tab-delimited file; each line contains the target name and the path to its fasta file
 * `SampleFile.txt`: tab-delimited file; each line contains the sample name and the path to its aTRAM-formatted database
 
+#### Results:
+
+`pipeline.log` contains the entire console output of the pipeline.
+
+For each sample, there is a directory of results. Each of those directories contains the following:
+
+* `.all.fasta` has all of the contigs pulled out in each iteration
+* `.best.fasta` has the best contigs for each iteration
+* `.results.txt` is the aTRAM results file for this sample.
+
 ### AlignmentPipeline.pl 
-aTRAM on a list of genes on a number of aTRAM formatted databases then aligns the aTRAM contigs back to the target
+Runs aTRAM for a number of target sequences on a number of aTRAM databases, then aligns the resulting contigs back to the target sequences. Target sequences must be DNA, not amino acid.
 
 ```perl AlignmentPipeline.pl -samples SampleFile.txt -targets -TargetFile.txt [atram parameters -complete -protein]```
 
 * `TargetFile.txt`: tab-delimited file; each line contains the target name and the path to its fasta file
 * `SampleFile.txt`: tab-delimited file; each line contains the sample name and the path to its aTRAM-formatted database
 
+#### Results:
+
+For each target sequence, there is a directory of results. Each of those directories contains the following:
+
+`results.txt` contains the overall summary of the pipeline results in tabular form: each sample's best contig is listed, with summary statistics for its bitscore and percent coverage of the target sequence.
+
+`pipeline.log` contains the entire console output of the pipeline.
+
+The `aTRAM` directory contains the per-sample results. For each sample, there are six files: 
+
+* `.all.fasta` has all of the contigs pulled out in each iteration
+* `.best.fasta` has the best contigs for each iteration
+* `.complete.fasta` has the contigs that cover both ends of the target sequence
+* `.align.fasta` uses MUSCLE to align the contigs from .best.fasta to the target sequence
+* `.trimmed.fasta` takes the MUSCLE alignment and trims out any gaps relative to the target sequence.
+* `.results.txt` is the aTRAM results file for this sample.
+
+The `alignments` folder contains summary results over all samples. There are two fasta files:
+
+* `.full.fasta` contains the entire sequence of the best-scoring contig for every sample, including introns and assemblies that go beyond the ends of the target sequence.
+* `.trimmed.fasta` contains those same contigs aligned to the target sequence and trimmed of gaps relative to the target sequence. If the target sequence was a CDS, this file will not contain introns.
 
 
