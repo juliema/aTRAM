@@ -43,9 +43,6 @@ sub assembler {
 	my $str = "$short_read_file\_temp-unitigs.fa";
 	my ($contigs, undef) = parsefasta ($str);
 	### paired end abyss
-#	my $str = "$short_read_file\_temp-contigs.fa";
-#	my ($contigs, undef) = parsefasta ($str);
-	print "$str\n\n";
 	# copy ABySS log output to logfile.
 	open LOGFH, "<:crlf", "$tempdir/Log";
 	printlog ("Abyss log:");
@@ -67,11 +64,7 @@ sub assembler {
 	###### remove temp files from abyss
 	`rm $short_read_file\_temp*`; 
 	`rm $short_read_file\_temp*`; 
-#	`rm $short_read_file_1.fasta`;
-#	`rm $short_read_file_2.fasta`;
 	###abyss paired end
-#	`rm *.dist`;
-#	`rm *.hist`;
 	close OUTFH;	
 	return $contigs;
 }
