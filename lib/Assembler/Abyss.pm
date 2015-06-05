@@ -40,7 +40,7 @@ sub assembler {
 	    print "$string\n\n";
 	    run_command (get_bin($binaries->{'abyss-pe'}), $string,1);
 	##single end abyss
-	my $str = "$short_read_file\_temp-scaffolds.fa";
+	my $str = "$short_read_file\_temp-unitigs.fa";
 	my ($contigs, undef) = parsefasta ($str);
 	### paired end abyss
 #	my $str = "$short_read_file\_temp-contigs.fa";
