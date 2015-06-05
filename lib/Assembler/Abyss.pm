@@ -49,16 +49,12 @@ sub assembler {
 	}
 	Configuration::initialize();
 	my ($kmer, $kmer2, $tempdir, $output_file) = 0;
-	my $longreads = "";
 	if ((ref $params) =~ /HASH/) {
 	    if (exists $params->{"kmer"}) {
 		$kmer = $params->{"kmer"};
 	    }
 	    if (exists $params->{"tempdir"}) {
 		$tempdir = $params->{"tempdir"};
-	    }
-	    if (exists $params->{"longreads"}) {
-		$longreads = $params->{"longreads"};
 	    }
 	    if (exists $params->{"output"}) {
 		$output_file = $params->{"output"};
@@ -70,20 +66,10 @@ sub assembler {
 	# using ABySS
 	# truncate ABySS log file if it already exists
 	truncate "$tempdir/Log", 0;
-	if ($longreads ne "") {
-	    $kmer2= 2*$kmer-10;
-	    ## abyss single endd
-	    my $string ="v=-v k=$kmer name=$short_read_file\_temp se='$short_read_file\_1.fasta $short_read_file\_2.fasta $longreads'";
-	    ### abyss paired end
-##	    my $string ="v=-v k=$kmer name=$short_read_file\_temp lib='LIB' LIB='$short_read_file\_1.fasta $short_read_file\_2.fasta' se='$longreads'";
-            run_command (get_bin($binaries->{'abyss-pe'}), $string,1);
-	} else {
-#	    my $string="v=-v k=$kmer name=$short_read_file\_temp  lib='LIB' LIB='$short_read_file\_1.fasta $short_read_file\_2.fasta'";
 	    ## abyss single end
 	    my $string="v=-v k=$kmer name=$short_read_file\_temp  se='$short_read_file\_1.fasta $short_read_file\_2.fasta'";
 	    print "$string\n\n";
 	    run_command (get_bin($binaries->{'abyss-pe'}), $string,1);
-	}
 	##single end abyss
 	my $str = "$short_read_file\_temp-scaffolds.fa";
 	my ($contigs, undef) = parsefasta ($str);
