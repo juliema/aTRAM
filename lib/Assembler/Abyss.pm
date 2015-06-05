@@ -35,10 +35,9 @@ sub assembler {
 	# using ABySS
 	# truncate ABySS log file if it already exists
 	truncate "$tempdir/Log", 0;
-	    ## abyss single end
+	## abyss single end
 	my $string="v=-v k=$kmer name=$short_read_file\_temp se='$short_read_file' E=0";
-	    print "$string\n\n";
-	    run_command (get_bin($binaries->{'abyss-pe'}), $string,1);
+	run_command (get_bin($binaries->{'abyss-pe'}), $string,1);
 	##single end abyss
 	my $str = "$short_read_file\_temp-unitigs.fa";
 	my ($contigs, undef) = parsefasta ($str);
