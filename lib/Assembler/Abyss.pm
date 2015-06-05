@@ -63,7 +63,6 @@ sub assembler {
 	}
 	###### remove temp files from abyss
 	`rm $short_read_file\_temp*`; 
-	`rm $short_read_file\_temp*`; 
 	###abyss paired end
 	close OUTFH;	
 	return $contigs;
