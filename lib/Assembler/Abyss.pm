@@ -16,37 +16,6 @@ sub assembler {
 	my $short_read_file = shift;
 	my $params = shift;
 	
-###############
-#### need to split the reads into two files return  $shortreadfile.read1  $shortreadfile.read2
-##############	
-#        print "spliting short read file into two files. $short_read_file $short_read_file\_1.fasta $short_read_file\_2.fasta\n";
-	open FH, "<$short_read_file";
-	open RD1, ">$short_read_file\_1.fasta";
-	open RD2, ">$short_read_file\_2.fasta";
-	my $flag=0;
-	my $lib='library';
-	while (<FH>) {
-	    if ($flag == 1 && ! />/) { 
-		my $seq=$_;
-		chomp $seq;
-		print RD1 "$seq\n"; 
-	    }
-	    if ($flag == 2 && ! />/) {
-		my $seq=$_;
-		chomp $seq;
-		print RD2 "$seq\n"; 
-	    }
-	    if (/>(.*?)\/1/) {
-		my $name=$1;
-		$flag=1;
-		print RD1;
-	    }
-	    if (/>(.*?)\/2/) {
-		$flag=2;
-		my $name=$2;
-		print RD2;
-	    }
-	}
 	Configuration::initialize();
 	my ($kmer, $kmer2, $tempdir, $output_file) = 0;
 	if ((ref $params) =~ /HASH/) {
@@ -67,7 +36,7 @@ sub assembler {
 	# truncate ABySS log file if it already exists
 	truncate "$tempdir/Log", 0;
 	    ## abyss single end
-	    my $string="v=-v k=$kmer name=$short_read_file\_temp  se='$short_read_file\_1.fasta $short_read_file\_2.fasta'";
+	my $string="v=-v k=$kmer name=$short_read_file\_temp se='$short_read_file' E=0";
 	    print "$string\n\n";
 	    run_command (get_bin($binaries->{'abyss-pe'}), $string,1);
 	##single end abyss
