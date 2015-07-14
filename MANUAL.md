@@ -2,6 +2,8 @@
 
 Here are the required commands for running aTRAM as well as a few things to keep in mind for maximum efficiency. Required commands are indicated and optional commands are in brackets. 
 
+A more detailed manual is in progress:  http://alturl.com/d7cia
+
 
 ## Setup
 To determine if aTRAM can run on your computer:
