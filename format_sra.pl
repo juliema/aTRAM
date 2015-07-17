@@ -60,7 +60,7 @@ unless(-e $short_read_archive) {
 		if ($short_read_1 =~ /\.f.*q/) {
 			$is_fastq = 1;
 		}
-		$srasize = (-s $short_read_1);
+		$srasize = (-s ($short_read_1 * 2));
 	}
 } else {
 	printlog "One input file: $short_read_archive\n";
@@ -162,11 +162,16 @@ if ($short_read_archive ne "") {
 	open SEARCH_FH, "<:crlf", $short_read_archive;
 	while (my $line = readline SEARCH_FH) {
 		chomp $line;
-		if ($line =~ /^[@>](.*?)([\s\/])([12])/) {
+		### editing 7.17 need to capture it up here
+	#	if ($line =~ /^[@>](.*?)([\s\/])([12])/) {
+		if ($line =~ /^[@>](.*?)([\s\/_])([12])/) {
 			if ($name ne "") {
-				if ($name =~ /\/1/) {
+				### editing 7.17. to allow different file types
+				#if ($name =~ /\/1/) {
+				if ($name =~ /(\/|_)1/) {
 					print {$out1_fhs[$shard]} ">$name,$seq\n";
-				} elsif ($name =~ /\/2/) {
+				#} elsif ($name =~ /\/2/) {
+				} elsif ($name =~ /(\/|_)2/) {
 					print {$out2_fhs[$shard]} ">$name,$seq\n";
 				}
 			}
@@ -186,10 +191,12 @@ if ($short_read_archive ne "") {
 			$seqlen = length ($seq);
 		}
 	}
-
-	if ($name =~ /\/1/) {
+	### editing 7.17. to allow different file types
+	#if ($name =~ /\/1/) {
+	if ($name =~ /(\/|_)1/) {
 		print {$out1_fhs[$shard]} ">$name,$seq\n";
-	} elsif ($name =~ /\/2/) {
+	#} elsif ($name =~ /\/2/) {
+	} elsif ($name =~ /(\/|_)2/) {
 		print {$out2_fhs[$shard]} ">$name,$seq\n";
 	}
 	close SEARCH_FH;
@@ -204,7 +211,9 @@ if ($short_read_archive ne "") {
 		open SEARCH_FH, "<:crlf", $sra_files[$i];
 		while (my $line = readline SEARCH_FH) {
 			chomp $line;
-			if ($line =~ /^[@>](.+?)(\/[12])*$/) {
+			###  some fastq formats have _1 in the middle of the name others have /1 at the end. editing 7.17.15 
+#			if ($line =~ /^[@>](.+?)(\/[12]).*$/) {
+			if ($line =~ /^[@>](.+?)([\/_][12]).*$/) {
 				if ($name ne "") {
 					print {@{$out_fhs[$i]}[$shard]} ">$name,$seq\n";
 				}
