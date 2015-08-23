@@ -160,11 +160,10 @@ my $seqlen = 0;
 my $shard = 0;
 
 if ($short_read_archive ne "") {
+	# there is one interleaved file.
 	open SEARCH_FH, "<:crlf", $short_read_archive;
 	while (my $line = readline SEARCH_FH) {
 		chomp $line;
-		### editing 7.17 need to capture it up here
-	#	if ($line =~ /^[@>](.*?)([\s\/])([12])/) {
 		if ($line =~ /^[@>](.*?)([\s\/_])([12])/) {
 			# new sequence, let's finish printing out the last sequence.
 			if ($name ne "") {
@@ -209,8 +208,6 @@ if ($short_read_archive ne "") {
 		open SEARCH_FH, "<:crlf", $sra_files[$i];
 		while (my $line = readline SEARCH_FH) {
 			chomp $line;
-			###  some fastq formats have _1 in the middle of the name others have /1 at the end. editing 7.17.15 
-#			if ($line =~ /^[@>](.+?)(\/[12]).*$/) {
 			if ($line =~ /^[@>](.+?)([\/_][12]).*$/) {
 				if ($name ne "") {
 					print {@{$out_fhs[$i]}[$shard]} ">$name,$seq\n";
