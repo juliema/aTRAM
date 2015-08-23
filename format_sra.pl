@@ -102,6 +102,7 @@ my $srasizeMB = $srasize / 1e6;
 $srasizeMB =~ s/(\d*)\.(\d{2}).*/$1.$2/;
 
 set_multiplier ($srasize);
+printlog ("Multiplier is " . get_multiplier() . ".");
 
 # if the user didn't specify how many shards to make, we should make as many as we need so that they average 250MB each.
 if ($numshards == 0) {
@@ -113,7 +114,7 @@ if ($numshards == 0) {
 	}
 	printlog ("Input is $srasizeMB MB; we will make $numshards shards.");
 } else {
-	printlog ("making $numshards shards.");
+	printlog ("Making $numshards shards.");
 }
 
 # declare how many shards we'll be making.
