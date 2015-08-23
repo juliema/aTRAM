@@ -166,16 +166,16 @@ if ($short_read_archive ne "") {
 		### editing 7.17 need to capture it up here
 	#	if ($line =~ /^[@>](.*?)([\s\/])([12])/) {
 		if ($line =~ /^[@>](.*?)([\s\/_])([12])/) {
+			# new sequence, let's finish printing out the last sequence.
 			if ($name ne "") {
-				### editing 7.17. to allow different file types
-				#if ($name =~ /\/1/) {
-				if ($name =~ /(\/|_)1/) {
+				if ($name =~ /1$/) {
 					print {$out1_fhs[$shard]} ">$name,$seq\n";
-				#} elsif ($name =~ /\/2/) {
-				} elsif ($name =~ /(\/|_)2/) {
+				} elsif ($name =~ /2$/) {
 					print {$out2_fhs[$shard]} ">$name,$seq\n";
 				}
 			}
+			
+			# set up the name for the next sequence: we're going with "name/1" formatting
 			$name = "$1\/$3";
 			$shard = map_to_shard($name);
 			$keys[$shard]++;
@@ -192,12 +192,9 @@ if ($short_read_archive ne "") {
 			$seqlen = length ($seq);
 		}
 	}
-	### editing 7.17. to allow different file types
-	#if ($name =~ /\/1/) {
-	if ($name =~ /(\/|_)1/) {
+	if ($name =~ /1$/) {
 		print {$out1_fhs[$shard]} ">$name,$seq\n";
-	#} elsif ($name =~ /\/2/) {
-	} elsif ($name =~ /(\/|_)2/) {
+	} elsif ($name =~ /2$/) {
 		print {$out2_fhs[$shard]} ">$name,$seq\n";
 	}
 	close SEARCH_FH;
