@@ -43,8 +43,23 @@ printlog ("OK", ECHO);
 ##########################################################################################
 ## Testing format_sra.pl
 ##########################################################################################
-printlog (++$i .". Checking that format_sra works correctly...", ECHO);
+printlog (++$i .". Checking that format_sra works correctly on an interleaved file...", ECHO);
 $result = run_command ("$executing_path/../format_sra.pl", "-in $executing_path/test_sra.fasta -out $temp_dir/test_db -num 7 $debug_flag $log_flag", {"no_exit"=>1});
+if ($result != 0) {
+	fail_with_msg ("Format_sra failed.");
+}
+
+`tail -n +2 $temp_dir/test_db.atram > $temp_dir/test_db.test`;
+`diff $executing_path/test_format.txt $temp_dir/test_db.test > $executing_path/test.results.$i.diff`;
+if ($? != 0) {
+	fail_with_msg ("Format_sra returned incorrect results.");
+}
+`rm $executing_path/test.results.$i.diff`;
+
+printlog ("OK", ECHO);
+
+printlog (++$i .". Checking that format_sra works correctly on two separate files...", ECHO);
+$result = run_command ("$executing_path/../format_sra.pl", "-1input $executing_path/test_sra1.fasta -2input $executing_path/test_sra2.fasta -out $temp_dir/test_db -num 7 $debug_flag $log_flag", {"no_exit"=>1});
 if ($result != 0) {
 	fail_with_msg ("Format_sra failed.");
 }
