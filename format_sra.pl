@@ -60,7 +60,7 @@ unless(-e $short_read_archive) {
 		if ($short_read_1 =~ /\.f.*q/) {
 			$is_fastq = 1;
 		}
-		$srasize = (-s $short_read_1);
+		$srasize = (-s ($short_read_1)) * 2;
 	}
 } else {
 	printlog "One input file: $short_read_archive\n";
@@ -102,6 +102,7 @@ my $srasizeMB = $srasize / 1e6;
 $srasizeMB =~ s/(\d*)\.(\d{2}).*/$1.$2/;
 
 set_multiplier ($srasize);
+printlog ("Multiplier is " . get_multiplier() . ".");
 
 # if the user didn't specify how many shards to make, we should make as many as we need so that they average 250MB each.
 if ($numshards == 0) {
@@ -113,7 +114,7 @@ if ($numshards == 0) {
 	}
 	printlog ("Input is $srasizeMB MB; we will make $numshards shards.");
 } else {
-	printlog ("making $numshards shards.");
+	printlog ("Making $numshards shards.");
 }
 
 # declare how many shards we'll be making.
@@ -159,17 +160,24 @@ my $seqlen = 0;
 my $shard = 0;
 
 if ($short_read_archive ne "") {
+	# there is one interleaved file.
 	open SEARCH_FH, "<:crlf", $short_read_archive;
 	while (my $line = readline SEARCH_FH) {
 		chomp $line;
-		if ($line =~ /^[@>](.*?)([\s\/])([12])/) {
+		### filetypes:
+		##  HWI-ST330:137:D057WACXX:7:1101:1222:2061 1:N:0:ACAGTG
+		##  HWI-ST330:137:D057WACXX:7:1101:1222:2061/1
+		##  HWI-ST330:137:D057WACXX:7:1101:1222:2061_1
+		if ($line =~ /^[@>](.*?)([\s\/_])([12])/) {
+			# new sequence, let's finish printing out the last sequence.
 			if ($name ne "") {
-				if ($name =~ /\/1/) {
+				if ($name =~ /1$/) {
 					print {$out1_fhs[$shard]} ">$name,$seq\n";
-				} elsif ($name =~ /\/2/) {
+				} elsif ($name =~ /2$/) {
 					print {$out2_fhs[$shard]} ">$name,$seq\n";
 				}
 			}
+			# set up the name for the next sequence: we're going with "name/1" formatting
 			$name = "$1\/$3";
 			$shard = map_to_shard($name);
 			$keys[$shard]++;
@@ -186,10 +194,10 @@ if ($short_read_archive ne "") {
 			$seqlen = length ($seq);
 		}
 	}
-
-	if ($name =~ /\/1/) {
+	if ($name =~ /1$/) {
 		print {$out1_fhs[$shard]} ">$name,$seq\n";
-	} elsif ($name =~ /\/2/) {
+	
+	} elsif ($name =~ /2$/) {
 		print {$out2_fhs[$shard]} ">$name,$seq\n";
 	}
 	close SEARCH_FH;
@@ -204,7 +212,7 @@ if ($short_read_archive ne "") {
 		open SEARCH_FH, "<:crlf", $sra_files[$i];
 		while (my $line = readline SEARCH_FH) {
 			chomp $line;
-			if ($line =~ /^[@>](.+?)(\/[12])*$/) {
+			if ($line =~ /^[@>](.+?)([\s\/_][12]).*$/) {
 				if ($name ne "") {
 					print {@{$out_fhs[$i]}[$shard]} ">$name,$seq\n";
 				}
