@@ -12,7 +12,7 @@ use Configuration;
 # Assembler modules should return a hash of the resulting contigs.
 
 # Hash of assembler's required binaries
-my $binaries = {trinity => "Trinity.pl"};
+my $binaries = {trinity => "Trinity"};
 
 sub get_binaries {
 	return $binaries;
@@ -43,7 +43,11 @@ sub assembler {
 		}
 	}
 	# using Trinity.pl
-	run_command (get_bin($binaries->{trinity}), "--seqType fa --single $short_read_file --run_as_paired --JM $jm --output $tempdir");
+  $tempdir .= '_trinity';
+  my $args = "--seqType fa --single $short_read_file --run_as_paired --output $tempdir --max_memory $jm";
+  # $args .= " --long_reads $longreads" if $longreads;
+  my $cmd = get_bin($binaries->{trinity});
+	run_command ($cmd, $args);
 
 	my ($contigs, undef) = parsefasta ("$tempdir/Trinity.fasta");
 	#### removing the trinity folder so trinity will now do more than one iteration
@@ -52,7 +56,6 @@ sub assembler {
 	open OUTFH, ">", $output_file;
 	foreach my $contigname (keys %$contigs) {
 		my $sequence = $contigs->{$contigname};
-		# >comp2_c0_seq1 len=4637 path=[7895:0-4636]
 		$contigname =~ s/^comp(\d+)_(c\d+)_seq. len=(\d+).*$/$1$2_len_$3/;
 		print OUTFH ">$contigname\n$sequence\n";
 	}
