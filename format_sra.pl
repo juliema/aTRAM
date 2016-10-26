@@ -17,6 +17,8 @@ if (@ARGV == 0) {
 
 my $runline = "Running " . basename($0) . " " . join (" ", @ARGV) . ", " . get_version() . "\n";
 
+
+## short read is concatenated read1 and read2, short_read1 is all read1s etc.
 my $short_read_archive = "";
 my $short_read_1 = "";
 my $short_read_2 = "";
@@ -24,7 +26,7 @@ my $output_file = "";
 my $log_file = "";
 my $help = 0;
 my $debug = 0;
-my $numshards = 0;
+my $numshards = 0;  ### possible tesing in the future. What is the ideal shard size?
 my $max_processes = 4;
 
 GetOptions ('input=s' => \$short_read_archive,
@@ -260,6 +262,9 @@ for (my $i=0; $i<$numshards; $i++) {
 }
 wait_for_forks(\@pids);
 printlog ("sorted.");
+
+## here we are taking the read 1 from the sorted files and turning them into a blast database.
+## read 2 goes into a fasta file with the shard name.
 
 for (my $i=0; $i<$numshards; $i++) {
 	printlog ("Making $output_file.$i.1.fasta.");
