@@ -1,5 +1,7 @@
+import os
 import re
 import sys
+import glob
 import time
 import sqlite3
 import argparse
@@ -8,11 +10,11 @@ from multiprocessing import Pool
 import numpy as np
 
 BATCH_SIZE = 750000
-DEFAULT_SHARDS = 8
-DEFAULT_PROCESSES = DEFAULT_SHARDS  # TODO
 FRAGMENT = re.compile(r'[>@] \s* ( .*? ) ( [\s\/_] [12] )', re.VERBOSE)
 
-DB_PATH = 'data/test.db'  # TODO !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+DEFAULT_SHARDS = 8  # TODO !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+DEFAULT_PROCESSES = DEFAULT_SHARDS  # TODO !!!!!!!!!!!!!!!!!!!!!!!!!!!!
+DB_PATH = 'data/temp_sqlite.db'  # TODO !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 
 def timing(f):
@@ -46,7 +48,7 @@ def append_rec(recs, frag, seq, end, count):
     return count
 
 
-@timing
+# @timing
 def load_seqs(db, sra_files):
     count = 0
     for file_name in sra_files:
@@ -82,68 +84,70 @@ def create_table(db):
     db.execute('''CREATE TABLE IF NOT EXISTS ends (frag TEXT, seq TEXT, seq_end TEXT)''')
 
 
-@timing
+# @timing
 def create_index(db):
     log('Creating sqlite indices')
     db.execute('''CREATE INDEX IF NOT EXISTS frag ON ends (frag)''')
 
 
 def connect_db(db_path):
-    db = sqlite3.connect(db_path)
-    return db
+    return sqlite3.connect(db_path)
 
 
 def assign_seqs_to_shards(db, shard_count):
     log('Assigning sequences to shards')
-    c = db.execute('SELECT COUNT(*) FROM ends')
-    total = c.fetchone()[0]
+    connection = db.execute('SELECT COUNT(*) FROM ends')
+    total = connection.fetchone()[0]
     offsets = np.linspace(0, total, num=shard_count + 1, dtype=int)
     for i in range(1, len(offsets) - 1):
-        c = db.execute('SELECT frag FROM ends ORDER BY frag LIMIT 2 OFFSET {}'.format(offsets[i]))
-        first = c.fetchone()[0]
-        second = c.fetchone()[0]
+        connection = db.execute('SELECT frag FROM ends ORDER BY frag LIMIT 2 OFFSET {}'.format(offsets[i]))
+        first = connection.fetchone()[0]
+        second = connection.fetchone()[0]
         if first != second:
             offsets[i] += 1
     limits = [offsets[i + 1] - offsets[i] for i in range(len(offsets) - 1)]
-    c.close()
+    connection.close()
     return list(zip(limits, offsets[:-1]))
 
 
-def create_temp_file(shard, i):
+def create_blast_db(shard, i):
     db = connect_db(DB_PATH)
     sql = 'SELECT frag, seq_end, seq FROM ends ORDER BY frag LIMIT {} OFFSET {}'.format(shard[0], shard[1])
-    c = db.execute(sql)
-    with open('data/seqs_{}.fasta'.format(i), 'w') as out_file:  # TODO
-        for row in c:
+    connection = db.execute(sql)
+    fasta_file = 'data/temp_seqs_{}.fasta'.format(i)
+    blast_prefix = 'data/blast_{}'.format(i)
+    with open(fasta_file, 'w') as out_file:  # TODO
+        for row in connection:
             out_file.write('>{}{}\n'.format(row[0], row[1]))
             out_file.write('{}\n'.format(row[2]))
-    c.close()
     db.close()
-
-
-def create_temp_files(process_count, shards):
-    log('Making temporary files')
-    with Pool(processes=process_count) as pool:
-        for i, shard in enumerate(shards):
-            proc = pool.Process(target=create_temp_file, args=(shard, i))
-            proc.start()
-    pool.join()
-
-
-def create_blast_db(shard):
-    pass
-    # Create temp file from shard and input filesc
-    # Build blast DB from temp file
-    # Remove temp file
+    result = subprocess.check_call(('makeblastdb -dbtype nucl -in {} -out {}').format(
+        fasta_file, blast_prefix), shell=True)
+    os.remove(fasta_file)
 
 
 def create_blast_dbs(process_count, shards):
     log('Making blast DBs')
     with Pool(processes=process_count) as pool:
-        for i in range(len(shards)):
-            proc = pool.Process(target=create_blast_db, args=(i,))
+        for i, shard in enumerate(shards):
+            proc = pool.Process(target=create_blast_db, args=(shard, i))
             proc.start()
     pool.join()
+
+
+def delete_temp_files():
+    log('Deleting temporary files')
+    try:
+        for f in glob.glob(DB_PATH + '*'):  # TODO !!!!!!!!!!!!!!!!!!!!!!!!!!
+            os.remove(f)
+    except:
+        log('Did not find the temporary sqlite database files')
+
+    try:
+        for f in glob.glob('data/blast_*'):  # TODO !!!!!!!!!!!!!!!!!!!!!!!!!!
+            os.remove(f)
+    except:
+        log('Did not find the temporary blast files')
 
 
 def parse_args():
@@ -171,13 +175,12 @@ if __name__ == "__main__":
 
     db = connect_db(DB_PATH)  # TODO: make based on args
 
-    # create_table(db)
-    # load_seqs(db, args.sra_files)
-    # create_index(db)
+    create_table(db)
+    load_seqs(db, args.sra_files)
+    create_index(db)
 
-    # shards = assign_seqs_to_shards(db, args.shards)
-    # create_temp_files(args.processes, shards)
-    # create_blast_dbs(args.process, shards)
-    # delete_temp_files()
+    shards = assign_seqs_to_shards(db, args.shards)
+    create_blast_dbs(args.processes, shards)
+    delete_temp_files()
 
     db.close()
