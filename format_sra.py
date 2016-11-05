@@ -8,10 +8,11 @@ import argparse
 import subprocess
 from multiprocessing import Pool
 import numpy as np
+# from Bio import SeqIO  # 2-3x slower
 
-BATCH_SIZE = 750000
-FRAGMENT = re.compile(r'[>@] \s* ( .*? ) ( [\s\/_] [12] )', re.VERBOSE)
+FRAGMENT = re.compile(r'^ [>@] \s* ( .* ) ( [\s\/_] [12] )', re.VERBOSE)
 
+DEFAULT_BATCH_SIZE = 10000000  # TODO !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 DEFAULT_SHARDS = 8  # TODO !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 DEFAULT_PROCESSES = DEFAULT_SHARDS  # TODO !!!!!!!!!!!!!!!!!!!!!!!!!!!!
 DB_PATH = 'data/temp_sqlite.db'  # TODO !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -31,52 +32,44 @@ def log(s):
     print(s)  # TODO
 
 
-def create_temp_file(shard):
-    return 1
-
-
-def bulk_insert(db, recs, count):
+def bulk_insert(db, recs):
     if recs:
         db.executemany('''INSERT INTO ends (frag, seq, seq_end) VALUES (?, ?, ?)''', recs)
         db.commit()
 
 
-def append_rec(recs, frag, seq, end, count):
-    if seq:
-        recs.append((frag, seq, end))
-        count += 1
-    return count
-
-
 # @timing
 def load_seqs(db, sra_files):
-    count = 0
     for file_name in sra_files:
         log('Loading "{}" into sqlite database'.format(file_name))
         with open(file_name, 'r') as sra_file:
-            recs = []
-            seq, end, frag = '', '', 0
+            recs, seq, end, frag, is_seq = [], '', '', 0, True
             for line in sra_file:
                 if not line:
                     pass
                 elif line[0] in ['>', '@']:
-                    count = append_rec(recs, frag, seq, end, count)
+                    if seq:
+                        recs.append((frag, seq, end))
                     seq = ''
                     match = FRAGMENT.match(line)
+                    is_seq = True
                     if match:
                         frag = match.group(1)
                         end = match.group(2)
                     else:
                         frag = line[1:]
                         end = ''
-                elif line[0].isalpha():
+                elif line[0] == '+':
+                    is_seq = False
+                elif line[0].isalpha() and is_seq:
                     seq += line.rstrip()
-                if len(recs) >= BATCH_SIZE:
-                    bulk_insert(db, recs, count)
+                if len(recs) >= DEFAULT_BATCH_SIZE:
+                    bulk_insert(db, recs)
                     recs = []
             else:
-                count = append_rec(recs, frag, seq, end, count)
-                bulk_insert(db, recs, count)
+                if seq:
+                    recs.append((frag, seq, end))
+                bulk_insert(db, recs)
 
 
 def create_table(db):
@@ -91,7 +84,11 @@ def create_index(db):
 
 
 def connect_db(db_path):
-    return sqlite3.connect(db_path)
+    db = sqlite3.connect(db_path)
+    db.execute("PRAGMA page_size = {}".format(2**16))
+    db.execute("PRAGMA journal_mode = 'off'")
+    db.execute("PRAGMA synchronous = 'off'")
+    return db
 
 
 def assign_seqs_to_shards(db, shard_count):
@@ -135,21 +132,6 @@ def create_blast_dbs(process_count, shards):
     pool.join()
 
 
-def delete_temp_files():
-    log('Deleting temporary files')
-    try:
-        for f in glob.glob(DB_PATH + '*'):  # TODO !!!!!!!!!!!!!!!!!!!!!!!!!!
-            os.remove(f)
-    except:
-        log('Did not find the temporary sqlite database files')
-
-    try:
-        for f in glob.glob('data/blast_*'):  # TODO !!!!!!!!!!!!!!!!!!!!!!!!!!
-            os.remove(f)
-    except:
-        log('Did not find the temporary blast files')
-
-
 def parse_args():
     parser = argparse.ArgumentParser(description='''
         Takes fasta or fastq files of paired-end (or single-end) short reads and creates an aTRAM database.
@@ -157,7 +139,7 @@ def parse_args():
     parser.add_argument('sra_files', nargs='+', help='short read archive in fasta or fastq format.')
     parser.add_argument('-o', '--out', help='output aTRAM files with this prefix')
     parser.add_argument('-l', '--log', help='save log information to this file')
-    parser.add_argument('-n', '--shards', type=int, help='number of shards to create')
+    parser.add_argument('-s', '--shards', type=int, help='number of shards to create')
     parser.add_argument('-p', '--processes', type=int, help='number of processes to create')
     args = parser.parse_args()
 
@@ -181,6 +163,5 @@ if __name__ == "__main__":
 
     shards = assign_seqs_to_shards(db, args.shards)
     create_blast_dbs(args.processes, shards)
-    delete_temp_files()
 
     db.close()
