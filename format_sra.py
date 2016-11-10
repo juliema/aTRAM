@@ -28,6 +28,11 @@ def log(s):
     LOG_FILE.write('{}: {}\n'.format(datetime.datetime.now().isoformat(' '), s))
 
 
+def close_log_file():
+    log('Done')
+    LOG_FILE.close()
+
+
 def bulk_insert(db, recs):
     if recs:
         db.executemany('''INSERT INTO frags (frag, frag_end, seq) VALUES (?, ?, ?)''', recs)
@@ -168,4 +173,4 @@ if __name__ == '__main__':
     create_blast_dbs(args, shards)
 
     db.close()
-    LOG_FILE.close()
+    close_log_file()
