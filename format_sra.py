@@ -4,33 +4,15 @@ import sys
 import time
 import sqlite3
 import argparse
-import datetime
 import functools
 import subprocess
 import multiprocessing
 import numpy as np
+import util
 # from Bio import SeqIO  # 2-3x slower
 
 FRAGMENT = re.compile(r'^ [>@] \s* ( .* ) ( [\s\/_] [12] )', re.VERBOSE)
-
 DEFAULT_BATCH_SIZE = 1e7
-LOG_FILE = None
-
-
-def create_log_file(args):
-    global LOG_FILE
-    log_file = '{}log.txt'.format(args.out)
-    LOG_FILE = open(log_file, 'w')
-
-
-def log(s):
-    global LOG_FILE
-    LOG_FILE.write('{}: {}\n'.format(datetime.datetime.now().isoformat(' '), s))
-
-
-def close_log_file():
-    log('Done')
-    LOG_FILE.close()
 
 
 def bulk_insert(db, recs):
@@ -41,7 +23,7 @@ def bulk_insert(db, recs):
 
 def load_seqs(db, args):
     for file_name in args.sra_files:
-        log('Loading "{}" into sqlite database'.format(file_name))
+        util.log('Loading "{}" into sqlite database'.format(file_name))
         with open(file_name, 'r') as sra_file:
             recs, seq, frag_end, frag, is_seq = [], '', '', 0, True
             for line in sra_file:
@@ -73,14 +55,14 @@ def load_seqs(db, args):
 
 
 def create_table(db):
-    log('Creating sqlite tables')
+    util.log('Creating sqlite tables')
     db.execute('''DROP INDEX IF EXISTS frag''')
     db.execute('''DROP TABLE IF EXISTS frags''')
     db.execute('''CREATE TABLE IF NOT EXISTS frags (frag TEXT, frag_end TEXT, seq TEXT)''')
 
 
 def create_index(db):
-    log('Creating sqlite indices')
+    util.log('Creating sqlite indices')
     db.execute('''CREATE INDEX IF NOT EXISTS frag ON frags (frag)''')
 
 
@@ -94,7 +76,7 @@ def connect_db(args):
 
 
 def assign_seqs_to_shards(db, args):
-    log('Assigning sequences to shards')
+    util.log('Assigning sequences to shards')
     connection = db.execute('SELECT COUNT(*) FROM frags')
     total = connection.fetchone()[0]
     offsets = np.linspace(0, total, num=args.shards + 1, dtype=int)
@@ -126,7 +108,7 @@ def create_blast_db(args, shard, i):
 
 
 def create_blast_dbs(args, shards):
-    log('Making blast DBs')
+    util.log('Making blast DBs')
     with multiprocessing.Pool(processes=args.processes) as pool:
         for i, shard in enumerate(shards):
             proc = pool.Process(target=create_blast_db, args=(args, shard, i))
@@ -138,8 +120,10 @@ def parse_args():
     parser = argparse.ArgumentParser(description='''
         Takes fasta or fastq files of paired-end (or single-end) short reads and creates an aTRAM database.
     ''')
-    parser.add_argument('sra_files', nargs='+', help='short read archives in fasta or fastq format. May contain wildcards.')
-    parser.add_argument('-o', '--out', help='output aTRAM files with this prefix. May include a directory in the prefix.')
+    parser.add_argument('sra_files', nargs='+',
+                        help='short read archives in fasta or fastq format. May contain wildcards.')
+    parser.add_argument('-o', '--out',
+                        help='output aTRAM files with this prefix. May include a directory in the prefix.')
     parser.add_argument('-s', '--shards', type=int, help='number of shards to create')
     parser.add_argument('-p', '--processes', type=int, help='number of processes to create')
     args = parser.parse_args()
@@ -160,8 +144,8 @@ def parse_args():
 if __name__ == '__main__':
     args = parse_args()
 
-    create_log_file(args)
-    log(' '.join(sys.argv))
+    util.open_log_file(args)
+    util.log(' '.join(sys.argv))
 
     db = connect_db(args)
 
@@ -173,4 +157,4 @@ if __name__ == '__main__':
     create_blast_dbs(args, shards)
 
     db.close()
-    close_log_file()
+    util.close_log_file()
