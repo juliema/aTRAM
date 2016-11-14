@@ -144,7 +144,7 @@ def parse_args():
 if __name__ == '__main__':
     args = parse_args()
 
-    util.open_log_file(args)
+    util.open_log_file(args.out)
     util.log(' '.join(sys.argv))
 
     db = connect_db(args)
