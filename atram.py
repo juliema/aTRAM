@@ -1,6 +1,15 @@
 import sys
+import logging
 import argparse
 import util
+
+
+COMPLEMENT = str.maketrans('ACGTUWSMKRYBDHVNXacgtuwsmkrybdhvnx',
+                           'TGCAAWSKMYRVHDBNXtgcaawskmyrvhdbnx')
+
+
+def reverse_complement(seq):
+    return seq.translate(COMPLEMENT)[::-1]
 
 
 def parse_args():
@@ -14,8 +23,4 @@ def parse_args():
 
 if __name__ == '__main__':
     args = parse_args()
-
-    util.open_log_file(args.out)
-    util.log(' '.join(sys.argv))
-
-    util.close_log_file()
+    util.setup_log(args)
