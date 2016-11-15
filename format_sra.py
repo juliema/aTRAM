@@ -3,6 +3,7 @@ import os
 import sys
 import time
 import sqlite3
+import logging
 import argparse
 import functools
 import subprocess
@@ -23,7 +24,7 @@ def bulk_insert(db, recs):
 
 def load_seqs(db, args):
     for file_name in args.sra_files:
-        util.log('Loading "{}" into sqlite database'.format(file_name))
+        logging.info('Loading "{}" into sqlite database'.format(file_name))
         with open(file_name, 'r') as sra_file:
             recs, seq, frag_end, frag, is_seq = [], '', '', 0, True
             for line in sra_file:
@@ -55,14 +56,14 @@ def load_seqs(db, args):
 
 
 def create_table(db):
-    util.log('Creating sqlite tables')
+    logging.info('Creating sqlite tables')
     db.execute('''DROP INDEX IF EXISTS frag''')
     db.execute('''DROP TABLE IF EXISTS frags''')
     db.execute('''CREATE TABLE IF NOT EXISTS frags (frag TEXT, frag_end TEXT, seq TEXT)''')
 
 
 def create_index(db):
-    util.log('Creating sqlite indices')
+    logging.info('Creating sqlite indices')
     db.execute('''CREATE INDEX IF NOT EXISTS frag ON frags (frag)''')
 
 
@@ -76,7 +77,7 @@ def connect_db(args):
 
 
 def assign_seqs_to_shards(db, args):
-    util.log('Assigning sequences to shards')
+    logging.info('Assigning sequences to shards')
     connection = db.execute('SELECT COUNT(*) FROM frags')
     total = connection.fetchone()[0]
     offsets = np.linspace(0, total, num=args.shards + 1, dtype=int)
@@ -108,7 +109,7 @@ def create_blast_db(args, shard, i):
 
 
 def create_blast_dbs(args, shards):
-    util.log('Making blast DBs')
+    logging.info('Making blast DBs')
     with multiprocessing.Pool(processes=args.processes) as pool:
         for i, shard in enumerate(shards):
             proc = pool.Process(target=create_blast_db, args=(args, shard, i))
@@ -143,12 +144,9 @@ def parse_args():
 
 if __name__ == '__main__':
     args = parse_args()
-
-    util.open_log_file(args.out)
-    util.log(' '.join(sys.argv))
+    util.setup_log(args)
 
     db = connect_db(args)
-
     create_table(db)
     load_seqs(db, args)
     create_index(db)
@@ -157,4 +155,3 @@ if __name__ == '__main__':
     create_blast_dbs(args, shards)
 
     db.close()
-    util.close_log_file()
