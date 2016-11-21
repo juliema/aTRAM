@@ -44,7 +44,7 @@ def load_seqs(db, args):
                 elif line[0] == '+':
                     is_seq = False
                 elif line[0].isalpha() and is_seq:
-                    seq += line.rstrip()
+                    seq += line.rstrip()  # Almost always singletons so ''.join([strs]) is no help
                 if len(recs) >= DEFAULT_BATCH_SIZE:
                     bulk_insert(db, recs)
                     recs = []
@@ -127,21 +127,12 @@ def parse_args():
                         help=('output aTRAM files with this prefix. '
                               'May include a directory in the prefix.'))
     parser.add_argument('-s', '--shards', type=int, help='number of shards to create')
-    parser.add_argument('-p', '--processes', type=int, help='number of processes to create')
+    parser.add_argument('-p', '--processes', type=int, help='number of processes to create',
+                        default=util.default_process_count())
     args = parser.parse_args()
 
-    size = 0
-    for sra_file in args.sra_files:
-        raw_size = os.path.getsize(sra_file)
-        if sra_file.lower().endswith('.fastq'):
-            raw_size /= 2
-        size += raw_size
-    size = int(size / 2.5e8)
-    default_shards = size if size else 1
-    args.shards = args.shards if args.shards else default_shards
-
-    default_processes = os.cpu_count() - 2 if os.cpu_count() > 2 else 1
-    args.processes = args.processes if args.processes else default_processes
+    if not args.shards:
+        args.shards = util.default_shard_count(args.sra_files)
 
     return args
 
