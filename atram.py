@@ -1,5 +1,5 @@
-import sys
-import logging
+#!/usr/bin/python3
+
 import argparse
 import util
 
@@ -16,11 +16,12 @@ def parse_args():
     parser = argparse.ArgumentParser(
         description=''' ''')
     parser.add_argument('-o', '--out',
-                        help='output aTRAM files with this prefix. May include a directory in the prefix.')
+                        help=('output aTRAM files with this prefix. '
+                              'May include a directory in the prefix.'))
     args = parser.parse_args()
     return args
 
 
 if __name__ == '__main__':
-    args = parse_args()
-    util.setup_log(args)
+    ARGS = parse_args()
+    util.setup_log(ARGS)

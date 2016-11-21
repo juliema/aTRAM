@@ -1,3 +1,5 @@
+#!/usr/bin/python3
+
 import re
 import os
 import sqlite3
@@ -116,10 +118,9 @@ def create_blast_dbs(args, shards):
 
 
 def parse_args():
-    parser = argparse.ArgumentParser(description='''
-        Takes fasta or fastq files of paired-end (or single-end) short reads and
-        creates an aTRAM database.
-    ''')
+    parser = argparse.ArgumentParser(
+        description=('Takes fasta or fastq files of paired-end (or single-end) '
+                     'short reads and creates an aTRAM database.'))
     parser.add_argument('sra_files', nargs='+',
                         help='short read archives in fasta or fastq format. May contain wildcards.')
     parser.add_argument('-o', '--out',
@@ -131,10 +132,10 @@ def parse_args():
 
     size = 0
     for sra_file in args.sra_files:
+        raw_size = os.path.getsize(sra_file)
         if sra_file.lower().endswith('.fastq'):
-            size += os.path.getsize(sra_file) / 2
-        else:
-            os.path.getsize(sra_file)
+            raw_size /= 2
+        size += raw_size
     size = int(size / 2.5e8)
     default_shards = size if size else 1
     args.shards = args.shards if args.shards else default_shards
