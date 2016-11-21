@@ -1,16 +1,13 @@
 import re
 import os
-import sys
-import time
 import sqlite3
 import logging
 import argparse
-import functools
 import subprocess
 import multiprocessing
 import numpy as np
 import util
-# from Bio import SeqIO  # 2-3x slower
+# from Bio import SeqIO  # 2-3x slower than load_seqs()
 
 FRAGMENT = re.compile(r'^ [>@] \s* ( .* ) ( [\s\/_] [12] )', re.VERBOSE)
 DEFAULT_BATCH_SIZE = 1e7
@@ -24,7 +21,7 @@ def bulk_insert(db, recs):
 
 def load_seqs(db, args):
     for file_name in args.sra_files:
-        logging.info('Loading "{}" into sqlite database'.format(file_name))
+        logging.info('Loading "%s" into sqlite database', file_name)
         with open(file_name, 'r') as sra_file:
             recs, seq, frag_end, frag, is_seq = [], '', '', 0, True
             for line in sra_file:
@@ -49,10 +46,9 @@ def load_seqs(db, args):
                 if len(recs) >= DEFAULT_BATCH_SIZE:
                     bulk_insert(db, recs)
                     recs = []
-            else:
-                if seq:
-                    recs.append((frag, frag_end, seq))
-                bulk_insert(db, recs)
+            if seq:
+                recs.append((frag, frag_end, seq))
+            bulk_insert(db, recs)
 
 
 def create_table(db):
@@ -82,7 +78,8 @@ def assign_seqs_to_shards(db, args):
     total = connection.fetchone()[0]
     offsets = np.linspace(0, total, num=args.shards + 1, dtype=int)
     for i in range(1, len(offsets) - 1):
-        connection = db.execute('SELECT frag FROM frags ORDER BY frag LIMIT 2 OFFSET {}'.format(offsets[i]))
+        connection = db.execute(
+            'SELECT frag FROM frags ORDER BY frag LIMIT 2 OFFSET {}'.format(offsets[i]))
         first = connection.fetchone()[0]
         second = connection.fetchone()[0]
         if first != second:
@@ -94,7 +91,8 @@ def assign_seqs_to_shards(db, args):
 
 def create_blast_db(args, shard, i):
     db = connect_db(args)
-    sql = 'SELECT frag, frag_end, seq FROM frags ORDER BY frag LIMIT {} OFFSET {}'.format(shard[0], shard[1])
+    sql = ('SELECT frag, frag_end, seq FROM frags '
+           'ORDER BY frag LIMIT {} OFFSET {}').format(shard[0], shard[1])
     connection = db.execute(sql)
     fasta_file = '{}temp_seqs_{}.format'.format(args.out, i)
     blast_prefix = '{}blast_{}'.format(args.out, i)
@@ -103,7 +101,7 @@ def create_blast_db(args, shard, i):
             out_file.write('>{}{}\n'.format(row[0], row[1]))
             out_file.write('{}\n'.format(row[2]))
     db.close()
-    result = subprocess.check_call(('makeblastdb -dbtype nucl -in {} -out {}').format(
+    subprocess.check_call(('makeblastdb -dbtype nucl -in {} -out {}').format(
         fasta_file, blast_prefix), shell=True)
     os.remove(fasta_file)
 
@@ -119,19 +117,24 @@ def create_blast_dbs(args, shards):
 
 def parse_args():
     parser = argparse.ArgumentParser(description='''
-        Takes fasta or fastq files of paired-end (or single-end) short reads and creates an aTRAM database.
+        Takes fasta or fastq files of paired-end (or single-end) short reads and
+        creates an aTRAM database.
     ''')
     parser.add_argument('sra_files', nargs='+',
                         help='short read archives in fasta or fastq format. May contain wildcards.')
     parser.add_argument('-o', '--out',
-                        help='output aTRAM files with this prefix. May include a directory in the prefix.')
+                        help=('output aTRAM files with this prefix. '
+                              'May include a directory in the prefix.'))
     parser.add_argument('-s', '--shards', type=int, help='number of shards to create')
     parser.add_argument('-p', '--processes', type=int, help='number of processes to create')
     args = parser.parse_args()
 
     size = 0
-    for f in args.sra_files:
-        size += os.path.getsize(f) / 2 if f.lower().endswith('.fastq') else os.path.getsize(f)
+    for sra_file in args.sra_files:
+        if sra_file.lower().endswith('.fastq'):
+            size += os.path.getsize(sra_file) / 2
+        else:
+            os.path.getsize(sra_file)
     size = int(size / 2.5e8)
     default_shards = size if size else 1
     args.shards = args.shards if args.shards else default_shards
@@ -143,15 +146,15 @@ def parse_args():
 
 
 if __name__ == '__main__':
-    args = parse_args()
-    util.setup_log(args)
+    ARGS = parse_args()
+    util.setup_log(ARGS)
 
-    db = connect_db(args)
-    create_table(db)
-    load_seqs(db, args)
-    create_index(db)
+    DB = connect_db(ARGS)
+    create_table(DB)
+    load_seqs(DB, ARGS)
+    create_index(DB)
 
-    shards = assign_seqs_to_shards(db, args)
-    create_blast_dbs(args, shards)
+    SHARDS = assign_seqs_to_shards(DB, ARGS)
+    create_blast_dbs(ARGS, SHARDS)
 
-    db.close()
+    DB.close()
