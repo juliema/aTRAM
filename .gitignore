@@ -3,3 +3,4 @@ lib/config.txt
 config.txt
 data/*
 temp/*
+venv/*
