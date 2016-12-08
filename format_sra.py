@@ -10,7 +10,8 @@ import argparse
 import subprocess
 import multiprocessing
 import numpy as np
-import util
+import configure
+import log
 # Bio.SeqIO  # 2-3x slower than load_seqs() :(
 
 FRAGMENT = re.compile(r'^ [>@] \s* ( .* ) ( [\s\/_] [12] )', re.VERBOSE)
@@ -141,18 +142,18 @@ def parse_args():
                               'May include a directory in the prefix.'))
     parser.add_argument('-s', '--shards', type=int, help='number of shards to create')
     parser.add_argument('-p', '--processes', type=int, help='number of processes to create',
-                        default=util.default_process_count())
+                        default=configure.default_process_count())
     config = parser.parse_args()
 
     if not config.shards:
-        config.shards = util.default_shard_count(config.sra_files)
+        config.shards = configure.default_shard_count(config.sra_files)
 
     return config
 
 
 if __name__ == '__main__':
     ARGS = parse_args()
-    util.setup_log(ARGS)
+    log.setup(ARGS)
 
     DB = connect_db(ARGS)
     create_table(DB)
