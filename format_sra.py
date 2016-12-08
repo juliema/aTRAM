@@ -1,5 +1,3 @@
-#!/usr/bin/python3
-
 """Create the initial blast databases that will be used by aTRAM."""
 
 import re
@@ -134,19 +132,13 @@ def parse_args():
     """Parse the input arguments and assign defaults."""
     parser = argparse.ArgumentParser(
         description=('Takes fasta or fastq files of paired-end (or single-end) '
-                     'short reads and creates an aTRAM database.'))
-    parser.add_argument('sra_files', nargs='+',
-                        help='short read archives in fasta or fastq format. May contain wildcards.')
-    parser.add_argument('-o', '--out',
-                        help=('output aTRAM files with this prefix. '
-                              'May include a directory in the prefix.'))
-    parser.add_argument('-s', '--shards', type=int, help='number of shards to create')
-    parser.add_argument('-p', '--processes', type=int, help='number of processes to create',
-                        default=configure.default_process_count())
+                     'sequence reads and creates an aTRAM database.'))
+    configure.add_argument(parser, 'sra_files')
+    configure.add_argument(parser, 'out')
+    configure.add_argument(parser, 'shards')
+    configure.add_argument(parser, 'processes')
     config = parser.parse_args()
-
-    if not config.shards:
-        config.shards = configure.default_shard_count(config.sra_files)
+    configure.default_shard_count(config)
 
     return config
 
