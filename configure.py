@@ -51,7 +51,7 @@ def parse_args(parser):
 
     # Default for shard count requires calulation after the args are parsed
     shards = args.get('shards', None)
-    if shards is not None and shards <= 0:
+    if shards is not None and shards < 1:
         args['shards'] = default_shard_count(args)
 
     return DictAttrs(vars(args))
@@ -59,7 +59,13 @@ def parse_args(parser):
 
 def add_argument(parser, arg):
     """Add command-line arguments. We want to keep them consistent between programs."""
-    if arg == 'evalue':
+
+    if arg == 'blast_db':
+        parser.add_argument(
+            '-b', '--blast-db', required=True,
+            help='SRA BLAST DB files have this prefix. May include a directory in the prefix.')
+
+    elif arg == 'evalue':
         parser.add_argument(
             '-e', '--evalue', default=DEFAULT.evalue, type=float,
             help='The default evalue is {}.'.format(DEFAULT.evalue))
@@ -70,19 +76,14 @@ def add_argument(parser, arg):
             help=('The number of pipline iterations. '
                   'The default is {}.').format(DEFAULT.iterations))
 
-    elif arg == 'out':
-        parser.add_argument(
-            '-o', '--out',
-            help='Output aTRAM files with this prefix. May include a directory in the prefix.')
-
     elif arg == 'max_target_seqs':
         parser.add_argument(
             '-M', '--max-target-seqs', type=int, default=DEFAULT.max_target_seqs,
             help='Maximum hit sequences per shard. Default is {}.'.format(DEFAULT.max_target_seqs))
 
-    elif arg == 'process_count':
+    elif arg == 'processes':
         parser.add_argument(
-            '-p', '--processes-count', type=int, help='Number of processes to create.',
+            '-P', '--processes', type=int, help='Number of processes to create.',
             default=default_process_count())
 
     if arg == 'protein':
@@ -90,9 +91,9 @@ def add_argument(parser, arg):
             '-p', '--protein', nargs='?', const=True, default=False,
             help='Is the target sequence a protein?')
 
-    elif arg == 'shard_count':
+    elif arg == 'shards':
         parser.add_argument(
-            '-s', '--shards-count', type=int, help='Number of SRA shards to create.', default=-1)
+            '-s', '--shards', type=int, help='Number of SRA shards to create.', default=-1)
 
     elif arg == 'sra_files':
         parser.add_argument(

@@ -59,7 +59,7 @@ def load_seqs(db_conn, config):
 
 
 def create_table(db_conn):
-    """Reset the DB. Delete the table and readd it."""
+    """Reset the DB. Delete the table and read it."""
     logging.info('Creating sqlite tables')
     db_conn.execute('''DROP INDEX IF EXISTS frag''')
     db_conn.execute('''DROP TABLE IF EXISTS frags''')
@@ -74,7 +74,7 @@ def create_index(db_conn):
 
 def connect_db(config):
     """Setup the DB for our processing needs."""
-    db_path = '{}sqlite.db'.format(config.out)
+    db_path = '{}sqlite.db'.format(config.blast_db)
     db_conn = sqlite3.connect(db_path)
     db_conn.execute("PRAGMA page_size = {}".format(2**16))
     db_conn.execute("PRAGMA journal_mode = 'off'")
@@ -87,7 +87,7 @@ def assign_seqs_to_shards(db_conn, config):
     logging.info('Assigning sequences to shards')
     connection = db_conn.execute('SELECT COUNT(*) FROM frags')
     total = connection.fetchone()[0]
-    offsets = np.linspace(0, total, num=config.shard_count + 1, dtype=int)
+    offsets = np.linspace(0, total, num=config.shards + 1, dtype=int)
     for i in range(1, len(offsets) - 1):
         connection = db_conn.execute(
             'SELECT frag FROM frags ORDER BY frag LIMIT 2 OFFSET {}'.format(offsets[i]))
@@ -106,8 +106,8 @@ def create_blast_db(config, shard, i):
     sql = ('SELECT frag, frag_end, seq FROM frags '
            'ORDER BY frag LIMIT {} OFFSET {}').format(shard[0], shard[1])
     connection = db_conn.execute(sql)
-    fasta_file = '{}temp_seqs_{}.format'.format(config.out, i)
-    blast_prefix = '{}blast_{}'.format(config.out, i)
+    fasta_file = '{}temp_seqs_{}.format'.format(config.blast_db, i)
+    blast_prefix = '{}blast_{}'.format(config.blast_db, i)
     with open(fasta_file, 'w') as out_file:
         for row in connection:
             out_file.write('>{}{}\n'.format(row[0], row[1]))
@@ -121,7 +121,7 @@ def create_blast_db(config, shard, i):
 def create_blast_dbs(config, shards):
     """Assign processes to make the blast DBs."""
     logging.info('Making blast DBs')
-    with multiprocessing.Pool(processes=config.process_count) as pool:
+    with multiprocessing.Pool(processes=config.processes) as pool:
         for i, shard in enumerate(shards):
             proc = pool.Process(target=create_blast_db, args=(config, shard, i))
             proc.start()
@@ -134,9 +134,9 @@ def parse_args():
         description=('Takes fasta or fastq files of paired-end (or single-end) '
                      'sequence reads and creates an aTRAM database.'))
     configure.add_argument(parser, 'sra_files')
-    configure.add_argument(parser, 'out')
-    configure.add_argument(parser, 'shard_count')
-    configure.add_argument(parser, 'process_count')
+    configure.add_argument(parser, 'blast_db')
+    configure.add_argument(parser, 'shards')
+    configure.add_argument(parser, 'processes')
     config = parser.parse_args()
 
     return config
