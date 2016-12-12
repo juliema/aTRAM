@@ -65,12 +65,12 @@ def parse_args():
     """Parse the input arguments and assign defaults."""
     parser = argparse.ArgumentParser(description=''' ''')
     configure.add_argument(parser, 'out')
+    configure.add_argument(parser, 'blast_db')
     configure.add_argument(parser, 'protein')
     configure.add_argument(parser, 'iterations')
     configure.add_argument(parser, 'evalue')
     configure.add_argument(parser, 'max_target_seqs')
     config = configure.parse_args(parser)
-    print(config)
     return config
 
 
