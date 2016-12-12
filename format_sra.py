@@ -87,7 +87,7 @@ def assign_seqs_to_shards(db_conn, config):
     logging.info('Assigning sequences to shards')
     connection = db_conn.execute('SELECT COUNT(*) FROM frags')
     total = connection.fetchone()[0]
-    offsets = np.linspace(0, total, num=config.shards + 1, dtype=int)
+    offsets = np.linspace(0, total, num=config.shard_count + 1, dtype=int)
     for i in range(1, len(offsets) - 1):
         connection = db_conn.execute(
             'SELECT frag FROM frags ORDER BY frag LIMIT 2 OFFSET {}'.format(offsets[i]))
@@ -121,7 +121,7 @@ def create_blast_db(config, shard, i):
 def create_blast_dbs(config, shards):
     """Assign processes to make the blast DBs."""
     logging.info('Making blast DBs')
-    with multiprocessing.Pool(processes=config.processes) as pool:
+    with multiprocessing.Pool(processes=config.process_count) as pool:
         for i, shard in enumerate(shards):
             proc = pool.Process(target=create_blast_db, args=(config, shard, i))
             proc.start()
@@ -135,10 +135,9 @@ def parse_args():
                      'sequence reads and creates an aTRAM database.'))
     configure.add_argument(parser, 'sra_files')
     configure.add_argument(parser, 'out')
-    configure.add_argument(parser, 'shards')
-    configure.add_argument(parser, 'processes')
+    configure.add_argument(parser, 'shard_count')
+    configure.add_argument(parser, 'process_count')
     config = parser.parse_args()
-    configure.default_shard_count(config)
 
     return config
 

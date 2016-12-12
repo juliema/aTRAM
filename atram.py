@@ -2,23 +2,26 @@
 
 import argparse
 import logging
-import subprocess
-import multiprocessing
-from Bio.Blast.Applications import NcbiblastnCommandline
+# import subprocess
+# import multiprocessing
+from Bio.Blast.Applications import NcbiblastnCommandline, NcbitblastnCommandline
+# from Bio.Blast.Applications import NcbitblastxCommandline
 import log
 import configure
 
 
 def blast(config, targets, blast_db, iteration):
     """Blast the target sequences against an SRA blast DB."""
-    # push @pids, fork_cmd (get_bin("blastn"), "-task blastn -evalue $evalue
-    # -max_target_seqs $max_target_seqs -db $atram_db.$s.db -query $search_fasta
-    # -outfmt '6 sseqid' -out $current_shard");
     out = '{}_{}'.format(blast_db, iteration)  # ???
-    cmd = NcbiblastnCommandline(
-        cmd='blastn', outfmt='6 sseqid', evalue=config.evalue, db=blast_db,
-        max_target_seqs=config.max_target_seqs, out=out, query=targets)
-    subprocess.check_call(cmd, shell=True)
+    blast_args = dict(outfmt="'6 sseqid'", max_target_seqs=config.max_target_seqs,
+                      out=out, db=blast_db, query=targets)
+    if config.protein:
+        cmd = str(NcbitblastnCommandline(cmd='tblastn', **blast_args))
+    else:
+        cmd = str(NcbiblastnCommandline(cmd='blastn', task='blastn',
+                                        evalue=config.evalue, **blast_args))
+    print(cmd)
+    # subprocess.check_call(cmd, shell=True)
 
 
 def blast_sra(config, iteration):
@@ -26,13 +29,14 @@ def blast_sra(config, iteration):
     Blast the targets against the SRA databases. We're using a map-reduce strategy here.
     We map the blasting of the target sequences and reduce the output into one fasta file.
     """
-    with multiprocessing.Pool(processes=config.processes) as pool:
-        for shard in config.shards:
-            targets = shard   # ???
-            blast_db = shard  # ???
-            proc = pool.Process(target=blast, args=(config, targets, blast_db, shard, iteration))
-            proc.start()
-    pool.join()
+    blast(config, [], '', iteration)
+    # with multiprocessing.Pool(processes=config.processes) as pool:
+    #     for shard in config.shards:
+    #         targets = shard   # ???
+    #         blast_db = shard  # ???
+    #         proc = pool.Process(target=blast, args=(config, targets, blast_db, shard, iteration))
+    #         proc.start()
+    # pool.join()
 
 
 def get_matching_ends():
@@ -49,7 +53,7 @@ def filter_contigs():
 
 def atram(config):
     """The main aTRAM program loop."""
-    for iteration in range(config.iterations):
+    for iteration in range(1, config.iterations + 1):
         logging.info('aTRAM iteration %i', iteration)
         blast_sra(config, iteration)
         get_matching_ends()
@@ -61,7 +65,12 @@ def parse_args():
     """Parse the input arguments and assign defaults."""
     parser = argparse.ArgumentParser(description=''' ''')
     configure.add_argument(parser, 'out')
-    config = parser.parse_args()
+    configure.add_argument(parser, 'protein')
+    configure.add_argument(parser, 'iterations')
+    configure.add_argument(parser, 'evalue')
+    configure.add_argument(parser, 'max_target_seqs')
+    config = configure.parse_args(parser)
+    print(config)
     return config
 
 
