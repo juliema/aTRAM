@@ -108,7 +108,7 @@ def create_blast_db(config, shard_params, shard_index):
     sql = ('SELECT frag, frag_end, seq FROM frags '
            'ORDER BY frag LIMIT {} OFFSET {}').format(shard_params[0], shard_params[1])
     connection = db_conn.execute(sql)
-    fasta_file = '{}temp_seqs_{}.format'.format(config.blast_db, shard_index)
+    fasta_file = '{}temp_seqs_{}.format'.format(config.blast_db, shard_index + 1)
     blast_db = util.blast_shard_name(config, shard_index)
     with open(fasta_file, 'w') as out_file:
         for row in connection:
@@ -118,16 +118,22 @@ def create_blast_db(config, shard_params, shard_index):
     subprocess.check_call(('makeblastdb -dbtype nucl -in {} -out {}').format(
         fasta_file, blast_db), shell=True)
     os.remove(fasta_file)
+    return shard_index
 
 
-def create_blast_dbs(config, shard_param_list):
+def create_blast_dbs(config, shard_list):
     """Assign processes to make the blast DBs."""
     logging.info('Making blast DBs')
+    procs = []
     with multiprocessing.Pool(processes=config.processes) as pool:
-        for shard_index, shard_params in enumerate(shard_param_list):
+        for shard_index, shard_params in enumerate(shard_list):
             proc = pool.Process(target=create_blast_db, args=(config, shard_params, shard_index))
+            procs.append(proc)
             proc.start()
-    pool.join()
+    for proc in procs:
+        proc.join()
+    # pool.join()
+    logging.info('Finished making blast DBs')
 
 
 def parse_args():
@@ -153,7 +159,7 @@ if __name__ == '__main__':
     load_seqs(DB, ARGS)
     create_index(DB)
 
-    SHARD_PARAM_LIST = assign_seqs_to_shards(DB, ARGS)
-    create_blast_dbs(ARGS, SHARD_PARAM_LIST)
+    SHARD_LIST = assign_seqs_to_shards(DB, ARGS)
+    create_blast_dbs(ARGS, SHARD_LIST)
 
     DB.close()
