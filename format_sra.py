@@ -9,7 +9,7 @@ import subprocess
 import multiprocessing
 import numpy as np
 import configure
-import log
+import util
 # Bio.SeqIO  # 2-3x slower than load_seqs() :(
 
 FRAGMENT = re.compile(r'^ [>@] \s* ( .* ) ( [\s\/_] [12] )', re.VERBOSE)
@@ -24,7 +24,9 @@ def bulk_insert(db_conn, recs):
 
 
 def load_seqs(db_conn, config):
-    """A faster version of "Bio.SeqIO. We can take shortcuts because of the limited use."""
+    """
+    A version of "Bio.SeqIO. It is faster because we can take shortcuts due to the limited uses.
+    """
     for file_name in config.sra_files:
         logging.info('Loading "%s" into sqlite database', file_name)
         with open(file_name, 'r') as sra_file:
@@ -100,30 +102,30 @@ def assign_seqs_to_shards(db_conn, config):
     return list(zip(limits, offsets[:-1]))
 
 
-def create_blast_db(config, shard, i):
+def create_blast_db(config, shard_params, shard_index):
     """Create a blast DB from the shard."""
     db_conn = connect_db(config)
     sql = ('SELECT frag, frag_end, seq FROM frags '
-           'ORDER BY frag LIMIT {} OFFSET {}').format(shard[0], shard[1])
+           'ORDER BY frag LIMIT {} OFFSET {}').format(shard_params[0], shard_params[1])
     connection = db_conn.execute(sql)
-    fasta_file = '{}temp_seqs_{}.format'.format(config.blast_db, i)
-    blast_prefix = '{}blast_{}'.format(config.blast_db, i)
+    fasta_file = '{}temp_seqs_{}.format'.format(config.blast_db, shard_index)
+    blast_db = util.blast_shard_name(config, shard_index)
     with open(fasta_file, 'w') as out_file:
         for row in connection:
             out_file.write('>{}{}\n'.format(row[0], row[1]))
             out_file.write('{}\n'.format(row[2]))
     db_conn.close()
     subprocess.check_call(('makeblastdb -dbtype nucl -in {} -out {}').format(
-        fasta_file, blast_prefix), shell=True)
+        fasta_file, blast_db), shell=True)
     os.remove(fasta_file)
 
 
-def create_blast_dbs(config, shards):
+def create_blast_dbs(config, shard_param_list):
     """Assign processes to make the blast DBs."""
     logging.info('Making blast DBs')
     with multiprocessing.Pool(processes=config.processes) as pool:
-        for i, shard in enumerate(shards):
-            proc = pool.Process(target=create_blast_db, args=(config, shard, i))
+        for shard_index, shard_params in enumerate(shard_param_list):
+            proc = pool.Process(target=create_blast_db, args=(config, shard_params, shard_index))
             proc.start()
     pool.join()
 
@@ -137,21 +139,21 @@ def parse_args():
     configure.add_argument(parser, 'blast_db')
     configure.add_argument(parser, 'shards')
     configure.add_argument(parser, 'processes')
-    config = parser.parse_args()
+    config = configure.parse_args(parser)
 
     return config
 
 
 if __name__ == '__main__':
     ARGS = parse_args()
-    log.setup(ARGS)
+    util.log_setup(ARGS)
 
     DB = connect_db(ARGS)
     create_table(DB)
     load_seqs(DB, ARGS)
     create_index(DB)
 
-    SHARDS = assign_seqs_to_shards(DB, ARGS)
-    create_blast_dbs(ARGS, SHARDS)
+    SHARD_PARAM_LIST = assign_seqs_to_shards(DB, ARGS)
+    create_blast_dbs(ARGS, SHARD_PARAM_LIST)
 
     DB.close()
