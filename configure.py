@@ -47,14 +47,13 @@ def setup_config_file():
 
 def parse_args(parser):
     """Parse the commandline arguments and return a dict attribute object."""
-    args = parser.parse_args()
+    args = DictAttrs(vars(parser.parse_args()))
 
     # Default for shard count requires calulation after the args are parsed
-    shards = args.get('shards', None)
-    if shards is not None and shards < 1:
+    if 'shards' in args and args.shards < 1:
         args['shards'] = default_shard_count(args)
 
-    return DictAttrs(vars(args))
+    return args
 
 
 def add_argument(parser, arg):
@@ -89,7 +88,7 @@ def add_argument(parser, arg):
     if arg == 'protein':
         parser.add_argument(
             '-p', '--protein', nargs='?', const=True, default=False,
-            help='Is the target sequence a protein?')
+            help='Are the target sequences protein?')
 
     elif arg == 'shards':
         parser.add_argument(
@@ -99,6 +98,11 @@ def add_argument(parser, arg):
         parser.add_argument(
             'sra_files', nargs='+',
             help='Short read archives in fasta or fastq format. May contain wildcards.')
+
+    elif arg == 'target':
+        parser.add_argument(
+            '-t', '--target', required=True,
+            help='The path to the fasta file with sequences of interest.')
 
 
 if __name__ == '__main__':

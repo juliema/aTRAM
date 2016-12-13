@@ -2,41 +2,38 @@
 
 import argparse
 import logging
-# import subprocess
-# import multiprocessing
+import subprocess
+import multiprocessing
 from Bio.Blast.Applications import NcbiblastnCommandline, NcbitblastnCommandline
 # from Bio.Blast.Applications import NcbitblastxCommandline
-import log
 import configure
+import util
 
 
-def blast(config, targets, blast_db, iteration):
+def blast(config, target, iteration, shard):
     """Blast the target sequences against an SRA blast DB."""
-    out = '{}_{}'.format(blast_db, iteration)  # ???
+    out = '{}_{}.txt'.format(shard, str(iteration).zfill(2))  # ???
     blast_args = dict(outfmt="'6 sseqid'", max_target_seqs=config.max_target_seqs,
-                      out=out, db=blast_db, query=targets)
-    if config.protein:
+                      out=out, db=shard, query=target)
+    if config.protein and iteration == 1:
         cmd = str(NcbitblastnCommandline(cmd='tblastn', **blast_args))
     else:
         cmd = str(NcbiblastnCommandline(cmd='blastn', task='blastn',
                                         evalue=config.evalue, **blast_args))
-    print(cmd)
-    # subprocess.check_call(cmd, shell=True)
+    # print(cmd)
+    subprocess.check_call(cmd, shell=True)
 
 
-def blast_sra(config, iteration):
+def blast_sra(config, iteration, shards, target):
     """
     Blast the targets against the SRA databases. We're using a map-reduce strategy here.
     We map the blasting of the target sequences and reduce the output into one fasta file.
     """
-    blast(config, [], '', iteration)
-    # with multiprocessing.Pool(processes=config.processes) as pool:
-    #     for shard in config.shards:
-    #         targets = shard   # ???
-    #         blast_db = shard  # ???
-    #         proc = pool.Process(target=blast, args=(config, targets, blast_db, shard, iteration))
-    #         proc.start()
-    # pool.join()
+    with multiprocessing.Pool(processes=config.processes) as pool:
+        for shard in shards:
+            proc = pool.Process(target=blast, args=(config, target, iteration, shard))
+            proc.start()
+    pool.join()
 
 
 def get_matching_ends():
@@ -53,12 +50,15 @@ def filter_contigs():
 
 def atram(config):
     """The main aTRAM program loop."""
+    shards = util.get_blast_shards(config)
+    target = config.target
     for iteration in range(1, config.iterations + 1):
         logging.info('aTRAM iteration %i', iteration)
-        blast_sra(config, iteration)
+        blast_sra(config, iteration, shards, target)
         get_matching_ends()
         assemble_hits()
         filter_contigs()
+        break
 
 
 def parse_args():
@@ -66,8 +66,10 @@ def parse_args():
     parser = argparse.ArgumentParser(description=''' ''')
     configure.add_argument(parser, 'out')
     configure.add_argument(parser, 'blast_db')
+    configure.add_argument(parser, 'target')
     configure.add_argument(parser, 'protein')
     configure.add_argument(parser, 'iterations')
+    configure.add_argument(parser, 'processes')
     configure.add_argument(parser, 'evalue')
     configure.add_argument(parser, 'max_target_seqs')
     config = configure.parse_args(parser)
@@ -76,5 +78,5 @@ def parse_args():
 
 if __name__ == '__main__':
     ARGS = parse_args()
-    log.setup(ARGS)
+    util.log_setup(ARGS)
     atram(ARGS)
