@@ -12,7 +12,7 @@ import util
 
 def blast(config, target, iteration, shard):
     """Blast the target sequences against an SRA blast DB."""
-    out = '{}_{}.txt'.format(shard, str(iteration).zfill(2))  # ???
+    out = util.blast_result_file(shard, iteration)
     blast_args = dict(outfmt="'6 sseqid'", max_target_seqs=config.max_target_seqs,
                       out=out, db=shard, query=target)
     if config.protein and iteration == 1:
@@ -36,8 +36,19 @@ def blast_sra(config, iteration, shards, target):
     pool.join()
 
 
-def get_matching_ends():
+def retrieve_paired_ends(config, iteration, shard):
+    """Spin thru the file and grab matching sequences from the DB"""
+    file_name = util.blast_result_file(shard, iteration)
+    print(file_name)
+
+
+def get_matching_ends(config, iteration, shards):
     """Take all of the blast hits and append any matching ends that are not already found."""
+    with multiprocessing.Pool(processes=config.processes) as pool:
+        for shard in shards:
+            proc = pool.Process(target=retrieve_paired_ends, args=(config, iteration, shard))
+            proc.start()
+    pool.join()
 
 
 def assemble_hits():
@@ -55,9 +66,10 @@ def atram(config):
     for iteration in range(1, config.iterations + 1):
         logging.info('aTRAM iteration %i', iteration)
         blast_sra(config, iteration, shards, target)
-        get_matching_ends()
+        get_matching_ends(config, iteration, shards)
         assemble_hits()
         filter_contigs()
+        # target = new file
         break
 
 

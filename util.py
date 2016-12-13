@@ -28,3 +28,8 @@ def get_blast_shards(config):
     pattern = '{}blast_*.nhr'.format(config.blast_db)
     files = glob.glob(pattern)
     return sorted([f[:-4] for f in files])
+
+
+def blast_result_file(shard, iteration):
+    """Get the name of the blast result file. Can use wild"""
+    return '{}_{}.txt'.format(shard, str(iteration).zfill(2))
