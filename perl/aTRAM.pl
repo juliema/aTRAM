@@ -59,6 +59,7 @@ my $evalue = 10e-10;
 my $max_target_seqs = 100000000;
 my $assembler = "Velvet";
 my $kmer = 31;
+my $db_gencode = 1;
 
 GetOptions ('reads|sra|database|db=s' => \$atram_db,
             'target=s' => \$target_fasta,
@@ -78,6 +79,7 @@ GetOptions ('reads|sra|database|db=s' => \$atram_db,
             'kmer=i' => \$kmer,
             'bitscore=i' => \$bitscore,
             'evalue=f' => \$evalue,
+	    'db_gencode=i' => \$db_gencode,
             'length=i' => \$contiglength,
             'max_memory|memory=i' => \$max_memory,
             'help|?' => \$help) or pod2usage(-msg => "GetOptions failed.", -exitval => 2);
@@ -312,7 +314,7 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 		push @shardfiles, $current_shard;
 		# 1. blast to find any short reads that match the target.
 		if (($protein == 1) && ($i == 1)) {
-			push @pids, fork_cmd (get_bin("tblastn"), "-max_target_seqs $max_target_seqs -db $atram_db.$s.db -query $search_fasta -outfmt '6 sseqid' -out $current_shard");
+			push @pids, fork_cmd (get_bin("tblastn"), "-max_target_seqs $max_target_seqs -db $atram_db.$s.db -query $search_fasta -db_gencode $db_gencode  -outfmt '6 sseqid' -out $current_shard");
 		} else {
 			push @pids, fork_cmd (get_bin("blastn"), "-task blastn -evalue $evalue -max_target_seqs $max_target_seqs -db $atram_db.$s.db -query $search_fasta -outfmt '6 sseqid' -out $current_shard");
 		}
@@ -405,10 +407,9 @@ for (my $i=$start_iter; $i<=$iterations; $i++) {
 		$blast_file = "$temp_name.$i.blast";
 	} else {
 		(undef, $blast_file) = tempfile(UNLINK => 1);
-	}
-
-	if ($protein == 1) {
-		run_command (get_bin("blastx"), "-db $targetdb.db -query $contigs_file -out $blast_file -outfmt '6 qseqid sseqid bitscore qstart qend sstart send qlen'");
+		}
+		if ($protein == 1) {
+		run_command (get_bin("blastx"), "-db $targetdb.db -query $contigs_file -out $blast_file -query_gencode $db_gencode -outfmt '6 qseqid sseqid bitscore qstart qend sstart send qlen'");
 	} else {
 		run_command (get_bin("tblastx"), "-db $targetdb.db -query $contigs_file -out $blast_file -outfmt '6 qseqid sseqid bitscore qstart qend sstart send qlen'");
 	}
@@ -612,6 +613,9 @@ aTRAM does targeted denovo assembly of short reads to find homologs or paralogs 
   optional values for blast-filtering contigs:
   -bitscore:        default value is 70.
   -length:          default value is 100.
+
+optional values for blast:
+ -db_gencode	    allow user to query a different genetic code, default 1
 
 =cut
 
