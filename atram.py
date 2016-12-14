@@ -68,15 +68,29 @@ def get_matching_ends(config, iteration, shards):
                 out_file.write('{}\n'.format(row[2]))
 
 
-def assemble_hits(config, iteration):
+def assemble_hits_abyss(config, iteration):
     """Use an assembler to build up the contigs."""
-    # cmd = "abyss-pe v=-v k=$kmer name=$short_read_file\_temp se='$short_read_file' E=0".format()
     kmer = 31
     fasta_file = '{}matching_seqs_{}.fasta'.format(config['blast_db'], iteration)
     contig_file = '{}matching_seqs_{}_out.fasta'.format(config['blast_db'], iteration)
     cmd = "abyss-pe v=-v k={} name='{}' se='{}' E=0".format(kmer, contig_file, fasta_file)
     print(cmd)
     subprocess.check_call(cmd, shell=True)
+
+
+def assemble_hits_trinity(config, iteration):
+    """Use an assembler to build up the contigs."""
+    fasta_file = '{}matching_seqs_{}.fasta'.format(config['blast_db'], iteration)
+    jm = '1G'
+    # trinity --seqType fa --single $short_read_file --run_as_paired --JM $jm --output $tempdir
+    cmd = 'Trinity --seqType fa --single {} --run_as_paired --JM {} --output $tempdir'.format(
+        fasta_file, jm)
+    print(cmd)
+
+
+def assemble_hits(config, iteration):
+    """Use an assembler to build up the contigs."""
+    assemble_hits_trinity(config, iteration)
 
 
 def filter_contigs():
