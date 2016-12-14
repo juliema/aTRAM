@@ -35,7 +35,7 @@ def blast_sra(config, iteration, shards, target):
     Blast the targets against the SRA databases. We're using a map-reduce strategy here.
     We map the blasting of the target sequences and reduce the output into one fasta file.
     """
-    with multiprocessing.Pool(processes=config['processes']) as pool:
+    with multiprocessing.Pool(processes=config['cpu']) as pool:
         results = [pool.apply_async(blast, (config, target, iteration, shard)) for shard in shards]
         _ = [result.get() for result in results]
 
@@ -115,8 +115,8 @@ def parse_args():
     """Parse the input arguments and assign defaults."""
     # These lines should all be done in one function
     parser = argparse.ArgumentParser(description=''' ''')
-    configure.add_arguments(parser, ['out', 'blast_db', 'target', 'protein', 'iterations',
-                                     'processes', 'evalue', 'max_target_seqs'])
+    configure.add_arguments(parser, ['blast_db', 'target', 'protein', 'iterations',
+                                     'cpu', 'evalue', 'max_target_seqs'])
     config = configure.parse_args(parser)
     return config
 

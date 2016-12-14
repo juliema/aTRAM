@@ -4,7 +4,6 @@ import re
 import os
 import sqlite3
 import logging
-import argparse  # ???
 import subprocess
 import multiprocessing
 import numpy as np
@@ -124,7 +123,7 @@ def create_blast_db(config, shard_params, shard_index):
 def create_blast_dbs(config, shard_list):
     """Assign processes to make the blast DBs."""
     logging.info('Making blast DBs')
-    with multiprocessing.Pool(processes=config['processes']) as pool:
+    with multiprocessing.Pool(processes=config['cpu']) as pool:
         results = [pool.apply_async(create_blast_db, (config, shard_params, shard_index))
                    for shard_index, shard_params in enumerate(shard_list)]
         _ = [result.get() for result in results]
@@ -132,19 +131,12 @@ def create_blast_dbs(config, shard_list):
     logging.info('Finished making blast DBs')
 
 
-def parse_args():
-    """Parse the input arguments and assign defaults."""
-    parser = argparse.ArgumentParser(
-        description=('Takes fasta or fastq files of paired-end (or single-end) '
-                     'sequence reads and creates an aTRAM database.'))
-    configure.add_arguments(parser, ['sra_files', 'blast_db', 'shards', 'processes'])
-    config = configure.parse_args(parser)
-
-    return config
-
-
 if __name__ == '__main__':
-    CONFIG = parse_args()
+    CONFIG = configure.parse_command_line(
+        description=('Takes fasta or fastq files of paired-end (or single-end) '
+                     'sequence reads and creates an aTRAM database.'),
+        args=['sra_files', 'blast_db_prefix', 'shards', 'cpu'])
+
     util.log_setup(CONFIG)
 
     DB = connect_db(CONFIG)
