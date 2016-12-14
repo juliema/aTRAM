@@ -87,8 +87,8 @@ def connect_db(config):
 def assign_seqs_to_shards(db_conn, config):
     """Put the sequences into the DB shards."""
     logging.info('Assigning sequences to shards')
-    connection = db_conn.execute('SELECT COUNT(*) FROM frags')
-    total = connection.fetchone()[0]
+    result = db_conn.execute('SELECT COUNT(*) FROM frags')
+    total = result.fetchone()[0]
     offsets = np.linspace(0, total, num=config['shards'] + 1, dtype=int)
     for i in range(1, len(offsets) - 1):
         connection = db_conn.execute(

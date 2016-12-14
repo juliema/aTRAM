@@ -5,7 +5,7 @@ import logging
 import sqlite3
 
 import argparse  # ???
-# import subprocess
+import subprocess
 import multiprocessing
 from more_itertools import chunked
 from Bio.Blast.Applications import NcbiblastnCommandline, NcbitblastnCommandline
@@ -35,7 +35,7 @@ def blast_sra(config, iteration, shards, target):
     Blast the targets against the SRA databases. We're using a map-reduce strategy here.
     We map the blasting of the target sequences and reduce the output into one fasta file.
     """
-    with multiprocessing.Pool(processes=2) as pool:
+    with multiprocessing.Pool(processes=config['processes']) as pool:
         results = [pool.apply_async(blast, (config, target, iteration, shard)) for shard in shards]
         _ = [result.get() for result in results]
 
@@ -68,8 +68,15 @@ def get_matching_ends(config, iteration, shards):
                 out_file.write('{}\n'.format(row[2]))
 
 
-def assemble_hits():
+def assemble_hits(config, iteration):
     """Use an assembler to build up the contigs."""
+    # cmd = "abyss-pe v=-v k=$kmer name=$short_read_file\_temp se='$short_read_file' E=0".format()
+    kmer = 31
+    fasta_file = '{}matching_seqs_{}.fasta'.format(config['blast_db'], iteration)
+    contig_file = '{}matching_seqs_{}_out.fasta'.format(config['blast_db'], iteration)
+    cmd = "abyss-pe v=-v k={} name='{}' se='{}' E=0".format(kmer, contig_file, fasta_file)
+    print(cmd)
+    subprocess.check_call(cmd, shell=True)
 
 
 def filter_contigs():
@@ -84,7 +91,7 @@ def atram(config):
         logging.info('aTRAM iteration %i', iteration)
         blast_sra(config, iteration, shards, target)
         get_matching_ends(config, iteration, shards)
-        # assemble_hits()
+        assemble_hits(config, iteration)
         # filter_contigs()
         # target = new file
         break
@@ -92,6 +99,7 @@ def atram(config):
 
 def parse_args():
     """Parse the input arguments and assign defaults."""
+    # These lines should all be done in one function
     parser = argparse.ArgumentParser(description=''' ''')
     configure.add_arguments(parser, ['out', 'blast_db', 'target', 'protein', 'iterations',
                                      'processes', 'evalue', 'max_target_seqs'])
