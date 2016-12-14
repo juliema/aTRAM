@@ -4,6 +4,8 @@
 # ??? Write the config file
 
 import os
+import argparse
+# import tempfile
 import configparser
 
 DEFAULT = {
@@ -35,13 +37,21 @@ def default_shard_count(config):
     return shard_count if shard_count else 1  # We need at least one shard
 
 
-def default_process_count():
+def default_cpu_count():
     """If we're not given a default process count use the number of CPUs minus 2."""
     return os.cpu_count() - 2 if os.cpu_count() > 2 else 1
 
 
 def setup_config_file():
     """Make our best guess for the configurations."""
+    print('Not done yet!')
+
+
+def parse_command_line(args=None, description=''):
+    """Return the configuration after parsing the command line options."""
+    parser = argparse.ArgumentParser(description=description)
+    add_arguments(parser, args)
+    return parse_args(parser)
 
 
 def parse_args(parser):
@@ -59,15 +69,27 @@ def add_arguments(parser, args):
     """Add command-line arguments. We want to keep them consistent between programs."""
 
     for arg in args:
-        if arg == 'blast_db':
+        if arg == 'blast_db_prefix':
             parser.add_argument(
-                '-b', '--blast-db', required=True,
-                help='SRA BLAST DB files have this prefix. May include a directory in the prefix.')
+                '-b', '--blast-db-prefix', required=True,
+                help=('SRA blast DB files (and others) will have this prefix. '
+                      'This prefix may contain a directory to '))
+
+        elif arg == 'cpu':
+            parser.add_argument(
+                '-c', '--cpu', type=int, help='Number of cpus to use.',
+                default=default_cpu_count())
 
         elif arg == 'evalue':
             parser.add_argument(
                 '-e', '--evalue', default=DEFAULT['evalue'], type=float,
                 help='The default evalue is {}.'.format(DEFAULT['evalue']))
+
+        elif arg == 'file_prefix':
+            parser.add_argument(
+                '-f', '--file-prefix', default=DEFAULT['iterations'],
+                help=('This will get prepended to all of the . '
+                      'The default is {}.').format(DEFAULT['iterations']))
 
         elif arg == 'iterations':
             parser.add_argument(
@@ -80,11 +102,6 @@ def add_arguments(parser, args):
                 '-M', '--max-target-seqs', type=int, default=DEFAULT['max_target_seqs'],
                 help='Maximum hit sequences per shard. Default is {}.'.format(
                     DEFAULT['max_target_seqs']))
-
-        elif arg == 'processes':
-            parser.add_argument(
-                '-P', '--processes', type=int, help='Number of processes to create.',
-                default=default_process_count())
 
         if arg == 'protein':
             parser.add_argument(
@@ -104,6 +121,11 @@ def add_arguments(parser, args):
             parser.add_argument(
                 '-t', '--target', required=True,
                 help='The path to the fasta file with sequences of interest.')
+
+        elif arg == 'work_dir':
+            parser.add_argument(
+                '-w', '--work-dir',
+                help='A directory to use as a temp dir. Default to a system temp dir.')
 
 
 if __name__ == '__main__':
