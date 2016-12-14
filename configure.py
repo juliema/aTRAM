@@ -1,18 +1,17 @@
 """Handle configuration options and setup."""
 
 # ??? Read the config file
-# ??? Overwrite config file settings with command-line args
+# ??? Write the config file
 
 import os
 import configparser
-from dict_attrs import DictAttrs
 
-DEFAULT = DictAttrs({
+DEFAULT = {
     'shard_size': 2.5e8,
     'evalue': 1e-9,
     'iterations': 5,
     'max_target_seqs': 100000000,
-})
+}
 
 
 def read_config_file(config, args):
@@ -32,7 +31,7 @@ def default_shard_count(config):
         if sra_file.lower().endswith('.fastq'):
             file_size /= 2  # Guessing that fastq files are about twice as big as fasta files
         total_fasta_size += file_size
-    shard_count = int(total_fasta_size / DEFAULT.shard_size)
+    shard_count = int(total_fasta_size / DEFAULT['shard_size'])
     return shard_count if shard_count else 1  # We need at least one shard
 
 
@@ -47,62 +46,64 @@ def setup_config_file():
 
 def parse_args(parser):
     """Parse the commandline arguments and return a dict attribute object."""
-    args = DictAttrs(vars(parser.parse_args()))
+    config = vars(parser.parse_args())
 
     # Default for shard count requires calulation after the args are parsed
-    if 'shards' in args and args.shards < 1:
-        args['shards'] = default_shard_count(args)
+    if 'shards' in config and config['shards'] < 1:
+        config['shards'] = default_shard_count(config)
 
-    return args
+    return config
 
 
-def add_argument(parser, arg):
+def add_arguments(parser, args):
     """Add command-line arguments. We want to keep them consistent between programs."""
 
-    if arg == 'blast_db':
-        parser.add_argument(
-            '-b', '--blast-db', required=True,
-            help='SRA BLAST DB files have this prefix. May include a directory in the prefix.')
+    for arg in args:
+        if arg == 'blast_db':
+            parser.add_argument(
+                '-b', '--blast-db', required=True,
+                help='SRA BLAST DB files have this prefix. May include a directory in the prefix.')
 
-    elif arg == 'evalue':
-        parser.add_argument(
-            '-e', '--evalue', default=DEFAULT.evalue, type=float,
-            help='The default evalue is {}.'.format(DEFAULT.evalue))
+        elif arg == 'evalue':
+            parser.add_argument(
+                '-e', '--evalue', default=DEFAULT['evalue'], type=float,
+                help='The default evalue is {}.'.format(DEFAULT['evalue']))
 
-    elif arg == 'iterations':
-        parser.add_argument(
-            '-i', '--iterations', default=DEFAULT.iterations, type=int,
-            help=('The number of pipline iterations. '
-                  'The default is {}.').format(DEFAULT.iterations))
+        elif arg == 'iterations':
+            parser.add_argument(
+                '-i', '--iterations', default=DEFAULT['iterations'], type=int,
+                help=('The number of pipline iterations. '
+                      'The default is {}.').format(DEFAULT['iterations']))
 
-    elif arg == 'max_target_seqs':
-        parser.add_argument(
-            '-M', '--max-target-seqs', type=int, default=DEFAULT.max_target_seqs,
-            help='Maximum hit sequences per shard. Default is {}.'.format(DEFAULT.max_target_seqs))
+        elif arg == 'max_target_seqs':
+            parser.add_argument(
+                '-M', '--max-target-seqs', type=int, default=DEFAULT['max_target_seqs'],
+                help='Maximum hit sequences per shard. Default is {}.'.format(
+                    DEFAULT['max_target_seqs']))
 
-    elif arg == 'processes':
-        parser.add_argument(
-            '-P', '--processes', type=int, help='Number of processes to create.',
-            default=default_process_count())
+        elif arg == 'processes':
+            parser.add_argument(
+                '-P', '--processes', type=int, help='Number of processes to create.',
+                default=default_process_count())
 
-    if arg == 'protein':
-        parser.add_argument(
-            '-p', '--protein', nargs='?', const=True, default=False,
-            help='Are the target sequences protein?')
+        if arg == 'protein':
+            parser.add_argument(
+                '-p', '--protein', nargs='?', const=True, default=False,
+                help='Are the target sequences protein?')
 
-    elif arg == 'shards':
-        parser.add_argument(
-            '-s', '--shards', type=int, help='Number of SRA shards to create.', default=-1)
+        elif arg == 'shards':
+            parser.add_argument(
+                '-s', '--shards', type=int, help='Number of SRA shards to create.', default=-1)
 
-    elif arg == 'sra_files':
-        parser.add_argument(
-            'sra_files', nargs='+',
-            help='Short read archives in fasta or fastq format. May contain wildcards.')
+        elif arg == 'sra_files':
+            parser.add_argument(
+                'sra_files', nargs='+',
+                help='Short read archives in fasta or fastq format. May contain wildcards.')
 
-    elif arg == 'target':
-        parser.add_argument(
-            '-t', '--target', required=True,
-            help='The path to the fasta file with sequences of interest.')
+        elif arg == 'target':
+            parser.add_argument(
+                '-t', '--target', required=True,
+                help='The path to the fasta file with sequences of interest.')
 
 
 if __name__ == '__main__':
