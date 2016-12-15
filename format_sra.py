@@ -1,9 +1,9 @@
 """Create the initial blast databases that will be used by aTRAM."""
 
 import re
-import os
 import sqlite3
 import logging
+import tempfile
 import subprocess
 import multiprocessing
 import numpy as np
@@ -75,7 +75,7 @@ def create_index(db_conn):
 
 def connect_db(config):
     """Setup the DB for our processing needs."""
-    db_path = '{}sqlite.db'.format(config['blast_db'])
+    db_path = '{}sqlite.db'.format(config['blast_db_prefix'])
     db_conn = sqlite3.connect(db_path)
     db_conn.execute("PRAGMA page_size = {}".format(2**16))
     db_conn.execute("PRAGMA journal_mode = 'off'")
@@ -90,34 +90,35 @@ def assign_seqs_to_shards(db_conn, config):
     total = result.fetchone()[0]
     offsets = np.linspace(0, total, num=config['shards'] + 1, dtype=int)
     for i in range(1, len(offsets) - 1):
-        connection = db_conn.execute(
+        result = db_conn.execute(
             'SELECT frag FROM frags ORDER BY frag LIMIT 2 OFFSET {}'.format(offsets[i]))
-        first = connection.fetchone()[0]
-        second = connection.fetchone()[0]
+        first = result.fetchone()[0]
+        second = result.fetchone()[0]
         if first != second:
             offsets[i] += 1
     limits = [offsets[i + 1] - offsets[i] for i in range(len(offsets) - 1)]
-    connection.close()
     return list(zip(limits, offsets[:-1]))
+
+
+def fill_blast_fasta(fasta_file, config, shard_params):
+    """Fill the fasta file used as input into blast with shard sequences from the DB."""
+    db_conn = connect_db(config)
+    sql = 'SELECT frag, frag_end, seq FROM frags ORDER BY frag LIMIT {} OFFSET {}'.format(
+        shard_params[0], shard_params[1])
+    result = db_conn.execute(sql)
+    for row in result:
+        fasta_file.write('>{}{}\n'.format(row[0], row[1]))
+        fasta_file.write('{}\n'.format(row[2]))
+    db_conn.close()
 
 
 def create_blast_db(config, shard_params, shard_index):
     """Create a blast DB from the shard."""
-    db_conn = connect_db(config)
-    sql = ('SELECT frag, frag_end, seq FROM frags '
-           'ORDER BY frag LIMIT {} OFFSET {}').format(shard_params[0], shard_params[1])
-    connection = db_conn.execute(sql)
-    fasta_file = '{}shard_seqs_{}.fasta'.format(config['blast_db'], shard_index + 1)
     blast_db = util.blast_shard_name(config, shard_index)
-    with open(fasta_file, 'w') as out_file:
-        for row in connection:
-            out_file.write('>{}{}\n'.format(row[0], row[1]))
-            out_file.write('{}\n'.format(row[2]))
-    db_conn.close()
-    subprocess.check_call(('makeblastdb -dbtype nucl -in {} -out {}').format(
-        fasta_file, blast_db), shell=True)
-    os.remove(fasta_file)
-    return shard_index
+    with tempfile.NamedTemporaryFile(mode='w') as fasta_file:
+        fill_blast_fasta(fasta_file, config, shard_params)
+        subprocess.check_call('makeblastdb -dbtype nucl -in {} -out {}'.format(
+            fasta_file.name, blast_db), shell=True)
 
 
 def create_blast_dbs(config, shard_list):
@@ -127,14 +128,15 @@ def create_blast_dbs(config, shard_list):
         results = [pool.apply_async(create_blast_db, (config, shard_params, shard_index))
                    for shard_index, shard_params in enumerate(shard_list)]
         _ = [result.get() for result in results]
-
     logging.info('Finished making blast DBs')
 
 
 if __name__ == '__main__':
     CONFIG = configure.parse_command_line(
-        description=('Takes fasta or fastq files of paired-end (or single-end) '
-                     'sequence reads and creates an aTRAM database.'),
+        description="""
+        Takes fasta or fastq files of paired-end (or single-end)
+        sequence reads and creates an aTRAM database.
+        """,
         args=['sra_files', 'blast_db_prefix', 'shards', 'cpu'])
 
     util.log_setup(CONFIG)

@@ -70,10 +70,11 @@ def get_matching_ends(config, iteration, shards):
 
 def assemble_hits_abyss(config, iteration):
     """Use an assembler to build up the contigs."""
-    kmer = 31
-    fasta_file = '{}matching_seqs_{}.fasta'.format(config['blast_db'], iteration)
-    contig_file = '{}matching_seqs_{}_out.fasta'.format(config['blast_db'], iteration)
-    cmd = "abyss-pe v=-v k={} name='{}' se='{}' E=0".format(kmer, contig_file, fasta_file)
+    # kmer = 31
+    # fasta_file = '{}matching_seqs_{}.fasta'.format(config['blast_db'], iteration)
+    # contig_file = '{}matching_seqs_{}_out.fasta'.format(config['blast_db'], iteration)
+    cmd = 'abyss-pe '
+    # cmd = "abyss-pe v=-v k={} name='{}' se='{}' E=0".format(kmer, contig_file, fasta_file)
     print(cmd)
     subprocess.check_call(cmd, shell=True)
 
