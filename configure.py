@@ -28,7 +28,7 @@ def read_config_file(config, args):
 def default_shard_count(config):
     """If we're not given an input shard count use the fasta file size / 250MB."""
     total_fasta_size = 0
-    for sra_file in config.sra_files:
+    for sra_file in config['sra_files']:
         file_size = os.path.getsize(sra_file)
         if sra_file.lower().endswith('.fastq'):
             file_size /= 2  # Guessing that fastq files are about twice as big as fasta files
