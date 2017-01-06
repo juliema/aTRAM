@@ -3,9 +3,7 @@
 import re
 import logging
 import sqlite3
-
-import argparse  # ???
-import subprocess
+# import subprocess
 import multiprocessing
 from more_itertools import chunked
 from Bio.Blast.Applications import NcbiblastnCommandline, NcbitblastnCommandline
@@ -68,24 +66,12 @@ def get_matching_ends(config, iteration, shards):
                 out_file.write('{}\n'.format(row[2]))
 
 
-def assemble_hits_abyss(config, iteration):
-    """Use an assembler to build up the contigs."""
-    # kmer = 31
-    # fasta_file = '{}matching_seqs_{}.fasta'.format(config['blast_db'], iteration)
-    # contig_file = '{}matching_seqs_{}_out.fasta'.format(config['blast_db'], iteration)
-    cmd = 'abyss-pe '
-    # cmd = "abyss-pe v=-v k={} name='{}' se='{}' E=0".format(kmer, contig_file, fasta_file)
-    print(cmd)
-    subprocess.check_call(cmd, shell=True)
-
-
 def assemble_hits_trinity(config, iteration):
     """Use an assembler to build up the contigs."""
     fasta_file = '{}matching_seqs_{}.fasta'.format(config['blast_db'], iteration)
-    jm = '1G'
     # trinity --seqType fa --single $short_read_file --run_as_paired --JM $jm --output $tempdir
-    cmd = 'Trinity --seqType fa --single {} --run_as_paired --JM {} --output $tempdir'.format(
-        fasta_file, jm)
+    cmd = 'Trinity --seqType fa --single {} --run_as_paired --output $tempdir'
+    cmd = cmd.format(fasta_file)
     print(cmd)
 
 
@@ -112,17 +98,9 @@ def atram(config):
         break
 
 
-def parse_args():
-    """Parse the input arguments and assign defaults."""
-    # These lines should all be done in one function
-    parser = argparse.ArgumentParser(description=''' ''')
-    configure.add_arguments(parser, ['blast_db', 'target', 'protein', 'iterations',
-                                     'cpu', 'evalue', 'max_target_seqs'])
-    config = configure.parse_args(parser)
-    return config
-
-
 if __name__ == '__main__':
-    ARGS = parse_args()
+    ARGS = configure.parse_command_line(
+        description=""" """,
+        args=['blast_db', 'target', 'protein', 'iterations', 'cpu', 'evalue', 'max_target_seqs'])
     util.log_setup(ARGS)
     atram(ARGS)

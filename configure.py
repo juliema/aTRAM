@@ -47,11 +47,14 @@ def setup_config_file():
     print('Not done yet!')
 
 
-def parse_command_line(args=None, description=''):
-    """Return the configuration after parsing the command line options."""
+def parse_command_line(description='', args=None):
+    """Build the command line parser and parse it."""
+    args = args if args else []
     parser = argparse.ArgumentParser(description=description)
-    add_arguments(parser, args)
-    return parse_args(parser)
+    add_arguments(parser, ['blast_db', 'target', 'protein', 'iterations',
+                           'cpu', 'evalue', 'max_target_seqs'])
+    config = parse_args(parser)
+    return config
 
 
 def parse_args(parser):
