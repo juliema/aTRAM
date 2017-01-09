@@ -41,7 +41,7 @@ def blast_sra(config, iteration, shards, target):
 
 def connect_db(config):
     """Setup the DB for our processing needs."""
-    db_path = '{}sqlite.db'.format(config['blast_db'])
+    db_path = util.db_name(config)
     db_conn = sqlite3.connect(db_path)
     return db_conn
 
@@ -64,14 +64,21 @@ def write_sequences(config, iteration, fragments):
     fasta files.
     """
     db_conn = connect_db(config)
-    fasta_file = '{}matching_seqs_{}.fasta'.format(config['blast_db'], iteration)
-    batches = chunked(fragments.keys(), 100)
-    with open(fasta_file, 'w') as out_file:
-        for ids in batches:
+    fasta_1 = util.paired_end_file(config, iteration, '1')
+    fasta_2 = util.paired_end_file(config, iteration, '2')
+    paired = False
+    with open(fasta_1, 'w') as file_1, open(fasta_2, 'w') as file_2:
+        for ids in chunked(fragments.keys(), 100):
             sql = 'SELECT * FROM frags WHERE frag IN ({})'.format(','.join('?' for _ in ids))
             for row in db_conn.execute(sql, ids):
-                out_file.write('>{}{}\n'.format(row[0], row[1]))
-                out_file.write('{}\n'.format(row[2]))
+                if row[1] and row[1].endswith('2'):
+                    file_2.write('>{}{}\n'.format(row[0], row[1]))
+                    file_2.write('{}\n'.format(row[2]))
+                    paired = True
+                else:
+                    file_1.write('>{}{}\n'.format(row[0], row[1]))
+                    file_1.write('{}\n'.format(row[2]))
+    return paired
 
 
 def filter_contigs():
@@ -87,8 +94,8 @@ def atram(config):
         logging.info('aTRAM iteration %i', iteration)
         blast_sra(config, iteration, shards, target)
         fragments = get_matching_fragments(iteration, shards)
-        write_sequences(config, iteration, fragments)
-        assember.assemble(iteration)
+        paired = write_sequences(config, iteration, fragments)
+        assember.assemble(iteration, paired)
         # filter_contigs()
         # target = new file
         break
@@ -97,7 +104,7 @@ def atram(config):
 if __name__ == '__main__':
     ARGS = configure.parse_command_line(
         description=""" """,
-        args=['blast_db', 'target', 'protein', 'iterations', 'cpu', 'evalue', 'max_target_seqs',
-              'assembler'])
+        args=['target', 'protein', 'iterations', 'cpu', 'evalue', 'max_target_seqs',
+              'assembler', 'max_memory', 'file_prefix', 'work_dir'])
     util.log_setup(ARGS)
     atram(ARGS)
