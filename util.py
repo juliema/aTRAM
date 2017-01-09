@@ -11,7 +11,7 @@ def log_setup(config):
     the command-line arguments for the starting message. Both are gotten from the user input.
     """
     logging.basicConfig(
-        filename='{}{}.log'.format(config['blast_db_prefix'], sys.argv[0][:-3]),
+        filename='{}{}.log'.format(config['blast_db'], sys.argv[0][:-3]),
         level=logging.DEBUG,
         format='%(asctime)s %(levelname)s: %(message)s',
         datefmt='%Y-%m-%d %H:%M:%S')
@@ -20,16 +20,16 @@ def log_setup(config):
 
 def blast_shard_name(config, iteration):
     """Standardize the BLAST shard DB names"""
-    return '{}blast_{}'.format(config['blast_db_prefix'], str(iteration + 1).zfill(3))
+    return '{}blast_{}'.format(config['blast_db'], str(iteration + 1).zfill(3))
 
 
 def get_blast_shards(config):
     """Get all of the BLAST DB names built by format_sra."""
-    pattern = '{}blast_*.nhr'.format(config['blast_db_prefix'])
+    pattern = '{}blast_*.nhr'.format(config['blast_db'])
     files = glob.glob(pattern)
     return sorted([f[:-4] for f in files])
 
 
 def blast_result_file(shard, iteration):
-    """Get the name of the blast result file. Can use wild"""
+    """Get the name of the blast result file. Can use wildcards."""
     return '{}_{}.txt'.format(shard, str(iteration).zfill(2))

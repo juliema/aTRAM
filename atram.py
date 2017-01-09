@@ -10,6 +10,7 @@ from Bio.Blast.Applications import NcbiblastnCommandline, NcbitblastnCommandline
 # from Bio.Blast.Applications import NcbitblastxCommandline
 import configure
 import util
+from assembler import Assembler
 
 FRAGMENT = re.compile(r'^ ( .* ) ( [\s\/_] [12] )', re.VERBOSE)
 
@@ -45,9 +46,8 @@ def connect_db(config):
     return db_conn
 
 
-def get_matching_ends(config, iteration, shards):
-    """Take all of the blast hits and append any matching ends that are not already found."""
-    db_conn = connect_db(config)
+def get_matching_fragments(iteration, shards):
+    """Get all of the blast hits."""
     frags = {}
     for shard in shards:
         file_name = util.blast_result_file(shard, iteration)
@@ -55,29 +55,23 @@ def get_matching_ends(config, iteration, shards):
             for line in match_file:
                 match = FRAGMENT.match(line)
                 frags[match.group(1)] = 1
+    return frags
 
+
+def write_sequences(config, iteration, fragments):
+    """
+    Take the matching blast hits and write the sequence and any matching end to the appropriate
+    fasta files.
+    """
+    db_conn = connect_db(config)
     fasta_file = '{}matching_seqs_{}.fasta'.format(config['blast_db'], iteration)
-    batches = chunked(frags.keys(), 100)
+    batches = chunked(fragments.keys(), 100)
     with open(fasta_file, 'w') as out_file:
         for ids in batches:
             sql = 'SELECT * FROM frags WHERE frag IN ({})'.format(','.join('?' for _ in ids))
             for row in db_conn.execute(sql, ids):
                 out_file.write('>{}{}\n'.format(row[0], row[1]))
                 out_file.write('{}\n'.format(row[2]))
-
-
-def assemble_hits_trinity(config, iteration):
-    """Use an assembler to build up the contigs."""
-    fasta_file = '{}matching_seqs_{}.fasta'.format(config['blast_db'], iteration)
-    # trinity --seqType fa --single $short_read_file --run_as_paired --JM $jm --output $tempdir
-    cmd = 'Trinity --seqType fa --single {} --run_as_paired --output $tempdir'
-    cmd = cmd.format(fasta_file)
-    print(cmd)
-
-
-def assemble_hits(config, iteration):
-    """Use an assembler to build up the contigs."""
-    assemble_hits_trinity(config, iteration)
 
 
 def filter_contigs():
@@ -87,12 +81,14 @@ def filter_contigs():
 def atram(config):
     """The main aTRAM program loop."""
     shards = util.get_blast_shards(config)
+    assember = Assembler.factory(config)
     target = config['target']
     for iteration in range(1, config['iterations'] + 1):
         logging.info('aTRAM iteration %i', iteration)
         blast_sra(config, iteration, shards, target)
-        get_matching_ends(config, iteration, shards)
-        assemble_hits(config, iteration)
+        fragments = get_matching_fragments(iteration, shards)
+        write_sequences(config, iteration, fragments)
+        assember.assemble(iteration)
         # filter_contigs()
         # target = new file
         break
@@ -101,6 +97,7 @@ def atram(config):
 if __name__ == '__main__':
     ARGS = configure.parse_command_line(
         description=""" """,
-        args=['blast_db', 'target', 'protein', 'iterations', 'cpu', 'evalue', 'max_target_seqs'])
+        args=['blast_db', 'target', 'protein', 'iterations', 'cpu', 'evalue', 'max_target_seqs',
+              'assembler'])
     util.log_setup(ARGS)
     atram(ARGS)
