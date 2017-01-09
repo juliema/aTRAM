@@ -13,6 +13,7 @@ DEFAULT = {
     'evalue': 1e-9,
     'iterations': 5,
     'max_target_seqs': 100000000,
+    'assembler': 'trinity',
 }
 
 
@@ -51,8 +52,7 @@ def parse_command_line(description='', args=None):
     """Build the command line parser and parse it."""
     args = args if args else []
     parser = argparse.ArgumentParser(description=description)
-    add_arguments(parser, ['blast_db', 'target', 'protein', 'iterations',
-                           'cpu', 'evalue', 'max_target_seqs'])
+    add_arguments(parser, args)
     config = parse_args(parser)
     return config
 
@@ -68,20 +68,26 @@ def parse_args(parser):
     return config
 
 
+# pylint: disable=R0912
 def add_arguments(parser, args):
     """Add command-line arguments. We want to keep them consistent between programs."""
 
     for arg in args:
-        if arg == 'blast_db_prefix':
+        if arg == 'assembler':
             parser.add_argument(
-                '-b', '--blast-db-prefix', required=True,
+                '-a', '--assembler', required=True,
+                help='Which assembler to use. (Trinity, Abyss, Velvet)')
+
+        elif arg == 'blast_db':
+            parser.add_argument(
+                '-b', '--blast-db', required=True,
                 help=('SRA blast DB files (and others) will have this prefix. '
-                      'This prefix may contain a directory to '))
+                      'This prefix may contain a directory to put the files into.'))
 
         elif arg == 'cpu':
             parser.add_argument(
-                '-c', '--cpu', type=int, help='Number of cpus to use.',
-                default=default_cpu_count())
+                '-c', '--cpu', type=int, default=default_cpu_count(),
+                help='Number of cpus to use.')
 
         elif arg == 'evalue':
             parser.add_argument(
@@ -106,7 +112,7 @@ def add_arguments(parser, args):
                 help='Maximum hit sequences per shard. Default is {}.'.format(
                     DEFAULT['max_target_seqs']))
 
-        if arg == 'protein':
+        elif arg == 'protein':
             parser.add_argument(
                 '-p', '--protein', nargs='?', const=True, default=False,
                 help='Are the target sequences protein?')
@@ -129,6 +135,7 @@ def add_arguments(parser, args):
             parser.add_argument(
                 '-w', '--work-dir',
                 help='A directory to use as a temp dir. Default to a system temp dir.')
+# pylint: enable=R0912
 
 
 if __name__ == '__main__':
