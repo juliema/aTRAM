@@ -1,11 +1,24 @@
 """Wrappers for the various assember programs."""
 
 import util
+# import subprocess
 
 
-# pylint: disable=too-few-public-methods
 class Assembler:
-    """A factory class for building the assembers."""
+    """A factory class for building the assembers. It also has the class signature."""
+
+    def __init__(self, config):
+        self.config = config
+
+    def command(self, iteration, paired):
+        """Build the command for assembly."""
+
+    def assemble(self, iteration, paired):
+        """Use the assembler to build up the contigs."""
+        cmd = self.command(iteration, paired)
+        print(cmd)
+        # subprocess.check_call(cmd, shell=True)
+
     @staticmethod
     def factory(config):
         """Return the assembler based upon the configuration options."""
@@ -15,14 +28,10 @@ class Assembler:
             return VevetAssembler(config)
         elif config['assembler'].lower() == 'abyss':
             return AbyssAssembler(config)
-# pylint: enable=too-few-public-methods
 
 
-class TrinityAssembler:
+class TrinityAssembler(Assembler):
     """Wrapper for the trinity assembler."""
-
-    def __init__(self, config):
-        self.config = config
 
     def output_file(self):
         """The output file name has unique requirements."""
@@ -36,7 +45,7 @@ class TrinityAssembler:
         cmd.append('--max_memory {}'.format(self.config['max_memory']))
         cmd.append('--CPU {}'.format(self.config['cpu']))
 
-        if not paired:
+        if paired:
             cmd.append('--left {}'.format(util.paired_end_file(self.config, iteration, '1')))
             cmd.append('--right {}'.format(util.paired_end_file(self.config, iteration, '2')))
         else:
@@ -45,33 +54,16 @@ class TrinityAssembler:
 
         return ' '.join(cmd)
 
-    def assemble(self, iteration, paired):
-        """Use the assembler to build up the contigs."""
-        cmd = self.command(iteration, paired)
-        print(cmd)
 
-
-class VevetAssembler:
+class VevetAssembler(Assembler):
     """Wrapper for the Velvet assembler."""
 
-    def __init__(self, config):
-        self.config = config
-
     def command(self, iteration, paired):
         """Build the command for assembly."""
 
-    def assemble(self, iteration, paired):
-        """Use the assembler to build up the contigs."""
 
-
-class AbyssAssembler:
+class AbyssAssembler(Assembler):
     """Wrapper for the Abyss assembler."""
 
-    def __init__(self, config):
-        self.config = config
-
     def command(self, iteration, paired):
         """Build the command for assembly."""
-
-    def assemble(self, iteration, paired):
-        """Use the assembler to build up the contigs."""
