@@ -1,7 +1,9 @@
 """Wrappers for the various assember programs."""
 
+import util
 
-# pylint: disable=R0903
+
+# pylint: disable=too-few-public-methods
 class Assembler:
     """A factory class for building the assembers."""
     @staticmethod
@@ -13,7 +15,7 @@ class Assembler:
             return VevetAssembler(config)
         elif config['assembler'].lower() == 'abyss':
             return AbyssAssembler(config)
-# pylint: enable=R0903
+# pylint: enable=too-few-public-methods
 
 
 class TrinityAssembler:
@@ -22,16 +24,30 @@ class TrinityAssembler:
     def __init__(self, config):
         self.config = config
 
-    def command(self, iteration):
-        """Build the command for assembly."""
-        fasta_file = '{}matching_seqs_{}.fasta'.format(self.config['blast_db'], iteration)
-        # trinity --seqType fa --single $short_read_file --run_as_paired --JM $jm --output $tempdir
-        cmd = 'Trinity --seqType fa --single {} --run_as_paired --output $tempdir'
-        cmd = cmd.format(fasta_file)
+    def output_file(self):
+        """The output file name has unique requirements."""
+        pass
 
-    def assemble(self, iteration):
+    def command(self, iteration, paired):
+        """Build the command for assembly."""
+
+        cmd = ['Trinity']
+        cmd.append('--seqType fa')
+        cmd.append('--max_memory {}'.format(self.config['max_memory']))
+        cmd.append('--CPU {}'.format(self.config['cpu']))
+
+        if not paired:
+            cmd.append('--left {}'.format(util.paired_end_file(self.config, iteration, '1')))
+            cmd.append('--right {}'.format(util.paired_end_file(self.config, iteration, '2')))
+        else:
+            cmd.append('--single {}'.format(util.paired_end_file(self.config, iteration, '1')))
+            cmd.append('--run_as_paired')
+
+        return ' '.join(cmd)
+
+    def assemble(self, iteration, paired):
         """Use the assembler to build up the contigs."""
-        cmd = self.command(iteration)
+        cmd = self.command(iteration, paired)
         print(cmd)
 
 
@@ -41,10 +57,10 @@ class VevetAssembler:
     def __init__(self, config):
         self.config = config
 
-    def command(self, iteration):
+    def command(self, iteration, paired):
         """Build the command for assembly."""
 
-    def assemble(self, iteration):
+    def assemble(self, iteration, paired):
         """Use the assembler to build up the contigs."""
 
 
@@ -54,8 +70,8 @@ class AbyssAssembler:
     def __init__(self, config):
         self.config = config
 
-    def command(self, iteration):
+    def command(self, iteration, paired):
         """Build the command for assembly."""
 
-    def assemble(self, iteration):
+    def assemble(self, iteration, paired):
         """Use the assembler to build up the contigs."""

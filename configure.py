@@ -7,6 +7,8 @@ import os
 import argparse
 # import tempfile
 import configparser
+import psutil
+
 
 DEFAULT = {
     'shard_size': 2.5e8,
@@ -14,6 +16,7 @@ DEFAULT = {
     'iterations': 5,
     'max_target_seqs': 100000000,
     'assembler': 'trinity',
+    'max_memory': '50G',
 }
 
 
@@ -43,6 +46,11 @@ def default_cpu_count():
     return os.cpu_count() - 2 if os.cpu_count() > 2 else 1
 
 
+def default_max_memory():
+    """Some assemblers want to know how much memory they can use. Default to available - 2G."""
+    return '{}G'.format(int(psutil.virtual_memory()[0]/(2**30)) - 2)
+
+
 def setup_config_file():
     """Make our best guess for the configurations."""
     print('Not done yet!')
@@ -68,7 +76,7 @@ def parse_args(parser):
     return config
 
 
-# pylint: disable=R0912
+# pylint: disable=too-many-branches
 def add_arguments(parser, args):
     """Add command-line arguments. We want to keep them consistent between programs."""
 
@@ -77,12 +85,6 @@ def add_arguments(parser, args):
             parser.add_argument(
                 '-a', '--assembler', required=True,
                 help='Which assembler to use. (Trinity, Abyss, Velvet)')
-
-        elif arg == 'blast_db':
-            parser.add_argument(
-                '-b', '--blast-db', required=True,
-                help=('SRA blast DB files (and others) will have this prefix. '
-                      'This prefix may contain a directory to put the files into.'))
 
         elif arg == 'cpu':
             parser.add_argument(
@@ -96,15 +98,19 @@ def add_arguments(parser, args):
 
         elif arg == 'file_prefix':
             parser.add_argument(
-                '-f', '--file-prefix', default=DEFAULT['iterations'],
-                help=('This will get prepended to all of the . '
-                      'The default is {}.').format(DEFAULT['iterations']))
+                '-f', '--file-prefix', default='',
+                help='This will get prepended to all of files so you can tell runs apart.')
 
         elif arg == 'iterations':
             parser.add_argument(
                 '-i', '--iterations', default=DEFAULT['iterations'], type=int,
                 help=('The number of pipline iterations. '
                       'The default is {}.').format(DEFAULT['iterations']))
+
+        elif arg == 'max_memory':
+            parser.add_argument(
+                '-m', '--max-memory', default=default_max_memory(),
+                help='Number of cpus to use.')
 
         elif arg == 'max_target_seqs':
             parser.add_argument(
@@ -133,9 +139,10 @@ def add_arguments(parser, args):
 
         elif arg == 'work_dir':
             parser.add_argument(
-                '-w', '--work-dir',
-                help='A directory to use as a temp dir. Default to a system temp dir.')
-# pylint: enable=R0912
+                '-w', '--work-dir', default='.',
+                help=('Where to store files needed by other aTRAM programs '
+                      'and other temporary files. Defaults to the current working directory.'))
+# pylint: enable=too-many-branches
 
 
 if __name__ == '__main__':

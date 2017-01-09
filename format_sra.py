@@ -75,7 +75,7 @@ def create_index(db_conn):
 
 def connect_db(config):
     """Setup the DB for our processing needs."""
-    db_path = '{}sqlite.db'.format(config['blast_db'])
+    db_path = util.db_name(config)
     db_conn = sqlite3.connect(db_path)
     db_conn.execute("PRAGMA page_size = {}".format(2**16))
     db_conn.execute("PRAGMA journal_mode = 'off'")
@@ -137,7 +137,7 @@ if __name__ == '__main__':
         Takes fasta or fastq files of paired-end (or single-end)
         sequence reads and creates an aTRAM database.
         """,
-        args=['sra_files', 'blast_db', 'shards', 'cpu'])
+        args=['sra_files', 'file_prefix', 'work_dir', 'shards', 'cpu'])
 
     util.log_setup(CONFIG)
 

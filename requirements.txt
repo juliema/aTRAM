@@ -1,4 +1,5 @@
 biopython==1.68
 more-itertools==2.4.1
 numpy==1.11.2
+psutil==5.0.1
 six==1.10.0
