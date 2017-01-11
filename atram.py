@@ -3,11 +3,10 @@
 import re
 import logging
 import sqlite3
-# import subprocess
+import subprocess
 import multiprocessing
 from more_itertools import chunked
 from Bio.Blast.Applications import NcbiblastnCommandline, NcbitblastnCommandline
-# from Bio.Blast.Applications import NcbitblastxCommandline
 import configure
 import util
 from assembler import Assembler
@@ -21,7 +20,8 @@ def blast(config, target, iteration, shard):
     blast_args = dict(outfmt="'6 sseqid'", max_target_seqs=config['max_target_seqs'],
                       out=out, db=shard, query=target)
     if config['protein'] and iteration == 1:
-        cmd = str(NcbitblastnCommandline(cmd='tblastn', **blast_args))
+        cmd = str(NcbitblastnCommandline(cmd='tblastn', db_gencode=config['genetic_code'],
+                                         **blast_args))
     else:
         cmd = str(NcbiblastnCommandline(cmd='blastn', task='blastn',
                                         evalue=config['evalue'], **blast_args))
@@ -41,7 +41,7 @@ def blast_sra(config, iteration, shards, target):
 
 def connect_db(config):
     """Setup the DB for our processing needs."""
-    db_path = util.db_name(config)
+    db_path = util.db_file(config)
     db_conn = sqlite3.connect(db_path)
     return db_conn
 
@@ -81,8 +81,28 @@ def write_sequences(config, iteration, fragments):
     return paired
 
 
-def filter_contigs():
+def create_blast_db(config, iteration):
+    """Create a blast DB from the assembled fragments."""
+    blast_db = util.blast_contig_file(config, iteration)
+    fasta_file = util.contig_file(config, iteration)
+    cmd = 'makeblastdb -dbtype nucl -in {} -out {}'.format(fasta_file, blast_db)
+    subprocess.check_call(cmd, shell=True)
+    return blast_db
+
+
+def filter_contigs(config, iteration):
     """Remove junk from the assembled contigs."""
+    blast_db = create_blast_db(config, iteration)
+    scored_contigs = util.contig_score_file(config, iteration)
+    blast_args = dict(db=blast_db, query=config['target'], out=scored_contigs,
+                      outfmt="'6 qseqid sseqid bitscore qstart qend sstart send qlen'")
+    if config['protein']:
+        cmd = str(NcbitblastnCommandline(cmd='tblastn', db_gencode=config['genetic_code'],
+                                         **blast_args))
+    else:
+        cmd = str(NcbiblastnCommandline(cmd='blastn', task='blastn', **blast_args))
+    print(cmd)
+    # subprocess.check_call(cmd, shell=True)
 
 
 def atram(config):
@@ -96,7 +116,7 @@ def atram(config):
         fragments = get_matching_fragments(iteration, shards)
         paired = write_sequences(config, iteration, fragments)
         assember.assemble(iteration, paired)
-        # filter_contigs()
+        filter_contigs(config, iteration)
         # target = new file
         break
 
@@ -104,7 +124,7 @@ def atram(config):
 if __name__ == '__main__':
     ARGS = configure.parse_command_line(
         description=""" """,
-        args=['target', 'protein', 'iterations', 'cpu', 'evalue', 'max_target_seqs',
-              'assembler', 'max_memory', 'file_prefix', 'work_dir'])
+        args=['target', 'protein', 'iterations', 'cpu', 'evalue', 'max_target_seqs', 'assembler',
+              'max_memory', 'file_prefix', 'work_dir', 'bit_score', 'genetic_code'])
     util.log_setup(ARGS)
     atram(ARGS)

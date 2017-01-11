@@ -1,7 +1,9 @@
 """Wrappers for the various assember programs."""
 
+import os
+import shutil
+import subprocess
 import util
-# import subprocess
 
 
 class Assembler:
@@ -10,14 +12,22 @@ class Assembler:
     def __init__(self, config):
         self.config = config
 
+    @property
+    def output_dir(self):
+        """The output directory name mauy have unique requirements."""
+        return self.config['work_dir']
+
     def command(self, iteration, paired):
         """Build the command for assembly."""
 
     def assemble(self, iteration, paired):
         """Use the assembler to build up the contigs."""
         cmd = self.command(iteration, paired)
-        print(cmd)
-        # subprocess.check_call(cmd, shell=True)
+        subprocess.check_call(cmd, shell=True)
+        self.post_assembly(iteration, paired)
+
+    def post_assembly(self, iteration, paired):
+        """Some assembers have unique post assembly steps."""
 
     @staticmethod
     def factory(config):
@@ -33,9 +43,17 @@ class Assembler:
 class TrinityAssembler(Assembler):
     """Wrapper for the trinity assembler."""
 
-    def output_file(self):
-        """The output file name has unique requirements."""
-        pass
+    @property
+    def output_dir(self):
+        """The output directory name has unique requirements."""
+        return os.path.join(self.config['work_dir'], 'trinity')
+
+    def post_assembly(self, iteration, paired):
+        """This assember has a unique post assembly step."""
+        old_file = os.path.join(self.output_dir, 'Trinity.fasta')  # It always names it this?
+        new_file = util.raw_contig_file(self.config, iteration)    # Our file name and path
+        shutil.move(old_file, new_file)  # Save the file for further processing
+        shutil.rmtree(self.output_dir)   # We need to remove this so other iterations will work
 
     def command(self, iteration, paired):
         """Build the command for assembly."""
@@ -44,12 +62,13 @@ class TrinityAssembler(Assembler):
         cmd.append('--seqType fa')
         cmd.append('--max_memory {}'.format(self.config['max_memory']))
         cmd.append('--CPU {}'.format(self.config['cpu']))
+        cmd.append('--output "{}"'.format(self.output_dir))
 
         if paired:
-            cmd.append('--left {}'.format(util.paired_end_file(self.config, iteration, '1')))
-            cmd.append('--right {}'.format(util.paired_end_file(self.config, iteration, '2')))
+            cmd.append('--left "{}"'.format(util.paired_end_file(self.config, iteration, '1')))
+            cmd.append('--right "{}"'.format(util.paired_end_file(self.config, iteration, '2')))
         else:
-            cmd.append('--single {}'.format(util.paired_end_file(self.config, iteration, '1')))
+            cmd.append('--single "{}"'.format(util.paired_end_file(self.config, iteration, '1')))
             cmd.append('--run_as_paired')
 
         return ' '.join(cmd)
