@@ -83,8 +83,8 @@ def write_sequences(config, iteration, fragments):
 
 def create_blast_db(config, iteration):
     """Create a blast DB from the assembled fragments."""
-    blast_db = util.blast_contig_file(config, iteration)
-    fasta_file = util.contig_file(config, iteration)
+    blast_db = util.blast_shard_file(config, iteration)
+    fasta_file = util.raw_contig_file(config, iteration)
     cmd = 'makeblastdb -dbtype nucl -in {} -out {}'.format(fasta_file, blast_db)
     subprocess.check_call(cmd, shell=True)
     return blast_db
@@ -107,7 +107,7 @@ def filter_contigs(config, iteration):
 
 def atram(config):
     """The main aTRAM program loop."""
-    shards = util.get_blast_shards(config)
+    shards = util.get_shard_file_names(config)
     assember = Assembler.factory(config)
     target = config['target']
     for iteration in range(1, config['iterations'] + 1):
@@ -115,7 +115,7 @@ def atram(config):
         blast_sra(config, iteration, shards, target)
         fragments = get_matching_fragments(iteration, shards)
         paired = write_sequences(config, iteration, fragments)
-        assember.assemble(iteration, paired)
+        # assember.assemble(iteration, paired)
         filter_contigs(config, iteration)
         # target = new file
         break
