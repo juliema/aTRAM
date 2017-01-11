@@ -17,6 +17,8 @@ DEFAULT = {
     'max_target_seqs': 100000000,
     'assembler': 'trinity',
     'max_memory': '50G',
+    'bit_score': 70,
+    'genetic_code': 1,
 }
 
 
@@ -86,6 +88,12 @@ def add_arguments(parser, args):
                 '-a', '--assembler', required=True,
                 help='Which assembler to use. (Trinity, Abyss, Velvet)')
 
+        elif arg == 'bit_score':
+            parser.add_argument(
+                '-b', '--bit-score', type=int, default=DEFAULT['bit_score'],
+                help=('Remove contigs that have a value less than this. '
+                      'The default is {}').format(DEFAULT['bit_score']))
+
         elif arg == 'cpu':
             parser.add_argument(
                 '-c', '--cpu', type=int, default=default_cpu_count(),
@@ -101,6 +109,11 @@ def add_arguments(parser, args):
                 '-f', '--file-prefix', default='',
                 help='This will get prepended to all of files so you can tell runs apart.')
 
+        elif arg == 'genetic_code':
+            parser.add_argument(
+                '-g', '--genetic-code', default=DEFAULT['genetic_code'], type=int,
+                help='The genetic code to use. The default is {}.'.format(DEFAULT['genetic_code']))
+
         elif arg == 'iterations':
             parser.add_argument(
                 '-i', '--iterations', default=DEFAULT['iterations'], type=int,
@@ -109,7 +122,7 @@ def add_arguments(parser, args):
 
         elif arg == 'max_memory':
             parser.add_argument(
-                '-m', '--max-memory', default=default_max_memory(),
+                '-m', '--max_memory', default=default_max_memory(),
                 help='Number of cpus to use.')
 
         elif arg == 'max_target_seqs':
@@ -129,7 +142,7 @@ def add_arguments(parser, args):
 
         elif arg == 'sra_files':
             parser.add_argument(
-                'sra_files', nargs='+',
+                'sra-files', nargs='+',
                 help='Short read archives in fasta or fastq format. May contain wildcards.')
 
         elif arg == 'target':

@@ -48,7 +48,7 @@ def load_seqs(db_conn, config):
                 elif line[0] == '+':
                     is_seq = False
                 elif line[0].isalpha() and is_seq:
-                    seq += line.rstrip()  # Almost always singletons so ''.join([strs]) is no help
+                    seq += line.rstrip()  # ''.join([strs])
 
                 if len(recs) >= DEFAULT_BATCH_SIZE:
                     bulk_insert(db_conn, recs)
@@ -75,7 +75,7 @@ def create_index(db_conn):
 
 def connect_db(config):
     """Setup the DB for our processing needs."""
-    db_path = util.db_name(config)
+    db_path = util.db_file(config)
     db_conn = sqlite3.connect(db_path)
     db_conn.execute("PRAGMA page_size = {}".format(2**16))
     db_conn.execute("PRAGMA journal_mode = 'off'")
@@ -114,11 +114,11 @@ def fill_blast_fasta(fasta_file, config, shard_params):
 
 def create_blast_db(config, shard_params, shard_index):
     """Create a blast DB from the shard."""
-    blast_db = util.blast_shard_name(config, shard_index)
+    blast_db = util.blast_shard_file(config, shard_index)
     with tempfile.NamedTemporaryFile(mode='w') as fasta_file:
         fill_blast_fasta(fasta_file, config, shard_params)
-        subprocess.check_call('makeblastdb -dbtype nucl -in {} -out {}'.format(
-            fasta_file.name, blast_db), shell=True)
+        cmd = 'makeblastdb -dbtype nucl -in {} -out {}'.format(fasta_file.name, blast_db)
+        subprocess.check_call(cmd, shell=True)
 
 
 def create_blast_dbs(config, shard_list):
