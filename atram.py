@@ -26,7 +26,7 @@ def blast(config, target, iteration, shard):
         cmd = str(NcbiblastnCommandline(cmd='blastn', task='blastn',
                                         evalue=config['evalue'], **blast_args))
     print(cmd)
-    # subprocess.check_call(cmd, shell=True)
+    subprocess.check_call(cmd, shell=True)
 
 
 def blast_sra(config, iteration, shards, target):
@@ -51,6 +51,7 @@ def get_matching_fragments(iteration, shards):
     frags = {}
     for shard in shards:
         file_name = util.blast_result_file(shard, iteration)
+        print(file_name)
         with open(file_name, 'r') as match_file:
             for line in match_file:
                 match = FRAGMENT.match(line)
@@ -83,8 +84,8 @@ def write_sequences(config, iteration, fragments):
 
 def create_blast_db(config, iteration):
     """Create a blast DB from the assembled fragments."""
-    blast_db = util.blast_shard_file(config, iteration)
-    fasta_file = util.raw_contig_file(config, iteration)
+    blast_db = util.contig_score_file(config, iteration)
+    fasta_file = util.contig_unfiltered_file(config, iteration)
     cmd = 'makeblastdb -dbtype nucl -in {} -out {}'.format(fasta_file, blast_db)
     subprocess.check_call(cmd, shell=True)
     return blast_db
@@ -102,12 +103,12 @@ def filter_contigs(config, iteration):
     else:
         cmd = str(NcbiblastnCommandline(cmd='blastn', task='blastn', **blast_args))
     print(cmd)
-    # subprocess.check_call(cmd, shell=True)
+    subprocess.check_call(cmd, shell=True)
 
 
 def atram(config):
     """The main aTRAM program loop."""
-    shards = util.get_shard_file_names(config)
+    shards = util.shard_db_names(config)
     assember = Assembler.factory(config)
     target = config['target']
     for iteration in range(1, config['iterations'] + 1):
@@ -115,7 +116,7 @@ def atram(config):
         blast_sra(config, iteration, shards, target)
         fragments = get_matching_fragments(iteration, shards)
         paired = write_sequences(config, iteration, fragments)
-        # assember.assemble(iteration, paired)
+        assember.assemble(iteration, paired)
         filter_contigs(config, iteration)
         # target = new file
         break
@@ -125,6 +126,6 @@ if __name__ == '__main__':
     ARGS = configure.parse_command_line(
         description=""" """,
         args=['target', 'protein', 'iterations', 'cpu', 'evalue', 'max_target_seqs', 'assembler',
-              'max_memory', 'file_prefix', 'work_dir', 'bit_score', 'genetic_code'])
+              'max_memory', 'file_prefix', 'work_dir', 'bit_score', 'genetic_code', 'kmer'])
     util.log_setup(ARGS)
     atram(ARGS)

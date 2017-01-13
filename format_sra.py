@@ -114,7 +114,7 @@ def fill_blast_fasta(fasta_file, config, shard_params):
 
 def create_blast_db(config, shard_params, shard_index):
     """Create a blast DB from the shard."""
-    blast_db = util.blast_shard_file(config, shard_index)
+    blast_db = util.shard_db_name(config, shard_index)
     with tempfile.NamedTemporaryFile(mode='w') as fasta_file:
         fill_blast_fasta(fasta_file, config, shard_params)
         cmd = 'makeblastdb -dbtype nucl -in {} -out {}'.format(fasta_file.name, blast_db)
