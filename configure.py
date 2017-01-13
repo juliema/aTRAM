@@ -11,14 +11,17 @@ import psutil
 
 
 DEFAULT = {
-    'shard_size': 2.5e8,
-    'evalue': 1e-9,
-    'iterations': 5,
-    'max_target_seqs': 100000000,
-    'assembler': 'trinity',
-    'max_memory': '50G',
+    'abyss': 'abyss-pe',
+    # 'assembler': 'trinity',
     'bit_score': 70,
+    'evalue': 1e-9,
     'genetic_code': 1,
+    'iterations': 5,
+    'kmer': 31,
+    'max_memory': '50G',
+    'max_target_seqs': 100000000,
+    'shard_size': 2.5e8,
+    'trinity': 'Trinity',
 }
 
 
@@ -50,7 +53,7 @@ def default_cpu_count():
 
 def default_max_memory():
     """Some assemblers want to know how much memory they can use. Default to available - 2G."""
-    return '{}G'.format(int(psutil.virtual_memory()[0]/(2**30)) - 2)
+    return '{}G'.format(int(psutil.virtual_memory()[0] / (2**30)) - 2)
 
 
 def setup_config_file():
@@ -120,10 +123,16 @@ def add_arguments(parser, args):
                 help=('The number of pipline iterations. '
                       'The default is {}.').format(DEFAULT['iterations']))
 
+        elif arg == 'kmer':
+            parser.add_argument(
+                '-k', '--kmer', default=DEFAULT['kmer'], type=int,
+                help=('k-mer size for assembers that use it. '
+                      'The default is {}.').format(DEFAULT['kmer']))
+
         elif arg == 'max_memory':
             parser.add_argument(
                 '-m', '--max_memory', default=default_max_memory(),
-                help='Number of cpus to use.')
+                help='Maximum amount of memory to use.')
 
         elif arg == 'max_target_seqs':
             parser.add_argument(
@@ -142,7 +151,7 @@ def add_arguments(parser, args):
 
         elif arg == 'sra_files':
             parser.add_argument(
-                'sra-files', nargs='+',
+                'sra_files', nargs='+',
                 help='Short read archives in fasta or fastq format. May contain wildcards.')
 
         elif arg == 'target':

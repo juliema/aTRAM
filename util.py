@@ -11,7 +11,6 @@ def log_setup(config):
     Set up the logs for a common format. We need the prefix of the output log file name and
     the command-line arguments for the starting message. Both are gotten from the user input.
     """
-    print(config)
     file_name = '{}{}.log'.format(config['file_prefix'], sys.argv[0][:-3])
     logging.basicConfig(
         filename=os.path.join(config['work_dir'], file_name),
@@ -21,62 +20,58 @@ def log_setup(config):
     logging.info(' '.join(sys.argv))
 
 
-def get_shard_file_names(config):
-    """Get all of the BLAST DB names built by format_sra."""
-    file_name = '{}blast_*.nhr'.format(config['file_prefix'])
-    pattern = os.path.join(config['work_dir'], file_name)
-    files = glob.glob(pattern)
-    return sorted([f[:-4] for f in files])
-
-
-def path(config, file_name):
+def path(file_name, config, iteration=None):
     """Standardize file names with a work directory and a file prefix."""
-    file_name = config['file_prefix'] + file_name
+    if iteration:
+        file_name = file_name.format(str(iteration).zfill(2))
+    file_name = '{}{}'.format(config['file_prefix'], file_name)
     return os.path.join(config['work_dir'], file_name)
 
 
 def db_file(config):
-    """Create an SQL DB name."""
-    file_name = 'sqlite.db'
-    return path(config, file_name)
+    """Create an SQLite3 DB name."""
+    return path('sqlite.db', config)
 
 
-def blast_shard_file(config, iteration):
-    """Standardize the BLAST shard DB names."""
-    file_name = 'blast_{}'.format(str(iteration).zfill(2))
-    return path(config, file_name)
+def shard_db_names(config):
+    """Get all of the BLAST DB names built by format_sra."""
+    pattern = path('blast_*.nhr', config)
+    files = glob.glob(pattern)
+    return sorted([f[:-4] for f in files])
 
 
-def blast_contig_file(config, iteration):
-    """Get the name of the blast result file."""
-    file_name = 'contig_scores_{}.txt'.format(str(iteration).zfill(2))
-    return path(config, file_name)
-
-
-def contig_score_file(config, iteration):
-    """Get the name of the blast DB for the assembled contigs."""
-    file_name = 'blast_contigs_{}'.format(str(iteration).zfill(2))
-    return path(config, file_name)
+def shard_db_name(config, shard_index):
+    """Create the BLAST shard DB names."""
+    file_name = 'blast_{}'.format(str(shard_index + 1).zfill(3))
+    return path(file_name, config)
 
 
 def paired_end_file(config, iteration, end):
-    """Standardize the name of the paired file."""
-    file_name = 'matching_seqs_{}_{}.fasta'.format(str(iteration).zfill(2), end)
-    return path(config, file_name)
+    """Create the file name of the paired end file."""
+    file_name = 'matching_seqs_{}_{}.fasta'.format('{}', end)
+    return path(file_name, config, iteration=iteration)
 
 
-def raw_contig_file(config, iteration):
-    """Standardize the contig file name from before it is filtered."""
-    file_name = 'raw_contigs_{}.fasta'.format(str(iteration).zfill(2))
-    return path(config, file_name)
+def contig_blast_file(config, iteration):
+    """Create the file name of the blast DB for the assembled contigs."""
+    return path('blast_contigs_{}', config, iteration=iteration)
 
 
-def contig_file(config, iteration):
-    """Standardize the contig file name from after it is filtered."""
-    file_name = 'contigs_{}.fasta'.format(str(iteration).zfill(2))
-    return path(config, file_name)
+def contig_score_file(config, iteration):
+    """Create the contig blast result file name."""
+    return path('contig_scores_{}.txt', config, iteration=iteration)
 
 
-def blast_result_file(shard, iteration):
-    """Get the name of the blast result file."""
-    return '{}_{}.txt'.format(shard, str(iteration).zfill(2))
+def contig_unfiltered_file(config, iteration):
+    """Create the file name for the contigs before they are filtered."""
+    return path('raw_contigs_{}.fasta', config, iteration=iteration)
+
+
+def contig_filtered_file(config, iteration):
+    """Create the file name for the contigs after they are filtered."""
+    return path('contigs_{}.fasta', config, iteration=iteration)
+
+
+def blast_result_file(shard_name, iteration):
+    """Get the file name of the blast result file."""
+    return '{}_{}.txt'.format(shard_name, str(iteration).zfill(2))
