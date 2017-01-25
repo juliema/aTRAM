@@ -26,7 +26,9 @@ DEFAULT = {
 
 
 def read_config_file(config, args):
-    """Read in the config file and hoist the data into the config dict."""
+    """
+    Read in the config file and hoist the data into the config dict.
+    """
     if not args.get('config_file', None):
         pass
     parser = configparser.ConfigParser()
@@ -35,24 +37,31 @@ def read_config_file(config, args):
 
 
 def default_shard_count(config):
-    """If we're not given an input shard count use the fasta file size / 250MB."""
+    """
+    If we're not given an input shard count use the fasta file size / 250MB.
+    """
     total_fasta_size = 0
     for sra_file in config['sra_files']:
         file_size = os.path.getsize(sra_file)
         if sra_file.lower().endswith('.fastq'):
-            file_size /= 2  # Guessing that fastq files are about twice as big as fasta files
+            file_size /= 2  # Guessing that fastq files ~2x size of fasta files
         total_fasta_size += file_size
     shard_count = int(total_fasta_size / DEFAULT['shard_size'])
     return shard_count if shard_count else 1  # We need at least one shard
 
 
 def default_cpu_count():
-    """If we're not given a default process count use the number of CPUs minus 2."""
+    """
+    If we're not given a default process count use the number of CPUs minus 2.
+    """
     return os.cpu_count() - 2 if os.cpu_count() > 2 else 1
 
 
 def default_max_memory():
-    """Some assemblers want to know how much memory they can use. Default to available - 2G."""
+    """
+    Some assemblers want to know how much memory they can use.
+    Default to available memory minus 2G.
+    """
     return '{}G'.format(int(psutil.virtual_memory()[0] / (2**30)) - 2)
 
 
@@ -83,7 +92,7 @@ def parse_args(parser):
 
 # pylint: disable=too-many-branches
 def add_arguments(parser, args):
-    """Add command-line arguments. We want to keep them consistent between programs."""
+    """Add command-line arguments."""
 
     for arg in args:
         if arg == 'assembler':
@@ -110,12 +119,16 @@ def add_arguments(parser, args):
         elif arg == 'file_prefix':
             parser.add_argument(
                 '-f', '--file-prefix', default='',
-                help='This will get prepended to all of files so you can tell runs apart.')
+                help=('This will get prepended to all of files so you can '
+                      'tell runs apart.'))
 
         elif arg == 'genetic_code':
             parser.add_argument(
-                '-g', '--genetic-code', default=DEFAULT['genetic_code'], type=int,
-                help='The genetic code to use. The default is {}.'.format(DEFAULT['genetic_code']))
+                '-g', '--genetic-code',
+                default=DEFAULT['genetic_code'],
+                type=int,
+                help='The genetic code to use. The default is {}.'.format(
+                    DEFAULT['genetic_code']))
 
         elif arg == 'iterations':
             parser.add_argument(
@@ -136,7 +149,8 @@ def add_arguments(parser, args):
 
         elif arg == 'max_target_seqs':
             parser.add_argument(
-                '-M', '--max-target-seqs', type=int, default=DEFAULT['max_target_seqs'],
+                '-M', '--max-target-seqs',
+                type=int, default=DEFAULT['max_target_seqs'],
                 help='Maximum hit sequences per shard. Default is {}.'.format(
                     DEFAULT['max_target_seqs']))
 
@@ -147,12 +161,14 @@ def add_arguments(parser, args):
 
         elif arg == 'shards':
             parser.add_argument(
-                '-s', '--shards', type=int, help='Number of SRA shards to create.', default=-1)
+                '-s', '--shards', type=int,
+                help='Number of SRA shards to create.', default=-1)
 
         elif arg == 'sra_files':
             parser.add_argument(
                 'sra_files', nargs='+',
-                help='Short read archives in fasta or fastq format. May contain wildcards.')
+                help=('Short read archives in fasta or fastq format. '
+                      'May contain wildcards.'))
 
         elif arg == 'target':
             parser.add_argument(
@@ -163,7 +179,8 @@ def add_arguments(parser, args):
             parser.add_argument(
                 '-w', '--work-dir', default='.',
                 help=('Where to store files needed by other aTRAM programs '
-                      'and other temporary files. Defaults to the current working directory.'))
+                      'and other temporary files. Defaults to the current '
+                      'working directory.'))
 # pylint: enable=too-many-branches
 
 

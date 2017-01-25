@@ -7,7 +7,7 @@ import util
 
 
 class Assembler:
-    """A factory class for building the assembers. It also has the class signature."""
+    """A factory class for building the assembers."""
 
     def __init__(self, config):
         self.config = config
@@ -50,10 +50,10 @@ class TrinityAssembler(Assembler):
 
     def post_assembly(self, iteration, paired):
         """This assember has a unique post assembly step."""
-        old_file = os.path.join(self.work_path, 'Trinity.fasta')       # It always names it this?
-        new_file = util.contig_unfiltered_file(self.config, iteration)  # Our file name and path
+        old_file = os.path.join(self.work_path, 'Trinity.fasta')
+        new_file = util.contig_unfiltered_file(self.config, iteration)
         shutil.move(old_file, new_file)  # Save the file for further processing
-        shutil.rmtree(self.work_path)   # We need to remove this so other iterations will work
+        shutil.rmtree(self.work_path)    # Remove so other iterations will work
 
     def command(self, iteration, paired):
         """Build the command for assembly."""
@@ -65,10 +65,13 @@ class TrinityAssembler(Assembler):
         cmd.append("--output '{}'".format(self.work_path))
 
         if paired:
-            cmd.append("--left '{}'".format(util.paired_end_file(self.config, iteration, '1')))
-            cmd.append("--right '{}'".format(util.paired_end_file(self.config, iteration, '2')))
+            cmd.append("--left '{}'".format(util.paired_end_file(
+                self.config, iteration, '1')))
+            cmd.append("--right '{}'".format(util.paired_end_file(
+                self.config, iteration, '2')))
         else:
-            cmd.append("-single '{}'".format(util.paired_end_file(self.config, iteration, '1')))
+            cmd.append("-single '{}'".format(util.paired_end_file(
+                self.config, iteration, '1')))
             cmd.append('--run_as_paired')
 
         return ' '.join(cmd)
@@ -92,12 +95,15 @@ class AbyssAssembler(Assembler):
         cmd.append('E=0')
         cmd.append('k={}'.format(self.config['kmer']))
         # cmd.append('np={}'.format(self.config['cpu']))
-        cmd.append("name='{}'".format(util.contig_unfiltered_file(self.config, iteration)))
+        cmd.append("name='{}'".format(util.contig_unfiltered_file(
+            self.config, iteration)))
 
         if paired:
-            cmd.append("in='{} {}'".format(util.paired_end_file(self.config, iteration, '1'),
-                                           util.paired_end_file(self.config, iteration, '2')))
+            cmd.append("in='{} {}'".format(
+                util.paired_end_file(self.config, iteration, '1'),
+                util.paired_end_file(self.config, iteration, '2')))
         else:
-            cmd.append("se='{}'".format(util.paired_end_file(self.config, iteration, '1')))
+            cmd.append("se='{}'".format(
+                util.paired_end_file(self.config, iteration, '1')))
 
         return ' '.join(cmd)

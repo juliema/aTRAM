@@ -9,7 +9,7 @@ import multiprocessing
 import numpy as np
 import configure
 import util
-# Bio.SeqIO  # 2-3x slower than load_seqs() :(
+# Bio.SeqIO  # much slower than load_seqs()
 
 DEFAULT_BATCH_SIZE = 1e7
 FRAGMENT = re.compile(r'^ [>@] \s* ( .* ) ( [\s\/_] [12] )', re.VERBOSE)
@@ -18,13 +18,15 @@ FRAGMENT = re.compile(r'^ [>@] \s* ( .* ) ( [\s\/_] [12] )', re.VERBOSE)
 def bulk_insert(db_conn, recs):
     """Insert a batch of sequence records into the sqlite database."""
     if recs:
-        db_conn.executemany('''INSERT INTO frags (frag, frag_end, seq) VALUES (?, ?, ?)''', recs)
+        sql = '''INSERT INTO frags (frag, frag_end, seq) VALUES (?, ?, ?)'''
+        db_conn.executemany(sql, recs)
         db_conn.commit()
 
 
 def load_seqs(db_conn, config):
     """
-    A version of "Bio.SeqIO. It is faster because we can take shortcuts due to the limited uses.
+    A version of "Bio.SeqIO. It is faster because we can take shortcuts due to
+    the limited use.
     """
     for file_name in config['sra_files']:
         logging.info('Loading "%s" into sqlite database', file_name)
@@ -64,7 +66,10 @@ def create_table(db_conn):
     logging.info('Creating sqlite tables')
     db_conn.execute('''DROP INDEX IF EXISTS frag''')
     db_conn.execute('''DROP TABLE IF EXISTS frags''')
-    db_conn.execute('''CREATE TABLE IF NOT EXISTS frags (frag TEXT, frag_end TEXT, seq TEXT)''')
+    sql = '''
+        CREATE TABLE IF NOT EXISTS frags (frag TEXT, frag_end TEXT, seq TEXT)
+    '''
+    db_conn.execute(sql)
 
 
 def create_index(db_conn):
@@ -90,8 +95,8 @@ def assign_seqs_to_shards(db_conn, config):
     total = result.fetchone()[0]
     offsets = np.linspace(0, total, num=config['shards'] + 1, dtype=int)
     for i in range(1, len(offsets) - 1):
-        result = db_conn.execute(
-            'SELECT frag FROM frags ORDER BY frag LIMIT 2 OFFSET {}'.format(offsets[i]))
+        sql = 'SELECT frag FROM frags ORDER BY frag LIMIT 2 OFFSET {}'
+        result = db_conn.execute(sql.format(offsets[i]))
         first = result.fetchone()[0]
         second = result.fetchone()[0]
         if first != second:
@@ -101,10 +106,15 @@ def assign_seqs_to_shards(db_conn, config):
 
 
 def fill_blast_fasta(fasta_file, config, shard_params):
-    """Fill the fasta file used as input into blast with shard sequences from the DB."""
+    """
+    Fill the fasta file used as input into blast with shard sequences from
+    the DB.
+    """
     db_conn = connect_db(config)
-    sql = 'SELECT frag, frag_end, seq FROM frags ORDER BY frag LIMIT {} OFFSET {}'.format(
-        shard_params[0], shard_params[1])
+    sql = '''
+        SELECT frag, frag_end, seq FROM frags ORDER BY frag LIMIT {} OFFSET {}
+    '''
+    sql = sql.format(shard_params[0], shard_params[1])
     result = db_conn.execute(sql)
     for row in result:
         fasta_file.write('>{}{}\n'.format(row[0], row[1]))
@@ -117,7 +127,8 @@ def create_blast_db(config, shard_params, shard_index):
     blast_db = util.shard_db_name(config, shard_index)
     with tempfile.NamedTemporaryFile(mode='w') as fasta_file:
         fill_blast_fasta(fasta_file, config, shard_params)
-        cmd = 'makeblastdb -dbtype nucl -in {} -out {}'.format(fasta_file.name, blast_db)
+        cmd = 'makeblastdb -dbtype nucl -in {} -out {}'
+        cmd = cmd.format(fasta_file.name, blast_db)
         subprocess.check_call(cmd, shell=True)
 
 
@@ -125,7 +136,8 @@ def create_blast_dbs(config, shard_list):
     """Assign processes to make the blast DBs."""
     logging.info('Making blast DBs')
     with multiprocessing.Pool(processes=config['cpu']) as pool:
-        results = [pool.apply_async(create_blast_db, (config, shard_params, shard_index))
+        results = [pool.apply_async(create_blast_db,
+                                    (config, shard_params, shard_index))
                    for shard_index, shard_params in enumerate(shard_list)]
         _ = [result.get() for result in results]
     logging.info('Finished making blast DBs')
@@ -137,7 +149,7 @@ if __name__ == '__main__':
         Takes fasta or fastq files of paired-end (or single-end)
         sequence reads and creates an aTRAM database.
         """,
-        args=['sra_files', 'file_prefix', 'work_dir', 'shards', 'cpu'])
+        args='sra_files file_prefix work_dir shards cpu'.split())
 
     util.log_setup(CONFIG)
 
