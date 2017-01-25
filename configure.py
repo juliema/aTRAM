@@ -13,7 +13,7 @@ import psutil
 DEFAULT = {
     'abyss': 'abyss-pe',
     # 'assembler': 'trinity',
-    'bit_score': 70,
+    'bit_score': 70.0,
     'evalue': 1e-9,
     'genetic_code': 1,
     'iterations': 5,
@@ -102,7 +102,7 @@ def add_arguments(parser, args):
 
         elif arg == 'bit_score':
             parser.add_argument(
-                '-b', '--bit-score', type=int, default=DEFAULT['bit_score'],
+                '-b', '--bit-score', type=float, default=DEFAULT['bit_score'],
                 help=('Remove contigs that have a value less than this. '
                       'The default is {}').format(DEFAULT['bit_score']))
 

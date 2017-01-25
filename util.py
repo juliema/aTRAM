@@ -58,9 +58,14 @@ def contig_blast_file(config, iteration):
     return path('blast_contigs_{}', config, iteration=iteration)
 
 
+def contig_score_db(config, iteration):
+    """Create the contig blast DB name."""
+    return path('contig_scores_{}', config, iteration=iteration)
+
+
 def contig_score_file(config, iteration):
     """Create the contig blast result file name."""
-    return path('contig_scores_{}.txt', config, iteration=iteration)
+    return contig_score_db(config, iteration) + '.csv'
 
 
 def contig_unfiltered_file(config, iteration):
