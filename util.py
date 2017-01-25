@@ -8,8 +8,9 @@ import glob
 
 def log_setup(config):
     """
-    Set up the logs for a common format. We need the prefix of the output log file name and
-    the command-line arguments for the starting message. Both are gotten from the user input.
+    Set up the logs for a common format. We need the prefix of the output log
+    file name and the command-line arguments for the starting message. Both are
+    gotten from the user input.
     """
     file_name = '{}{}.log'.format(config['file_prefix'], sys.argv[0][:-3])
     logging.basicConfig(
