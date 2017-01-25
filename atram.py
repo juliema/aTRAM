@@ -1,11 +1,13 @@
 """The aTRAM assembly program."""
 
 import re
+import csv
 import logging
 import sqlite3
 import subprocess
 import multiprocessing
 from more_itertools import chunked
+from Bio import SeqIO
 from Bio.Blast.Applications import NcbiblastnCommandline
 from Bio.Blast.Applications import NcbitblastnCommandline
 import configure
@@ -17,8 +19,9 @@ FRAGMENT = re.compile(r'^ ( .* ) ( [\s\/_] [12] )', re.VERBOSE)
 
 def blast(config, target, iteration, shard):
     """Blast the target sequences against an SRA blast DB."""
+
     out = util.blast_result_file(shard, iteration)
-    blast_args = dict(outfmt="'6 sseqid'",
+    blast_args = dict(outfmt="'10 sseqid'",
                       max_target_seqs=config['max_target_seqs'],
                       out=out, db=shard, query=target)
     if config['protein'] and iteration == 1:
@@ -38,6 +41,7 @@ def blast_sra(config, iteration, shards, target):
     strategy here. We map the blasting of the target sequences and reduce
     the output into one fasta file.
     """
+
     with multiprocessing.Pool(processes=config['cpu']) as pool:
         results = [pool.apply_async(blast, (config, target, iteration, shard))
                    for shard in shards]
@@ -46,6 +50,7 @@ def blast_sra(config, iteration, shards, target):
 
 def connect_db(config):
     """Setup the DB for our processing needs."""
+
     db_path = util.db_file(config)
     db_conn = sqlite3.connect(db_path)
     return db_conn
@@ -53,11 +58,12 @@ def connect_db(config):
 
 def get_matching_fragments(iteration, shards):
     """Get all of the blast hits."""
+
     frags = {}
     for shard in shards:
         file_name = util.blast_result_file(shard, iteration)
         print(file_name)
-        with open(file_name, 'r') as match_file:
+        with open(file_name) as match_file:
             for line in match_file:
                 match = FRAGMENT.match(line)
                 frags[match.group(1) if match else line] = 1
@@ -69,6 +75,7 @@ def write_sequences(config, iteration, fragments):
     Take the matching blast hits and write the sequence and any matching end to
     the appropriate fasta files.
     """
+
     db_conn = connect_db(config)
     fasta_1 = util.paired_end_file(config, iteration, '1')
     fasta_2 = util.paired_end_file(config, iteration, '2')
@@ -90,7 +97,8 @@ def write_sequences(config, iteration, fragments):
 
 def create_blast_db(config, iteration):
     """Create a blast DB from the assembled fragments."""
-    blast_db = util.contig_score_file(config, iteration)
+
+    blast_db = util.contig_score_db(config, iteration)
     fasta_file = util.contig_unfiltered_file(config, iteration)
     cmd = 'makeblastdb -dbtype nucl -in {} -out {}'
     cmd = cmd.format(fasta_file, blast_db)
@@ -98,13 +106,17 @@ def create_blast_db(config, iteration):
     return blast_db
 
 
-def filter_contigs(config, iteration):
-    """Remove junk from the assembled contigs."""
+def blast_target_against_contigs(config, iteration):
+    """
+    Blast the target sequence against the contings. The blast output will have
+    the scores for later processing.
+    """
+
     blast_db = create_blast_db(config, iteration)
     scored_contigs = util.contig_score_file(config, iteration)
     blast_args = dict(
         db=blast_db, query=config['target'], out=scored_contigs,
-        outfmt="'6 qseqid sseqid bitscore qstart qend sstart send slen'")
+        outfmt="'10 qseqid sseqid bitscore qstart qend sstart send slen'")
     if config['protein']:
         cmd = str(NcbitblastnCommandline(
             cmd='tblastn', db_gencode=config['genetic_code'], **blast_args))
@@ -115,16 +127,53 @@ def filter_contigs(config, iteration):
     subprocess.check_call(cmd, shell=True)
 
 
+def filter_contig_scores(config, iteration):
+    """Remove contigs that have scores below the bit score cut-off."""
+
+    # qseqid sseqid bitscore qstart qend sstart send slen
+    field_names = ['target_id', 'contig_id', 'bit_score',
+                   'target_start', 'target_end',
+                   'contig_start', 'contig_end', 'contig_len']
+    contig_score_file = util.contig_score_file(config, iteration)
+
+    scores = {}
+    with open(contig_score_file) as in_file:
+        for score in csv.DictReader(in_file, field_names):
+            score['bit_score'] = float(score['bit_score'])
+            if score['bit_score'] >= config['bit_score']:
+                for field in field_names[3:]:
+                    score[field] = int(score[field])
+                scores[score['contig_id']] = score
+
+    return scores
+
+
+def filter_contigs(config, iteration):
+    """Remove junk from the assembled contigs."""
+
+    blast_target_against_contigs(config, iteration)
+    filtered_names = filter_contig_scores(config, iteration)
+    unfiltered_file = util.contig_unfiltered_file(config, iteration)
+    # filtered_file = util.contig_filtered_file(config, iteration)
+
+    print(filtered_names)
+    with open(unfiltered_file) as in_file:
+        for contig in SeqIO.parse(in_file, 'fasta'):
+            if contig.id in filtered_names:
+                print(contig)
+
+
 def atram(config):
     """The main aTRAM program loop."""
+
     shards = util.shard_db_names(config)
     assember = Assembler.factory(config)
     target = config['target']
     for iteration in range(1, config['iterations'] + 1):
         logging.info('aTRAM iteration %i', iteration)
         blast_sra(config, iteration, shards, target)
-        fragments = get_matching_fragments(iteration, shards)
-        paired = write_sequences(config, iteration, fragments)
+        frag = get_matching_fragments(iteration, shards)
+        paired = write_sequences(config, iteration, frag)
         assember.assemble(iteration, paired)
         filter_contigs(config, iteration)
         # target = new file

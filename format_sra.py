@@ -25,12 +25,12 @@ def bulk_insert(db_conn, recs):
 
 def load_seqs(db_conn, config):
     """
-    A version of "Bio.SeqIO. It is faster because we can take shortcuts due to
-    the limited use.
+    A hand rolled version of "Bio.SeqIO". It's faster because we can take
+    shortcuts due to its limited use.
     """
     for file_name in config['sra_files']:
         logging.info('Loading "%s" into sqlite database', file_name)
-        with open(file_name, 'r') as sra_file:
+        with open(file_name) as sra_file:
             recs, seq, frag_end, frag, is_seq = [], '', '', 0, True
             for line in sra_file:
                 if not line:
