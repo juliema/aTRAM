@@ -185,6 +185,6 @@ if __name__ == '__main__':
         description=""" """,
         args=('target protein iterations cpu evalue max_target_seqs '
               'assembler max_memory file_prefix work_dir bit_score '
-              'genetic_code kmer').split())
+              'genetic_code kmer'))
     util.log_setup(ARGS)
     atram(ARGS)

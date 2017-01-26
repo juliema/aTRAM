@@ -12,7 +12,8 @@ def reverse_complement(seq):
 
 def makeblastdb(config, **kwargs):
     """
-    Build the command line for the makeblastdb program. BioPython seems to be missing this.
+    Build the command line for the makeblastdb program. BioPython seems to be
+    missing this.
     """
     cmd = [config.get('makeblastdb')]
     for key, val in kwargs.items():
