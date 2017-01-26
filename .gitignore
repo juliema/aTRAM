@@ -2,5 +2,5 @@ __pycache__/*
 lib/config.txt
 config.txt
 data/*
-temp/*
 venv/*
+temp

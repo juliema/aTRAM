@@ -94,7 +94,7 @@ def parse_args(parser):
 def add_arguments(parser, args):
     """Add command-line arguments."""
 
-    for arg in args:
+    for arg in args.split():
         if arg == 'assembler':
             parser.add_argument(
                 '-a', '--assembler', required=True,
@@ -120,7 +120,7 @@ def add_arguments(parser, args):
             parser.add_argument(
                 '-f', '--file-prefix', default='',
                 help=('This will get prepended to all of files so you can '
-                      'tell runs apart.'))
+                      'identify different runs.'))
 
         elif arg == 'genetic_code':
             parser.add_argument(

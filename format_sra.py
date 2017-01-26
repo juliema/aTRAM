@@ -146,10 +146,11 @@ def create_blast_dbs(config, shard_list):
 if __name__ == '__main__':
     CONFIG = configure.parse_command_line(
         description="""
-        Takes fasta or fastq files of paired-end (or single-end)
-        sequence reads and creates an aTRAM database.
+        This script prepares data for use by the atram.py script. It takes
+        fasta or fastq files of paired-end (or single-end) sequence reads
+        and creates a set of aTRAM databases.
         """,
-        args='sra_files file_prefix work_dir shards cpu'.split())
+        args='sra_files file_prefix work_dir shards cpu')
 
     util.log_setup(CONFIG)
 
