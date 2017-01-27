@@ -97,4 +97,6 @@ class Filer:
 
     @staticmethod
     def temp_file():
+        """Create temp files for output. nest these in a "with" statdment."""
+
         return tempfile.NamedTemporaryFile(mode='w')
