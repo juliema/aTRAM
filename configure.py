@@ -84,8 +84,8 @@ def parse_args(parser):
     config = vars(parser.parse_args())
 
     # Default for shard count requires calulation after the args are parsed
-    if 'shards' in config and config['shards'] < 1:
-        config['shards'] = default_shard_count(config)
+    if 'shard_count' in config and config['shard_count'] < 1:
+        config['shard_count'] = default_shard_count(config)
 
     return config
 
@@ -159,9 +159,9 @@ def add_arguments(parser, args):
                 '-p', '--protein', nargs='?', const=True, default=False,
                 help='Are the target sequences protein?')
 
-        elif arg == 'shards':
+        elif arg == 'shard_count':
             parser.add_argument(
-                '-s', '--shards', type=int,
+                '-s', '--shard-count', type=int,
                 help='Number of SRA shards to create.', default=-1)
 
         elif arg == 'sra_files':
