@@ -23,12 +23,12 @@ def bulk_insert(db_conn, recs):
         db_conn.commit()
 
 
-def load_seqs(db_conn, config):
+def load_seqs(db_conn, sra_files):
     """
     A hand rolled version of "Bio.SeqIO". It's faster because we can take
     shortcuts due to its limited use.
     """
-    for file_name in config['sra_files']:
+    for file_name in sra_files:
         logging.info('Loading "%s" into sqlite database', file_name)
         with open(file_name) as sra_file:
             recs, seq, frag_end, frag, is_seq = [], '', '', 0, True
@@ -78,9 +78,9 @@ def create_index(db_conn):
     db_conn.execute('''CREATE INDEX IF NOT EXISTS frag ON frags (frag)''')
 
 
-def connect_db(config):
+def connect_db(work_dir, file_prefix):
     """Setup the DB for our processing needs."""
-    db_path = util.db_file(config)
+    db_path = util.db_file(work_dir, file_prefix)
     db_conn = sqlite3.connect(db_path)
     db_conn.execute("PRAGMA page_size = {}".format(2**16))
     db_conn.execute("PRAGMA journal_mode = 'off'")
@@ -88,12 +88,12 @@ def connect_db(config):
     return db_conn
 
 
-def assign_seqs_to_shards(db_conn, config):
+def assign_seqs_to_shards(db_conn, shard_count):
     """Put the sequences into the DB shards."""
     logging.info('Assigning sequences to shards')
     result = db_conn.execute('SELECT COUNT(*) FROM frags')
     total = result.fetchone()[0]
-    offsets = np.linspace(0, total, num=config['shards'] + 1, dtype=int)
+    offsets = np.linspace(0, total, num=shard_count + 1, dtype=int)
     for i in range(1, len(offsets) - 1):
         sql = 'SELECT frag FROM frags ORDER BY frag LIMIT 2 OFFSET {}'
         result = db_conn.execute(sql.format(offsets[i]))
@@ -105,12 +105,12 @@ def assign_seqs_to_shards(db_conn, config):
     return list(zip(limits, offsets[:-1]))
 
 
-def fill_blast_fasta(fasta_file, config, shard_params):
+def fill_blast_fasta(fasta_file, work_dir, file_prefix, shard_params):
     """
     Fill the fasta file used as input into blast with shard sequences from
     the DB.
     """
-    db_conn = connect_db(config)
+    db_conn = connect_db(work_dir, file_prefix)
     sql = '''
         SELECT frag, frag_end, seq FROM frags ORDER BY frag LIMIT {} OFFSET {}
     '''
@@ -122,22 +122,23 @@ def fill_blast_fasta(fasta_file, config, shard_params):
     db_conn.close()
 
 
-def create_blast_db(config, shard_params, shard_index):
+def create_blast_db(work_dir, file_prefix, shard_params, shard_index):
     """Create a blast DB from the shard."""
-    blast_db = util.shard_db_name(config, shard_index)
+    blast_db = util.shard_db_name(work_dir, file_prefix, shard_index)
     with tempfile.NamedTemporaryFile(mode='w') as fasta_file:
-        fill_blast_fasta(fasta_file, config, shard_params)
+        fill_blast_fasta(fasta_file, work_dir, file_prefix, shard_params)
         cmd = 'makeblastdb -dbtype nucl -in {} -out {}'
         cmd = cmd.format(fasta_file.name, blast_db)
         subprocess.check_call(cmd, shell=True)
 
 
-def create_blast_dbs(config, shard_list):
+def create_blast_dbs(cpu, work_dir, file_prefix, shard_list):
     """Assign processes to make the blast DBs."""
     logging.info('Making blast DBs')
-    with multiprocessing.Pool(processes=config['cpu']) as pool:
-        results = [pool.apply_async(create_blast_db,
-                                    (config, shard_params, shard_index))
+    with multiprocessing.Pool(processes=cpu) as pool:
+        results = [pool.apply_async(
+            create_blast_db,
+            (work_dir, file_prefix, shard_params, shard_index))
                    for shard_index, shard_params in enumerate(shard_list)]
         _ = [result.get() for result in results]
     logging.info('Finished making blast DBs')
@@ -150,16 +151,17 @@ if __name__ == '__main__':
         fasta or fastq files of paired-end (or single-end) sequence reads
         and creates a set of aTRAM databases.
         """,
-        args='sra_files file_prefix work_dir shards cpu')
+        args='sra_files file_prefix work_dir shard_count cpu')
 
-    util.log_setup(CONFIG)
+    util.log_setup(CONFIG['work_dir'], CONFIG['file_prefix'])
 
-    DB = connect_db(CONFIG)
+    DB = connect_db(CONFIG['work_dir'], CONFIG['file_prefix'])
     create_table(DB)
-    load_seqs(DB, CONFIG)
+    load_seqs(DB, CONFIG['sra_files'])
     create_index(DB)
 
-    SHARD_LIST = assign_seqs_to_shards(DB, CONFIG)
-    create_blast_dbs(CONFIG, SHARD_LIST)
+    SHARD_LIST = assign_seqs_to_shards(DB, CONFIG['shard_count'])
+    create_blast_dbs(CONFIG['cpu'], CONFIG['work_dir'], CONFIG['file_prefix'],
+                     SHARD_LIST)
 
     DB.close()
