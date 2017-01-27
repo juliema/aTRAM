@@ -42,7 +42,7 @@ def blast_sra(config, iteration, shards, target):
     the output into one fasta file.
     """
 
-    with multiprocessing.Pool(processes=config['cpu']) as pool:
+    with multiprocessing.Pool(processes=config['cpus']) as pool:
         results = [pool.apply_async(blast, (config, target, iteration, shard))
                    for shard in shards]
         _ = [result.get() for result in results]
@@ -153,8 +153,10 @@ def filter_contig_scores(work_dir, file_prefix, iteration, bit_score):
 def filter_contigs(work_dir, file_prefix, iteration):
     """Remove junk from the assembled contigs."""
 
-    blast_target_against_contigs(work_dir, file_prefix, iteration)
-    filtered_names = filter_contig_scores(work_dir, file_prefix, iteration)
+    blast_target_against_contigs(work_dir, file_prefix, iteration,
+                                 target, genetic_code, protein)
+    filtered_names = filter_contig_scores(work_dir, file_prefix,
+                                          iteration, bit_score)
     unfiltered_file = util.contig_unfiltered_file(work_dir, file_prefix,
                                                   iteration)
     # filtered_file = util.contig_filtered_file(work_dir, file_prefix,
@@ -187,7 +189,7 @@ def atram(config):
 if __name__ == '__main__':
     CONFIG = configure.parse_command_line(
         description=""" """,
-        args=('target protein iterations cpu evalue max_target_seqs '
+        args=('target protein iterations cpus evalue max_target_seqs '
               'assembler max_memory file_prefix work_dir bit_score '
               'genetic_code kmer'))
     util.log_setup(CONFIG.work_dir, CONFIG.file_prefix)

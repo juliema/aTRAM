@@ -2,184 +2,175 @@
 
 import os
 import argparse
-import configparser
 import psutil
 from dict_attrs import DictAttrs
 
 
-DEFAULT = {
-    'abyss': 'abyss-pe',
-    # 'assembler': 'trinity',
-    'bit_score': 70.0,
-    'evalue': 1e-9,
-    'genetic_code': 1,
-    'iterations': 5,
-    'kmer': 31,
-    'max_memory': '50G',
-    'max_target_seqs': 100000000,
-    'shard_size': 2.5e8,
-    'trinity': 'Trinity',
-}
+class Configure:
+    """Class for handling configuration options."""
 
+    default = {
+        'abyss': 'abyss-pe',
+        # 'assembler': 'trinity',
+        'bit_score': 70.0,
+        'evalue': 1e-9,
+        'genetic_code': 1,
+        'iterations': 5,
+        'kmer': 31,
+        'max_memory': '50G',
+        'max_target_seqs': 100000000,
+        'shard_size': 2.5e8,
+        'trinity': 'Trinity',
+    }
 
-def read_config_file(config, args):
-    """
-    Read in the config file and hoist the data into the config dict.
-    """
-    if not args.get('config_file', None):
-        pass
-    parser = configparser.ConfigParser()
-    parser.read(args['config_file'])
-    return config
+    # All command-line arguments defined here for consistency between programs
+    # pylint: disable=undefined-variable
+    args = {
+        'assembler': lambda p: p.add_argument(
+            '-a', '--assembler', required=True,
+            help='Which assembler to use. (Trinity, Abyss, Velvet)'),
 
+        'bit_score': lambda p: p.add_argument(
+            '-b', '--bit-score', type=float, default=default['bit_score'],
+            help=('Remove contigs that have a value less than this. '
+                  'The default is {}').format(default['bit_score'])),
 
-def default_shard_count(config):
-    """
-    If we're not given an input shard count use the fasta file size / 250MB.
-    """
-    total_fasta_size = 0
-    for sra_file in config['sra_files']:
-        file_size = os.path.getsize(sra_file)
-        if sra_file.lower().endswith('.fastq'):
-            file_size /= 2  # Guessing that fastq files ~2x size of fasta files
-        total_fasta_size += file_size
-    shard_count = int(total_fasta_size / DEFAULT['shard_size'])
-    return shard_count if shard_count else 1  # We need at least one shard
+        'cpus': lambda p: p.add_argument(
+            '-c', '--cpus', type=int, default=0,
+            help='Number of cpus to use.'),
 
+        'evalue': lambda p: p.add_argument(
+            '-e', '--evalue', default=default['evalue'], type=float,
+            help='The default evalue is {}.'.format(default['evalue'])),
 
-def default_cpu_count():
-    """
-    If we're not given a default process count use the number of CPUs minus 2.
-    """
-    return os.cpu_count() - 2 if os.cpu_count() > 2 else 1
+        'file_prefix': lambda p: p.add_argument(
+            '-f', '--file-prefix', default='',
+            help=('This will get prepended to all of files so you can '
+                  'identify different runs.')),
 
+        'genetic_code': lambda p: p.add_argument(
+            '-g', '--genetic-code',
+            default=default['genetic_code'],
+            type=int,
+            help='The genetic code to use. The default is {}.'.format(
+                default['genetic_code'])),
 
-def default_max_memory():
-    """
-    Some assemblers want to know how much memory they can use.
-    Default to available memory minus 2G.
-    """
-    return '{}G'.format(int(psutil.virtual_memory()[0] / (2**30)) - 2)
+        'iterations': lambda p: p.add_argument(
+            '-i', '--iterations', default=default['iterations'],
+            type=int,
+            help=('The number of pipline iterations. '
+                  'The default is {}.').format(default['iterations'])),
 
+        'kmer': lambda p: p.add_argument(
+            '-k', '--kmer', default=default['kmer'], type=int,
+            help=('k-mer size for assembers that use it. '
+                  'The default is {}.').format(default['kmer'])),
 
-def setup_config_file():
-    """Make our best guess for the configurations."""
-    print('Not done yet!')
+        'max_memory': lambda p: p.add_argument(
+            '-m', '--max_memory', default=0,
+            help='Maximum amount of memory to use.'),
 
+        'max_target_seqs': lambda p: p.add_argument(
+            '-M', '--max-target-seqs',
+            type=int, default=default['max_target_seqs'],
+            help='Maximum hit sequences per shard. Default is {}.'.format(
+                default['max_target_seqs'])),
 
-def parse_command_line(description='', args=None):
-    """Build the command line parser and parse it."""
-    args = args if args else []
-    parser = argparse.ArgumentParser(description=description)
-    add_arguments(parser, args)
-    config = parse_args(parser)
-    return config
+        'protein': lambda p: p.add_argument(
+            '-p', '--protein', nargs='?', const=True, default=False,
+            help='Are the target sequences protein?'),
 
+        'shard_count': lambda p: p.add_argument(
+            '-s', '--shard-count', type=int, default=0,
+            help='Number of SRA shards to create.'),
 
-def parse_args(parser):
-    """Parse the commandline arguments and return a dict attribute object."""
-    config = vars(parser.parse_args())
+        'sra_files': lambda p: p.add_argument(
+            'sra_files', nargs='+',
+            help=('Short read archives in fasta or fastq format. '
+                  'May contain wildcards.')),
 
-    # Default for shard count requires calulation after the args are parsed
-    if 'shard_count' in config and config['shard_count'] < 1:
-        config['shard_count'] = default_shard_count(config)
+        'target': lambda p: p.add_argument(
+            '-t', '--target', required=True,
+            help='The path to the fasta file with sequences of interest.'),
 
-    return DictAttrs(config)
+        'work_dir': lambda p: p.add_argument(
+            '-w', '--work-dir', default='.',
+            help=('Where to store files needed by other aTRAM programs '
+                  'and other temporary files. Defaults to the current '
+                  'working directory.')),
+    }
+    # pylint: enable=undefined-variable
 
+    def __init__(self):
+        self.config = None
 
-# pylint: disable=too-many-branches
-def add_arguments(parser, args):
-    """Add command-line arguments."""
+    def parse_command_line(self, description='', args=None):
+        """
+        Parse the commandline arguments and return a dict attribute object.
+        """
 
-    for arg in args.split():
-        if arg == 'assembler':
-            parser.add_argument(
-                '-a', '--assembler', required=True,
-                help='Which assembler to use. (Trinity, Abyss, Velvet)')
+        parser = argparse.ArgumentParser(description=description)
+        self.add_arguments(parser, args)
 
-        elif arg == 'bit_score':
-            parser.add_argument(
-                '-b', '--bit-score', type=float, default=DEFAULT['bit_score'],
-                help=('Remove contigs that have a value less than this. '
-                      'The default is {}').format(DEFAULT['bit_score']))
+        self.config = vars(parser.parse_args())
 
-        elif arg == 'cpu':
-            parser.add_argument(
-                '-c', '--cpu', type=int, default=default_cpu_count(),
-                help='Number of cpus to use.')
+        self.set_environment_defaults()
 
-        elif arg == 'evalue':
-            parser.add_argument(
-                '-e', '--evalue', default=DEFAULT['evalue'], type=float,
-                help='The default evalue is {}.'.format(DEFAULT['evalue']))
+        return DictAttrs(self.config)
 
-        elif arg == 'file_prefix':
-            parser.add_argument(
-                '-f', '--file-prefix', default='',
-                help=('This will get prepended to all of files so you can '
-                      'identify different runs.'))
+    @staticmethod
+    def add_arguments(parser, args):
+        """
+        Add command-line arguments. We're given a string of argument keys, and
+        we split that and look up the command line parser action in the
+        dispatch table above.
+        """
 
-        elif arg == 'genetic_code':
-            parser.add_argument(
-                '-g', '--genetic-code',
-                default=DEFAULT['genetic_code'],
-                type=int,
-                help='The genetic code to use. The default is {}.'.format(
-                    DEFAULT['genetic_code']))
+        for arg in args.split():
+            Configure.args[arg](parser)
 
-        elif arg == 'iterations':
-            parser.add_argument(
-                '-i', '--iterations', default=DEFAULT['iterations'], type=int,
-                help=('The number of pipline iterations. '
-                      'The default is {}.').format(DEFAULT['iterations']))
+    def set_environment_defaults(self):
+        """Add defaults that require calulation base on the environment."""
 
-        elif arg == 'kmer':
-            parser.add_argument(
-                '-k', '--kmer', default=DEFAULT['kmer'], type=int,
-                help=('k-mer size for assembers that use it. '
-                      'The default is {}.').format(DEFAULT['kmer']))
+        environment_defaults = {
+            'cpus': self.default_cpu_count,
+            'max_memory': self.default_max_memory,
+            'shard_count': self.default_shard_count,
+        }
 
-        elif arg == 'max_memory':
-            parser.add_argument(
-                '-m', '--max_memory', default=default_max_memory(),
-                help='Maximum amount of memory to use.')
+        for arg, func in environment_defaults.items():
+            if arg in self.config and self.config[arg] < 1:
+                self.config[arg] = func()
 
-        elif arg == 'max_target_seqs':
-            parser.add_argument(
-                '-M', '--max-target-seqs',
-                type=int, default=DEFAULT['max_target_seqs'],
-                help='Maximum hit sequences per shard. Default is {}.'.format(
-                    DEFAULT['max_target_seqs']))
+    def default_shard_count(self):
+        """
+        Default the shard count to the total fasta file size / 250MB
+        """
 
-        elif arg == 'protein':
-            parser.add_argument(
-                '-p', '--protein', nargs='?', const=True, default=False,
-                help='Are the target sequences protein?')
+        total_fasta_size = 0
+        for sra_file in self.config['sra_files']:
+            file_size = os.path.getsize(sra_file)
+            if sra_file.lower().endswith('.fastq'):
+                file_size /= 2  # Guessing that fastq files ~2x fasta files
+            total_fasta_size += file_size
 
-        elif arg == 'shard_count':
-            parser.add_argument(
-                '-s', '--shard-count', type=int,
-                help='Number of SRA shards to create.', default=-1)
+        shard_count = int(total_fasta_size / Configure.default['shard_size'])
 
-        elif arg == 'sra_files':
-            parser.add_argument(
-                'sra_files', nargs='+',
-                help=('Short read archives in fasta or fastq format. '
-                      'May contain wildcards.'))
+        return shard_count if shard_count else 1  # We need at least one shard
 
-        elif arg == 'target':
-            parser.add_argument(
-                '-t', '--target', required=True,
-                help='The path to the fasta file with sequences of interest.')
+    @staticmethod
+    def default_cpu_count():
+        """
+        If we're not given a default process count use the number of CPUs
+        minus 2.
+        """
 
-        elif arg == 'work_dir':
-            parser.add_argument(
-                '-w', '--work-dir', default='.',
-                help=('Where to store files needed by other aTRAM programs '
-                      'and other temporary files. Defaults to the current '
-                      'working directory.'))
-# pylint: enable=too-many-branches
+        return os.cpu_count() - 2 if os.cpu_count() > 2 else 1
 
-
-if __name__ == '__main__':
-    setup_config_file()
+    @staticmethod
+    def default_max_memory():
+        """
+        Some assemblers want to know how much memory they can use.
+        Default to available memory minus 2G.
+        """
+        return '{}G'.format(int(psutil.virtual_memory()[0] / (2**30)) - 2)

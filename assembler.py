@@ -61,7 +61,7 @@ class TrinityAssembler(Assembler):
         cmd = ['Trinity']
         cmd.append('--seqType fa')
         cmd.append('--max_memory {}'.format(self.config['max_memory']))
-        cmd.append('--CPU {}'.format(self.config['cpu']))
+        cmd.append('--CPU {}'.format(self.config['cpus']))
         cmd.append("--output '{}'".format(self.work_path))
 
         if paired:
@@ -94,7 +94,7 @@ class AbyssAssembler(Assembler):
         cmd.append('v=-v')
         cmd.append('E=0')
         cmd.append('k={}'.format(self.config['kmer']))
-        # cmd.append('np={}'.format(self.config['cpu']))
+        # cmd.append('np={}'.format(self.config['cpus']))
         cmd.append("name='{}'".format(util.contig_unfiltered_file(
             self.config, iteration)))
 
