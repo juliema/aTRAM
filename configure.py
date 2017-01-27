@@ -11,7 +11,6 @@ class Configure:
 
     default = {
         'abyss': 'abyss-pe',
-        # 'assembler': 'trinity',
         'bit_score': 70.0,
         'evalue': 1e-9,
         'genetic_code': 1,
