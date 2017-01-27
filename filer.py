@@ -40,7 +40,7 @@ class Filer:
         file_name = '{}{}'.format(self.file_prefix, file_name)
         return os.path.join(self.work_dir, file_name)
 
-    def db_file(self):
+    def db_file_name(self):
         """Create an SQLite3 DB name."""
 
         return self.path('sqlite.db')
@@ -97,6 +97,6 @@ class Filer:
 
     @staticmethod
     def temp_file():
-        """Create temp files for output. nest these in a "with" statdment."""
+        """Create temp files for output. Nest these in a "with" statement."""
 
         return tempfile.NamedTemporaryFile(mode='w')
