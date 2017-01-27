@@ -6,7 +6,6 @@ archive files and converts them for further processing.
 import re
 import sqlite3
 import logging
-import tempfile
 import subprocess
 import multiprocessing
 import numpy as np
@@ -239,7 +238,7 @@ class AtramPreprocessor:
         filer = Filer(work_dir=work_dir, file_prefix=file_prefix)
         blast_db = filer.shard_db_name(shard_index)
 
-        with tempfile.NamedTemporaryFile(mode='w') as fasta_file:
+        with filer.temp_file() as fasta_file:
             AtramPreprocessor.fill_blast_fasta(fasta_file, filer, shard_params)
 
             cmd = 'makeblastdb -dbtype nucl -in {} -out {}'

@@ -2,8 +2,9 @@
 
 import os
 import sys
-import logging
 import glob
+import logging
+import tempfile
 
 
 class Filer:
@@ -93,3 +94,7 @@ class Filer:
         """Get the file name of the blast result file."""
 
         return '{}_{}.txt'.format(shard_name, str(self.iteration).zfill(2))
+
+    @staticmethod
+    def temp_file():
+        return tempfile.NamedTemporaryFile(mode='w')
