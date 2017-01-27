@@ -8,11 +8,37 @@ import subprocess
 import multiprocessing
 import numpy as np
 import configure
-import util
+from filer import Filer
 # Bio.SeqIO  # much slower than load_seqs()
 
 DEFAULT_BATCH_SIZE = 1e7
 FRAGMENT = re.compile(r'^ [>@] \s* ( .* ) ( [\s\/_] [12] )', re.VERBOSE)
+
+
+def preprocessor():
+    """The main program."""
+
+    config = configure.parse_command_line(
+        description="""
+            This script prepares data for use by the atram.py script. It takes
+            fasta or fastq files of paired-end (or single-end) sequence reads
+            and creates a set of aTRAM databases.
+            """,
+        args='sra_files file_prefix work_dir shard_count cpu')
+
+    filer = Filer(config.work_dir, config.file_prefix)
+    filer.log_setup()
+
+    db_conn = connect_db(filer)
+    create_table(db_conn)
+    load_seqs(db_conn, config.sra_files)
+    create_index(db_conn)
+
+    shard_list = assign_seqs_to_shards(db_conn, config.shard_count)
+    create_blast_dbs(config.cpu, config.work_dir, config.file_prefix,
+                     shard_list)
+
+    db_conn.close()
 
 
 def bulk_insert(db_conn, recs):
@@ -82,10 +108,10 @@ def create_index(db_conn):
     db_conn.execute('''CREATE INDEX IF NOT EXISTS frag ON frags (frag)''')
 
 
-def connect_db(work_dir, file_prefix):
+def connect_db(filer):
     """Setup the DB for our processing needs."""
 
-    db_path = util.db_file(work_dir, file_prefix)
+    db_path = filer.db_file()
     db_conn = sqlite3.connect(db_path)
     db_conn.execute("PRAGMA page_size = {}".format(2**16))
     db_conn.execute("PRAGMA journal_mode = 'off'")
@@ -111,13 +137,13 @@ def assign_seqs_to_shards(db_conn, shard_count):
     return list(zip(limits, offsets[:-1]))
 
 
-def fill_blast_fasta(fasta_file, work_dir, file_prefix, shard_params):
+def fill_blast_fasta(fasta_file, filer, shard_params):
     """
     Fill the fasta file used as input into blast with shard sequences from
     the DB.
     """
 
-    db_conn = connect_db(work_dir, file_prefix)
+    db_conn = connect_db(filer)
     sql = '''
         SELECT frag, frag_end, seq FROM frags ORDER BY frag LIMIT {} OFFSET {}
     '''
@@ -132,9 +158,12 @@ def fill_blast_fasta(fasta_file, work_dir, file_prefix, shard_params):
 def create_blast_db(work_dir, file_prefix, shard_params, shard_index):
     """Create a blast DB from the shard."""
 
-    blast_db = util.shard_db_name(work_dir, file_prefix, shard_index)
+    filer = Filer(work_dir=work_dir, file_prefix=file_prefix)
+    blast_db = filer.shard_db_name(shard_index)
+
     with tempfile.NamedTemporaryFile(mode='w') as fasta_file:
-        fill_blast_fasta(fasta_file, work_dir, file_prefix, shard_params)
+        fill_blast_fasta(fasta_file, filer, shard_params)
+
         cmd = 'makeblastdb -dbtype nucl -in {} -out {}'
         cmd = cmd.format(fasta_file.name, blast_db)
         subprocess.check_call(cmd, shell=True)
@@ -151,31 +180,6 @@ def create_blast_dbs(cpu, work_dir, file_prefix, shard_list):
                    for shard_index, shard_params in enumerate(shard_list)]
         _ = [result.get() for result in results]
     logging.info('Finished making blast DBs')
-
-
-def preprocessor():
-    """The main program."""
-
-    config = configure.parse_command_line(
-        description="""
-        This script prepares data for use by the atram.py script. It takes
-        fasta or fastq files of paired-end (or single-end) sequence reads
-        and creates a set of aTRAM databases.
-        """,
-        args='sra_files file_prefix work_dir shard_count cpu')
-
-    util.log_setup(config.work_dir, config.file_prefix)
-
-    db_conn = connect_db(config.work_dir, config.file_prefix)
-    create_table(db_conn)
-    load_seqs(db_conn, config.sra_files)
-    create_index(db_conn)
-
-    shard_list = assign_seqs_to_shards(db_conn, config.shard_count)
-    create_blast_dbs(config.cpu, config.work_dir, config.file_prefix,
-                     shard_list)
-
-    db_conn.close()
 
 
 if __name__ == '__main__':
