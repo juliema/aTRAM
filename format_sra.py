@@ -7,9 +7,9 @@ import tempfile
 import subprocess
 import multiprocessing
 import numpy as np
-import configure
 from filer import Filer
-# Bio.SeqIO  # much slower than load_seqs()
+from configure import Configure
+
 
 DEFAULT_BATCH_SIZE = 1e7
 FRAGMENT = re.compile(r'^ [>@] \s* ( .* ) ( [\s\/_] [12] )', re.VERBOSE)
@@ -18,13 +18,13 @@ FRAGMENT = re.compile(r'^ [>@] \s* ( .* ) ( [\s\/_] [12] )', re.VERBOSE)
 def preprocessor():
     """The main program."""
 
-    config = configure.parse_command_line(
+    config = Configure().parse_command_line(
         description="""
             This script prepares data for use by the atram.py script. It takes
             fasta or fastq files of paired-end (or single-end) sequence reads
             and creates a set of aTRAM databases.
             """,
-        args='sra_files file_prefix work_dir shard_count cpu')
+        args='sra_files file_prefix work_dir shard_count cpus')
 
     filer = Filer(config.work_dir, config.file_prefix)
     filer.log_setup()
@@ -35,7 +35,7 @@ def preprocessor():
     create_index(db_conn)
 
     shard_list = assign_seqs_to_shards(db_conn, config.shard_count)
-    create_blast_dbs(config.cpu, config.work_dir, config.file_prefix,
+    create_blast_dbs(config.cpus, config.work_dir, config.file_prefix,
                      shard_list)
 
     db_conn.close()
@@ -169,11 +169,11 @@ def create_blast_db(work_dir, file_prefix, shard_params, shard_index):
         subprocess.check_call(cmd, shell=True)
 
 
-def create_blast_dbs(cpu, work_dir, file_prefix, shard_list):
+def create_blast_dbs(cpus, work_dir, file_prefix, shard_list):
     """Assign processes to make the blast DBs."""
 
     logging.info('Making blast DBs')
-    with multiprocessing.Pool(processes=cpu) as pool:
+    with multiprocessing.Pool(processes=cpus) as pool:
         results = [pool.apply_async(
             create_blast_db,
             (work_dir, file_prefix, shard_params, shard_index))
