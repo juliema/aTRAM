@@ -1,13 +1,10 @@
 """Handle configuration options and setup."""
 
-# ??? Read the config file
-# ??? Write the config file
-
 import os
 import argparse
-# import tempfile
 import configparser
 import psutil
+from dict_attrs import DictAttrs
 
 
 DEFAULT = {
@@ -87,7 +84,7 @@ def parse_args(parser):
     if 'shard_count' in config and config['shard_count'] < 1:
         config['shard_count'] = default_shard_count(config)
 
-    return config
+    return DictAttrs(config)
 
 
 # pylint: disable=too-many-branches

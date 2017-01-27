@@ -17,6 +17,7 @@ FRAGMENT = re.compile(r'^ [>@] \s* ( .* ) ( [\s\/_] [12] )', re.VERBOSE)
 
 def bulk_insert(db_conn, recs):
     """Insert a batch of sequence records into the sqlite database."""
+
     if recs:
         sql = '''INSERT INTO frags (frag, frag_end, seq) VALUES (?, ?, ?)'''
         db_conn.executemany(sql, recs)
@@ -28,6 +29,7 @@ def load_seqs(db_conn, sra_files):
     A hand rolled version of "Bio.SeqIO". It's faster because we can take
     shortcuts due to its limited use.
     """
+
     for file_name in sra_files:
         logging.info('Loading "%s" into sqlite database', file_name)
         with open(file_name) as sra_file:
@@ -63,6 +65,7 @@ def load_seqs(db_conn, sra_files):
 
 def create_table(db_conn):
     """Reset the DB. Delete the table and read it."""
+
     logging.info('Creating sqlite tables')
     db_conn.execute('''DROP INDEX IF EXISTS frag''')
     db_conn.execute('''DROP TABLE IF EXISTS frags''')
@@ -74,12 +77,14 @@ def create_table(db_conn):
 
 def create_index(db_conn):
     """Create the index after we build the table."""
+
     logging.info('Creating sqlite indices')
     db_conn.execute('''CREATE INDEX IF NOT EXISTS frag ON frags (frag)''')
 
 
 def connect_db(work_dir, file_prefix):
     """Setup the DB for our processing needs."""
+
     db_path = util.db_file(work_dir, file_prefix)
     db_conn = sqlite3.connect(db_path)
     db_conn.execute("PRAGMA page_size = {}".format(2**16))
@@ -90,6 +95,7 @@ def connect_db(work_dir, file_prefix):
 
 def assign_seqs_to_shards(db_conn, shard_count):
     """Put the sequences into the DB shards."""
+
     logging.info('Assigning sequences to shards')
     result = db_conn.execute('SELECT COUNT(*) FROM frags')
     total = result.fetchone()[0]
@@ -110,6 +116,7 @@ def fill_blast_fasta(fasta_file, work_dir, file_prefix, shard_params):
     Fill the fasta file used as input into blast with shard sequences from
     the DB.
     """
+
     db_conn = connect_db(work_dir, file_prefix)
     sql = '''
         SELECT frag, frag_end, seq FROM frags ORDER BY frag LIMIT {} OFFSET {}
@@ -124,6 +131,7 @@ def fill_blast_fasta(fasta_file, work_dir, file_prefix, shard_params):
 
 def create_blast_db(work_dir, file_prefix, shard_params, shard_index):
     """Create a blast DB from the shard."""
+
     blast_db = util.shard_db_name(work_dir, file_prefix, shard_index)
     with tempfile.NamedTemporaryFile(mode='w') as fasta_file:
         fill_blast_fasta(fasta_file, work_dir, file_prefix, shard_params)
@@ -134,6 +142,7 @@ def create_blast_db(work_dir, file_prefix, shard_params, shard_index):
 
 def create_blast_dbs(cpu, work_dir, file_prefix, shard_list):
     """Assign processes to make the blast DBs."""
+
     logging.info('Making blast DBs')
     with multiprocessing.Pool(processes=cpu) as pool:
         results = [pool.apply_async(
@@ -144,8 +153,10 @@ def create_blast_dbs(cpu, work_dir, file_prefix, shard_list):
     logging.info('Finished making blast DBs')
 
 
-if __name__ == '__main__':
-    CONFIG = configure.parse_command_line(
+def preprocessor():
+    """The main program."""
+
+    config = configure.parse_command_line(
         description="""
         This script prepares data for use by the atram.py script. It takes
         fasta or fastq files of paired-end (or single-end) sequence reads
@@ -153,15 +164,20 @@ if __name__ == '__main__':
         """,
         args='sra_files file_prefix work_dir shard_count cpu')
 
-    util.log_setup(CONFIG['work_dir'], CONFIG['file_prefix'])
+    util.log_setup(config.work_dir, config.file_prefix)
 
-    DB = connect_db(CONFIG['work_dir'], CONFIG['file_prefix'])
-    create_table(DB)
-    load_seqs(DB, CONFIG['sra_files'])
-    create_index(DB)
+    db_conn = connect_db(config.work_dir, config.file_prefix)
+    create_table(db_conn)
+    load_seqs(db_conn, config.sra_files)
+    create_index(db_conn)
 
-    SHARD_LIST = assign_seqs_to_shards(DB, CONFIG['shard_count'])
-    create_blast_dbs(CONFIG['cpu'], CONFIG['work_dir'], CONFIG['file_prefix'],
-                     SHARD_LIST)
+    shard_list = assign_seqs_to_shards(db_conn, config.shard_count)
+    create_blast_dbs(config.cpu, config.work_dir, config.file_prefix,
+                     shard_list)
 
-    DB.close()
+    db_conn.close()
+
+
+if __name__ == '__main__':
+
+    preprocessor()
