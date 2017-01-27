@@ -1,6 +1,6 @@
 """
 Format the data so that atram can use it later. It takes given sequence read
-archive files and converts them for further processing.
+archive files and converts them.
 """
 
 import re
@@ -60,7 +60,7 @@ class AtramPreprocessor:
         shared with the parent (caller) and we cannot use instance variables.
         """
 
-        db_path = filer.db_file()
+        db_path = filer.db_file_name()
         db_conn = sqlite3.connect(db_path)
         db_conn.execute("PRAGMA page_size = {}".format(2**16))
         db_conn.execute("PRAGMA journal_mode = 'off'")
@@ -96,9 +96,9 @@ class AtramPreprocessor:
         shortcuts due to its limited use.
 
         We're using a very simple state machine on lines to do the parsing.
-            1) header (exactly 1 line)
-            2) sequence (1 or more lines)
-            3) fastq stuff (0 or more lines)
+            1) header      (exactly 1 line)  Starts with a '>' or an '@'
+            2) sequence    (1 or more lines) Starts with a letter
+            3) fastq stuff (0 or more lines) Starts with a '+', Wait for header
             4) Either go back to 1 or end
         """
 
@@ -107,7 +107,8 @@ class AtramPreprocessor:
             logging.info('Loading "%s" into sqlite database', file_name)
 
             with open(file_name) as sra_file:
-                rec_batch = []  # The batch of records to insert
+                record_batch = []  # The batch of records to insert
+
                 seq = ''        # The sequence string. A DB field
                 seq_end = ''    # Which end? 1 or 2. A DB field
                 seq_name = ''   # Name from the fasta file. A DB field
@@ -115,14 +116,14 @@ class AtramPreprocessor:
 
                 for line in sra_file:
 
-                    # Skip blank lines without a state change
+                    # Skip blank lines
                     if not line:
                         pass
 
                     # Handle a header line
                     elif line[0] in ['>', '@']:
                         if seq:  # Append last record to the batch?
-                            rec_batch.append((seq_name, seq_end, seq))
+                            record_batch.append((seq_name, seq_end, seq))
 
                         seq = ''        # Reset the sequence
                         is_seq = True   # Reset the state flag
@@ -132,30 +133,31 @@ class AtramPreprocessor:
                         seq_name = match.group(1) if match else ''
                         seq_end = match.group(2) if match else ''
 
-                    # We're dealing with fastq stuff, so skip these lines
+                    # Handle fastq stuff, so skip these lines
                     elif line[0] == '+':
                         is_seq = False
 
-                    # Gather the sequence lines
+                    # Handle sequence lines
                     elif line[0].isalpha() and is_seq:
                         seq += line.rstrip()  # ''.join([strs])
 
-                    if len(rec_batch) >= AtramPreprocessor.batch_size:
-                        self.bulk_insert(rec_batch)
-                        rec_batch = []
+                    if len(record_batch) >= AtramPreprocessor.batch_size:
+                        self.insert_record_batch(record_batch)
+                        record_batch = []
 
                 if seq:
-                    rec_batch.append((seq_name, seq_end, seq))
-                self.bulk_insert(rec_batch)
+                    record_batch.append((seq_name, seq_end, seq))
 
-    def bulk_insert(self, rec_batch):
+                self.insert_record_batch(record_batch)
+
+    def insert_record_batch(self, record_batch):
         """Insert a batch of sequence records into the sqlite database."""
 
-        if rec_batch:
+        if record_batch:
             sql = '''
                 INSERT INTO sequences (seq_name, seq_end, seq) VALUES (?, ?, ?)
                 '''
-            self.db_conn.executemany(sql, rec_batch)
+            self.db_conn.executemany(sql, record_batch)
             self.db_conn.commit()
 
     def assign_seqs_to_shards(self):
@@ -177,13 +179,13 @@ class AtramPreprocessor:
         total = result.fetchone()[0]
 
         # This creates a list of roughly equal partition indexes
-        offsets = np.linspace(0, total,
-                              num=self.config.shard_count + 1, dtype=int)
+        offsets = np.linspace(0, total, dtype=int,
+                              num=self.config.shard_count + 1)
 
         # Checking to make sure we don't split up the ends of a sequence
         for i in range(1, len(offsets) - 1):
 
-            # Take the first two sequences at the start of a partition
+            # Get the first two sequences of a partition
             sql = '''
                 SELECT seq_name FROM sequences
                 ORDER BY seq_name LIMIT 2 OFFSET {}
@@ -193,9 +195,9 @@ class AtramPreprocessor:
             second = result.fetchone()[0]
 
             # If both have the same name then both sequences will be in the
-            # same partition. If they have different names then we know that
-            # second sequence either starts a new pair or is a singleton, so
-            # we can safely start the partition at the second sequence.
+            # same partition and we're done. If they have different names then
+            # we know that second sequence either starts a new pair or is a
+            # singleton, so we can safely start the partition at the second one
             if first != second:
                 offsets[i] += 1
 

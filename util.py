@@ -29,7 +29,7 @@ def path(file_name, work_dir, file_prefix, iteration=None):
     return os.path.join(work_dir, file_name)
 
 
-def db_file(work_dir, file_prefix):
+def db_file_name(work_dir, file_prefix):
     """Create an SQLite3 DB name."""
     return path('sqlite.db', work_dir, file_prefix)
 

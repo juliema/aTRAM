@@ -51,7 +51,7 @@ def blast_sra(config, iteration, shards, target):
 def connect_db(work_dir, file_prefix):
     """Setup the DB for our processing needs."""
 
-    db_path = util.db_file(work_dir, file_prefix)
+    db_path = util.db_file_name(work_dir, file_prefix)
     db_conn = sqlite3.connect(db_path)
     return db_conn
 
