@@ -1,6 +1,6 @@
-__pycache__/*
-lib/config.txt
+__pycache__
 config.txt
-data/*
-venv/*
+data
+venv
 temp
+junk*
