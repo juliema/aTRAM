@@ -45,7 +45,7 @@ class Filer:
 
         return self.path('sqlite.db')
 
-    def shard_db_names(self):
+    def all_blast_shard_names(self):
         """Get all of the BLAST DB names built by the preprocessor."""
 
         pattern = self.path('blast_*.nhr')
@@ -53,7 +53,7 @@ class Filer:
 
         return sorted([f[:-4] for f in files])
 
-    def shard_db_name(self, shard_index):
+    def blast_shard_name(self, shard_index):
         """Create the BLAST shard DB names."""
 
         file_name = 'blast_{}'.format(str(shard_index + 1).zfill(3))

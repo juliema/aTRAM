@@ -10,17 +10,56 @@ from more_itertools import chunked
 from Bio import SeqIO
 from Bio.Blast.Applications import NcbiblastnCommandline
 from Bio.Blast.Applications import NcbitblastnCommandline
-import configure
-import util
-from assembler import Assembler
+from lib.filer import Filer
+from lib.configure import Configure
+from lib.assembler import Assembler
 
-FRAGMENT = re.compile(r'^ ( .* ) ( [\s\/_] [12] )', re.VERBOSE)
 
+class Atram:
+    """The atram program itself."""
+
+    fragment = re.compile(r'^ ( .* ) ( [\s\/_] [12] )', re.VERBOSE)
+
+    def __init__(self):
+        self.filer = None
+        self.config = None
+        self.db_conn = None
+        self.assember = None
+        self.shard_list = None
+
+    def process(self):
+        self.config = Configure().parse_command_line(
+            description=""" """,
+            args=('target protein iterations cpus evalue max_target_seqs '
+                  'assembler max_memory file_prefix work_dir bit_score '
+                  'genetic_code kmer'))
+
+        self.filer = Filer(self.config.work_dir, self.config.file_prefix)
+        self.filer.log_setup()
+
+        self.shard_list = self.filer.all_blast_shard_names()
+        self.assember = Assembler.factory(self.config)
+
+        self.atram()
+
+    def atram(self):
+        """The main aTRAM program loop."""
+
+        target = config['target']
+        for iteration in range(1, config['iterations'] + 1):
+            logging.info('aTRAM iteration %i', iteration)
+            blast_sra(config, iteration, shards, target)
+            frag = get_matching_fragments(iteration, shards)
+            paired = write_sequences(config, iteration, frag)
+            assember.assemble(iteration, paired)
+            filter_contigs(config, iteration)
+            # target = new file
+            break
 
 def blast(config, target, iteration, shard):
     """Blast the target sequences against an SRA blast DB."""
 
-    out = util.blast_result_file(shard, iteration)
+    out = self.filer.blast_result_file(shard, iteration)
     blast_args = dict(outfmt="'10 sseqid'",
                       max_target_seqs=config['max_target_seqs'],
                       out=out, db=shard, query=target)
@@ -51,7 +90,7 @@ def blast_sra(config, iteration, shards, target):
 def connect_db(work_dir, file_prefix):
     """Setup the DB for our processing needs."""
 
-    db_path = util.db_file_name(work_dir, file_prefix)
+    db_path = self.filer.db_file_name(work_dir, file_prefix)
     db_conn = sqlite3.connect(db_path)
     return db_conn
 
@@ -61,11 +100,11 @@ def get_matching_fragments(iteration, shards):
 
     frags = {}
     for shard in shards:
-        file_name = util.blast_result_file(shard, iteration)
+        file_name = self.filer.blast_result_file(shard, iteration)
         print(file_name)
         with open(file_name) as match_file:
             for line in match_file:
-                match = FRAGMENT.match(line)
+                match = Atram.fragment.match(line)
                 frags[match.group(1) if match else line] = 1
     return frags
 
@@ -77,8 +116,8 @@ def write_sequences(work_dir, file_prefix, iteration, fragments):
     """
 
     db_conn = connect_db(work_dir, file_prefix)
-    fasta_1 = util.paired_end_file(work_dir, file_prefix, iteration, '1')
-    fasta_2 = util.paired_end_file(work_dir, file_prefix, iteration, '2')
+    fasta_1 = self.filer.paired_end_file(work_dir, file_prefix, iteration, '1')
+    fasta_2 = self.filer.paired_end_file(work_dir, file_prefix, iteration, '2')
     paired = False
     with open(fasta_1, 'w') as file_1, open(fasta_2, 'w') as file_2:
         for ids in chunked(fragments.keys(), 100):
@@ -98,8 +137,8 @@ def write_sequences(work_dir, file_prefix, iteration, fragments):
 def create_blast_db(work_dir, file_prefix, iteration):
     """Create a blast DB from the assembled fragments."""
 
-    blast_db = util.contig_score_db(work_dir, file_prefix, iteration)
-    fasta_file = util.contig_unfiltered_file(work_dir, file_prefix, iteration)
+    blast_db = self.filer.contig_score_db(work_dir, file_prefix, iteration)
+    fasta_file = self.filer.contig_unfiltered_file(work_dir, file_prefix, iteration)
     cmd = 'makeblastdb -dbtype nucl -in {} -out {}'
     cmd = cmd.format(fasta_file, blast_db)
     subprocess.check_call(cmd, shell=True)
@@ -114,7 +153,7 @@ def blast_target_against_contigs(work_dir, file_prefix, iteration,
     """
 
     blast_db = create_blast_db(work_dir, file_prefix, iteration)
-    scored_contigs = util.contig_score_file(work_dir, file_prefix, iteration)
+    scored_contigs = self.filer.contig_score_file(work_dir, file_prefix, iteration)
     blast_args = dict(
         db=blast_db, query=target, out=scored_contigs,
         outfmt="'10 qseqid sseqid bitscore qstart qend sstart send slen'")
@@ -135,7 +174,7 @@ def filter_contig_scores(work_dir, file_prefix, iteration, bit_score):
     field_names = ['target_id', 'contig_id', 'bit_score',
                    'target_start', 'target_end',
                    'contig_start', 'contig_end', 'contig_len']
-    contig_score_file = util.contig_score_file(work_dir, file_prefix,
+    contig_score_file = self.filer.contig_score_file(work_dir, file_prefix,
                                                iteration)
 
     scores = {}
@@ -157,9 +196,9 @@ def filter_contigs(work_dir, file_prefix, iteration):
                                  target, genetic_code, protein)
     filtered_names = filter_contig_scores(work_dir, file_prefix,
                                           iteration, bit_score)
-    unfiltered_file = util.contig_unfiltered_file(work_dir, file_prefix,
+    unfiltered_file = self.filer.contig_unfiltered_file(work_dir, file_prefix,
                                                   iteration)
-    # filtered_file = util.contig_filtered_file(work_dir, file_prefix,
+    # filtered_file = self.filer.contig_filtered_file(work_dir, file_prefix,
     #                                           iteration)
 
     print(filtered_names)
@@ -169,28 +208,6 @@ def filter_contigs(work_dir, file_prefix, iteration):
                 print(contig)
 
 
-def atram(config):
-    """The main aTRAM program loop."""
-
-    shards = util.shard_db_names(config)
-    assember = Assembler.factory(config)
-    target = config['target']
-    for iteration in range(1, config['iterations'] + 1):
-        logging.info('aTRAM iteration %i', iteration)
-        blast_sra(config, iteration, shards, target)
-        frag = get_matching_fragments(iteration, shards)
-        paired = write_sequences(config, iteration, frag)
-        assember.assemble(iteration, paired)
-        filter_contigs(config, iteration)
-        # target = new file
-        break
-
-
 if __name__ == '__main__':
-    CONFIG = configure.parse_command_line(
-        description=""" """,
-        args=('target protein iterations cpus evalue max_target_seqs '
-              'assembler max_memory file_prefix work_dir bit_score '
-              'genetic_code kmer'))
-    util.log_setup(CONFIG.work_dir, CONFIG.file_prefix)
-    atram(CONFIG)
+
+    Atram().process()
