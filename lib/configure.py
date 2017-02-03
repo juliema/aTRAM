@@ -2,6 +2,7 @@
 
 import os
 import argparse
+import textwrap
 import psutil
 from lib.dict_attrs import DictAttrs
 
@@ -81,11 +82,11 @@ class Configure:
 
         'shard_count': lambda p: p.add_argument(
             '-s', '--shard-count', type=int, default=0,
-            help='Number of SRA shards to create.'),
+            help='Number of blast DB shards to create.'),
 
         'sra_files': lambda p: p.add_argument(
             'sra_files', nargs='+',
-            help=('Short read archives in fasta or fastq format. '
+            help=('Sequence read archives in fasta or fastq format. '
                   'May contain wildcards.')),
 
         'target': lambda p: p.add_argument(
@@ -94,9 +95,9 @@ class Configure:
 
         'work_dir': lambda p: p.add_argument(
             '-w', '--work-dir', default='.',
-            help=('Where to store files needed by other aTRAM programs '
-                  'and other temporary files. Defaults to the current '
-                  'working directory.')),
+            help=('Where to store temporary files and files needed by other '
+                  'aTRAM programs and other temporary files. Defaults to '
+                  'the current working directory.')),
     }
     # pylint: enable=undefined-variable
 
@@ -108,7 +109,9 @@ class Configure:
         Parse the commandline arguments and return a dict attribute object.
         """
 
-        parser = argparse.ArgumentParser(description=description)
+        parser = argparse.ArgumentParser(
+            formatter_class=argparse.RawDescriptionHelpFormatter,
+            description=textwrap.dedent(description))
         self.add_arguments(parser, args)
 
         self.config = vars(parser.parse_args())

@@ -19,7 +19,7 @@ class AtramPreprocessor:
     batch_size = 1e7  # How many sequence records to insert at a time
 
     # Try to get the sequence name and which end it is from the fasta header
-    parse_header = re.compile(r'^ [>@] \s* ( .* ) ( [\s\/_] [12] )',
+    parse_header = re.compile(r'^ [>@] \s* ( .* ) ( [\s/._] [12] ) \s* $',
                               re.VERBOSE)
 
     def __init__(self):
@@ -35,6 +35,21 @@ class AtramPreprocessor:
                 This script prepares data for use by the atram.py script.
                 It takes fasta or fastq files of paired-end (or single-end)
                 sequence reads and creates a set of atram databases.
+
+                You need to prepare the sequence read archive files so that the
+                header lines contain only a sequence ID with the optional
+                paired-end suffix at the end of the header line. The separator
+                for the optional trailing paired-end suffix may be a space,
+                a slash "/", a dot ".", or an underscore "_".
+
+                For example:
+
+                    >DBRHHJN1:427:H9YYAADXX:1:1101:10001:77019/1
+                    GATTAA...
+                    >DBRHHJN1:427:H9YYAADXX:1:1101:10001:77019/2
+                    ATAGCC...
+                    >DBRHHJN1:427:H9YYAADXX:1:1101:10006:63769/2
+                    CGAAAA...
                 """,
             args='sra_files file_prefix work_dir shard_count cpus')
 
@@ -57,7 +72,7 @@ class AtramPreprocessor:
         Setup the DB for our processing needs and return a DB connection.
 
         Because this is called in a child process, the address space is not
-        shared with the parent (caller) and we cannot use instance variables.
+        shared with the parent (caller) hence we cannot use instance variables.
         """
 
         db_path = filer.db_file_name()
@@ -234,11 +249,11 @@ class AtramPreprocessor:
         appropriate sequences and hand things off to the makeblastdb program.
 
         Because this is called in a child process, the address space is not
-        shared with the parent (caller) and we cannot use instance variables.
+        shared with the parent (caller) hence we cannot use instance variables.
         """
 
         filer = Filer(work_dir=work_dir, file_prefix=file_prefix)
-        blast_db = filer.shard_db_name(shard_index)
+        blast_db = filer.blast_shard_name(shard_index)
 
         with filer.temp_file() as fasta_file:
             AtramPreprocessor.fill_blast_fasta(fasta_file, filer, shard_params)
@@ -255,7 +270,7 @@ class AtramPreprocessor:
         which sequences to get for this shard.
 
         Because this is called in a child process, the address space is not
-        shared with the parent (caller) and we cannot use instance variables.
+        shared with the parent (caller) hence we cannot use instance variables.
         """
 
         db_conn = AtramPreprocessor.connect_db(filer)
