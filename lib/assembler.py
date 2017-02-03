@@ -3,7 +3,7 @@
 import os
 import shutil
 import subprocess
-import util
+import lib.util as util
 
 
 class Assembler:

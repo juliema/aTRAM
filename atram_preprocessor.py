@@ -9,8 +9,8 @@ import logging
 import subprocess
 import multiprocessing
 import numpy as np
-from filer import Filer
-from configure import Configure
+from lib.filer import Filer
+from lib.configure import Configure
 
 
 class AtramPreprocessor:

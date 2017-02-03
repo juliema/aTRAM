@@ -3,7 +3,7 @@
 import os
 import argparse
 import psutil
-from dict_attrs import DictAttrs
+from lib.dict_attrs import DictAttrs
 
 
 class Configure:
