@@ -50,6 +50,11 @@ class Filer:
 
         pattern = self.path('blast_*.nhr')
         files = glob.glob(pattern)
+        if not files:
+            print(('No blast shards found. Looking for "{}"\n'
+                   'Verify the --work-dir and --file-prefix options.').format(
+                pattern[:-4]))
+            sys.exit()
 
         return sorted([f[:-4] for f in files])
 
@@ -90,7 +95,7 @@ class Filer:
 
         return self.path('contigs_{}.fasta')
 
-    def blast_result_file(self, shard_name):
+    def blast_target_against_sra(self, shard_name):
         """Get the file name of the blast result file."""
 
         return '{}_{}.txt'.format(shard_name, str(self.iteration).zfill(2))

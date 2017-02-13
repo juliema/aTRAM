@@ -208,19 +208,33 @@ class AtramPreprocessor:
 
         logging.info('Making blast DBs')
 
-        config = self.config
-
         with multiprocessing.Pool(processes=self.config.cpus) as pool:
             results = []
             for shard_index, shard_params in enumerate(self.shard_list):
                 results.append(pool.apply_async(
                     create_blast_db,
-                    (config.work_dir, config.file_prefix,
+                    (self.config.work_dir, self.config.file_prefix,
                      shard_params, shard_index)))
 
             _ = [result.get() for result in results]
 
         logging.info('Finished making blast DBs')
+
+
+def connect_db(filer):
+    """
+    Setup the DB for our processing needs and return a DB connection.
+
+    Because this is called in a child process, the address space is not
+    shared with the parent (caller) hence we cannot use instance variables.
+    """
+
+    db_path = filer.db_file_name()
+    db_conn = sqlite3.connect(db_path)
+    db_conn.execute("PRAGMA page_size = {}".format(2**16))
+    db_conn.execute("PRAGMA journal_mode = 'off'")
+    db_conn.execute("PRAGMA synchronous = 'off'")
+    return db_conn
 
 
 def create_blast_db(work_dir, file_prefix, shard_params, shard_index):
@@ -241,22 +255,6 @@ def create_blast_db(work_dir, file_prefix, shard_params, shard_index):
         cmd = 'makeblastdb -dbtype nucl -in {} -out {}'
         cmd = cmd.format(fasta_file.name, blast_db)
         subprocess.check_call(cmd, shell=True)
-
-
-def connect_db(filer):
-    """
-    Setup the DB for our processing needs and return a DB connection.
-
-    Because this is called in a child process, the address space is not
-    shared with the parent (caller) hence we cannot use instance variables.
-    """
-
-    db_path = filer.db_file_name()
-    db_conn = sqlite3.connect(db_path)
-    db_conn.execute("PRAGMA page_size = {}".format(2**16))
-    db_conn.execute("PRAGMA journal_mode = 'off'")
-    db_conn.execute("PRAGMA synchronous = 'off'")
-    return db_conn
 
 
 def fill_blast_fasta(fasta_file, filer, shard_params):
