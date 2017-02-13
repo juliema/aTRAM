@@ -3,19 +3,22 @@
 import os
 import shutil
 import subprocess
-import lib.util as util
+from lib.filer import Filer
 
 
 class Assembler:
     """A factory class for building the assembers."""
 
-    def __init__(self, config):
+    def __init__(self, config, iteration):
         self.config = config
+        self.filer = Filer(work_dir=config.work_dir,
+                           file_prefix=config.file_prefix,
+                           iteration=iteration)
 
     @property
     def work_path(self):
-        """The output directory name mauy have unique requirements."""
-        return self.config['work_dir']
+        """The output directory name may have unique requirements."""
+        return self.config.work_dir
 
     def command(self, iteration, paired):
         """Build the command for assembly."""
@@ -30,14 +33,14 @@ class Assembler:
         """Some assembers have unique post assembly steps."""
 
     @staticmethod
-    def factory(config):
+    def factory(config, iteration):
         """Return the assembler based upon the configuration options."""
         if config['assembler'].lower() == 'trinity':
-            return TrinityAssembler(config)
+            return TrinityAssembler(config, iteration)
         elif config['assembler'].lower() == 'velvet':
-            return VevetAssembler(config)
+            return VevetAssembler(config, iteration)
         elif config['assembler'].lower() == 'abyss':
-            return AbyssAssembler(config)
+            return AbyssAssembler(config, iteration)
 
 
 class TrinityAssembler(Assembler):
@@ -46,14 +49,8 @@ class TrinityAssembler(Assembler):
     @property
     def work_path(self):
         """The output directory name has unique requirements."""
-        return os.path.join(self.config['work_dir'], 'trinity')
 
-    def post_assembly(self, iteration, paired):
-        """This assember has a unique post assembly step."""
-        old_file = os.path.join(self.work_path, 'Trinity.fasta')
-        new_file = util.contig_unfiltered_file(self.config, iteration)
-        shutil.move(old_file, new_file)  # Save the file for further processing
-        shutil.rmtree(self.work_path)    # Remove so other iterations will work
+        return os.path.join(self.config['work_dir'], 'trinity')
 
     def command(self, iteration, paired):
         """Build the command for assembly."""
@@ -65,16 +62,20 @@ class TrinityAssembler(Assembler):
         cmd.append("--output '{}'".format(self.work_path))
 
         if paired:
-            cmd.append("--left '{}'".format(util.paired_end_file(
-                self.config, iteration, '1')))
-            cmd.append("--right '{}'".format(util.paired_end_file(
-                self.config, iteration, '2')))
+            cmd.append("--left '{}'".format(self.filer.paired_end_file('1')))
+            cmd.append("--right '{}'".format(self.filer.paired_end_file('2')))
         else:
-            cmd.append("-single '{}'".format(util.paired_end_file(
-                self.config, iteration, '1')))
+            cmd.append("-single '{}'".format(self.filer.paired_end_file('1')))
             cmd.append('--run_as_paired')
 
         return ' '.join(cmd)
+
+    def post_assembly(self, iteration, paired):
+        """This assember has a unique post assembly step."""
+        old_file = os.path.join(self.work_path, 'Trinity.fasta')
+        new_file = self.filer.contig_unfiltered_file()
+        shutil.move(old_file, new_file)  # Save the file for further processing
+        shutil.rmtree(self.work_path)    # Remove so other iterations will work
 
 
 class VevetAssembler(Assembler):
@@ -95,15 +96,14 @@ class AbyssAssembler(Assembler):
         cmd.append('E=0')
         cmd.append('k={}'.format(self.config['kmer']))
         # cmd.append('np={}'.format(self.config['cpus']))
-        cmd.append("name='{}'".format(util.contig_unfiltered_file(
-            self.config, iteration)))
+        cmd.append("name='{}'".format(self.filer.contig_unfiltered_file()))
 
         if paired:
             cmd.append("in='{} {}'".format(
-                util.paired_end_file(self.config, iteration, '1'),
-                util.paired_end_file(self.config, iteration, '2')))
+                self.filer.paired_end_file('1'),
+                self.filer.paired_end_file('2')))
         else:
             cmd.append("se='{}'".format(
-                util.paired_end_file(self.config, iteration, '1')))
+                self.filer.paired_end_file('1')))
 
         return ' '.join(cmd)

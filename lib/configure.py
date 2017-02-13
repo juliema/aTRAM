@@ -31,17 +31,19 @@ class Configure:
             help='Which assembler to use. (Trinity, Abyss, Velvet)'),
 
         'bit_score': lambda p: p.add_argument(
-            '-b', '--bit-score', type=float, default=default['bit_score'],
+            '-b', '--bit-score', type=float,
+            default=Configure.default['bit_score'],
             help=('Remove contigs that have a value less than this. '
-                  'The default is {}').format(default['bit_score'])),
+                  'The default is {}').format(Configure.default['bit_score'])),
 
         'cpus': lambda p: p.add_argument(
             '-c', '--cpus', type=int, default=0,
             help='Number of cpus to use.'),
 
         'evalue': lambda p: p.add_argument(
-            '-e', '--evalue', default=default['evalue'], type=float,
-            help='The default evalue is {}.'.format(default['evalue'])),
+            '-e', '--evalue', type=float, default=Configure.default['evalue'],
+            help='The default evalue is {}.'.format(
+                Configure.default['evalue'])),
 
         'file_prefix': lambda p: p.add_argument(
             '-f', '--file-prefix', default='',
@@ -49,22 +51,22 @@ class Configure:
                   'identify different runs.')),
 
         'genetic_code': lambda p: p.add_argument(
-            '-g', '--genetic-code',
-            default=default['genetic_code'],
-            type=int,
+            '-g', '--genetic-code', type=int,
+            default=Configure.default['genetic_code'],
             help='The genetic code to use. The default is {}.'.format(
-                default['genetic_code'])),
+                Configure.default['genetic_code'])),
 
         'iterations': lambda p: p.add_argument(
-            '-i', '--iterations', default=default['iterations'],
-            type=int,
+            '-i', '--iterations', type=int,
+            default=Configure.default['iterations'],
             help=('The number of pipline iterations. '
-                  'The default is {}.').format(default['iterations'])),
+                  'The default is {}.').format(
+                    Configure.default['iterations'])),
 
         'kmer': lambda p: p.add_argument(
-            '-k', '--kmer', default=default['kmer'], type=int,
+            '-k', '--kmer', type=int, default=Configure.default['kmer'],
             help=('k-mer size for assembers that use it. '
-                  'The default is {}.').format(default['kmer'])),
+                  'The default is {}.').format(Configure.default['kmer'])),
 
         'max_memory': lambda p: p.add_argument(
             '-m', '--max_memory', default=0,
@@ -72,9 +74,9 @@ class Configure:
 
         'max_target_seqs': lambda p: p.add_argument(
             '-M', '--max-target-seqs',
-            type=int, default=default['max_target_seqs'],
+            type=int, default=Configure.default['max_target_seqs'],
             help='Maximum hit sequences per shard. Default is {}.'.format(
-                default['max_target_seqs'])),
+                Configure.default['max_target_seqs'])),
 
         'protein': lambda p: p.add_argument(
             '-p', '--protein', nargs='?', const=True, default=False,
