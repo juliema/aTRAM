@@ -1,26 +1,19 @@
-"""
-Format the data so that atram can use it later. It takes given sequence read
-archive files and converts them.
+"""Format the data so that atram can use it later. It takes given sequence
+read archive files and converts them.
 """
 
-import re
-import sqlite3
 import logging
 import subprocess
 import multiprocessing
 import numpy as np
+import lib.db as db
+import lib.bio as bio
 from lib.filer import Filer
 from lib.configure import Configure
 
 
 class AtramPreprocessor:
     """Class to handle getting the data into a format that atram can use."""
-
-    batch_size = 1e7  # How many sequence records to insert at a time
-
-    # Try to get the sequence name and which end it is from the fasta header
-    parse_header = re.compile(r'^ [>@] \s* ( .* ) ( [\s/._] [12] ) \s* $',
-                              re.VERBOSE)
 
     def __init__(self):
         self.config = None
@@ -31,10 +24,10 @@ class AtramPreprocessor:
         """The main method."""
 
         self.config = Configure().parse_command_line(
-            description="""
-                This script prepares data for use by the atram.py script.
-                It takes fasta or fastq files of paired-end (or single-end)
-                sequence reads and creates a set of atram databases.
+            description="""This script prepares data for use by the atram.py
+                script. It takes fasta or fastq files of paired-end (or
+                single-end) sequence reads and creates a set of atram
+                databases.
 
                 You need to prepare the sequence read archive files so that the
                 header lines contain only a sequence ID with the optional
@@ -56,38 +49,19 @@ class AtramPreprocessor:
         filer = Filer(self.config.work_dir, self.config.file_prefix)
         filer.log_setup()
 
-        self.db_conn = connect_db(filer)
-        self.create_table()
+        self.db_conn = db.connect(filer)
+        db.create_sequences_table(self.db_conn)
         self.load_seqs()
-        self.create_index()
+        db.create_sequences_index(self.db_conn)
 
         self.shard_list = self.assign_seqs_to_shards()
         self.create_blast_dbs()
 
         self.db_conn.close()
 
-    def create_table(self):
-        """Reset the DB. Delete the tables and recreate them."""
-
-        logging.info('Creating sqlite tables')
-        self.db_conn.execute('''DROP INDEX IF EXISTS seq_names''')
-        self.db_conn.execute('''DROP TABLE IF EXISTS sequences''')
-        sql = 'CREATE TABLE sequences (seq_name TEXT, seq_end TEXT, seq TEXT)'
-        self.db_conn.execute(sql)
-
-    def create_index(self):
-        """
-        Create indexes after we build the table. This speeds up the program
-        significantly.
-        """
-
-        logging.info('Creating sqlite indices')
-        self.db_conn.execute('CREATE INDEX seq_names ON sequences (seq_name)')
-
     def load_seqs(self):
-        """
-        A hand rolled version of "Bio.SeqIO". It's faster because we can take
-        shortcuts due to its limited use.
+        """A hand rolled version of "Bio.SeqIO". It's faster because we can
+        take shortcuts due to its limited use.
 
         We're using a very simple state machine on lines to do the parsing.
             1) header      (exactly 1 line)  Starts with a '>' or an '@'
@@ -101,7 +75,7 @@ class AtramPreprocessor:
             logging.info('Loading "%s" into sqlite database', file_name)
 
             with open(file_name) as sra_file:
-                record_batch = []  # The batch of records to insert
+                sequence_batch = []  # The batch of records to insert
 
                 seq = ''        # The sequence string. A DB field
                 seq_end = ''    # Which end? 1 or 2. A DB field
@@ -117,13 +91,13 @@ class AtramPreprocessor:
                     # Handle a header line
                     elif line[0] in ['>', '@']:
                         if seq:  # Append last record to the batch?
-                            record_batch.append((seq_name, seq_end, seq))
+                            sequence_batch.append((seq_name, seq_end, seq))
 
                         seq = ''        # Reset the sequence
                         is_seq = True   # Reset the state flag
 
                         # Get data from the header
-                        match = AtramPreprocessor.parse_header.match(line)
+                        match = bio.PARSE_HEADER.match(line)
                         seq_name = match.group(1) if match else ''
                         seq_end = match.group(2) if match else ''
 
@@ -135,31 +109,20 @@ class AtramPreprocessor:
                     elif line[0].isalpha() and is_seq:
                         seq += line.rstrip()  # ''.join([strs])
 
-                    if len(record_batch) >= AtramPreprocessor.batch_size:
-                        self.insert_record_batch(record_batch)
-                        record_batch = []
+                    if len(sequence_batch) >= db.BATCH_SIZE:
+                        db.insert_sequences_batch(self.db_conn, sequence_batch)
+                        sequence_batch = []
 
                 if seq:
-                    record_batch.append((seq_name, seq_end, seq))
+                    sequence_batch.append((seq_name, seq_end, seq))
 
-                self.insert_record_batch(record_batch)
-
-    def insert_record_batch(self, record_batch):
-        """Insert a batch of sequence records into the sqlite database."""
-
-        if record_batch:
-            sql = '''
-                INSERT INTO sequences (seq_name, seq_end, seq) VALUES (?, ?, ?)
-                '''
-            self.db_conn.executemany(sql, record_batch)
-            self.db_conn.commit()
+                db.insert_sequences_batch(self.db_conn, sequence_batch)
 
     def assign_seqs_to_shards(self):
-        """
-        Put the sequences into the DB shards. What we doing is dividing all of
-        the input sequences into shard_count bucket of sequences. If there are
-        two ends of a sequence we have to make sure that both ends (1 & 2) wind
-        up in the same shard. These shards will then be turned into blast
+        """Put the sequences into the DB shards. What we doing is dividing all
+        of the input sequences into shard_count bucket of sequences. If there
+        are two ends of a sequence we have to make sure that both ends (1 & 2)
+        wind up in the same shard. These shards will then be turned into blast
         databases.
 
         This will build up an array of "LIMIT len OFFSET start" parameters for
@@ -169,8 +132,7 @@ class AtramPreprocessor:
 
         logging.info('Assigning sequences to shards')
 
-        result = self.db_conn.execute('SELECT COUNT(*) FROM sequences')
-        total = result.fetchone()[0]
+        total = db.get_sequence_count(self.db_conn)
 
         # This creates a list of roughly equal partition indexes
         offsets = np.linspace(0, total, dtype=int,
@@ -180,13 +142,7 @@ class AtramPreprocessor:
         for i in range(1, len(offsets) - 1):
 
             # Get the first two sequences of a partition
-            sql = '''
-                SELECT seq_name FROM sequences
-                ORDER BY seq_name LIMIT 2 OFFSET {}
-                '''
-            result = self.db_conn.execute(sql.format(offsets[i]))
-            first = result.fetchone()[0]
-            second = result.fetchone()[0]
+            first, second = db.get_two_sequences(self.db_conn, offsets[i])
 
             # If both have the same name then both sequences will be in the
             # same partition and we're done. If they have different names then
@@ -201,9 +157,8 @@ class AtramPreprocessor:
         return list(zip(limits, offsets[:-1]))
 
     def create_blast_dbs(self):
-        """
-        Assign processes to make the blast DBs. One process for each blast DB
-        shard.
+        """Assign processes to make the blast DBs. One process for each blast
+        DB shard.
         """
 
         logging.info('Making blast DBs')
@@ -221,25 +176,8 @@ class AtramPreprocessor:
         logging.info('Finished making blast DBs')
 
 
-def connect_db(filer):
-    """
-    Setup the DB for our processing needs and return a DB connection.
-
-    Because this is called in a child process, the address space is not
-    shared with the parent (caller) hence we cannot use instance variables.
-    """
-
-    db_path = filer.db_file_name()
-    db_conn = sqlite3.connect(db_path)
-    db_conn.execute("PRAGMA page_size = {}".format(2**16))
-    db_conn.execute("PRAGMA journal_mode = 'off'")
-    db_conn.execute("PRAGMA synchronous = 'off'")
-    return db_conn
-
-
 def create_blast_db(work_dir, file_prefix, shard_params, shard_index):
-    """
-    Create a blast DB from the shard. We fill a fasta file with the
+    """Create a blast DB from the shard. We fill a fasta file with the
     appropriate sequences and hand things off to the makeblastdb program.
 
     Because this is called in a child process, the address space is not
@@ -258,8 +196,7 @@ def create_blast_db(work_dir, file_prefix, shard_params, shard_index):
 
 
 def fill_blast_fasta(fasta_file, filer, shard_params):
-    """
-    Fill the fasta file used as input into blast with shard sequences from
+    """Fill the fasta file used as input into blast with shard sequences from
     the sqlite3 DB. We use the shard partitions passed in to determine
     which sequences to get for this shard.
 
@@ -267,13 +204,9 @@ def fill_blast_fasta(fasta_file, filer, shard_params):
     shared with the parent (caller) hence we cannot use instance variables.
     """
 
-    db_conn = connect_db(filer)
-    sql = '''
-        SELECT seq_name, seq_end, seq FROM sequences
-        ORDER BY seq_name LIMIT {} OFFSET {}
-        '''
-    sql = sql.format(shard_params[0], shard_params[1])
-    result = db_conn.execute(sql)
+    db_conn = db.connect(filer)
+    result = db.get_sequences_in_shard(
+        db_conn, shard_params[0], shard_params[1])
     for row in result:
         fasta_file.write('>{}{}\n'.format(row[0], row[1]))
         fasta_file.write('{}\n'.format(row[2]))

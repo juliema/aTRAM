@@ -9,38 +9,37 @@ from lib.filer import Filer
 class Assembler:
     """A factory class for building the assembers."""
 
-    def __init__(self, config, iteration):
+    def __init__(self, config):
         self.config = config
         self.filer = Filer(work_dir=config.work_dir,
-                           file_prefix=config.file_prefix,
-                           iteration=iteration)
+                           file_prefix=config.file_prefix)
 
     @property
     def work_path(self):
         """The output directory name may have unique requirements."""
         return self.config.work_dir
 
-    def command(self, iteration, paired):
+    def command(self, files):
         """Build the command for assembly."""
 
-    def assemble(self, iteration, paired):
+    def assemble(self, files):
         """Use the assembler to build up the contigs."""
-        cmd = self.command(iteration, paired)
+        cmd = self.command(files)
         subprocess.check_call(cmd, shell=True)
-        self.post_assembly(iteration, paired)
+        self.post_assembly(files)
 
-    def post_assembly(self, iteration, paired):
+    def post_assembly(self, files):
         """Some assembers have unique post assembly steps."""
 
     @staticmethod
-    def factory(config, iteration):
+    def factory(config):
         """Return the assembler based upon the configuration options."""
         if config['assembler'].lower() == 'trinity':
-            return TrinityAssembler(config, iteration)
+            return TrinityAssembler(config)
         elif config['assembler'].lower() == 'velvet':
-            return VevetAssembler(config, iteration)
+            return VevetAssembler(config)
         elif config['assembler'].lower() == 'abyss':
-            return AbyssAssembler(config, iteration)
+            return AbyssAssembler(config)
 
 
 class TrinityAssembler(Assembler):
@@ -52,7 +51,7 @@ class TrinityAssembler(Assembler):
 
         return os.path.join(self.config['work_dir'], 'trinity')
 
-    def command(self, iteration, paired):
+    def command(self, files):
         """Build the command for assembly."""
 
         cmd = ['Trinity']
@@ -61,34 +60,33 @@ class TrinityAssembler(Assembler):
         cmd.append('--CPU {}'.format(self.config['cpus']))
         cmd.append("--output '{}'".format(self.work_path))
 
-        if paired:
-            cmd.append("--left '{}'".format(self.filer.paired_end_file('1')))
-            cmd.append("--right '{}'".format(self.filer.paired_end_file('2')))
+        if files['is_paired']:
+            cmd.append("--left '{}'".format(files['end_1']))
+            cmd.append("--right '{}'".format(files['end_2']))
         else:
-            cmd.append("-single '{}'".format(self.filer.paired_end_file('1')))
+            cmd.append("-single '{}'".format(files['end_1']))
             cmd.append('--run_as_paired')
 
         return ' '.join(cmd)
 
-    def post_assembly(self, iteration, paired):
+    def post_assembly(self, files):
         """This assember has a unique post assembly step."""
         old_file = os.path.join(self.work_path, 'Trinity.fasta')
-        new_file = self.filer.contig_unfiltered_file()
-        shutil.move(old_file, new_file)  # Save the file for further processing
-        shutil.rmtree(self.work_path)    # Remove so other iterations will work
+        shutil.move(old_file, files['raw_contigs'])
+        shutil.rmtree(self.work_path)  # Remove so other iterations will work
 
 
 class VevetAssembler(Assembler):
     """Wrapper for the Velvet assembler."""
 
-    def command(self, iteration, paired):
+    def command(self, files):
         """Build the command for assembly."""
 
 
 class AbyssAssembler(Assembler):
     """Wrapper for the Abyss assembler."""
 
-    def command(self, iteration, paired):
+    def command(self, files):
         """Build the command for assembly."""
 
         cmd = ['abyss-pe']
@@ -96,14 +94,11 @@ class AbyssAssembler(Assembler):
         cmd.append('E=0')
         cmd.append('k={}'.format(self.config['kmer']))
         # cmd.append('np={}'.format(self.config['cpus']))
-        cmd.append("name='{}'".format(self.filer.contig_unfiltered_file()))
+        cmd.append("name='{}'".format(files['raw_contigs']))
 
-        if paired:
-            cmd.append("in='{} {}'".format(
-                self.filer.paired_end_file('1'),
-                self.filer.paired_end_file('2')))
+        if files['is_paired']:
+            cmd.append("in='{} {}'".format(files['end_1'], files['end_2']))
         else:
-            cmd.append("se='{}'".format(
-                self.filer.paired_end_file('1')))
+            cmd.append("se='{}'".format(files['end_1']))
 
         return ' '.join(cmd)

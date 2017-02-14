@@ -1,15 +1,14 @@
 """The aTRAM assembly program."""
 
-import re
-import csv
 import logging
-import sqlite3
 import subprocess
 import multiprocessing
-from more_itertools import chunked
-from Bio import SeqIO
+# from more_itertools import chunked
+# from Bio import SeqIO
 from Bio.Blast.Applications import NcbiblastnCommandline as tblastn
 from Bio.Blast.Applications import NcbitblastnCommandline as blastn
+import lib.db as db
+import lib.bio as bio
 from lib.filer import Filer
 from lib.configure import Configure
 from lib.assembler import Assembler
@@ -17,8 +16,6 @@ from lib.assembler import Assembler
 
 class Atram:
     """The atram program itself."""
-
-    fragment = re.compile(r'^ ( .* ) ( [\s\/_] [12] )', re.VERBOSE)
 
     def __init__(self):
         self.filer = None
@@ -30,6 +27,7 @@ class Atram:
 
     def run(self):
         """Setup  and run atram."""
+
         self.config = Configure().parse_command_line(
             description=""" """,
             args=('target protein iterations cpus evalue max_target_seqs '
@@ -39,30 +37,42 @@ class Atram:
         self.filer = Filer(self.config.work_dir, self.config.file_prefix)
         self.filer.log_setup()
 
-        self.assember = Assembler.factory(self.config, self.iteration)
+        self.db_conn = db.connect(self.filer)
+        db.create_blast_hits_table(self.db_conn)
+        db.create_blast_hits_index(self.db_conn)
+
+        self.assember = Assembler.factory(self.config)
         self.shard_list = self.filer.all_blast_shard_names()
 
         self.atram()
 
     def atram(self):
-        """The main aTRAM program loop."""
+        """The main program loop."""
 
         target = self.config.target
         for self.iteration in range(1, self.config.iterations + 1):
             logging.info('aTRAM iteration %i', self.iteration)
             self.blast_all_targets_against_sra(target)
-            sequences = self.get_blast_hits()
-            paired = self.write_paired_end_files(sequences)
-            # assember.assemble(iteration, paired)
+
+            files = {
+                'end_1': self.filer.temp_file(delete=False),
+                'end_2': self.filer.temp_file(delete=False),
+                'raw_contigs': self.filer.temp_file(delete=False),
+                'new_contigs': self.filer.temp_file(delete=False),
+                'old_contigs': self.filer.temp_file(delete=False),
+                'is_paired': False}
+
+            self.write_paired_end_files(self.iteration, files)
+            self.assember.assemble(files)
+
             # filter_contigs(iteration)
             # target = new file
             break
 
     def blast_all_targets_against_sra(self, target):
-        """
-        Blast the targets against the SRA databases. We're using a map-reduce
-        strategy here. We map the blasting of the target sequences and reduce
-        the output into one fasta file.
+        """Blast the targets against the SRA databases. We're using a
+        map-reduce strategy here. We map the blasting of the target sequences
+        and reduce the output into one fasta file.
         """
 
         # Pass these arguments to the blast subprocess
@@ -78,60 +88,27 @@ class Atram:
         }
 
         with multiprocessing.Pool(processes=self.config.cpus) as pool:
-            results = [pool.apply_async(blast_target_against_sra,
-                                        (blast_params, shard_name))
+            results = [pool.apply_async(
+                blast_target_against_sra,
+                (blast_params, shard_name, self.iteration))
                        for shard_name in self.shard_list]
             _ = [result.get() for result in results]
 
-    def get_blast_hits(self):
-        """Get all of the blast hits"""
-
-        sequences = {}
-        for shard_name in self.shard_list:
-            hits_file_name = self.filer.blast_target_against_sra(shard_name)
-            print(hits_file_name)
-            with open(hits_file_name) as blast_hits:
-                for line in blast_hits:
-                    match = Atram.fragment.match(line)
-                    sequences[match.group(1) if match else line] = 1
-        return sequences
-
-    def write_paired_end_files(self, sequences):
-        """
-        Take the matching blast hits and write the sequence and any matching
+    def write_paired_end_files(self, iteration, files):
+        """Take the matching blast hits and write the sequence and any matching
         end to the appropriate fasta files.
         """
 
-        # db_conn = connect_db(work_dir, file_prefix)
-        # fasta_1 = self.filer.paired_end_file(work_dir, file_prefix, iteration, '1')
-        # fasta_2 = self.filer.paired_end_file(work_dir, file_prefix, iteration, '2')
-        # paired = False
-        # with open(fasta_1, 'w') as file_1, open(fasta_2, 'w') as file_2:
-        #     for ids in chunked(fragments.keys(), 100):
-        #         sql = 'SELECT * FROM frags WHERE frag IN ({})'
-        #         sql = sql.format(','.join('?' for _ in ids))
-        #         for row in db_conn.execute(sql, ids):
-        #             if row[1] and row[1].endswith('2'):
-        #                 file_2.write('>{}{}\n'.format(row[0], row[1]))
-        #                 file_2.write('{}\n'.format(row[2]))
-        #                 paired = True
-        #             else:
-        #                 file_1.write('>{}{}\n'.format(row[0], row[1]))
-        #                 file_1.write('{}\n'.format(row[2]))
-        # return paired
-
-    def connect_db(self):
-        """Setup the DB for our processing needs."""
-
-        db_path = self.filer.db_file_name()
-        db_conn = sqlite3.connect(db_path)
-        return db_conn
+        for row in db.get_blast_hits(self.db_conn, iteration):
+            if row[1] and row[1].endswith('2'):
+                files['end_2'].write('>{}{}\n'.format(row[0], row[1]))
+                files['end_2'].write('{}\n'.format(row[2]))
+                files['is_paired'] = True
+            else:
+                files['end_1'].write('>{}{}\n'.format(row[0], row[1]))
+                files['end_1'].write('{}\n'.format(row[2]))
 
 
-#
-#
-#
-#
 # def create_blast_db(work_dir, file_prefix, iteration):
 #     """Create a blast DB from the assembled fragments."""
 #
@@ -196,7 +173,8 @@ class Atram:
 #                                  target, genetic_code, protein)
 #     filtered_names = filter_contig_scores(work_dir, file_prefix,
 #                                           iteration, bit_score)
-#     unfiltered_file = self.filer.contig_unfiltered_file(work_dir, file_prefix,
+#     unfiltered_file = self.filer.contig_unfiltered_file(work_dir,
+#                                                   file_prefix,
 #                                                   iteration)
 #     # filtered_file = self.filer.contig_filtered_file(work_dir, file_prefix,
 #     #                                           iteration)
@@ -208,16 +186,40 @@ class Atram:
 #                 print(contig)
 
 
-def blast_target_against_sra(blast_params, shard_name):
-    """
-    Blast the target sequences against an SRA blast DB.
-    """
+def blast_target_against_sra(blast_params, shard_name, iteration):
+    """Blast the target sequences against an SRA blast DB."""
 
     filer = Filer(work_dir=blast_params['work_dir'],
-                  iteration=blast_params['iteration'],
                   file_prefix=blast_params['file_prefix'])
-    out = filer.blast_target_against_sra(shard_name)
+    db_conn = db.connect(filer)
 
+    with filer.temp_file() as results_file:
+        cmd = create_blast_command(blast_params, shard_name, results_file.name)
+        subprocess.check_call(cmd, shell=True)
+        insert_blast_hits(db_conn, results_file, iteration, shard_name)
+
+
+def insert_blast_hits(db_conn, results_file, iteration, shard_name):
+    """Put all of the blast hits into the database."""
+    blast_hit_batch = []
+    with open(results_file.name) as blast_hits:
+        for line in blast_hits:
+            match = bio.PARSE_BLAST_RESULTS.match(line)
+            if match:
+                seq_name = match.group(1)
+                seq_end = match.group(2)
+            else:
+                seq_name = line
+                seq_end = ''
+            blast_hit_batch.append(
+                (iteration, seq_end, seq_name, shard_name))
+    db.insert_blast_hit_batch(db_conn, blast_hit_batch)
+
+
+def create_blast_command(blast_params, shard_name, out):
+    """Build the blast command to blast the target against the SRA database
+    shards.
+    """
     blast_args = dict(outfmt="'10 sseqid'",
                       max_target_seqs=blast_params['max_target_seqs'],
                       out=out, db=shard_name, query=blast_params['target'])
@@ -229,8 +231,7 @@ def blast_target_against_sra(blast_params, shard_name):
         cmd = str(tblastn(
             cmd='blastn', task='blastn', evalue=blast_params['evalue'],
             **blast_args))
-    print(cmd)
-    subprocess.check_call(cmd, shell=True)
+    return cmd
 
 
 if __name__ == '__main__':
