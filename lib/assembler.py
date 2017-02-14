@@ -1,7 +1,6 @@
 """Wrappers for the various assember programs."""
 
-import os
-# import shutil
+import shutil
 import subprocess
 from lib.filer import Filer
 
@@ -49,7 +48,7 @@ class TrinityAssembler(Assembler):
     def work_path(self):
         """The output directory name has unique requirements."""
 
-        return os.path.join(self.config['work_dir'], 'trinity')
+        return 'trinity'
 
     def command(self, files):
         """Build the command for assembly."""
@@ -72,9 +71,7 @@ class TrinityAssembler(Assembler):
 
     def post_assembly(self, files):
         """This assember has a unique post assembly step."""
-        # old_file = os.path.join(self.work_path, 'Trinity.fasta')
-        # shutil.move(old_file, files['raw_contigs_name'])
-        # shutil.rmtree(self.work_path)  # Remove so other iterations will work
+        shutil.move('trinity.Trinity.fasta', files['raw_contigs'].name)
 
 
 class VevetAssembler(Assembler):
@@ -95,7 +92,7 @@ class AbyssAssembler(Assembler):
         cmd.append('E=0')
         cmd.append('k={}'.format(self.config['kmer']))
         # cmd.append('np={}'.format(self.config['cpus']))
-        cmd.append("name='{}'".format(files['raw_contigs_name']))
+        cmd.append("name='{}'".format(files['raw_contigs'].name))
 
         if files['is_paired']:
             cmd.append("in='{} {}'".format(files['end_1'].name,
