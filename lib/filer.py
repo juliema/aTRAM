@@ -101,19 +101,19 @@ class Filer:
         return '{}_{}.txt'.format(shard_name, str(iteration).zfill(2))
 
     @staticmethod
-    def temp_file(delete=True):
+    def temp_file():
         """Create temp files for output. Nest these in a "with" statement."""
 
-        return tempfile.NamedTemporaryFile(mode='w', delete=delete)
+        return tempfile.NamedTemporaryFile(mode='w')
 
     @staticmethod
     def open_assembly_files():
         return {
-            'end_1': Filer.temp_file(delete=False),
-            'end_2': Filer.temp_file(delete=False),
-            'raw_contigs': Filer.temp_file(delete=False),
-            'new_contigs': Filer.temp_file(delete=False),
-            'old_contigs': Filer.temp_file(delete=False),
+            'end_1': Filer.temp_file(),
+            'end_2': Filer.temp_file(),
+            'raw_contigs': Filer.temp_file(),
+            'new_contigs': Filer.temp_file(),
+            'old_contigs': Filer.temp_file(),
             'is_paired': False}
 
     @staticmethod

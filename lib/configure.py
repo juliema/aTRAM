@@ -40,15 +40,15 @@ class Configure:
             '-c', '--cpus', type=int, default=0,
             help='Number of cpus to use.'),
 
+        'db_prefix': lambda p: p.add_argument(
+            '-d', '--db-prefix', default='',
+            help=('This will get prepended to all blast and database files '
+                  'so you can identify different database sets.')),
+
         'evalue': lambda p: p.add_argument(
             '-e', '--evalue', type=float, default=Configure.default['evalue'],
             help='The default evalue is {}.'.format(
                 Configure.default['evalue'])),
-
-        'file_prefix': lambda p: p.add_argument(
-            '-f', '--file-prefix', default='',
-            help=('This will get prepended to all of files so you can '
-                  'identify different runs.')),
 
         'genetic_code': lambda p: p.add_argument(
             '-g', '--genetic-code', type=int,
@@ -61,7 +61,7 @@ class Configure:
             default=Configure.default['iterations'],
             help=('The number of pipline iterations. '
                   'The default is {}.').format(
-                    Configure.default['iterations'])),
+                      Configure.default['iterations'])),
 
         'kmer': lambda p: p.add_argument(
             '-k', '--kmer', type=int, default=Configure.default['kmer'],
@@ -77,6 +77,10 @@ class Configure:
             type=int, default=Configure.default['max_target_seqs'],
             help='Maximum hit sequences per shard. Default is {}.'.format(
                 Configure.default['max_target_seqs'])),
+
+        'output': lambda p: p.add_argument(
+            '-o', '--output', required=True,
+            help='The path to where the output will be written.'),
 
         'protein': lambda p: p.add_argument(
             '-p', '--protein', nargs='?', const=True, default=False,
