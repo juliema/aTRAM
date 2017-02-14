@@ -107,8 +107,7 @@ class Configure:
         self.config = None
 
     def parse_command_line(self, description='', args=None):
-        """
-        Parse the commandline arguments and return a dict attribute object.
+        """Parse the commandline arguments and return a dict attribute object.
         """
 
         parser = argparse.ArgumentParser(
@@ -124,9 +123,8 @@ class Configure:
 
     @staticmethod
     def add_arguments(parser, args):
-        """
-        Add command-line arguments. We're given a string of argument keys, and
-        we split that and look up the command line parser action in the
+        """Add command-line arguments. We're given a string of argument keys,
+        and we split that and look up the command line parser action in the
         dispatch table above.
         """
 
@@ -147,8 +145,7 @@ class Configure:
                 self.config[arg] = func()
 
     def default_shard_count(self):
-        """
-        Default the shard count to the total fasta file size / 250MB
+        """Default the shard count to the total fasta file size / 250MB.
         """
 
         total_fasta_size = 0
@@ -164,8 +161,7 @@ class Configure:
 
     @staticmethod
     def default_cpu_count():
-        """
-        If we're not given a default process count use the number of CPUs
+        """If we're not given a default process count use the number of CPUs
         minus 2.
         """
 
@@ -173,8 +169,7 @@ class Configure:
 
     @staticmethod
     def default_max_memory():
-        """
-        Some assemblers want to know how much memory they can use.
+        """Some assemblers want to know how much memory they can use.
         Default to available memory minus 2G.
         """
         return '{}G'.format(int(psutil.virtual_memory()[0] / (2**30)) - 2)
