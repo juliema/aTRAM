@@ -1,5 +1,6 @@
 """The aTRAM assembly program."""
 
+import os
 import logging
 import subprocess
 import multiprocessing
@@ -31,10 +32,10 @@ class Atram:
         self.config = Configure().parse_command_line(
             description=""" """,
             args=('target protein iterations cpus evalue max_target_seqs '
-                  'assembler max_memory file_prefix work_dir bit_score '
+                  'assembler max_memory db_prefix work_dir bit_score output '
                   'genetic_code kmer'))
 
-        self.filer = Filer(self.config.work_dir, self.config.file_prefix)
+        self.filer = Filer(self.config.work_dir, self.config.db_prefix)
         self.filer.log_setup()
 
         self.db_conn = db.connect(self.filer)
@@ -44,29 +45,31 @@ class Atram:
         self.assember = Assembler.factory(self.config)
         self.shard_list = self.filer.all_blast_shard_names()
 
-        self.atram()
+        self.main_loop()
 
-    def atram(self):
+    def main_loop(self):
         """The main program loop."""
 
         target = self.config.target
         for self.iteration in range(1, self.config.iterations + 1):
+
             logging.info('aTRAM iteration %i', self.iteration)
+
             self.blast_all_targets_against_sra(target)
-
-            files = {
-                'end_1': self.filer.temp_file(delete=False),
-                'end_2': self.filer.temp_file(delete=False),
-                'raw_contigs': self.filer.temp_file(delete=False),
-                'new_contigs': self.filer.temp_file(delete=False),
-                'old_contigs': self.filer.temp_file(delete=False),
-                'is_paired': False}
-
+            files = self.filer.open_assembly_files()
             self.write_paired_end_files(self.iteration, files)
-            self.assember.assemble(files)
 
-            # filter_contigs(iteration)
+            cwd = os.getcwd()
+            try:
+                os.chdir(self.config['work_dir'])  # Required by assemblers
+                self.assember.assemble(files)
+            finally:
+                os.chdir(cwd)
+
+        # filter_contigs(iteration)
             # target = new file
+
+            self.filer.close_assembly_files(files)
             break
 
     def blast_all_targets_against_sra(self, target):
@@ -82,7 +85,7 @@ class Atram:
             'protein': self.config.protein,
             'work_dir': self.config.work_dir,
             'iteration': self.iteration,
-            'file_prefix': self.config.file_prefix,
+            'db_prefix': self.config.db_prefix,
             'genetic_code': self.config.genetic_code,
             'max_target_seqs': self.config.max_target_seqs,
         }
@@ -109,28 +112,28 @@ class Atram:
                 files['end_1'].write('{}\n'.format(row[2]))
 
 
-# def create_blast_db(work_dir, file_prefix, iteration):
+# def create_blast_db(work_dir, db_prefix, iteration):
 #     """Create a blast DB from the assembled fragments."""
 #
-#     blast_db = self.filer.contig_score_db(work_dir, file_prefix, iteration)
+#     blast_db = self.filer.contig_score_db(work_dir, db_prefix, iteration)
 #     fasta_file = self.filer.contig_unfiltered_file(
-#           work_dir, file_prefix, iteration)
+#           work_dir, db_prefix, iteration)
 #     cmd = 'makeblastdb -dbtype nucl -in {} -out {}'
 #     cmd = cmd.format(fasta_file, blast_db)
 #     subprocess.check_call(cmd, shell=True)
 #     return blast_db
 #
 #
-# def blast_target_against_contigs(work_dir, file_prefix, iteration,
+# def blast_target_against_contigs(work_dir, db_prefix, iteration,
 #                                  target, genetic_code, protein):
 #     """
 #    Blast the target sequence against the contings. The blast output will have
 #     the scores for later processing.
 #     """
 #
-#     blast_db = create_blast_db(work_dir, file_prefix, iteration)
+#     blast_db = create_blast_db(work_dir, db_prefix, iteration)
 #     scored_contigs = self.filer.contig_score_file(
-#                                   work_dir, file_prefix, iteration)
+#                                   work_dir, db_prefix, iteration)
 #     blast_args = dict(
 #         db=blast_db, query=target, out=scored_contigs,
 #         outfmt="'10 qseqid sseqid bitscore qstart qend sstart send slen'")
@@ -144,14 +147,14 @@ class Atram:
 #     subprocess.check_call(cmd, shell=True)
 #
 #
-# def filter_contig_scores(work_dir, file_prefix, iteration, bit_score):
+# def filter_contig_scores(work_dir, db_prefix, iteration, bit_score):
 #     """Remove contigs that have scores below the bit score cut-off."""
 #
 #     # qseqid sseqid bitscore qstart qend sstart send slen
 #     field_names = ['target_id', 'contig_id', 'bit_score',
 #                    'target_start', 'target_end',
 #                    'contig_start', 'contig_end', 'contig_len']
-#     contig_score_file = self.filer.contig_score_file(work_dir, file_prefix,
+#     contig_score_file = self.filer.contig_score_file(work_dir, db_prefix,
 #                                                iteration)
 #
 #     scores = {}
@@ -166,17 +169,17 @@ class Atram:
 #     return scores
 #
 #
-# def filter_contigs(work_dir, file_prefix, iteration):
+# def filter_contigs(work_dir, db_prefix, iteration):
 #     """Remove junk from the assembled contigs."""
 #
-#     blast_target_against_contigs(work_dir, file_prefix, iteration,
+#     blast_target_against_contigs(work_dir, db_prefix, iteration,
 #                                  target, genetic_code, protein)
-#     filtered_names = filter_contig_scores(work_dir, file_prefix,
+#     filtered_names = filter_contig_scores(work_dir, db_prefix,
 #                                           iteration, bit_score)
 #     unfiltered_file = self.filer.contig_unfiltered_file(work_dir,
-#                                                   file_prefix,
+#                                                   db_prefix,
 #                                                   iteration)
-#     # filtered_file = self.filer.contig_filtered_file(work_dir, file_prefix,
+#     # filtered_file = self.filer.contig_filtered_file(work_dir, db_prefix,
 #     #                                           iteration)
 #
 #     print(filtered_names)
@@ -190,7 +193,7 @@ def blast_target_against_sra(blast_params, shard_name, iteration):
     """Blast the target sequences against an SRA blast DB."""
 
     filer = Filer(work_dir=blast_params['work_dir'],
-                  file_prefix=blast_params['file_prefix'])
+                  db_prefix=blast_params['db_prefix'])
     db_conn = db.connect(filer)
 
     with filer.temp_file() as results_file:

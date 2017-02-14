@@ -108,9 +108,10 @@ def get_sequences_in_shard(db_conn, limit, offset):
 def get_blast_hits(db_conn, iteration):
     """Get all blast hits for the iteration."""
 
+    print(iteration, type(iteration))
     sql = '''WITH hits AS
         (SELECT DISTINCT seq_name FROM blast_hits WHERE iteration = ?)
          SELECT seq_name, seq_end, seq FROM sequences WHERE seq_name IN hits
          ORDER BY seq_name, seq_end
         '''
-    return db_conn.execute(sql, iteration)
+    return db_conn.execute(sql, str(iteration))

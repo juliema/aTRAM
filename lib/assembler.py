@@ -1,7 +1,7 @@
 """Wrappers for the various assember programs."""
 
 import os
-import shutil
+# import shutil
 import subprocess
 from lib.filer import Filer
 
@@ -12,7 +12,7 @@ class Assembler:
     def __init__(self, config):
         self.config = config
         self.filer = Filer(work_dir=config.work_dir,
-                           file_prefix=config.file_prefix)
+                           db_prefix=config.db_prefix)
 
     @property
     def work_path(self):
@@ -29,7 +29,7 @@ class Assembler:
         self.post_assembly(files)
 
     def post_assembly(self, files):
-        """Some assembers have unique post assembly steps."""
+        """Assembers have unique post assembly steps."""
 
     @staticmethod
     def factory(config):
@@ -59,21 +59,22 @@ class TrinityAssembler(Assembler):
         cmd.append('--max_memory {}'.format(self.config['max_memory']))
         cmd.append('--CPU {}'.format(self.config['cpus']))
         cmd.append("--output '{}'".format(self.work_path))
+        cmd.append('--full_cleanup')
 
         if files['is_paired']:
-            cmd.append("--left '{}'".format(files['end_1']))
-            cmd.append("--right '{}'".format(files['end_2']))
+            cmd.append("--left '{}'".format(files['end_1'].name))
+            cmd.append("--right '{}'".format(files['end_2'].name))
         else:
-            cmd.append("-single '{}'".format(files['end_1']))
-            cmd.append('--run_as_paired')
+            cmd.append("-single '{}'".format(files['end_1'].name))
+            cmd.append('--run_as_paired')  # ??
 
         return ' '.join(cmd)
 
     def post_assembly(self, files):
         """This assember has a unique post assembly step."""
-        old_file = os.path.join(self.work_path, 'Trinity.fasta')
-        shutil.move(old_file, files['raw_contigs'])
-        shutil.rmtree(self.work_path)  # Remove so other iterations will work
+        # old_file = os.path.join(self.work_path, 'Trinity.fasta')
+        # shutil.move(old_file, files['raw_contigs_name'])
+        # shutil.rmtree(self.work_path)  # Remove so other iterations will work
 
 
 class VevetAssembler(Assembler):
@@ -94,11 +95,12 @@ class AbyssAssembler(Assembler):
         cmd.append('E=0')
         cmd.append('k={}'.format(self.config['kmer']))
         # cmd.append('np={}'.format(self.config['cpus']))
-        cmd.append("name='{}'".format(files['raw_contigs']))
+        cmd.append("name='{}'".format(files['raw_contigs_name']))
 
         if files['is_paired']:
-            cmd.append("in='{} {}'".format(files['end_1'], files['end_2']))
+            cmd.append("in='{} {}'".format(files['end_1'].name,
+                                           files['end_2'].name))
         else:
-            cmd.append("se='{}'".format(files['end_1']))
+            cmd.append("se='{}'".format(files['end_1'].name))
 
         return ' '.join(cmd)
