@@ -16,6 +16,8 @@ def connect(filer):
     return db_conn
 
 
+# ########################## sequences table ##################################
+
 def create_sequences_table(db_conn):
     """Create the sequence table."""
 
@@ -33,43 +35,14 @@ def create_sequences_index(db_conn):
     db_conn.execute('CREATE INDEX sequences_index ON sequences (seq_name)')
 
 
-def create_blast_hits_table(db_conn):
-    """Reset the DB. Delete the tables and recreate them."""
-
-    db_conn.execute('''DROP INDEX IF EXISTS blast_hits_index''')
-    db_conn.execute('''DROP TABLE IF EXISTS blast_hits''')
-    sql = '''CREATE TABLE blast_hits
-        (iteration INTEGER, seq_name TEXT, seq_end TEXT, shard_name TEXT)
-        '''
-    db_conn.execute(sql)
-
-
-def create_blast_hits_index(db_conn):
-    """Create the blast_hits_index after we build the table."""
-
-    sql = 'CREATE INDEX blast_hits_index ON blast_hits (iteration, seq_name)'
-    db_conn.execute(sql)
-
-
-def insert_sequences_batch(db_conn, sequence_batch):
+def insert_sequences_batch(db_conn, batch):
     """Insert a batch of sequence records into the sqlite database."""
 
-    if sequence_batch:
+    if batch:
         sql = '''INSERT INTO sequences (seq_name, seq_end, seq)
             VALUES (?, ?, ?)
             '''
-        db_conn.executemany(sql, sequence_batch)
-        db_conn.commit()
-
-
-def insert_blast_hit_batch(db_conn, blast_hit_batch):
-    """Insert a batch of blast hit records into the sqlite database."""
-
-    if blast_hit_batch:
-        sql = '''INSERT INTO blast_hits
-            (iteration, seq_end, seq_name, shard_name) VALUES (?, ?, ?, ?)
-            '''
-        db_conn.executemany(sql, blast_hit_batch)
+        db_conn.executemany(sql, batch)
         db_conn.commit()
 
 
@@ -105,6 +78,37 @@ def get_sequences_in_shard(db_conn, limit, offset):
     return db_conn.execute(sql)
 
 
+# ########################## blast_hits table #################################
+
+def create_blast_hits_table(db_conn):
+    """Reset the DB. Delete the tables and recreate them."""
+
+    db_conn.execute('''DROP INDEX IF EXISTS blast_hits_index''')
+    db_conn.execute('''DROP TABLE IF EXISTS blast_hits''')
+    sql = '''CREATE TABLE blast_hits
+        (iteration INTEGER, seq_name TEXT, seq_end TEXT, shard_name TEXT)
+        '''
+    db_conn.execute(sql)
+
+
+def create_blast_hits_index(db_conn):
+    """Create the blast_hits_index after we build the table."""
+
+    sql = 'CREATE INDEX blast_hits_index ON blast_hits (iteration, seq_name)'
+    db_conn.execute(sql)
+
+
+def insert_blast_hit_batch(db_conn, batch):
+    """Insert a batch of blast hit records into the sqlite database."""
+
+    if batch:
+        sql = '''INSERT INTO blast_hits
+            (iteration, seq_end, seq_name, shard_name) VALUES (?, ?, ?, ?)
+            '''
+        db_conn.executemany(sql, batch)
+        db_conn.commit()
+
+
 def get_blast_hits(db_conn, iteration):
     """Get all blast hits for the iteration."""
 
@@ -115,3 +119,36 @@ def get_blast_hits(db_conn, iteration):
          ORDER BY seq_name, seq_end
         '''
     return db_conn.execute(sql, str(iteration))
+
+
+# ####################### assembled_contigs table #############################
+
+def create_assembled_contigs_table(db_conn):
+    """Reset the DB. Delete the tables and recreate them."""
+
+    db_conn.execute('''DROP INDEX IF EXISTS assembled_contigs_index''')
+    db_conn.execute('''DROP TABLE IF EXISTS assembled_contigs''')
+    sql = '''CREATE TABLE assembled_contigs
+        (iteration INTEGER, assembly_id TEXT, description TEXT, seq TEXT)
+        '''
+    db_conn.execute(sql)
+
+
+def create_assembled_contigs_index(db_conn):
+    """Create the blast_hits_index after we build the table."""
+
+    sql = '''CREATE INDEX assembled_contigs_index ON assembled_contigs
+        (iteration, assembly_id)
+        '''
+    db_conn.execute(sql)
+
+
+def insert_assembled_contigs_batch(db_conn, batch):
+    """Insert a batch of blast hit records into the sqlite database."""
+
+    if batch:
+        sql = '''INSERT INTO assembled_contigs
+            (iteration, assembly_id, description, seq) VALUES (?, ?, ?, ?)
+            '''
+        db_conn.executemany(sql, batch)
+        db_conn.commit()

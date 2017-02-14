@@ -75,7 +75,7 @@ class AtramPreprocessor:
             logging.info('Loading "%s" into sqlite database', file_name)
 
             with open(file_name) as sra_file:
-                sequence_batch = []  # The batch of records to insert
+                batch = []  # The batch of records to insert
 
                 seq = ''        # The sequence string. A DB field
                 seq_end = ''    # Which end? 1 or 2. A DB field
@@ -91,7 +91,7 @@ class AtramPreprocessor:
                     # Handle a header line
                     elif line[0] in ['>', '@']:
                         if seq:  # Append last record to the batch?
-                            sequence_batch.append((seq_name, seq_end, seq))
+                            batch.append((seq_name, seq_end, seq))
 
                         seq = ''        # Reset the sequence
                         is_seq = True   # Reset the state flag
@@ -109,14 +109,14 @@ class AtramPreprocessor:
                     elif line[0].isalpha() and is_seq:
                         seq += line.rstrip()  # ''.join([strs])
 
-                    if len(sequence_batch) >= db.BATCH_SIZE:
-                        db.insert_sequences_batch(self.db_conn, sequence_batch)
-                        sequence_batch = []
+                    if len(batch) >= db.BATCH_SIZE:
+                        db.insert_sequences_batch(self.db_conn, batch)
+                        batch = []
 
                 if seq:
-                    sequence_batch.append((seq_name, seq_end, seq))
+                    batch.append((seq_name, seq_end, seq))
 
-                db.insert_sequences_batch(self.db_conn, sequence_batch)
+                db.insert_sequences_batch(self.db_conn, batch)
 
     def assign_seqs_to_shards(self):
         """Put the sequences into the DB shards. What we doing is dividing all

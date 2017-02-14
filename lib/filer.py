@@ -10,9 +10,9 @@ import tempfile
 class Filer:
     """Handle file naming as well as some file creation and deletion."""
 
-    def __init__(self, work_dir='', file_prefix=''):
+    def __init__(self, work_dir='', db_prefix=''):
         self.work_dir = work_dir
-        self.file_prefix = file_prefix
+        self.db_prefix = db_prefix
 
     def log_setup(self):
         """Set up the logs for a common format. We need the prefix of the
@@ -20,7 +20,7 @@ class Filer:
         message. Both are gotten from the user input.
         """
 
-        file_name = '{}{}.log'.format(self.file_prefix, sys.argv[0][:-3])
+        file_name = '{}{}.log'.format(self.db_prefix, sys.argv[0][:-3])
 
         logging.basicConfig(
             filename=os.path.join(self.work_dir, file_name),
@@ -35,7 +35,7 @@ class Filer:
         if iteration:
             file_name = file_name.format(str(iteration).zfill(2))
 
-        file_name = '{}{}'.format(self.file_prefix, file_name)
+        file_name = '{}{}'.format(self.db_prefix, file_name)
         return os.path.join(self.work_dir, file_name)
 
     def db_file_name(self):
@@ -73,15 +73,15 @@ class Filer:
 
         return self.path('blast_contigs_{}')
 
-    def contig_score_db(self):
+    def contig_score_db(self, iteration):
         """Create the contig blast DB name."""
 
-        return self.path('contig_scores_{}')
+        return self.path('contig_scores_{}', iteration=iteration)
 
-    def contig_score_file(self):
+    def contig_score_file(self, iteration):
         """Create the contig blast result file name."""
 
-        return self.contig_score_db() + '.csv'
+        return self.contig_score_db(iteration) + '.csv'
 
     def contig_unfiltered_file(self, iteration):
         """Create the file name for the contigs before they are filtered."""
@@ -100,24 +100,30 @@ class Filer:
 
         return '{}_{}.txt'.format(shard_name, str(iteration).zfill(2))
 
-    @staticmethod
-    def temp_file():
+    def temp_file(self):
         """Create temp files for output. Nest these in a "with" statement."""
 
-        return tempfile.NamedTemporaryFile(mode='w')
+        return tempfile.NamedTemporaryFile(mode='w', dir=self.work_dir)
 
     @staticmethod
-    def open_assembly_files():
+    def open_assembler_files():
+        """TODO Will be moved into Assembler.py"""
         return {
-            'end_1': Filer.temp_file(),
-            'end_2': Filer.temp_file(),
-            'raw_contigs': Filer.temp_file(),
-            'new_contigs': Filer.temp_file(),
-            'old_contigs': Filer.temp_file(),
+            'end_1': tempfile.NamedTemporaryFile(mode='w', dir='.'),
+            'end_2': tempfile.NamedTemporaryFile(mode='w', dir='.'),
+            'raw_contigs': tempfile.NamedTemporaryFile(mode='w', dir='.'),
+            'new_contigs': tempfile.NamedTemporaryFile(mode='w', dir='.'),
+            'prev_contigs': tempfile.NamedTemporaryFile(mode='w', dir='.'),
             'is_paired': False}
 
     @staticmethod
-    def close_assembly_files(files):
+    def close_assembler_files(files):
+        """TODO Will be moved into Assembler.py"""
         for file_ in files.values():
             if not isinstance(file_, bool):
                 file_.close()
+
+    def remove_with_wildcards(self, pattern):
+        pattern += '.*'
+        for file_ in glob.glob(pattern):
+            os.remove(file_)
