@@ -6,8 +6,6 @@ import logging
 import subprocess
 import multiprocessing
 from Bio import SeqIO
-from Bio.Blast.Applications import NcbiblastnCommandline as tblastn
-from Bio.Blast.Applications import NcbitblastnCommandline as blastn
 import lib.db as db
 import lib.bio as bio
 from lib.filer import Filer
@@ -22,7 +20,7 @@ class Atram:
         self.filer = None
         self.config = None
         self.db_conn = None
-        self.assember = None
+        self.assembler = None
         self.iteration = 0
         self.shard_list = None
 
@@ -44,7 +42,7 @@ class Atram:
         db.create_assembled_contigs_table(self.db_conn)
         db.create_assembled_contigs_index(self.db_conn)
 
-        self.assember = Assembler.factory(self.config)
+        self.assembler = Assembler.factory(self.config)
         self.shard_list = self.filer.all_blast_shard_names()
 
         self.main_loop()
@@ -58,30 +56,39 @@ class Atram:
             logging.info('aTRAM iteration %i', self.iteration)
 
             self.blast_all_targets_against_sra(target)
-            assembler_files = self.filer.open_assembler_files()
+            assembler_files = self.filer.open_assembler_files(self.iteration)
             self.write_paired_end_files(assembler_files)
 
             cwd = os.getcwd()
             try:
-                os.chdir(self.config['work_dir'])
-                self.assember.assemble(assembler_files)
+                os.chdir(self.config['work_dir'])  # some assemblers need this
+                self.assembler.assemble(assembler_files)
             finally:
                 os.chdir(cwd)
 
             self.filter_contigs(assembler_files)
-            target = self.create_target_from_contigs()
-            self.cleanup_files(assembler_files)
 
-    def create_target_from_contigs(self):
+            target = self.create_targets_from_contigs()
+
+    def create_targets_from_contigs(self):
         """Crate a new file with the contigs that will be used as the
         next target.
         """
 
+        target = self.filer.target_file(self.iteration)
+        with open(target, 'w') as target_file:
+            for row in db.get_assembled_contigs(self.db_conn, self.iteration):
+                target_file.write('>{}\n'.format(row[0]))
+                target_file.write('{}\n'.format(row[1]))
+
+        return target
+
     def cleanup_files(self, assembler_files):
         """Cleanup files"""
-        self.filer.close_assembler_files(assembler_files)
-        blast_db = self.filer.contig_score_db(self.iteration)
-        self.filer.remove_with_wildcards(blast_db)
+
+        # self.filer.close_assembler_files(assembler_files)
+        # blast_db = self.filer.contig_score_db(self.iteration)
+        # self.filer.remove_all_starting_with(blast_db)
 
     def blast_all_targets_against_sra(self, target):
         """Blast the targets against the SRA databases. We're using a
@@ -98,8 +105,10 @@ class Atram:
             'iteration': self.iteration,
             'db_prefix': self.config.db_prefix,
             'genetic_code': self.config.genetic_code,
-            'max_target_seqs': self.config.max_target_seqs,
-        }
+            'max_target_seqs': self.config.max_target_seqs}
+
+        with open(blast_params['target']) as in_file:
+            lines = in_file.readlines()
 
         with multiprocessing.Pool(processes=self.config.cpus) as pool:
             results = [pool.apply_async(
@@ -113,13 +122,14 @@ class Atram:
         end to the appropriate fasta files.
         """
 
+        assembler_files['is_paired'] = 0
         for row in db.get_blast_hits(self.db_conn, self.iteration):
             if row[1] and row[1].endswith(('1', '2')):
                 end = row[1][-1]
                 key = 'end_' + end
                 assembler_files[key].write('>{}/{}\n'.format(row[0], end))
                 assembler_files[key].write('{}\n'.format(row[2]))
-                assembler_files['is_paired'] = True
+                assembler_files['is_paired'] += int(end == '2')
             else:
                 assembler_files['end_1'].write('>{}\n'.format(row[0]))
                 assembler_files['end_1'].write('{}\n'.format(row[2]))
@@ -132,17 +142,22 @@ class Atram:
         self.create_blast_db_from_contigs(blast_db, raw_contigs)
         self.blast_target_against_contigs(blast_db, assembler_files)
         filtered_scores = self.filter_contig_scores(assembler_files)
-        self.save_contigs(assembler_files, filtered_scores)
+        self.save_contigs(assembler_files, filtered_scores, raw_contigs)
 
-    def save_contigs(self, assembler_files, filtered_scores):
+    def save_contigs(self, assembler_files, filtered_scores, raw_contigs):
         """Save the contigs to the database."""
 
         batch = []
-        with open(assembler_files['raw_contigs'].name) as in_file:
+        with open(raw_contigs) as in_file:
             for contig in SeqIO.parse(in_file, 'fasta'):
                 if contig.id in filtered_scores:
-                    batch.append((self.iteration, contig.id,
-                                  contig.description, str(contig.seq)))
+                    score = filtered_scores[contig.id]
+                    batch.append(
+                        (self.iteration, contig.id,
+                         str(contig.seq), contig.description,
+                         score['bit_score'], score['target_start'],
+                         score['target_end'], score['contig_start'],
+                         score['contig_end'], score['contig_len']))
         db.insert_assembled_contigs_batch(self.db_conn, batch)
 
     @staticmethod
@@ -158,19 +173,21 @@ class Atram:
         will have the scores for later processing.
         """
 
-        blast_args = dict(
-            db=blast_db,
-            query=self.config.target,
-            out=assembler_files['new_contigs'].name,
-            outfmt="'10 qseqid sseqid bitscore qstart qend sstart send slen'")
+        cmd = []
 
         if self.config.protein:
-            cmd = str(blastn(
-                cmd='tblastn',
-                db_gencode=self.config.genetic_code,
-                **blast_args))
+            cmd.append('tblastn')
+            cmd.append('-db_gencode {}'.format(self.config.genetic_code))
         else:
-            cmd = str(tblastn(cmd='blastn', task='blastn', **blast_args))
+            cmd.append('blastn')
+
+        cmd.append('-db {}'.format(blast_db))
+        cmd.append('-query {}'.format(self.config.target))
+        cmd.append('-out {}'.format(assembler_files['new_contigs'].name))
+        cmd.append(
+            "-outfmt '10 qseqid sseqid bitscore qstart qend sstart send slen'")
+
+        cmd = ' '.join(cmd)
 
         subprocess.check_call(cmd, shell=True)
 
@@ -200,8 +217,12 @@ def blast_target_against_sra(blast_params, shard_name, iteration):
                   db_prefix=blast_params['db_prefix'])
     db_conn = db.connect(filer)
 
-    with filer.temp_file() as results_file:
+    with filer.temp_file(
+            prefix='blast_results',
+            iteration=blast_params['iteration']) as results_file:
+
         cmd = create_blast_command(blast_params, shard_name, results_file.name)
+
         subprocess.check_call(cmd, shell=True)
         insert_blast_hits(db_conn, results_file, iteration, shard_name)
 
@@ -226,17 +247,24 @@ def create_blast_command(blast_params, shard_name, out):
     """Build the blast command to blast the target against the SRA database
     shards.
     """
-    blast_args = dict(outfmt="'10 sseqid'",
-                      max_target_seqs=blast_params['max_target_seqs'],
-                      out=out, db=shard_name, query=blast_params['target'])
+
+    cmd = []
+
     if blast_params['protein'] and blast_params['iteration'] == 1:
-        cmd = str(blastn(cmd='tblastn',
-                         db_gencode=blast_params['genetic_code'],
-                         **blast_args))
+        cmd.append('tblastn')
+        cmd.append('-db_gencode {}'.format(blast_params['genetic_code']))
     else:
-        cmd = str(tblastn(
-            cmd='blastn', task='blastn', evalue=blast_params['evalue'],
-            **blast_args))
+        cmd.append('blastn')
+        cmd.append('-evalue {}'.format(blast_params['evalue']))
+
+    cmd.append("-outfmt '10 sseqid'")
+    cmd.append('-max_target_seqs {}'.format(blast_params['max_target_seqs']))
+    cmd.append('-out {}'.format(out))
+    cmd.append('-db {}'.format(shard_name))
+    cmd.append('-query {}'.format(blast_params['target']))
+
+    cmd = ' '.join(cmd)
+
     return cmd
 
 

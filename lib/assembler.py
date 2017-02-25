@@ -1,5 +1,6 @@
 """Wrappers for the various assember programs."""
 
+import os
 import shutil
 import subprocess
 from lib.filer import Filer
@@ -16,10 +17,13 @@ class Assembler:
     @property
     def work_path(self):
         """The output directory name may have unique requirements."""
+
         return self.config.work_dir
 
     def command(self, files):
         """Build the command for assembly."""
+
+        raise NotImplementedError()
 
     def assemble(self, files):
         """Use the assembler to build up the contigs."""
@@ -33,6 +37,7 @@ class Assembler:
     @staticmethod
     def factory(config):
         """Return the assembler based upon the configuration options."""
+
         if config['assembler'].lower() == 'trinity':
             return TrinityAssembler(config)
         elif config['assembler'].lower() == 'velvet':
@@ -65,12 +70,13 @@ class TrinityAssembler(Assembler):
             cmd.append("--right '{}'".format(files['end_2'].name))
         else:
             cmd.append("-single '{}'".format(files['end_1'].name))
-            cmd.append('--run_as_paired')  # ??
+            cmd.append('--run_as_paired')
 
         return ' '.join(cmd)
 
     def post_assembly(self, files):
         """This assember has a unique post assembly step."""
+
         shutil.move('trinity.Trinity.fasta', files['raw_contigs'].name)
 
 
@@ -101,3 +107,14 @@ class AbyssAssembler(Assembler):
             cmd.append("se='{}'".format(files['end_1'].name))
 
         return ' '.join(cmd)
+
+    def post_assembly(self, files):
+        """This assember has a unique post assembly step."""
+
+        src = os.path.realpath(files['raw_contigs'].name + '-unitigs.fa')
+        dst = files['raw_contigs'].name
+
+        # shutil.move(src, files['raw_contigs'].name)
+        with open(src) as in_file, open(dst, 'w') as out_file:
+            for line in in_file:
+                out_file.write(line)

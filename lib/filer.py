@@ -29,11 +29,8 @@ class Filer:
             datefmt='%Y-%m-%d %H:%M:%S')
         logging.info(' '.join(sys.argv))
 
-    def path(self, file_name, iteration=None):
+    def path(self, file_name):
         """Standardize file names with a work directory and a file prefix."""
-
-        if iteration:
-            file_name = file_name.format(str(iteration).zfill(2))
 
         file_name = '{}{}'.format(self.db_prefix, file_name)
         return os.path.join(self.work_dir, file_name)
@@ -62,68 +59,84 @@ class Filer:
         file_name = 'blast_{}'.format(str(shard_index + 1).zfill(3))
         return self.path(file_name)
 
-    def paired_end_file(self, iteration, end):
-        """Create the file name of the paired end file."""
-
-        file_name = 'matching_seqs_{}_{}.fasta'.format(iteration, end)
-        return self.path(file_name)
-
-    def contig_blast_file(self):
-        """Create the file name of the blast DB for the assembled contigs."""
-
-        return self.path('blast_contigs_{}')
-
     def contig_score_db(self, iteration):
         """Create the contig blast DB name."""
 
-        return self.path('contig_scores_{}', iteration=iteration)
+        file_name = 'tmp_contig_scores_{}'.format(str(iteration).zfill(2))
+        return os.path.join(self.work_dir, file_name)
 
-    def contig_score_file(self, iteration):
-        """Create the contig blast result file name."""
+    def target_file(self, iteration):
+        """Create a target file name for the next iteration."""
 
-        return self.contig_score_db(iteration) + '.csv'
+        file_name = 'tmp_target_{}.fasta'.format(str(iteration).zfill(2))
+        return os.path.join(self.work_dir, file_name)
 
-    def contig_unfiltered_file(self, iteration):
-        """Create the file name for the contigs before they are filtered."""
-
-        return self.path('raw_contigs_{}.fasta'.format(
-            str(iteration).zfill(2)))
-
-    def contig_filtered_file(self):
-        """Create the file name for the contigs after they are filtered."""
-
-        return self.path('contigs_{}.fasta')
-
-    @staticmethod
-    def blast_target_against_sra(shard_name, iteration):
-        """Get the file name of the blast result file."""
-
-        return '{}_{}.txt'.format(shard_name, str(iteration).zfill(2))
-
-    def temp_file(self):
+    def temp_file(self, prefix='', iteration=None):
         """Create temp files for output. Nest these in a "with" statement."""
 
-        return tempfile.NamedTemporaryFile(mode='w', dir=self.work_dir)
+        if iteration:
+            prefix = 'tmp_{}_{}_'.format(prefix, iteration)
 
-    @staticmethod
-    def open_assembler_files():
-        """TODO Will be moved into Assembler.py"""
+        return tempfile.NamedTemporaryFile(
+            mode='w', dir=self.work_dir, prefix=prefix, delete=False)
+
+    def open_assembler_files(self, iteration=None):
+        """Open files required by the assembler."""
+
         return {
-            'end_1': tempfile.NamedTemporaryFile(mode='w', dir='.'),
-            'end_2': tempfile.NamedTemporaryFile(mode='w', dir='.'),
-            'raw_contigs': tempfile.NamedTemporaryFile(mode='w', dir='.'),
-            'new_contigs': tempfile.NamedTemporaryFile(mode='w', dir='.'),
-            'prev_contigs': tempfile.NamedTemporaryFile(mode='w', dir='.'),
+            'end_1': self.temp_file('end_1', iteration=iteration),
+            'end_2': self.temp_file('end_2', iteration=iteration),
+            'raw_contigs': self.temp_file('raw_contigs', iteration=iteration),
+            'new_contigs': self.temp_file('new_contigs', iteration=iteration),
             'is_paired': False}
 
     @staticmethod
     def close_assembler_files(files):
-        """TODO Will be moved into Assembler.py"""
-        for file_ in files.values():
-            if not isinstance(file_, bool):
-                file_.close()
+        """Close files required by the assembler."""
 
-    def remove_with_wildcards(self, pattern):
+        for key, file in files.items():
+            if key not in ['is_paired']:
+                file.close()
+
+    @staticmethod
+    def remove_all_starting_with(pattern):
+        """Remove all files starting with the given pattern. This is
+        currently used to remove blast DB files.
+        """
+
         pattern += '.*'
-        for file_ in glob.glob(pattern):
-            os.remove(file_)
+        for file in glob.glob(pattern):
+            os.remove(file)
+
+    # def paired_end_file(self, iteration, end):
+    #     """Create the file name of the paired end file."""
+    #
+    #     file_name = 'matching_seqs_{}_{}.fasta'.format(iteration, end)
+    #     return self.path(file_name)
+
+    # def contig_blast_file(self):
+    #     """Create the file name of the blast DB for the assembled contigs."""
+    #
+    #     return self.path('blast_contigs_{}')
+
+    # def contig_score_file(self, iteration):
+    #     """Create the contig blast result file name."""
+    #
+    #     return self.contig_score_db(iteration) + '.csv'
+
+    # def contig_unfiltered_file(self, iteration):
+    #     """Create the file name for the contigs before they are filtered."""
+    #
+    #     return self.path('raw_contigs_{}.fasta'.format(
+    #         str(iteration).zfill(2)))
+
+    # def contig_filtered_file(self):
+    #     """Create the file name for the contigs after they are filtered."""
+    #
+    #     return self.path('contigs_{}.fasta')
+
+    # @staticmethod
+    # def blast_target_against_sra(shard_name, iteration):
+    #     """Get the file name of the blast result file."""
+    #
+    #     return '{}_{}.txt'.format(shard_name, str(iteration).zfill(2))

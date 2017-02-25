@@ -18,10 +18,3 @@ COMPLEMENT = str.maketrans('ACGTUWSMKRYBDHVNXacgtuwsmkrybdhvnx',
 def reverse_complement(seq):
     """Reverse complement a nucleotide squence. We added some wildcards."""
     return seq.translate(COMPLEMENT)[::-1]
-
-
-# def makeblastdb(config, **kwargs):
-#     """Build the command line for the makeblastdb program. BioPython seems
-#     to be missing this.
-#     """
-#     pass
