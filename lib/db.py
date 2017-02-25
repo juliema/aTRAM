@@ -32,7 +32,8 @@ def create_sequences_index(db_conn):
     program significantly.
     """
 
-    db_conn.execute('CREATE INDEX sequences_index ON sequences (seq_name)')
+    sql = 'CREATE INDEX sequences_index ON sequences (seq_name, seq_end)'
+    db_conn.execute(sql)
 
 
 def insert_sequences_batch(db_conn, batch):
@@ -112,7 +113,6 @@ def insert_blast_hit_batch(db_conn, batch):
 def get_blast_hits(db_conn, iteration):
     """Get all blast hits for the iteration."""
 
-    print(iteration, type(iteration))
     sql = '''WITH hits AS
         (SELECT DISTINCT seq_name FROM blast_hits WHERE iteration = ?)
          SELECT seq_name, seq_end, seq FROM sequences WHERE seq_name IN hits
@@ -129,7 +129,9 @@ def create_assembled_contigs_table(db_conn):
     db_conn.execute('''DROP INDEX IF EXISTS assembled_contigs_index''')
     db_conn.execute('''DROP TABLE IF EXISTS assembled_contigs''')
     sql = '''CREATE TABLE assembled_contigs
-        (iteration INTEGER, assembly_id TEXT, description TEXT, seq TEXT)
+        (iteration INTEGER, contig_id TEXT, seq TEXT, description TEXT,
+         bit_score NUMERIC, target_start INTEGER, target_end INTEGER,
+         contig_start INTEGER, contig_end INTEGER, contig_len INTEGER)
         '''
     db_conn.execute(sql)
 
@@ -137,8 +139,8 @@ def create_assembled_contigs_table(db_conn):
 def create_assembled_contigs_index(db_conn):
     """Create the blast_hits_index after we build the table."""
 
-    sql = '''CREATE INDEX assembled_contigs_index ON assembled_contigs
-        (iteration, assembly_id)
+    sql = '''CREATE INDEX assembled_contigs_index
+        ON assembled_contigs (iteration, contig_id)
         '''
     db_conn.execute(sql)
 
@@ -148,7 +150,18 @@ def insert_assembled_contigs_batch(db_conn, batch):
 
     if batch:
         sql = '''INSERT INTO assembled_contigs
-            (iteration, assembly_id, description, seq) VALUES (?, ?, ?, ?)
+            (iteration, contig_id, seq, description, bit_score,
+             target_start, target_end, contig_start, contig_end, contig_len)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             '''
         db_conn.executemany(sql, batch)
         db_conn.commit()
+
+
+def get_assembled_contigs(db_conn, iteration):
+    """Get all assembled contigs for the iteration so that we can use them
+    as the targets in the next atram iteration.
+    """
+
+    sql = 'SELECT contig_id, seq FROM assembled_contigs WHERE iteration = ?'
+    return db_conn.execute(sql, str(iteration))
