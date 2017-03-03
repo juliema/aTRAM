@@ -165,3 +165,17 @@ def get_assembled_contigs(db_conn, iteration):
 
     sql = 'SELECT contig_id, seq FROM assembled_contigs WHERE iteration = ?'
     return db_conn.execute(sql, str(iteration))
+
+
+def get_all_assembled_contigs(db_conn):
+    """Get all assembled contigs for the iteration so that we can use them
+    as the targets in the next atram iteration.
+    """
+
+    sql = '''SELECT iteration, contig_id, seq, description, bit_score,
+        target_start, target_end, contig_start, contig_end, contig_len
+        FROM assembled_contigs ORDER BY bit_score DESC, iteration
+        '''
+
+    db_conn.row_factory = sqlite3.Row
+    return db_conn.execute(sql)

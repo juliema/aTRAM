@@ -10,9 +10,9 @@ import tempfile
 class Filer:
     """Handle file naming as well as some file creation and deletion."""
 
-    def __init__(self, work_dir='', db_prefix=''):
+    def __init__(self, work_dir='', data_prefix=''):
         self.work_dir = work_dir
-        self.db_prefix = db_prefix
+        self.data_prefix = data_prefix
 
     def log_setup(self):
         """Set up the logs for a common format. We need the prefix of the
@@ -20,7 +20,7 @@ class Filer:
         message. Both are gotten from the user input.
         """
 
-        file_name = '{}{}.log'.format(self.db_prefix, sys.argv[0][:-3])
+        file_name = '{}.{}.log'.format(self.data_prefix, sys.argv[0][:-3])
 
         logging.basicConfig(
             filename=os.path.join(self.work_dir, file_name),
@@ -32,18 +32,24 @@ class Filer:
     def path(self, file_name):
         """Standardize file names with a work directory and a file prefix."""
 
-        file_name = '{}{}'.format(self.db_prefix, file_name)
+        file_name = '{}{}'.format(self.data_prefix, file_name)
         return os.path.join(self.work_dir, file_name)
 
     def db_file_name(self):
         """Create an SQLite3 DB name."""
 
-        return self.path('sqlite.db')
+        return self.path('.sqlite.db')
+
+    def blast_shard_name(self, shard_index):
+        """Create the BLAST shard DB names."""
+
+        file_name = '.blast_{}'.format(str(shard_index + 1).zfill(3))
+        return self.path(file_name)
 
     def all_blast_shard_names(self):
         """Get all of the BLAST DB names built by the preprocessor."""
 
-        pattern = self.path('blast_*.nhr')
+        pattern = self.path('.blast_*.nhr')
         files = glob.glob(pattern)
         if not files:
             print(('No blast shards found. Looking for "{}"\n'
@@ -53,41 +59,47 @@ class Filer:
 
         return sorted([f[:-4] for f in files])
 
-    def blast_shard_name(self, shard_index):
-        """Create the BLAST shard DB names."""
-
-        file_name = 'blast_{}'.format(str(shard_index + 1).zfill(3))
-        return self.path(file_name)
-
     def contig_score_db(self, iteration):
         """Create the contig blast DB name."""
 
-        file_name = 'tmp_contig_scores_{}'.format(str(iteration).zfill(2))
+        file_name = '.tmp_contig_scores_{}'.format(str(iteration).zfill(2))
         return os.path.join(self.work_dir, file_name)
 
     def target_file(self, iteration):
         """Create a target file name for the next iteration."""
 
-        file_name = 'tmp_target_{}.fasta'.format(str(iteration).zfill(2))
+        file_name = '.tmp_target_{}.fasta'.format(str(iteration).zfill(2))
         return os.path.join(self.work_dir, file_name)
 
-    def temp_file(self, prefix='', iteration=None):
-        """Create temp files for output. Nest these in a "with" statement."""
+    def output_result_name(self, prefix):
+        """Build the output file name."""
 
-        if iteration:
-            prefix = 'tmp_{}_{}_'.format(prefix, iteration)
+        file_name = '{}.assembled_contigs.fasta'.format(prefix)
+        return os.path.join(self.work_dir, file_name)
 
-        return tempfile.NamedTemporaryFile(
-            mode='w', dir=self.work_dir, prefix=prefix, delete=False)
+    def temp_dir(self):
+        """Create a temp dir that will hold files needed by blast and the
+        assemblers.
+        """
+
+        return tempfile.TemporaryDirectory(dir=self.work_dir)
+
+    def temp_file(self, temp_dir=None):
+        """Create temp files for output."""
+
+        if not temp_dir:
+            temp_dir = self.work_dir
+
+        return tempfile.NamedTemporaryFile(mode='w', dir=temp_dir)
 
     def open_assembler_files(self, iteration=None):
         """Open files required by the assembler."""
 
         return {
-            'end_1': self.temp_file('end_1', iteration=iteration),
-            'end_2': self.temp_file('end_2', iteration=iteration),
-            'raw_contigs': self.temp_file('raw_contigs', iteration=iteration),
-            'new_contigs': self.temp_file('new_contigs', iteration=iteration),
+            'end_1': self.temp_file('.end_1', iteration=iteration),
+            'end_2': self.temp_file('.end_2', iteration=iteration),
+            'raw_contigs': self.temp_file('.raw_contigs', iteration=iteration),
+            'new_contigs': self.temp_file('.new_contigs', iteration=iteration),
             'is_paired': False}
 
     @staticmethod

@@ -44,9 +44,10 @@ class AtramPreprocessor:
                     >DBRHHJN1:427:H9YYAADXX:1:1101:10006:63769/2
                     CGAAAA...
                 """,
-            args='sra_files db_prefix work_dir shard_count cpus')
+            args=('sra_files data_prefix_preprocessor work_dir '
+                  'shard_count cpus'))
 
-        filer = Filer(self.config.work_dir, self.config.db_prefix)
+        filer = Filer(self.config.work_dir, self.config.data_prefix)
         filer.log_setup()
 
         self.db_conn = db.connect(filer)
@@ -168,7 +169,7 @@ class AtramPreprocessor:
             for shard_index, shard_params in enumerate(self.shard_list):
                 results.append(pool.apply_async(
                     create_blast_db,
-                    (self.config.work_dir, self.config.db_prefix,
+                    (self.config.work_dir, self.config.data_prefix,
                      shard_params, shard_index)))
 
             _ = [result.get() for result in results]
@@ -176,7 +177,7 @@ class AtramPreprocessor:
         logging.info('Finished making blast DBs')
 
 
-def create_blast_db(work_dir, db_prefix, shard_params, shard_index):
+def create_blast_db(work_dir, data_prefix, shard_params, shard_index):
     """Create a blast DB from the shard. We fill a fasta file with the
     appropriate sequences and hand things off to the makeblastdb program.
 
@@ -184,7 +185,7 @@ def create_blast_db(work_dir, db_prefix, shard_params, shard_index):
     shared with the parent (caller) hence we cannot use instance variables.
     """
 
-    filer = Filer(work_dir=work_dir, db_prefix=db_prefix)
+    filer = Filer(work_dir=work_dir, data_prefix=data_prefix)
     blast_db = filer.blast_shard_name(shard_index)
 
     with filer.temp_file() as fasta_file:
