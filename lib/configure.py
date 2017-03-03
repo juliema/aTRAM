@@ -3,6 +3,7 @@
 import os
 import argparse
 import textwrap
+from datetime import date
 import psutil
 from lib.dict_attrs import DictAttrs
 
@@ -13,6 +14,7 @@ class Configure:
     default = {
         'abyss': 'abyss-pe',
         'bit_score': 70.0,
+        'data_prefix': 'atram_db_' + date.today().isoformat(),
         'evalue': 1e-9,
         'genetic_code': 1,
         'iterations': 5,
@@ -20,53 +22,61 @@ class Configure:
         'max_memory': '50G',
         'max_target_seqs': 100000000,
         'shard_size': 2.5e8,
-        'trinity': 'Trinity',
     }
 
-    # All command-line arguments defined here for consistency between programs
-    # pylint: disable=undefined-variable
     args = {
         'assembler': lambda p: p.add_argument(
             '-a', '--assembler', required=True,
-            help='Which assembler to use. (Trinity, Abyss, Velvet)'),
+            help=('Which assembler to use. Required. '
+                  '(One of: Trinity, Abyss, Velvet)')),
 
         'bit_score': lambda p: p.add_argument(
             '-b', '--bit-score', type=float,
             default=Configure.default['bit_score'],
             help=('Remove contigs that have a value less than this. '
-                  'The default is {}').format(Configure.default['bit_score'])),
+                  'The default is "{}"').format(
+                    Configure.default['bit_score'])),
 
         'cpus': lambda p: p.add_argument(
             '-c', '--cpus', type=int, default=0,
             help='Number of cpus to use.'),
 
-        'db_prefix': lambda p: p.add_argument(
-            '-d', '--db-prefix', default='',
+        'data_prefix_atram': lambda p: p.add_argument(
+            '-d', '--db-prefix', default=Configure.default['data_prefix'],
+            help=('This needs to match the --db-prefix you entered for '
+                  'atram_preprocessor.py.')),
+
+        'data_prefix_preprocessor': lambda p: p.add_argument(
+            '-d', '--db-prefix', default=Configure.default['data_prefix'],
             help=('This will get prepended to all blast and database files '
-                  'so you can identify different database sets.')),
+                  'so you can identify different database sets. These files '
+                  'will be placed into the --work-dir. '
+                  'The default is "{}"').format(
+                    Configure.default['data_prefix'])),
 
         'evalue': lambda p: p.add_argument(
             '-e', '--evalue', type=float, default=Configure.default['evalue'],
-            help='The default evalue is {}.'.format(
+            help='The default evalue is "{}".'.format(
                 Configure.default['evalue'])),
 
         'genetic_code': lambda p: p.add_argument(
             '-g', '--genetic-code', type=int,
             default=Configure.default['genetic_code'],
-            help='The genetic code to use. The default is {}.'.format(
+            help=('The genetic code to use during blast runs. '
+                  'The default is "{}".').format(
                 Configure.default['genetic_code'])),
 
         'iterations': lambda p: p.add_argument(
             '-i', '--iterations', type=int,
             default=Configure.default['iterations'],
             help=('The number of pipline iterations. '
-                  'The default is {}.').format(
+                  'The default is "{}".').format(
                       Configure.default['iterations'])),
 
         'kmer': lambda p: p.add_argument(
             '-k', '--kmer', type=int, default=Configure.default['kmer'],
             help=('k-mer size for assembers that use it. '
-                  'The default is {}.').format(Configure.default['kmer'])),
+                  'The default is "{}".').format(Configure.default['kmer'])),
 
         'max_memory': lambda p: p.add_argument(
             '-m', '--max_memory', default=0,
@@ -75,12 +85,12 @@ class Configure:
         'max_target_seqs': lambda p: p.add_argument(
             '-M', '--max-target-seqs',
             type=int, default=Configure.default['max_target_seqs'],
-            help='Maximum hit sequences per shard. Default is {}.'.format(
+            help='Maximum hit sequences per shard. Default is "{}".'.format(
                 Configure.default['max_target_seqs'])),
 
-        'output': lambda p: p.add_argument(
-            '-o', '--output', required=True,
-            help='The path to where the output will be written.'),
+        'output_prefix': lambda p: p.add_argument(
+            '-o', '--output-prefix', required=True,
+            help='The give the aTRAM output files this prefix. Required.'),
 
         'protein': lambda p: p.add_argument(
             '-p', '--protein', nargs='?', const=True, default=False,
@@ -93,11 +103,12 @@ class Configure:
         'sra_files': lambda p: p.add_argument(
             'sra_files', nargs='+',
             help=('Sequence read archives in fasta or fastq format. '
-                  'May contain wildcards.')),
+                  'You may use wildcards or list multiple files.')),
 
         'target': lambda p: p.add_argument(
             '-t', '--target', required=True,
-            help='The path to the fasta file with sequences of interest.'),
+            help=('The path to the fasta file with sequences of interest. '
+                  'Required.')),
 
         'work_dir': lambda p: p.add_argument(
             '-w', '--work-dir', default='.',
@@ -105,7 +116,6 @@ class Configure:
                   'aTRAM programs and other temporary files. Defaults to '
                   'the current working directory.')),
     }
-    # pylint: enable=undefined-variable
 
     def __init__(self):
         self.config = None

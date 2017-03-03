@@ -12,7 +12,7 @@ class Assembler:
     def __init__(self, config):
         self.config = config
         self.filer = Filer(work_dir=config.work_dir,
-                           db_prefix=config.db_prefix)
+                           data_prefix=config.data_prefix)
 
     @property
     def work_path(self):
