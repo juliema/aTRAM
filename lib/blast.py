@@ -91,16 +91,16 @@ def all_shard_names(work_dir, blast_db):
     return sorted([f[:-4] for f in files])
 
 
-def output_file(work_dir, temp_dir, blast_db, name, iteration):
+def output_file(temp_dir, blast_db, name, iteration):
     """Create a file name for blast results."""
 
     file_name = '{}.{}.{}.fasta'.format(name, blast_db, iteration)
 
-    return os.path.join(work_dir, temp_dir, file_name)
+    return os.path.join(temp_dir, file_name)
 
 
-def temp_db(work_dir, temp_dir, blast_db, iteration):
+def temp_db(temp_dir, blast_db, iteration):
     """Generate a name for the temp DB used to filter the contigs."""
 
     file_name = '{}.blast.{:02d}'.format(blast_db, iteration)
-    return os.path.join(work_dir, temp_dir, file_name)
+    return os.path.join(temp_dir, file_name)
