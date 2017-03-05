@@ -3,22 +3,26 @@
 import os
 import shutil
 import subprocess
-from lib.filer import Filer
+# import lib.filer as filer
 
 
 class Assembler:
     """A factory class for building the assembers."""
 
-    def __init__(self, config):
-        self.config = config
-        self.filer = Filer(work_dir=config.work_dir,
-                           data_prefix=config.data_prefix)
+    def __init__(self, args):
+        self.args = args
+        self.is_paired = False
+        self.output_file = None
+        self.long_reads_file = None
+        self.single_end_file = None
+        self.paired_end_1_file = None
+        self.paired_end_2_file = None
 
     @property
     def work_path(self):
         """The output directory name may have unique requirements."""
 
-        return self.config.work_dir
+        return self.args.work_dir
 
     def command(self, files):
         """Build the command for assembly."""
@@ -34,16 +38,40 @@ class Assembler:
     def post_assembly(self, files):
         """Assembers have unique post assembly steps."""
 
+    def path(self, temp_dir, file_name, iteration=0):
+        """Files will go into the temp dir."""
+
+        file_name = '{}.{:02d}_{}'.format(
+            self.args.blast_db, iteration, file_name)
+
+        return os.path.join(self.args.work_dir, temp_dir, file_name)
+
+    def iteration_files(self, temp_dir, iteration):
+        """Files used by the assembler. Do this at the start of each
+        iteration.
+        """
+
+        self.output_file = None
+        self.long_reads_file = None
+        self.single_end_file = None
+        self.paired_end_1_file = None
+        self.paired_end_2_file = None
+
+    def close_files(self):
+        """Close files used by the assembler. Do this at the end of each
+        iteration.
+        """
+
     @staticmethod
-    def factory(config):
+    def factory(args):
         """Return the assembler based upon the configuration options."""
 
-        if config['assembler'].lower() == 'trinity':
-            return TrinityAssembler(config)
-        elif config['assembler'].lower() == 'velvet':
-            return VevetAssembler(config)
-        elif config['assembler'].lower() == 'abyss':
-            return AbyssAssembler(config)
+        if args['assembler'].lower() == 'trinity':
+            return TrinityAssembler(args)
+        elif args['assembler'].lower() == 'velvet':
+            return VevetAssembler(args)
+        elif args['assembler'].lower() == 'abyss':
+            return AbyssAssembler(args)
 
 
 class TrinityAssembler(Assembler):
@@ -60,8 +88,8 @@ class TrinityAssembler(Assembler):
 
         cmd = ['Trinity']
         cmd.append('--seqType fa')
-        cmd.append('--max_memory {}'.format(self.config['max_memory']))
-        cmd.append('--CPU {}'.format(self.config['cpus']))
+        cmd.append('--max_memory {}'.format(self.args['max_memory']))
+        cmd.append('--CPU {}'.format(self.args['cpus']))
         cmd.append("--output '{}'".format(self.work_path))
         cmd.append('--full_cleanup')
 
@@ -96,8 +124,8 @@ class AbyssAssembler(Assembler):
         cmd = ['abyss-pe']
         cmd.append('v=-v')
         cmd.append('E=0')
-        cmd.append('k={}'.format(self.config['kmer']))
-        # cmd.append('np={}'.format(self.config['cpus']))
+        cmd.append('k={}'.format(self.args['kmer']))
+        # cmd.append('np={}'.format(self.args['cpus']))
         cmd.append("name='{}'".format(files['raw_contigs'].name))
 
         if files['is_paired']:
