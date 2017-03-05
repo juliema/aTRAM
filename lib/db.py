@@ -1,15 +1,19 @@
 """Handle SQL functions."""
 
+import os
 import sqlite3
 
 BATCH_SIZE = 1e7  # How many sequence records to insert at a time
 
 
-def connect(filer):
+def connect(work_dir, blast_db):
     """Setup the DB for our processing needs and return a DB connection."""
 
-    db_path = filer.db_file_name()
+    db_name = '{}.sqlite.db'.format(blast_db)
+    db_path = os.path.join(work_dir, db_name)
+
     db_conn = sqlite3.connect(db_path)
+
     db_conn.execute("PRAGMA page_size = {}".format(2**16))
     db_conn.execute("PRAGMA journal_mode = 'off'")
     db_conn.execute("PRAGMA synchronous = 'off'")
@@ -91,10 +95,6 @@ def create_blast_hits_table(db_conn):
         '''
     db_conn.execute(sql)
 
-
-def create_blast_hits_index(db_conn):
-    """Create the blast_hits_index after we build the table."""
-
     sql = 'CREATE INDEX blast_hits_index ON blast_hits (iteration, seq_name)'
     db_conn.execute(sql)
 
@@ -118,6 +118,8 @@ def get_blast_hits(db_conn, iteration):
          SELECT seq_name, seq_end, seq FROM sequences WHERE seq_name IN hits
          ORDER BY seq_name, seq_end
         '''
+
+    db_conn.row_factory = sqlite3.Row
     return db_conn.execute(sql, str(iteration))
 
 
@@ -134,10 +136,6 @@ def create_assembled_contigs_table(db_conn):
          contig_start INTEGER, contig_end INTEGER, contig_len INTEGER)
         '''
     db_conn.execute(sql)
-
-
-def create_assembled_contigs_index(db_conn):
-    """Create the blast_hits_index after we build the table."""
 
     sql = '''CREATE INDEX assembled_contigs_index
         ON assembled_contigs (iteration, contig_id)
