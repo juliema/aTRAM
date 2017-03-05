@@ -81,8 +81,7 @@ def blast_target_against_sra(args, shard_name, query, temp_dir, iteration):
     the database.
     """
 
-    out = blast.output_file(
-        args.work_dir, temp_dir, shard_name, 'against_sra', iteration)
+    out = blast.output_file(temp_dir, shard_name, 'against_sra', iteration)
 
     blast.against_sra(args, shard_name, query, out, iteration)
 
@@ -131,8 +130,8 @@ def write_assembler_files(args, assembler, iteration):
 def filter_contigs(args, assembler, temp_dir, iteration):
     """Remove junk from the assembled contigs."""
 
-    blast_db = blast.temp_db(args.work_dir, temp_dir, args.blast_db, iteration)
-    output_file = blast.output_file(args.work_dir, temp_dir, args.blast_db,
+    blast_db = blast.temp_db(temp_dir, args.blast_db, iteration)
+    output_file = blast.output_file(temp_dir, args.blast_db,
                                     'target_against_contigs', iteration)
 
     blast.create_db(assembler.output_file, blast_db)

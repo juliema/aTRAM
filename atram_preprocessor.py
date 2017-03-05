@@ -139,11 +139,10 @@ def create_blast_dbs(args, shard_list):
     with multiprocessing.Pool(processes=args.cpus) as pool:
         results = []
         for idx, params in enumerate(shard_list):
-            create_blast_db(args.work_dir, args.blast_db, params, idx)
-        #     results.append(pool.apply_async(
-        #         create_blast_db, (args.work_dir, args.blast_db, params, idx)))
-        #
-        # _ = [result.get() for result in results]
+            results.append(pool.apply_async(
+                create_blast_db, (args.work_dir, args.blast_db, params, idx)))
+
+        _ = [result.get() for result in results]
 
     logging.info('Finished making blast DBs')
 
