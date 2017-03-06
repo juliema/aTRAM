@@ -132,6 +132,9 @@ class TrinityAssembler(Assembler):
             cmd.append("-single '{}'".format(self.paired_end_1_file))
             cmd.append('--run_as_paired')
 
+        if self.long_reads_file:
+            cmd.append("--long_reads '{}'".format(self.long_reads_file))
+
         return ' '.join(cmd)
 
     def post_assembly(self):
