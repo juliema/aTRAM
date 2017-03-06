@@ -59,9 +59,8 @@ def atram_loop(args, assembler, all_shards, temp_dir):
         #     os.chdir(cwd)
 
         filter_contigs(args, assembler, temp_dir, iteration)
-
-        # query = create_targets_from_contigs()
-        # assembler.close_files()
+        query = create_targets_from_contigs(
+            args, temp_dir, assembler, iteration)
 
 
 def blast_target_against_all_sras(
@@ -141,18 +140,17 @@ def filter_contigs(args, assembler, temp_dir, iteration):
     """Remove junk from the assembled contigs."""
 
     blast_db = blast.temp_db(temp_dir, args.blast_db, iteration)
-    output_file = blast.output_file(temp_dir, args.blast_db,
-                                    'blast_contigs', iteration)
+    hits_file = blast.output_file(temp_dir, args.blast_db, iteration)
 
     blast.create_db(assembler.output_file, blast_db)
 
-    blast.against_contigs(args, blast_db, args.query, output_file)
+    blast.against_contigs(args, blast_db, args.query, hits_file)
 
-    filtered_scores = filter_contig_scores(args, assembler)
+    filtered_scores = filter_contig_scores(args, hits_file)
     save_contigs(args, assembler, filtered_scores, iteration)
 
 
-def filter_contig_scores(args, assembler):
+def filter_contig_scores(args, hits_file):
     """Only save contigs that have bit scores above the cut-off."""
 
     # qseqid sseqid bitscore qstart qend sstart send slen
@@ -161,7 +159,7 @@ def filter_contig_scores(args, assembler):
                    'contig_start', 'contig_end', 'contig_len']
 
     scores = {}
-    with open(assembler.output_file) as in_file:
+    with open(hits_file) as in_file:
         for score in csv.DictReader(in_file, field_names):
             score['bit_score'] = float(score['bit_score'])
             if score['bit_score'] >= args.bit_score:
@@ -190,18 +188,24 @@ def save_contigs(args, assembler, filtered_scores, iteration):
     db_conn.close()
 
 
-def create_targets_from_contigs():
+def create_targets_from_contigs(args, temp_dir, assembler, iteration):
     """Crate a new file with the contigs that will be used as the
     next query target.
     """
 
-    # query = filer.target_file(iteration)
-    # with open(query, 'w') as target_file:
-    #     for row in db.get_assembled_contigs(db_conn, iteration):
-    #         target_file.write('>{}\n'.format(row[0]))
-    #         target_file.write('{}\n'.format(row[1]))
-    #
-    # return query
+    db_conn = db.connect(args.work_dir, args.blast_db)
+
+    query = assembler.path(temp_dir, 'long_reads.fasta', iteration)
+    assembler.long_reads_file = query
+
+    with open(query, 'w') as target_file:
+        for row in db.get_assembled_contigs(db_conn, iteration):
+            target_file.write('>{}\n'.format(row[0]))
+            target_file.write('{}\n'.format(row[1]))
+
+    db_conn.close()
+
+    return query
 
 
 def output_results():

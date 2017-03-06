@@ -61,26 +61,13 @@ class Assembler:
         iteration.
         """
 
-        self.output_file = self.path(temp_dir, 'output', iteration)
-        self.long_reads_file = self.path(
-            temp_dir, 'long_reads.fasta', iteration)
+        self.output_file = self.path(temp_dir, 'output.fasta', iteration)
         self.single_end_file = self.path(
             temp_dir, 'single_end.fasta', iteration)
         self.paired_end_1_file = self.path(
             temp_dir, 'paired_end_1.fasta', iteration)
         self.paired_end_2_file = self.path(
             temp_dir, 'paired_end_2.fasta', iteration)
-
-    def remove_files(self):
-        """Remove files used by the assembler. Do this at the end of each
-        iteration.
-        """
-
-        os.remove(self.output_file)
-        os.remove(self.long_reads_file)
-        os.remove(self.single_end_file)
-        os.remove(self.paired_end_1_file)
-        os.remove(self.paired_end_2_file)
 
 
 class AbyssAssembler(Assembler):
@@ -101,6 +88,9 @@ class AbyssAssembler(Assembler):
                                            self.paired_end_2_file))
         else:
             cmd.append("se='{}'".format(self.paired_end_1_file))
+
+        if self.long_reads_file:
+            cmd.append("long='{}'".format(self.long_reads_file))
 
         return ' '.join(cmd)
 
