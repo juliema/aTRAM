@@ -19,7 +19,7 @@ def run(args):
 
     logger.setup(args.work_dir, args.blast_db)
 
-    shard_list = blast.all_shard_names(args.work_dir, args.blast_db)
+    all_shards = blast.all_shard_paths(args.work_dir, args.blast_db)
     assembler = Assembler.factory(args)
 
     db_conn = db.connect(args.work_dir, args.blast_db)
@@ -28,12 +28,15 @@ def run(args):
     db_conn.close()
 
     with tempfile.TemporaryDirectory(dir=args.work_dir) as temporary_dir:
-        temp_dir = os.path.abspath(temporary_dir)
-        atram_loop(args, assembler, shard_list, temp_dir)
-        output_results()
+        temp_dir = os.path.join(args.work_dir, 'temp_dir')  # ###############
+        os.makedirs(temp_dir, exist_ok=True)                # ###############
+        temp_dir = os.path.abspath(temp_dir)
+        # temp_dir = os.path.abspath(temporary_dir)
+        atram_loop(args, assembler, all_shards, temp_dir)
+        # output_results()
 
 
-def atram_loop(args, assembler, shard_list, temp_dir):
+def atram_loop(args, assembler, all_shards, temp_dir):
     """The run program loop."""
 
     query = args.query
@@ -44,16 +47,16 @@ def atram_loop(args, assembler, shard_list, temp_dir):
         assembler.iteration_files(temp_dir, iteration)
 
         blast_target_against_all_sras(
-            args, temp_dir, query, shard_list, iteration)
+            args, temp_dir, query, all_shards, iteration)
 
         write_assembler_files(args, assembler, iteration)
 
-        cwd = os.getcwd()
-        try:
-            os.chdir(args.work_dir)  # some assemblers need this
-            assembler.assemble()
-        finally:
-            os.chdir(cwd)
+        # cwd = os.getcwd()
+        # try:
+        #     os.chdir(args.work_dir)  # some assemblers need this
+        assembler.assemble()
+        # finally:
+        #     os.chdir(cwd)
 
         filter_contigs(args, assembler, temp_dir, iteration)
 
@@ -62,7 +65,7 @@ def atram_loop(args, assembler, shard_list, temp_dir):
 
 
 def blast_target_against_all_sras(
-        args, temp_dir, query, shard_list, iteration):
+        args, temp_dir, query, all_shards, iteration):
     """Blast the targets against the SRA databases. We're using a
     map-reduce strategy here. We map the blasting of the query sequences
     and reduce the output into one fasta file.
@@ -71,24 +74,26 @@ def blast_target_against_all_sras(
     with multiprocessing.Pool(processes=args.cpus) as pool:
         results = [pool.apply_async(
             blast_target_against_sra,
-            (dict(vars(args)), shard_name, query, temp_dir, iteration))
-                   for shard_name in shard_list]
+            (dict(vars(args)), shard_path, query, temp_dir, iteration))
+                   for shard_path in all_shards]
         _ = [result.get() for result in results]
 
 
-def blast_target_against_sra(args, shard_name, query, temp_dir, iteration):
+def blast_target_against_sra(args, shard_path, query, temp_dir, iteration):
     """Blast the target against one blast DB shard. Then write the results to
     the database.
     """
+    # NOTE: Because this is called in a child process, the address space is not
+    # shared with the parent (caller) hence we cannot use object variables.
 
-    out = blast.output_file(temp_dir, shard_name, 'against_sra', iteration)
+    output_file = blast.output_file(temp_dir, shard_path, iteration)
 
-    blast.against_sra(args, shard_name, query, out, iteration)
+    blast.against_sra(args, shard_path, query, output_file, iteration)
 
-    db_conn = db.connect(args.work_dir, args.blast_db)
+    db_conn = db.connect(args['work_dir'], args['blast_db'])
 
     batch = []
-    with open(out) as blast_hits:
+    with open(output_file) as blast_hits:
         for line in blast_hits:
             match = blast.PARSE_RESULTS.match(line)
             if match:
@@ -97,7 +102,7 @@ def blast_target_against_sra(args, shard_name, query, temp_dir, iteration):
             else:
                 seq_name = line
                 seq_end = ''
-            batch.append((iteration, seq_end, seq_name, shard_name))
+            batch.append((iteration, seq_end, seq_name, shard_path))
     db.insert_blast_hit_batch(db_conn, batch)
 
 
@@ -110,19 +115,24 @@ def write_assembler_files(args, assembler, iteration):
 
     assembler.is_paired = False
 
-    for row in db.get_blast_hits(db_conn, iteration):
+    with open(assembler.paired_end_1_file, 'w') as end_1, \
+            open(assembler.paired_end_2_file, 'w') as end_2:
 
-        # NOTE: Some assemblers require a slash delimiter for the seq_end
-        seq_end = '/{}'.format(row['seq_end'][-1]) if row['seq_end'] else ''
+        for row in db.get_blast_hits(db_conn, iteration):
 
-        if seq_end.endswith('2'):
-            assembler.is_paired = True
-            out_file = assembler.paired_end_2_file
-        else:
-            out_file = assembler.paired_end_1_file
+            # NOTE: Some assemblers require a slash delimiter for the seq_end
+            seq_end = ''
+            if row['seq_end']:
+                seq_end = '/{}'.format(row['seq_end'][-1])
 
-        out_file.write('>{}{}\n'.format(row['seq_name'], seq_end))
-        out_file.write('{}\n'.format(row['seq']))
+            if seq_end.endswith('2'):
+                assembler.is_paired = True
+                out_file = end_2
+            else:
+                out_file = end_1
+
+            out_file.write('>{}{}\n'.format(row['seq_name'], seq_end))
+            out_file.write('{}\n'.format(row['seq']))
 
     db_conn.close()
 
@@ -132,7 +142,7 @@ def filter_contigs(args, assembler, temp_dir, iteration):
 
     blast_db = blast.temp_db(temp_dir, args.blast_db, iteration)
     output_file = blast.output_file(temp_dir, args.blast_db,
-                                    'target_against_contigs', iteration)
+                                    'blast_contigs', iteration)
 
     blast.create_db(assembler.output_file, blast_db)
 
@@ -253,6 +263,12 @@ def parse_command_line():
                        help='The number of pipline iterations. '
                             'The default is 5.')
 
+    cpus = os.cpu_count() - 4 if os.cpu_count() > 4 else 1
+    group.add_argument('-c', '--cpus', type=int, default=cpus,
+                       help=('Number of cpus to use. The default is {}. '
+                             'This will also be used for the assemblers '
+                             'when possible.').format(cpus))
+
     group = parser.add_argument_group('optional blast arguments')
 
     group.add_argument('-s', '--bit-score', type=float, default=70.0,
@@ -263,7 +279,7 @@ def parse_command_line():
     group.add_argument('-e', '--evalue', type=float, default=1e-9,
                        help='The default evalue is 1e-9.')
 
-    group.add_argument('-M', '--max-query-seqs', type=int, default=100000000,
+    group.add_argument('-M', '--max-target-seqs', type=int, default=100000000,
                        metavar='MAX',
                        help='Maximum hit sequences per shard. '
                             'Default is 100000000.')
@@ -278,10 +294,6 @@ def parse_command_line():
     group.add_argument('-k', '--kmer', type=int, default=31,
                        help='k-mer size for assembers that use it. '
                             'The default is 31. (Abyss)')
-
-    group.add_argument('-c', '--cpus', type=int, default=1,
-                       help='Number of cpus to use. The default is 1. '
-                            '(Trinity)')
 
     group.add_argument('-m', '--max_memory', default='50G', metavar='MEMORY',
                        help='Maximum amount of memory to use. The default is '

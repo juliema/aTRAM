@@ -138,7 +138,7 @@ def create_blast_dbs(args, shard_list):
 
     with multiprocessing.Pool(processes=args.cpus) as pool:
         results = []
-        for idx, params in enumerate(shard_list):
+        for idx, params in enumerate(shard_list, 1):
             results.append(pool.apply_async(
                 create_blast_db, (args.work_dir, args.blast_db, params, idx)))
 
@@ -150,26 +150,24 @@ def create_blast_dbs(args, shard_list):
 def create_blast_db(work_dir, blast_db, shard_params, shard_index):
     """Create a blast DB from the shard. We fill a fasta file with the
     appropriate sequences and hand things off to the makeblastdb program.
-
-    Because this is called in a child process, the address space is not
-    shared with the parent (caller) hence we cannot use object variables.
     """
+    # NOTE: Because this is called in a child process, the address space is not
+    # shared with the parent (caller) hence we cannot use object variables.
 
-    shard_name = blast.shard_name(work_dir, blast_db, shard_index)
+    shard_path = blast.shard_path(work_dir, blast_db, shard_index)
 
     with tempfile.NamedTemporaryFile(mode='w', dir=work_dir) as fasta_file:
         fill_blast_fasta(work_dir, blast_db, fasta_file, shard_params)
-        blast.create_db(fasta_file.name, shard_name)
+        blast.create_db(fasta_file.name, shard_path)
 
 
 def fill_blast_fasta(work_dir, blast_db, fasta_file, shard_params):
     """Fill the fasta file used as input into blast with shard sequences from
     the sqlite3 DB. We use the shard partitions passed in to determine
     which sequences to get for this shard.
-
-    Because this is called in a child process, the address space is not
-    shared with the parent (caller) hence we cannot use object variables.
     """
+    # NOTE: Because this is called in a child process, the address space is not
+    # shared with the parent (caller) hence we cannot use object variables.
 
     db_conn = db.connect(work_dir, blast_db)
 
