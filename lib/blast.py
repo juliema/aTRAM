@@ -68,14 +68,14 @@ def against_contigs(args, blast_db, query, hits_file):
     subprocess.check_call(command, shell=True)
 
 
-def shard_name(work_dir, blast_db, shard_index):
+def shard_path(work_dir, blast_db, shard_index):
     """Create the BLAST shard DB names."""
 
-    file_name = '{}.blast_{:03d}'.format(blast_db, shard_index + 1)
+    file_name = '{}.blast_{:03d}'.format(blast_db, shard_index)
     return os.path.join(work_dir, file_name)
 
 
-def all_shard_names(work_dir, blast_db):
+def all_shard_paths(work_dir, blast_db):
     """Get all of the BLAST DB names built by the preprocessor."""
 
     shard_pattern = '{}.blast_*.nhr'.format(blast_db)
@@ -91,10 +91,11 @@ def all_shard_names(work_dir, blast_db):
     return sorted([f[:-4] for f in files])
 
 
-def output_file(temp_dir, blast_db, name, iteration):
+def output_file(temp_dir, shrd_path, iteration):
     """Create a file name for blast results."""
 
-    file_name = '{}.{}.{}.fasta'.format(name, blast_db, iteration)
+    shard_name = os.path.basename(shrd_path)
+    file_name = '{}.{}.fasta'.format(shard_name, iteration)
 
     return os.path.join(temp_dir, file_name)
 
