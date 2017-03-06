@@ -65,6 +65,7 @@ def against_contigs(args, blast_db, query, hits_file):
         "-outfmt '10 qseqid sseqid bitscore qstart qend sstart send slen'")
 
     command = ' '.join(cmd)
+    print(command)
     subprocess.check_call(command, shell=True)
 
 
@@ -95,7 +96,7 @@ def output_file(temp_dir, shrd_path, iteration):
     """Create a file name for blast results."""
 
     shard_name = os.path.basename(shrd_path)
-    file_name = '{}.{}.fasta'.format(shard_name, iteration)
+    file_name = '{}.{}.results'.format(shard_name, iteration)
 
     return os.path.join(temp_dir, file_name)
 
