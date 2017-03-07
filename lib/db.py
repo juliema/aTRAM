@@ -91,7 +91,7 @@ def create_blast_hits_table(db_conn):
     db_conn.execute('''DROP INDEX IF EXISTS blast_hits_index''')
     db_conn.execute('''DROP TABLE IF EXISTS blast_hits''')
     sql = '''CREATE TABLE blast_hits
-        (iteration INTEGER, seq_name TEXT, seq_end TEXT, shard_path TEXT)
+        (iteration INTEGER, seq_name TEXT, seq_end TEXT, shard TEXT)
         '''
     db_conn.execute(sql)
 
@@ -104,7 +104,7 @@ def insert_blast_hit_batch(db_conn, batch):
 
     if batch:
         sql = '''INSERT INTO blast_hits
-            (iteration, seq_end, seq_name, shard_path) VALUES (?, ?, ?, ?)
+            (iteration, seq_end, seq_name, shard) VALUES (?, ?, ?, ?)
             '''
         db_conn.executemany(sql, batch)
         db_conn.commit()
