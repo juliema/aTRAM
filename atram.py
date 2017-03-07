@@ -33,7 +33,7 @@ def run(args):
         temp_dir = os.path.abspath(temp_dir)
         # temp_dir = os.path.abspath(temporary_dir)
         atram_loop(args, assembler, all_shards, temp_dir)
-        # output_results()
+        output_results(args)
 
 
 def atram_loop(args, assembler, all_shards, temp_dir):
@@ -90,6 +90,7 @@ def blast_target_against_sra(args, shard_path, query, temp_dir, iteration):
     blast.against_sra(args, shard_path, query, output_file, iteration)
 
     db_conn = db.connect(args['work_dir'], args['blast_db'])
+    shard = os.path.basename(shard_path)
 
     batch = []
     with open(output_file) as blast_hits:
@@ -101,7 +102,7 @@ def blast_target_against_sra(args, shard_path, query, temp_dir, iteration):
             else:
                 seq_name = line
                 seq_end = ''
-            batch.append((iteration, seq_end, seq_name, shard_path))
+            batch.append((iteration, seq_end, seq_name, shard))
     db.insert_blast_hit_batch(db_conn, batch)
 
 
@@ -208,18 +209,19 @@ def create_targets_from_contigs(args, temp_dir, assembler, iteration):
     return query
 
 
-def output_results():
+def output_results(args):
     """Write the assembled contigs to a fasta file."""
 
-    # file_name = filer.output_result_name(args.output_prefix)
-    # with open(file_name, 'w') as out_file:
-    #     for row in db.get_all_assembled_contigs(db_conn):
-    #         header = ('>{}_{} iteration={} contig_id={} '
-    #                   'score={}\n').format(
-    #                       row['iteration'], row['contig_id'],
-    #                       row['iteration'], row['contig_id'], row['bit_score'])
-    #         out_file.write(header)
-    #         out_file.write('{}\n'.format(row['seq']))
+    db_conn = db.connect(args.work_dir, args.blast_db)
+
+    with open(args.output, 'w') as out_file:
+        for row in db.get_all_assembled_contigs(db_conn):
+            header = ('>{}_{} iteration={} contig_id={} '
+                      'score={}\n').format(
+                          row['iteration'], row['contig_id'],
+                          row['iteration'], row['contig_id'], row['bit_score'])
+            out_file.write(header)
+            out_file.write('{}\n'.format(row['seq']))
 
 
 def parse_command_line():
