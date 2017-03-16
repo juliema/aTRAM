@@ -3,6 +3,7 @@ archive files and converts them into blast and sqlite3 databases.
 """
 
 import os
+import sys
 import logging
 import argparse
 import textwrap
@@ -18,7 +19,7 @@ def run(args):
     """Run the preprocessor."""
 
     logging.basicConfig(
-        filename=args.logfile,
+        filename=args.log_file,
         level=logging.DEBUG,
         format='%(asctime)s %(levelname)s: %(message)s',
         datefmt='%Y-%m-%d %H:%M:%S')
