@@ -1,6 +1,7 @@
 """The aTRAM assembly program."""
 
 import os
+import sys
 import csv
 import logging
 import argparse
@@ -17,15 +18,14 @@ def run(args):
     """Setup  and run atram."""
 
     logging.basicConfig(
-        filename=args.logfile,
+        filename=args.log_file,
         level=logging.DEBUG,
         format='%(asctime)s %(levelname)s: %(message)s',
         datefmt='%Y-%m-%d %H:%M:%S')
     logging.info(' '.join(sys.argv))
 
     all_shards = blast.all_shard_paths(args.work_dir, args.blast_db)
-    if args.assembler:
-        assembler = Assembler.factory(args)
+    assembler = Assembler.factory(args) if args.assembler else None
 
     db_conn = db.connect(args.work_dir, args.blast_db)
     db.create_blast_hits_table(db_conn)
@@ -49,10 +49,14 @@ def atram_loop(args, assembler, all_shards, temp_dir):
     for iteration in range(1, args.iterations + 1):
         logging.info('aTRAM iteration %i', iteration)
 
-        assembler.iteration_files(temp_dir, iteration)
-
         blast_target_against_all_sras(
             args, temp_dir, query, all_shards, iteration)
+
+        if not args.assembler:
+            write_blast_results(args)
+            sys.exit()
+
+        assembler.iteration_files(temp_dir, iteration)
 
         write_assembler_files(args, assembler, iteration)
 
@@ -140,6 +144,17 @@ def write_assembler_files(args, assembler, iteration):
             out_file.write('{}\n'.format(row['seq']))
 
     db_conn.close()
+
+
+def write_blast_results(args):
+    """Output this file if we are not assembling the contigs."""
+
+    db_conn = db.connect(args.work_dir, args.blast_db)
+
+    with open(args.output, 'w') as out_file:
+        for row in db.get_blast_hits(db_conn, 1):
+            out_file.write('>{}{}\n'.format(row['seq_name'], row['seq_end']))
+            out_file.write('{}\n'.format(row['seq']))
 
 
 def filter_contigs(args, assembler, temp_dir, iteration):
@@ -299,6 +314,11 @@ def parse_command_line():
                        help='Are the query sequences protein? '
                             'The aTRAM will guess if you skip this argument.')
 
+    group.add_argument('-P', '--path',
+                       help='If the assembler or blast you want to use is not '
+                            'in your $PATH then use this to prepend '
+                            'directories to your path.')
+
     group.add_argument('-S', '--start-iteration',
                        type=int, default=5, metavar='N',
                        help='If resuming from a previous run, which iteration '
@@ -349,10 +369,9 @@ def parse_command_line():
                             'library The default is "300". (Velvet)')
 
     group.add_argument('-K', '--kmer', type=int, default=31,
-                       help='k-mer size for assembers that use it. '
-                            'The default is "31". (Abyss)')
+                       help='k-mer size. The default is "31". (Abyss)')
 
-    group.add_argument('-M', '--max_memory', default='50G', metavar='MEMORY',
+    group.add_argument('-M', '--max-memory', default='50G', metavar='MEMORY',
                        help='Maximum amount of memory to use. The default is '
                             '"50G". (Trinity)')
 
@@ -368,6 +387,11 @@ def parse_command_line():
     args.log_file = os.path.abspath(args.log_file)
     args.output = os.path.abspath(args.output)
     args.query = os.path.abspath(args.query)
+
+    # TODO: Verify that the programs for blast and the assembler exist
+    # TODO: Verify we can find the blast DBs
+    # TODO: Calculate the max_target_seqs per shard
+    # TODO: If not --protein then probe for protein seq
 
     return args
 
