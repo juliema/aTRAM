@@ -10,17 +10,22 @@ import multiprocessing
 from Bio import SeqIO
 import lib.db as db
 import lib.blast as blast
-import lib.logger as logger
 from lib.assembler import Assembler
 
 
 def run(args):
     """Setup  and run atram."""
 
-    logger.setup(args.work_dir, args.blast_db)
+    logging.basicConfig(
+        filename=args.logfile,
+        level=logging.DEBUG,
+        format='%(asctime)s %(levelname)s: %(message)s',
+        datefmt='%Y-%m-%d %H:%M:%S')
+    logging.info(' '.join(sys.argv))
 
     all_shards = blast.all_shard_paths(args.work_dir, args.blast_db)
-    assembler = Assembler.factory(args)
+    if args.assembler:
+        assembler = Assembler.factory(args)
 
     db_conn = db.connect(args.work_dir, args.blast_db)
     db.create_blast_hits_table(db_conn)
@@ -227,10 +232,11 @@ def output_results(args):
 def parse_command_line():
     """Process command-line arguments."""
 
-    description = """This is the aTRAM script. It takes a target sequence and
-    a set of blast databases built with the atram_preprocessor.py script and
-    builds an assembly.
-    """
+    description = """
+        This is the aTRAM script. It takes a target sequence and
+        a set of blast databases built with the atram_preprocessor.py script
+        and builds an assembly.
+        """
 
     parser = argparse.ArgumentParser(
         formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -238,77 +244,128 @@ def parse_command_line():
 
     group = parser.add_argument_group('required arguments')
 
-    group.add_argument('-q', '--query', required=True,
-                       help='The path to the fasta file with sequences of '
-                            'interest.')
-
-    group.add_argument('-d', '--work-dir', default='.', metavar='DIR',
-                       required=True,
-                       help='Where to find the BLAST_DB files. aTRAM will '
-                            'also use this as a place to store temporary '
-                            'files.')
-
-    group.add_argument('-b', '--blast-db', required=True,
-                       help='This needs to match the BLAST_DB you '
+    group.add_argument('-b', '--blast-db', '--sra', '--db', '--database',
+                       required=True, metavar='DB',
+                       help='This needs to match the DB you '
                             'entered for atram_preprocessor.py.')
 
     group.add_argument('-o', '--output', required=True,
                        help='Output the aTRAM results to this file.')
 
-    group.add_argument('-a', '--assembler', required=True,
-                       choices=['abyss', 'trinity', 'velvet'],
-                       help='Which assembler to use.')
+    group.add_argument('-q', '--query', '--target', required=True,
+                       help='The path to the fasta file with sequences of '
+                            'interest.')
 
     group = parser.add_argument_group('optional aTRAM arguments')
 
-    group.add_argument('-p', '--protein', action='store_true',
-                       help='Are the query sequences protein? '
-                            'The default is False.')
+    group.add_argument('-a', '--assembler',
+                       choices=['abyss', 'trinity', 'velvet'],
+                       help='Which assembler to use. If you do not use this '
+                            'argument then aTRAM will do a single blast run '
+                            'and stop before assembly.')
+
+    cpus = os.cpu_count() - 4 if os.cpu_count() > 4 else 1
+    group.add_argument('-c', '--cpus', '--processes', '--max-processes',
+                       type=int, default=cpus,
+                       help=('Number of cpus to use. This will also be used '
+                             'for the assemblers when possible. Defaults to: '
+                             'Total CPUS  - 4 = "{}"').format(cpus))
+
+    group.add_argument('-C', '--complete', action='store_true',
+                       help='Automatically quit when a complete homolog is '
+                            'recovered.')
+
+    group.add_argument('-d', '--work-dir', default='.', metavar='DIR',
+                       help=('Which directory has the files created by '
+                             'atram_preprocessor.py. This will also be used '
+                             'as a place to store temporary files if TEMP_DIR '
+                             'is not specified. Defaults to the current '
+                             'directory "{}".'.format(os.getcwd())))
+
+    group.add_argument('-f', '--fraction', type=float, default=1.0,
+                       help='Use only the specified fraction of the aTRAM '
+                            'database. The default is "1.0"')
 
     group.add_argument('-i', '--iterations', type=int, default=5, metavar='N',
                        help='The number of pipline iterations. '
-                            'The default is 5.')
+                            'The default is "5".')
 
-    cpus = os.cpu_count() - 4 if os.cpu_count() > 4 else 1
-    group.add_argument('-c', '--cpus', type=int, default=cpus,
-                       help=('Number of cpus to use. The default is {}. '
-                             'This will also be used for the assemblers '
-                             'when possible.').format(cpus))
+    group.add_argument('-l', '--log-file',
+                       help='Log file (full path). The default is to use the '
+                            'DIR and DB arguments to come up with a name like '
+                            'so "DIR/DB_atram.log"')
 
-    group = parser.add_argument_group('optional blast arguments')
+    group.add_argument('-p', '--protein', action='store_true',
+                       help='Are the query sequences protein? '
+                            'The aTRAM will guess if you skip this argument.')
+
+    group.add_argument('-S', '--start-iteration',
+                       type=int, default=5, metavar='N',
+                       help='If resuming from a previous run, which iteration '
+                            'number to start from. The default is "1".')
+
+    group.add_argument('-t', '--temp-dir',
+                       help='Store temporary files in this directory. '
+                            'Temporary files will be deleted if you do not '
+                            'specify this argument.')
+
+    group = parser.add_argument_group(
+        'optional values for blast-filtering contigs')
+
+    group.add_argument('-L', '--length', '--contig-length',
+                       type=int, default=100,
+                       help='Remove blast hits that are shorter than this '
+                            'length. The default is "100".')
 
     group.add_argument('-s', '--bit-score', type=float, default=70.0,
                        metavar='SCORE',
                        help='Remove contigs that have a value less than this. '
-                            'The default is 70.0')
+                            'The default is "70.0"')
 
-    group.add_argument('-e', '--evalue', type=float, default=1e-9,
-                       help='The default evalue is 1e-9.')
+    group = parser.add_argument_group('optional blast arguments')
 
-    group.add_argument('-M', '--max-target-seqs', type=int, default=100000000,
-                       metavar='MAX',
-                       help='Maximum hit sequences per shard. '
-                            'Default is 100000000.')
+    group.add_argument('-e', '--evalue', type=float, default=1e-10,
+                       help='The default evalue is "1e-10".')
 
     group.add_argument('-g', '--db-gencode', type=int, default=1,
                        metavar='CODE',
                        help='The genetic code to use during blast runs. '
-                            'The default is 1.')
+                            'The default is "1".')
+
+    group.add_argument('-m', '--max-target-seqs', type=int, default=100000000,
+                       metavar='MAX',
+                       help='Maximum hit sequences per shard. '
+                            'Default is "100000000".')
 
     group = parser.add_argument_group('optional assembler arguments')
 
-    group.add_argument('-k', '--kmer', type=int, default=31,
-                       help='k-mer size for assembers that use it. '
-                            'The default is 31. (Abyss)')
+    group.add_argument('-E', '--exp-coverage', '--expected_coverage',
+                       type=int, default=30,
+                       help='The expected coverage of the region. '
+                            'The default is "30". (Velvet)')
 
-    group.add_argument('-m', '--max_memory', default='50G', metavar='MEMORY',
+    group.add_argument('-I', '--ins-length', type=int, default=300,
+                       help='The size of the fragments used in the short-read '
+                            'library The default is "300". (Velvet)')
+
+    group.add_argument('-K', '--kmer', type=int, default=31,
+                       help='k-mer size for assembers that use it. '
+                            'The default is "31". (Abyss)')
+
+    group.add_argument('-M', '--max_memory', default='50G', metavar='MEMORY',
                        help='Maximum amount of memory to use. The default is '
-                            '50G. (Trinity)')
+                            '"50G". (Trinity)')
 
     args = parser.parse_args()
 
-    # Set to absolute paths because we change directory during assembly
+    # Set degailt log file name
+    if not args.log_file:
+        file_name = '{}.{}.log'.format(args.blast_db, sys.argv[0][:-3])
+        args.log_file = os.path.join(args.work_dir, file_name)
+
+    # Set to absolute paths because we may change directory during assembly
     args.work_dir = os.path.abspath(args.work_dir)
+    args.log_file = os.path.abspath(args.log_file)
     args.output = os.path.abspath(args.output)
     args.query = os.path.abspath(args.query)
 
