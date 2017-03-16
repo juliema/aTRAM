@@ -12,13 +12,17 @@ from datetime import date
 import numpy as np
 import lib.db as db
 import lib.blast as blast
-import lib.logger as logger
 
 
 def run(args):
     """Run the preprocessor."""
 
-    logger.setup(args.work_dir, args.blast_db)
+    logging.basicConfig(
+        filename=args.logfile,
+        level=logging.DEBUG,
+        format='%(asctime)s %(levelname)s: %(message)s',
+        datefmt='%Y-%m-%d %H:%M:%S')
+    logging.info(' '.join(sys.argv))
 
     db_conn = db.connect(args.work_dir, args.blast_db)
     db.create_sequences_table(db_conn)
@@ -183,7 +187,8 @@ def fill_blast_fasta(work_dir, blast_db, fasta_file, shard_params):
 def parse_command_line():
     """Process command-line arguments."""
 
-    description = """This script prepares data for use by the atram.py
+    description = """
+        This script prepares data for use by the atram.py
         script. It takes fasta or fastq files of paired-end (or
         single-end) sequence reads and creates a set of atram
         databases.
@@ -208,36 +213,44 @@ def parse_command_line():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         description=textwrap.dedent(description))
 
+    parser.add_argument(dest='sra_files', metavar='FASTA_FILE', nargs='+',
+                        help='Sequence read archive files in fasta or '
+                             'fastq format. You may enter more than '
+                             'one file and you may use wildcards.')
+
     group = parser.add_argument_group('preprocessor arguments')
 
-    group.add_argument(dest='sra_files', metavar='FASTA_FILE', nargs='+',
-                       help='Sequence read archive files in fasta or '
-                            'fastq format. You may enter more than '
-                            'one file and you may use wildcards.')
-
-    group.add_argument('-d', '--work-dir', default='.', metavar='DIR',
-                       help=('Where to store files needed by aTRAM. '
-                             'Defaults to the current '
-                             'directory "{}".'.format(os.getcwd())))
-
     blast_db = 'atram_' + date.today().isoformat()
-    group.add_argument('-b', '--blast-db', default=blast_db,
-                       help=('This will get prepended to all blast '
-                             'database files so you can identify '
+    group.add_argument('-b', '--blast-db', '--output', '--db',
+                       default=blast_db, metavar='DB',
+                       help=('This is the prefix of all of the blast '
+                             'database files. So you can identify '
                              'different blast database sets. These files '
                              'will be placed into the DIR. The '
                              'default is "{}".').format(blast_db))
 
-    group.add_argument('-s', '--shards', type=int, metavar='SHARDS',
+    cpus = os.cpu_count() - 4 if os.cpu_count() > 4 else 1
+    group.add_argument('-c', '--cpus', '--processes', '--max-processes',
+                       type=int, default=cpus,
+                       help=('Number of cpus to use. Defaults to: Total CPUS '
+                             ' - 4 = "{}"').format(cpus))
+
+    group.add_argument('-d', '--work-dir', default='.', metavar='DIR',
+                       help=('Where to store files needed by aTRAM.py. '
+                             'Defaults to the current '
+                             'directory "{}".'.format(os.getcwd())))
+
+    group.add_argument('-l', '--log-file',
+                       help='Log file (full path). The default is to use the '
+                            'DIR and DB arguments to come up with a name like '
+                            'so "DIR/DB_atram_preprocessor.log"')
+
+    group.add_argument('-s', '--shards', '--number',
+                       type=int, metavar='SHARDS',
                        dest='shard_count',
                        help='Number of blast DB shards to create. '
                             'The default is to have each shard contain '
                             'roughly 250MB of sequence data.')
-
-    cpus = os.cpu_count() - 4 if os.cpu_count() > 4 else 1
-    group.add_argument('-c', '--cpus', type=int, default=cpus,
-                       help=('Number of cpus to use. '
-                             'Defaults to "{}".').format(cpus))
 
     args = parser.parse_args()
 
@@ -251,6 +264,11 @@ def parse_command_line():
             total_fasta_size += file_size
         args.shard_count = int(total_fasta_size / 2.5e8)
         args.shard_count = args.shard_count if args.shard_count else 1
+
+    # Set degailt log file name
+    if not args.log_file:
+        file_name = '{}.{}.log'.format(args.blast_db, sys.argv[0][:-3])
+        args.log_file = os.path.join(args.work_dir, file_name)
 
     return args
 
