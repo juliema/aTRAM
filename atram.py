@@ -10,6 +10,7 @@ import tempfile
 import multiprocessing
 from Bio import SeqIO
 import lib.db as db
+import lib.bio as bio
 import lib.blast as blast
 from lib.assembler import Assembler
 
@@ -32,6 +33,8 @@ def run(args):
     db.create_assembled_contigs_table(db_conn)
     db_conn.close()
 
+    # TODO: Setup starting iteration
+
     with tempfile.TemporaryDirectory(dir=args.work_dir) as temporary_dir:
         temp_dir = os.path.join(args.work_dir, 'temp_dir')  # ###############
         os.makedirs(temp_dir, exist_ok=True)                # ###############
@@ -52,22 +55,29 @@ def atram_loop(args, assembler, all_shards, temp_dir):
         blast_target_against_all_sras(
             args, temp_dir, query, all_shards, iteration)
 
+        # If we don't have an assembler then we just want the blast hits
         if not args.assembler:
-            write_blast_results(args)
+            output_blast_only_results(args)
             sys.exit()
+
+        # TODO: Exit if there are no blast hits
 
         assembler.iteration_files(temp_dir, iteration)
 
         write_assembler_files(args, assembler, iteration)
 
-        # cwd = os.getcwd()
-        # try:
-        #     os.chdir(args.work_dir)  # some assemblers need this
         assembler.assemble()
-        # finally:
-        #     os.chdir(cwd)
+        # TODO: Exit on error
+
+        # TODO: Exit if nothing was assembled
+
+        # TODO: Exit if there are no new assembled contigs contigs are the same
 
         filter_contigs(args, assembler, temp_dir, iteration)
+
+        # TODO: Exit if there are no filtered contigs
+        # TODO: Exit if the target was covered
+
         query = create_targets_from_contigs(
             args, temp_dir, assembler, iteration)
 
@@ -146,7 +156,7 @@ def write_assembler_files(args, assembler, iteration):
     db_conn.close()
 
 
-def write_blast_results(args):
+def output_blast_only_results(args):
     """Output this file if we are not assembling the contigs."""
 
     db_conn = db.connect(args.work_dir, args.blast_db)
@@ -242,6 +252,12 @@ def output_results(args):
                           row['iteration'], row['contig_id'], row['bit_score'])
             out_file.write(header)
             out_file.write('{}\n'.format(row['seq']))
+            header = ('>{}_{}_REV iteration={} contig_id={} '
+                      'score={}\n').format(
+                          row['iteration'], row['contig_id'],
+                          row['iteration'], row['contig_id'], row['bit_score'])
+            out_file.write(header)
+            out_file.write('{}\n'.format(bio.reverse_complement(row['seq'])))
 
 
 def parse_command_line():
