@@ -162,6 +162,19 @@ def assembled_contigs_count(db_conn, iteration):
     result = db_conn.execute(sql, str(iteration))
     return result.fetchone()[0]
 
+def iteration_overlap_count(db_conn, iteration):
+    """Count how many assembled contigs match what was in the last iteration.
+    """
+
+    sql = '''SELECT COUNT(*) AS overlap
+        FROM assembled_contigs AS curr_iter
+        JOIN assembled_contigs AS prev_iter
+          ON (    curr_iter.contig_id = prev_iter.contig_id
+              AND curr_iter.iteration = prev_iter.iteration + 1)
+        '''
+    result = db_conn.execute(sql, str(iteration))
+    return result.fetchone()[0]
+
 
 def insert_assembled_contigs_batch(db_conn, batch):
     """Insert a batch of blast hit records into the sqlite database."""
