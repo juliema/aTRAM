@@ -157,7 +157,7 @@ def create_blast_db(work_dir, blast_db, shard_params, shard_index):
     appropriate sequences and hand things off to the makeblastdb program.
     """
     # NOTE: Because this is called in a child process, the address space is not
-    # shared with the parent (caller) hence we cannot use object variables.
+    # shared with the parent (caller) hence we cannot share object variables.
 
     shard_path = blast.shard_path(work_dir, blast_db, shard_index)
 
@@ -172,7 +172,7 @@ def fill_blast_fasta(work_dir, blast_db, fasta_file, shard_params):
     which sequences to get for this shard.
     """
     # NOTE: Because this is called in a child process, the address space is not
-    # shared with the parent (caller) hence we cannot use object variables.
+    # shared with the parent (caller) hence we cannot share object variables.
 
     db_conn = db.connect(work_dir, blast_db)
 

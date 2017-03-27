@@ -110,6 +110,15 @@ def insert_blast_hit_batch(db_conn, batch):
         db_conn.commit()
 
 
+def blast_hits_count(db_conn, iteration):
+    """Count the blast hist for the iteration."""
+
+    sql = '''SELECT COUNT(*) AS count FROM blast_hits WHERE iteration = ?'''
+
+    result = db_conn.execute(sql, str(iteration))
+    return result.fetchone()[0]
+
+
 def get_blast_hits(db_conn, iteration):
     """Get all blast hits for the iteration."""
 
@@ -141,6 +150,17 @@ def create_assembled_contigs_table(db_conn):
         ON assembled_contigs (iteration, contig_id)
         '''
     db_conn.execute(sql)
+
+
+def assembled_contigs_count(db_conn, iteration):
+    """Count the blast hist for the iteration."""
+
+    sql = '''SELECT COUNT(*) AS count
+        FROM assembled_contigs WHERE iteration = ?
+        '''
+
+    result = db_conn.execute(sql, str(iteration))
+    return result.fetchone()[0]
 
 
 def insert_assembled_contigs_batch(db_conn, batch):
