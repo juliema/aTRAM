@@ -60,16 +60,27 @@ def atram_loop(args, assembler, all_shards, temp_dir):
             output_blast_only_results(args)
             sys.exit()
 
-        # TODO: Exit if there are no blast hits
+        # Exit if there are no blast hits
+        if not blast_hits_count(db_conn, iteration):
+            early_exit(args, 'No blast hits in iteration {}'.format(iteration))
 
         assembler.iteration_files(temp_dir, iteration)
 
         write_assembler_files(args, assembler, iteration)
 
-        assembler.assemble()
-        # TODO: Exit on error
+        cwd = os.getcwd()
+        try:
+            os.chdir(args.work_dir)  # some assemblers need this
+            assembler.assemble()
+        except Exception exn:
+            early_exit(args, 'The assembler failed: ' + exn, error=True)
+        finally:
+            os.chdir(cwd)
 
-        # TODO: Exit if nothing was assembled
+        # Exit if nothing was assembled
+        if not os.path.getsize(assembler.output_file):
+            early_exit(
+                args, 'No new assemblies in iteration {}'.format(iteration))
 
         # TODO: Exit if there are no new assembled contigs contigs are the same
 
@@ -80,6 +91,13 @@ def atram_loop(args, assembler, all_shards, temp_dir):
 
         query = create_targets_from_contigs(
             args, temp_dir, assembler, iteration)
+
+
+def early_exit(args, message, error=False):
+    """Early exit with message."""
+
+    logging.info(message)
+    sys.exit(message)
 
 
 def blast_target_against_all_sras(
@@ -102,7 +120,7 @@ def blast_target_against_sra(args, shard_path, query, temp_dir, iteration):
     the database.
     """
     # NOTE: Because this is called in a child process, the address space is not
-    # shared with the parent (caller) hence we cannot use object variables.
+    # shared with the parent (caller) hence we cannot share object variables.
 
     output_file = blast.output_file(temp_dir, shard_path, iteration)
 
