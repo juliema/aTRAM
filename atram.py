@@ -82,11 +82,22 @@ def atram_loop(args, assembler, all_shards, temp_dir):
             early_exit(
                 args, 'No new assemblies in iteration {}'.format(iteration))
 
-        # TODO: Exit if there are no new assembled contigs contigs are the same
 
-        filter_contigs(args, assembler, temp_dir, iteration)
+        high_score = filter_contigs(args, assembler, temp_dir, iteration)
 
-        # TODO: Exit if there are no filtered contigs
+        count = assembled_contigs_count(db_conn, iteration)
+        if not count:
+            early_exit(
+                args,
+                ('No contigs had a bit score greater than {} and are at '
+                 'least {} long in iteration {}. The highest score for this '
+                 'iteration is {}').format(args.bit_score, args.length,
+                                           iteration, high_score))
+
+        if count == assembled_contigs_count(db_conn, iteration):
+            early_exit(args, ('No new contigs were found in '
+                              'iteration {}').format(iteration))
+
         # TODO: Exit if the target was covered
 
         query = create_targets_from_contigs(
@@ -196,7 +207,7 @@ def filter_contigs(args, assembler, temp_dir, iteration):
     blast.against_contigs(args, blast_db, args.query, hits_file)
 
     filtered_scores = filter_contig_scores(args, hits_file)
-    save_contigs(args, assembler, filtered_scores, iteration)
+    return save_contigs(args, assembler, filtered_scores, iteration)
 
 
 def filter_contig_scores(args, hits_file):
@@ -223,10 +234,13 @@ def save_contigs(args, assembler, filtered_scores, iteration):
 
     db_conn = db.connect(args.work_dir, args.blast_db)
     batch = []
+    high_score = 0
     with open(assembler.output_file) as in_file:
         for contig in SeqIO.parse(in_file, 'fasta'):
             if contig.id in filtered_scores:
                 score = filtered_scores[contig.id]
+                if score['bit_score'] > high_score:
+                    high_score = score['bit_score']
                 batch.append((
                     iteration, contig.id,
                     str(contig.seq), contig.description,
@@ -235,6 +249,7 @@ def save_contigs(args, assembler, filtered_scores, iteration):
                     score['contig_end'], score['contig_len']))
     db.insert_assembled_contigs_batch(db_conn, batch)
     db_conn.close()
+    return high_score
 
 
 def create_targets_from_contigs(args, temp_dir, assembler, iteration):
