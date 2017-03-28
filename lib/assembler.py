@@ -23,10 +23,10 @@ class Assembler:
         self.args = args
         self.is_paired = False
         self.output_file = None
-        self.long_reads = None
-        self.single_end = None
-        self.end_1 = None
-        self.end_2 = None
+        self.long_reads_file = None
+        self.single_ends_file = None
+        self.ends_1_file = None
+        self.ends_2_file = None
 
     @property
     def work_path(self):
@@ -62,11 +62,10 @@ class Assembler:
         """
 
         self.output_file = self.path(temp_dir, 'output.fasta', iteration)
-        self.single_end = self.path(temp_dir, 'single_end.fasta', iteration)
-        self.end_1 = self.path(temp_dir, 'paired_end_1.fasta', iteration)
-        self.end_2 = self.path(temp_dir, 'paired_end_2.fasta', iteration)
-        print(temp_dir)
-        print(self.end_1)
+        self.ends_1_file = self.path(temp_dir, 'paired_end_1.fasta', iteration)
+        self.ends_2_file = self.path(temp_dir, 'paired_end_2.fasta', iteration)
+        self.single_ends_file = self.path(
+            temp_dir, 'single_end.fasta', iteration)
 
 
 class AbyssAssembler(Assembler):
@@ -83,13 +82,12 @@ class AbyssAssembler(Assembler):
         cmd.append("name='{}'".format(self.output_file))
 
         if self.is_paired:
-            cmd.append("in='{} {}'".format(self.end_1, self.end_2))
+            cmd.append("in='{} {}'".format(self.ends_1_file, self.ends_2_file))
         else:
-            cmd.append("se='{}'".format(self.end_1))
+            cmd.append("se='{}'".format(self.ends_1_file))
 
-        # TODO: Long reads should work here
-        # if self.long_reads:
-        #     cmd.append("long='{}'".format(self.long_reads))
+        if self.long_reads_file and not self.args.no_long_reads:
+            cmd.append("long='{}'".format(self.long_reads_file))
 
         return ' '.join(cmd)
 
@@ -126,17 +124,17 @@ class TrinityAssembler(Assembler):
         cmd.append('--full_cleanup')
 
         if self.is_paired:
-            cmd.append("--left '{}'".format(self.end_1))
-            cmd.append("--right '{}'".format(self.end_2))
+            cmd.append("--left '{}'".format(self.ends_1_file))
+            cmd.append("--right '{}'".format(self.ends_2_file))
         else:
-            cmd.append("-single '{}'".format(self.end_1))
+            cmd.append("-single '{}'".format(self.ends_1_file))
             cmd.append('--run_as_paired')
 
-        if self.long_reads:
-            cmd.append("--long_reads '{}'".format(self.long_reads))
+        if self.long_reads_file and not self.args.no_long_reads:
+            cmd.append("--long_reads_file '{}'".format(self.long_reads_file))
 
-        # TODO: See if we can get bowtie working
-        cmd.append('--no_bowtie')
+        if self.args.no_bowtie:
+            cmd.append('--no_bowtie')
 
         return ' '.join(cmd)
 
