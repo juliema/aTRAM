@@ -162,6 +162,7 @@ def assembled_contigs_count(db_conn, iteration):
     result = db_conn.execute(sql, str(iteration))
     return result.fetchone()[0]
 
+
 def iteration_overlap_count(db_conn, iteration):
     """Count how many assembled contigs match what was in the last iteration.
     """
@@ -171,6 +172,7 @@ def iteration_overlap_count(db_conn, iteration):
         JOIN assembled_contigs AS prev_iter
           ON (    curr_iter.contig_id = prev_iter.contig_id
               AND curr_iter.iteration = prev_iter.iteration + 1)
+        WHERE curr_iter.iteration = ?
         '''
     result = db_conn.execute(sql, str(iteration))
     return result.fetchone()[0]

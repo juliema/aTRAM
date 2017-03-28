@@ -23,10 +23,10 @@ class Assembler:
         self.args = args
         self.is_paired = False
         self.output_file = None
-        self.long_reads_file = None
-        self.single_end_file = None
-        self.paired_end_1_file = None
-        self.paired_end_2_file = None
+        self.long_reads = None
+        self.single_end = None
+        self.end_1 = None
+        self.end_2 = None
 
     @property
     def work_path(self):
@@ -54,7 +54,7 @@ class Assembler:
         file_name = '{}.{:02d}.{}'.format(
             self.args.blast_db, iteration, file_name)
 
-        return os.path.join(self.args.work_dir, temp_dir, file_name)
+        return os.path.join(temp_dir, file_name)
 
     def iteration_files(self, temp_dir, iteration):
         """Files used by the assembler. Do this at the start of each
@@ -62,12 +62,11 @@ class Assembler:
         """
 
         self.output_file = self.path(temp_dir, 'output.fasta', iteration)
-        self.single_end_file = self.path(
-            temp_dir, 'single_end.fasta', iteration)
-        self.paired_end_1_file = self.path(
-            temp_dir, 'paired_end_1.fasta', iteration)
-        self.paired_end_2_file = self.path(
-            temp_dir, 'paired_end_2.fasta', iteration)
+        self.single_end = self.path(temp_dir, 'single_end.fasta', iteration)
+        self.end_1 = self.path(temp_dir, 'paired_end_1.fasta', iteration)
+        self.end_2 = self.path(temp_dir, 'paired_end_2.fasta', iteration)
+        print(temp_dir)
+        print(self.end_1)
 
 
 class AbyssAssembler(Assembler):
@@ -80,17 +79,17 @@ class AbyssAssembler(Assembler):
         cmd.append('v=-v')
         cmd.append('E=0')
         cmd.append('k={}'.format(self.args.kmer))
-        # cmd.append('np={}'.format(self.args.cpus))
+        cmd.append('np={}'.format(self.args.cpus))
         cmd.append("name='{}'".format(self.output_file))
 
         if self.is_paired:
-            cmd.append("in='{} {}'".format(self.paired_end_1_file,
-                                           self.paired_end_2_file))
+            cmd.append("in='{} {}'".format(self.end_1, self.end_2))
         else:
-            cmd.append("se='{}'".format(self.paired_end_1_file))
+            cmd.append("se='{}'".format(self.end_1))
 
-        if self.long_reads_file:
-            cmd.append("long='{}'".format(self.long_reads_file))
+        # TODO: Long reads should work here
+        # if self.long_reads:
+        #     cmd.append("long='{}'".format(self.long_reads))
 
         return ' '.join(cmd)
 
@@ -112,8 +111,9 @@ class TrinityAssembler(Assembler):
     @property
     def work_path(self):
         """The output directory name has unique requirements."""
+        print(os.path.join(self.args.work_dir, 'trinity'))
 
-        return 'trinity'
+        return os.path.join(self.args.work_dir, 'trinity')
 
     def command(self):
         """Build the command for assembly."""
@@ -126,21 +126,25 @@ class TrinityAssembler(Assembler):
         cmd.append('--full_cleanup')
 
         if self.is_paired:
-            cmd.append("--left '{}'".format(self.paired_end_1_file))
-            cmd.append("--right '{}'".format(self.paired_end_2_file))
+            cmd.append("--left '{}'".format(self.end_1))
+            cmd.append("--right '{}'".format(self.end_2))
         else:
-            cmd.append("-single '{}'".format(self.paired_end_1_file))
+            cmd.append("-single '{}'".format(self.end_1))
             cmd.append('--run_as_paired')
 
-        if self.long_reads_file:
-            cmd.append("--long_reads '{}'".format(self.long_reads_file))
+        if self.long_reads:
+            cmd.append("--long_reads '{}'".format(self.long_reads))
+
+        # TODO: See if we can get bowtie working
+        cmd.append('--no_bowtie')
 
         return ' '.join(cmd)
 
     def post_assembly(self):
         """This assember has a unique post assembly step."""
 
-        shutil.move('trinity.Trinity.fasta', self.output_file)
+        file_name = os.path.join(self.args.work_dir, 'trinity.Trinity.fasta')
+        shutil.move(file_name, self.output_file)
 
 
 class VevetAssembler(Assembler):
