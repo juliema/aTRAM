@@ -9,6 +9,7 @@ import argparse
 import textwrap
 import tempfile
 import multiprocessing
+from shutil import which
 import psutil
 from Bio import SeqIO
 import lib.db as db
@@ -165,8 +166,8 @@ def write_assembler_files(db_conn, assembler, iteration):
 
     assembler.is_paired = False
 
-    with open(assembler.end_1, 'w') as end_1, \
-            open(assembler.end_2, 'w') as end_2:
+    with open(assembler.ends_1_file, 'w') as end_1, \
+            open(assembler.ends_2_file, 'w') as end_2:
 
         for row in db.get_blast_hits(db_conn, iteration):
 
@@ -254,8 +255,8 @@ def create_targets_from_contigs(db_conn, temp_dir, assembler, iteration):
     next query target.
     """
 
-    query = assembler.path(temp_dir, 'long_reads.fasta', iteration)
-    assembler.long_reads = query
+    query = assembler.path(temp_dir, 'long_reads_file.fasta', iteration)
+    assembler.long_reads_file = query
 
     with open(query, 'w') as target_file:
         for row in db.get_assembled_contigs(db_conn, iteration):
@@ -325,17 +326,6 @@ def parse_command_line():
                             'argument then aTRAM will do a single blast run '
                             'and stop before assembly.')
 
-    cpus = os.cpu_count() - 4 if os.cpu_count() > 4 else 1
-    group.add_argument('-c', '--cpus', '--processes', '--max-processes',
-                       type=int, default=cpus,
-                       help=('Number of cpus to use. This will also be used '
-                             'for the assemblers when possible. Defaults to: '
-                             'Total CPUS  - 4 = "{}"').format(cpus))
-
-    group.add_argument('-C', '--complete', action='store_true',
-                       help='Automatically quit when a complete homolog is '
-                            'recovered.')
-
     group.add_argument('-d', '--work-dir', default='.', metavar='DIR',
                        help=('Which directory has the files created by '
                              'atram_preprocessor.py. This will also be used '
@@ -343,34 +333,44 @@ def parse_command_line():
                              'is not specified. Defaults to the current '
                              'directory "{}".'.format(os.getcwd())))
 
-    group.add_argument('-f', '--fraction', type=float, default=1.0,
-                       help='Use only the specified fraction of the aTRAM '
-                            'database. The default is "1.0"')
-
     group.add_argument('-i', '--iterations', type=int, default=5, metavar='N',
                        help='The number of pipline iterations. '
                             'The default is "5".')
-
-    group.add_argument('-l', '--log-file',
-                       help='Log file (full path). The default is to use the '
-                            'DIR and DB arguments to come up with a name like '
-                            'so "DIR/DB_atram.log"')
 
     group.add_argument('-p', '--protein', action='store_true',
                        help='Are the query sequences protein? '
                             'The aTRAM will guess if you skip this argument.')
 
-    group.add_argument('-P', '--path',
+    group.add_argument('--fraction', type=float, default=1.0,
+                       help='Use only the specified fraction of the aTRAM '
+                            'database. The default is "1.0"')
+
+    group.add_argument('--complete', action='store_true',
+                       help='Automatically quit when a complete homolog is '
+                            'recovered.')
+
+    cpus = os.cpu_count() - 4 if os.cpu_count() > 4 else 1
+    group.add_argument('--cpus', '--processes', '--max-processes',
+                       type=int, default=cpus,
+                       help=('Number of cpus to use. This will also be used '
+                             'for the assemblers when possible. Defaults to: '
+                             'Total CPUS  - 4 = "{}"').format(cpus))
+
+    group.add_argument('--log-file',
+                       help='Log file (full path). The default is to use the '
+                            'DIR and DB arguments to come up with a name like '
+                            'so "DIR/DB_atram.log"')
+
+    group.add_argument('--path',
                        help='If the assembler or blast you want to use is not '
                             'in your $PATH then use this to prepend '
                             'directories to your path.')
 
-    group.add_argument('-S', '--start-iteration',
-                       type=int, default=5, metavar='N',
+    group.add_argument('--start-iteration', type=int, default=5, metavar='N',
                        help='If resuming from a previous run, which iteration '
                             'number to start from. The default is "1".')
 
-    group.add_argument('-t', '--temp-dir',
+    group.add_argument('--temp-dir',
                        help='Store temporary files in this directory. '
                             'Temporary files will be deleted if you do not '
                             'specify this argument.')
@@ -378,51 +378,56 @@ def parse_command_line():
     group = parser.add_argument_group(
         'optional values for blast-filtering contigs')
 
-    group.add_argument('-L', '--length', '--contig-length',
-                       type=int, default=100,
-                       help='Remove blast hits that are shorter than this '
-                            'length. The default is "100".')
-
-    group.add_argument('-s', '--bit-score', type=float, default=70.0,
+    group.add_argument('--bit-score', type=float, default=70.0,
                        metavar='SCORE',
                        help='Remove contigs that have a value less than this. '
                             'The default is "70.0"')
 
+    group.add_argument('--length', '--contig-length', type=int, default=100,
+                       help='Remove blast hits that are shorter than this '
+                            'length. The default is "100".')
+
     group = parser.add_argument_group('optional blast arguments')
 
-    group.add_argument('-e', '--evalue', type=float, default=1e-10,
-                       help='The default evalue is "1e-10".')
-
-    group.add_argument('-g', '--db-gencode', type=int, default=1,
+    group.add_argument('--db-gencode', type=int, default=1,
                        metavar='CODE',
                        help='The genetic code to use during blast runs. '
                             'The default is "1".')
 
-    group.add_argument('-m', '--max-target-seqs', type=int, default=100000000,
+    group.add_argument('--evalue', type=float, default=1e-10,
+                       help='The default evalue is "1e-10".')
+
+    group.add_argument('--max-target-seqs', type=int, default=100000000,
                        metavar='MAX',
                        help='Maximum hit sequences per shard. '
-                            'Default is "100000000".')
+                            'Default is calulated based on the available '
+                            'memory and the number of shards. ')
 
     group = parser.add_argument_group('optional assembler arguments')
 
-    group.add_argument('-E', '--exp-coverage', '--expected_coverage',
+    group.add_argument('--exp-coverage', '--expected_coverage',
                        type=int, default=30,
                        help='The expected coverage of the region. '
                             'The default is "30". (Velvet)')
 
-    group.add_argument('-I', '--ins-length', type=int, default=300,
+    group.add_argument('--ins-length', type=int, default=300,
                        help='The size of the fragments used in the short-read '
                             'library The default is "300". (Velvet)')
 
-    group.add_argument('-K', '--kmer', type=int, default=31,
+    group.add_argument('--kmer', type=int, default=31,
                        help='k-mer size. The default is "31". (Abyss)')
 
-    max_memory = '{}G'.format(math.floor(
-        psutil.virtual_memory().available / 1024**3))
-    group.add_argument('-M', '--max-memory', default=max_memory,
-                       metavar='MEMORY',
+    group.add_argument('--no-bowtie', action='store_true',
+                       help='Do not use bowtie2 during assembly. (Trinity)')
+
+    group.add_argument('--no-long-reads', action='store_true',
+                       help='Do not use long reads during assembly. '
+                            '(Abyss, Trinity)')
+
+    max_mem = max(1, math.floor(psutil.virtual_memory().available / 1024**3))
+    group.add_argument('--max-memory', default=max_mem, metavar='MEMORY',
                        help=('Maximum amount of memory to use. The default is '
-                             '"{}". (Trinity)').format(max_memory))
+                             '"{}G". (Trinity)').format(max_mem))
 
     args = parser.parse_args()
 
@@ -431,16 +436,61 @@ def parse_command_line():
         file_name = '{}.{}.log'.format(args.blast_db, sys.argv[0][:-3])
         args.log_file = os.path.join(args.work_dir, file_name)
 
-    # TODO: Verify that the programs for blast and the assembler exist
-    # TODO: Verify we can find the blast DBs
-    # TODO: Calculate the max_target_seqs per shard
-    # TODO: If not --protein then probe for protein seq
-    # TODO: Check for particular assembler dependencies when chosen
+    # If not --protein then probe for protein seq
+    if not args.protein:
+        with open(args.query) as in_file:
+            for query in SeqIO.parse(in_file, 'fasta'):
+                if bio.is_protein(query.seq):
+                    args.protein = True
 
+    # Prepend to PATH environment variable if requested
     if args.path:
         os.environ['PATH'] = '{}:{}'.format(args.path, os.environ['PATH'])
 
+    # Calculate the max_target_seqs per shard
+    if not args.max_target_seqs:
+        pass
+
+    find_programs(args)
+
     return args
+
+
+def find_programs(args):
+    """Make sure we can find the programs needed by the assembler and blast."""
+
+    if not (which('makeblastdb') and which('tblastn') and which('blastn')):
+        print('We could not find the programs "makeblastdb", "tblastn", or '
+              '"blastn". You either need to install them or you need adjust '
+              'the PATH environment variable with the "--path" option.')
+        sys.exit()
+
+    if args.assembler == 'abyss' and not which('abyss-pe'):
+        print('We could not find the "abyss-pe" program. You either need to '
+              'install it or you need to adjust the PATH environment variable '
+              'with the "--path" option.')
+        sys.exit()
+
+    if args.assembler == 'abyss' and not args.no_long_reads \
+            and not which('bwa'):
+        print('We could not find the "bwa-mem" program. You either need to '
+              'install it, adjust the PATH environment variable '
+              'with the "--path" option, or you may use the "--no-long-reads" '
+              'option to not use this program.')
+        sys.exit()
+
+    if args.assembler == 'trinity' and not which('Trinity'):
+        print('We could not find the "Trinity" program. You either need to '
+              'install it or you need to adjust the PATH environment variable '
+              'with the "--path" option.')
+        sys.exit()
+
+    if args.assembler == 'velvet' and \
+            not (which('velveth') and which('velvetg')):
+        print('We could not find the "Trinity" program. You either need to '
+              'install it or you need to adjust the PATH environment variable '
+              'with the "--path" option.')
+        sys.exit()
 
 
 if __name__ == '__main__':
