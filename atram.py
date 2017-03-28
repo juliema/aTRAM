@@ -3,11 +3,13 @@
 import os
 import sys
 import csv
+import math
 import logging
 import argparse
 import textwrap
 import tempfile
 import multiprocessing
+import psutil
 from Bio import SeqIO
 import lib.db as db
 import lib.bio as bio
@@ -31,20 +33,20 @@ def run(args):
     db_conn = db.connect(args.work_dir, args.blast_db)
     db.create_blast_hits_table(db_conn)
     db.create_assembled_contigs_table(db_conn)
-    db_conn.close()
 
     # TODO: Setup starting iteration
 
     with tempfile.TemporaryDirectory(dir=args.work_dir) as temporary_dir:
-        temp_dir = os.path.join(args.work_dir, 'temp_dir')  # ###############
-        os.makedirs(temp_dir, exist_ok=True)                # ###############
-        temp_dir = os.path.abspath(temp_dir)
-        # temp_dir = os.path.abspath(temporary_dir)
-        atram_loop(args, assembler, all_shards, temp_dir)
-        output_results(args)
+        temp_dir = os.path.join(args.work_dir, temporary_dir)
+        temp_dir = os.path.join(args.work_dir, 'temp_dir')  # TODO: Delete me
+        os.makedirs(temp_dir, exist_ok=True)                # TODO: Delete me
+        atram_loop(args, db_conn, assembler, all_shards, temp_dir)
+        output_results(args, db_conn)
+
+    db_conn.close()
 
 
-def atram_loop(args, assembler, all_shards, temp_dir):
+def atram_loop(args, db_conn, assembler, all_shards, temp_dir):
     """The run program loop."""
 
     query = args.query
@@ -57,58 +59,58 @@ def atram_loop(args, assembler, all_shards, temp_dir):
 
         # If we don't have an assembler then we just want the blast hits
         if not args.assembler:
-            output_blast_only_results(args)
+            output_blast_only_results(args, db_conn)
             sys.exit()
 
         # Exit if there are no blast hits
-        if not blast_hits_count(db_conn, iteration):
-            early_exit(args, 'No blast hits in iteration {}'.format(iteration))
+        if not db.blast_hits_count(db_conn, iteration):
+            logging.info('No blast hits in iteration %i', iteration)
+            break
 
+        print(temp_dir)
         assembler.iteration_files(temp_dir, iteration)
 
-        write_assembler_files(args, assembler, iteration)
+        write_assembler_files(db_conn, assembler, iteration)
 
-        cwd = os.getcwd()
         try:
-            os.chdir(args.work_dir)  # some assemblers need this
             assembler.assemble()
-        except Exception exn:
-            early_exit(args, 'The assembler failed: ' + exn, error=True)
-        finally:
-            os.chdir(cwd)
+        except Exception as exn:  # pylint: disable=broad-except
+            msg = 'The assembler failed: ' + str(exn)
+            logging.error(msg)
+            sys.exit(msg)
 
         # Exit if nothing was assembled
         if not os.path.getsize(assembler.output_file):
-            early_exit(
-                args, 'No new assemblies in iteration {}'.format(iteration))
+            logging.info('No new assemblies in iteration %i', iteration)
+            break
 
+        high_score = filter_contigs(
+            args, db_conn, assembler, temp_dir, iteration)
 
-        high_score = filter_contigs(args, assembler, temp_dir, iteration)
-
-        count = assembled_contigs_count(db_conn, iteration)
+        count = db.assembled_contigs_count(db_conn, iteration)
         if not count:
-            early_exit(
-                args,
-                ('No contigs had a bit score greater than {} and are at '
-                 'least {} long in iteration {}. The highest score for this '
-                 'iteration is {}').format(args.bit_score, args.length,
-                                           iteration, high_score))
+            logging.info(
+                ('No contigs had a bit score greater than %i and are at '
+                 'least %i long in iteration %i. The highest score for this '
+                 'iteration is %d'),
+                args.bit_score, args.length, iteration, high_score)
+            break
 
-        if count == assembled_contigs_count(db_conn, iteration):
-            early_exit(args, ('No new contigs were found in '
-                              'iteration {}').format(iteration))
+        if count == db.iteration_overlap_count(db_conn, iteration):
+            logging.info('No new contigs were found in iteration %i',
+                         iteration)
+            break
 
         # TODO: Exit if the target was covered
 
         query = create_targets_from_contigs(
-            args, temp_dir, assembler, iteration)
+            db_conn, temp_dir, assembler, iteration)
 
 
-def early_exit(args, message, error=False):
+def early_exit(message):
     """Early exit with message."""
 
     logging.info(message)
-    sys.exit(message)
 
 
 def blast_target_against_all_sras(
@@ -138,6 +140,7 @@ def blast_target_against_sra(args, shard_path, query, temp_dir, iteration):
     blast.against_sra(args, shard_path, query, output_file, iteration)
 
     db_conn = db.connect(args['work_dir'], args['blast_db'])
+
     shard = os.path.basename(shard_path)
 
     batch = []
@@ -152,19 +155,18 @@ def blast_target_against_sra(args, shard_path, query, temp_dir, iteration):
                 seq_end = ''
             batch.append((iteration, seq_end, seq_name, shard))
     db.insert_blast_hit_batch(db_conn, batch)
+    db_conn.close()
 
 
-def write_assembler_files(args, assembler, iteration):
+def write_assembler_files(db_conn, assembler, iteration):
     """Take the matching blast hits and write the sequence and any matching
     end to the appropriate fasta files.
     """
 
-    db_conn = db.connect(args.work_dir, args.blast_db)
-
     assembler.is_paired = False
 
-    with open(assembler.paired_end_1_file, 'w') as end_1, \
-            open(assembler.paired_end_2_file, 'w') as end_2:
+    with open(assembler.end_1, 'w') as end_1, \
+            open(assembler.end_2, 'w') as end_2:
 
         for row in db.get_blast_hits(db_conn, iteration):
 
@@ -182,13 +184,9 @@ def write_assembler_files(args, assembler, iteration):
             out_file.write('>{}{}\n'.format(row['seq_name'], seq_end))
             out_file.write('{}\n'.format(row['seq']))
 
-    db_conn.close()
 
-
-def output_blast_only_results(args):
+def output_blast_only_results(args, db_conn):
     """Output this file if we are not assembling the contigs."""
-
-    db_conn = db.connect(args.work_dir, args.blast_db)
 
     with open(args.output, 'w') as out_file:
         for row in db.get_blast_hits(db_conn, 1):
@@ -196,7 +194,7 @@ def output_blast_only_results(args):
             out_file.write('{}\n'.format(row['seq']))
 
 
-def filter_contigs(args, assembler, temp_dir, iteration):
+def filter_contigs(args, db_conn, assembler, temp_dir, iteration):
     """Remove junk from the assembled contigs."""
 
     blast_db = blast.temp_db(temp_dir, args.blast_db, iteration)
@@ -207,7 +205,7 @@ def filter_contigs(args, assembler, temp_dir, iteration):
     blast.against_contigs(args, blast_db, args.query, hits_file)
 
     filtered_scores = filter_contig_scores(args, hits_file)
-    return save_contigs(args, assembler, filtered_scores, iteration)
+    return save_contigs(db_conn, assembler, filtered_scores, iteration)
 
 
 def filter_contig_scores(args, hits_file):
@@ -229,10 +227,9 @@ def filter_contig_scores(args, hits_file):
     return scores
 
 
-def save_contigs(args, assembler, filtered_scores, iteration):
+def save_contigs(db_conn, assembler, filtered_scores, iteration):
     """Save the contigs to the database."""
 
-    db_conn = db.connect(args.work_dir, args.blast_db)
     batch = []
     high_score = 0
     with open(assembler.output_file) as in_file:
@@ -248,37 +245,37 @@ def save_contigs(args, assembler, filtered_scores, iteration):
                     score['target_end'], score['contig_start'],
                     score['contig_end'], score['contig_len']))
     db.insert_assembled_contigs_batch(db_conn, batch)
-    db_conn.close()
+
     return high_score
 
 
-def create_targets_from_contigs(args, temp_dir, assembler, iteration):
+def create_targets_from_contigs(db_conn, temp_dir, assembler, iteration):
     """Crate a new file with the contigs that will be used as the
     next query target.
     """
 
-    db_conn = db.connect(args.work_dir, args.blast_db)
-
     query = assembler.path(temp_dir, 'long_reads.fasta', iteration)
-    assembler.long_reads_file = query
+    assembler.long_reads = query
 
     with open(query, 'w') as target_file:
         for row in db.get_assembled_contigs(db_conn, iteration):
             target_file.write('>{}\n'.format(row[0]))
             target_file.write('{}\n'.format(row[1]))
 
-    db_conn.close()
-
     return query
 
 
-def output_results(args):
+def output_results(args, db_conn):
     """Write the assembled contigs to a fasta file."""
 
-    db_conn = db.connect(args.work_dir, args.blast_db)
-
+    seen = {}
     with open(args.output, 'w') as out_file:
         for row in db.get_all_assembled_contigs(db_conn):
+
+            if row['contig_id'] in seen:
+                continue
+            seen[row['contig_id']] = 1
+
             header = ('>{}_{} iteration={} contig_id={} '
                       'score={}\n').format(
                           row['iteration'], row['contig_id'],
@@ -420,9 +417,12 @@ def parse_command_line():
     group.add_argument('-K', '--kmer', type=int, default=31,
                        help='k-mer size. The default is "31". (Abyss)')
 
-    group.add_argument('-M', '--max-memory', default='50G', metavar='MEMORY',
-                       help='Maximum amount of memory to use. The default is '
-                            '"50G". (Trinity)')
+    max_memory = '{}G'.format(math.floor(
+        psutil.virtual_memory().available / 1024**3))
+    group.add_argument('-M', '--max-memory', default=max_memory,
+                       metavar='MEMORY',
+                       help=('Maximum amount of memory to use. The default is '
+                             '"{}". (Trinity)').format(max_memory))
 
     args = parser.parse_args()
 
@@ -431,16 +431,14 @@ def parse_command_line():
         file_name = '{}.{}.log'.format(args.blast_db, sys.argv[0][:-3])
         args.log_file = os.path.join(args.work_dir, file_name)
 
-    # Set to absolute paths because we may change directory during assembly
-    args.work_dir = os.path.abspath(args.work_dir)
-    args.log_file = os.path.abspath(args.log_file)
-    args.output = os.path.abspath(args.output)
-    args.query = os.path.abspath(args.query)
-
     # TODO: Verify that the programs for blast and the assembler exist
     # TODO: Verify we can find the blast DBs
     # TODO: Calculate the max_target_seqs per shard
     # TODO: If not --protein then probe for protein seq
+    # TODO: Check for particular assembler dependencies when chosen
+
+    if args.path:
+        os.environ['PATH'] = '{}:{}'.format(args.path, os.environ['PATH'])
 
     return args
 
