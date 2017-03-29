@@ -417,8 +417,8 @@ def parse_command_line():
     group.add_argument('--kmer', type=int, default=31,
                        help='k-mer size. The default is "31". (Abyss)')
 
-    group.add_argument('--no-bowtie', action='store_true',
-                       help='Do not use bowtie2 during assembly. (Trinity)')
+    group.add_argument('--bowtie2', action='store_true',
+                       help='Use bowtie2 during assembly. (Trinity)')
 
     group.add_argument('--no-long-reads', action='store_true',
                        help='Do not use long reads during assembly. '
