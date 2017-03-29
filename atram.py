@@ -63,7 +63,7 @@ def atram_loop(args, db_conn, assembler, all_shards, temp_dir):
             output_blast_only_results(args, db_conn)
             sys.exit()
 
-        Exit if there are no blast hits
+        # Exit if there are no blast hits
         if not db.blast_hits_count(db_conn, iteration):
             logging.info('No blast hits in iteration %i', iteration)
             break
