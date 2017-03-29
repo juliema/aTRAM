@@ -104,7 +104,7 @@ class AbyssAssembler(Assembler):
         src = os.path.realpath(self.output_file + '-unitigs.fa')
         dst = self.output_file
 
-        # shutil.move(src['raw_contigs'].name)
+        # shutil.move(src, dst)
         with open(src) as in_file, open(dst, 'w') as out_file:
             for line in in_file:
                 out_file.write(line)
