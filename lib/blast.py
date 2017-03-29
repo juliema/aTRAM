@@ -65,7 +65,6 @@ def against_contigs(args, blast_db, query, hits_file):
         "-outfmt '10 qseqid sseqid bitscore qstart qend sstart send slen'")
 
     command = ' '.join(cmd)
-    print(command)
     subprocess.check_call(command, shell=True)
 
 
