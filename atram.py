@@ -70,7 +70,7 @@ def atram_loop(args, db_conn, assembler, all_shards, temp_dir):
             logging.info('No blast hits in iteration %i', iteration)
             break
 
-        assembler.iteration_files(temp_dir, iteration)
+        assembler.iteration_files(iteration)
 
         write_assembler_files(db_conn, assembler, iteration)
 
