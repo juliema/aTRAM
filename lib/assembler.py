@@ -128,7 +128,7 @@ class TrinityAssembler(Assembler):
 
         cmd = ['Trinity']
         cmd.append('--seqType fa')
-        cmd.append('--max_memory {}G'.format(self.args.max_memory))
+        cmd.append('--max_memory {}'.format(self.args.max_memory))
         cmd.append('--CPU {}'.format(self.args.cpus))
         cmd.append("--output '{}'".format(self.work_path))
         cmd.append('--full_cleanup')

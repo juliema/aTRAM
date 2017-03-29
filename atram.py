@@ -106,8 +106,7 @@ def atram_loop(args, db_conn, assembler, all_shards, temp_dir):
 
         # TODO: Exit if the target was covered
 
-        query = create_targets_from_contigs(
-            db_conn, temp_dir, assembler, iteration)
+        query = create_targets_from_contigs(db_conn, assembler, iteration)
 
 
 def blast_target_against_all_sras(
@@ -246,12 +245,12 @@ def save_contigs(db_conn, assembler, filtered_scores, iteration):
     return high_score
 
 
-def create_targets_from_contigs(db_conn, temp_dir, assembler, iteration):
+def create_targets_from_contigs(db_conn, assembler, iteration):
     """Crate a new file with the contigs that will be used as the
     next query target.
     """
 
-    query = assembler.path(temp_dir, 'long_reads_file.fasta', iteration)
+    query = assembler.path('long_reads_file.fasta', iteration)
     assembler.long_reads_file = query
 
     with open(query, 'w') as target_file:
@@ -287,7 +286,7 @@ def output_results(args, db_conn):
             out_file.write('{}\n'.format(bio.reverse_complement(row['seq'])))
 
 
-def parse_command_line():
+def parse_command_line():  # pylint: disable=too-many-statements
     """Process command-line arguments."""
 
     description = """
@@ -421,11 +420,16 @@ def parse_command_line():
                             '(Abyss, Trinity, Velvet)')
 
     max_mem = max(1, math.floor(psutil.virtual_memory().available / 1024**3))
+    max_mem = '{}G'.format(max_mem / 2)
     group.add_argument('--max-memory', default=max_mem, metavar='MEMORY',
                        help=('Maximum amount of memory to use. The default is '
-                             '"{}G". (Trinity)').format(max_mem))
+                             '"{}". (Trinity)').format(max_mem))
 
     args = parser.parse_args()
+
+    # Check max_memory
+    if not args.max_memory.endswith('G'):
+        args.max_memory += 'G'
 
     # Set degailt log file name
     if not args.log_file:
