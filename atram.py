@@ -29,7 +29,6 @@ def run(args):
     logging.info(' '.join(sys.argv))
 
     all_shards = blast.all_shard_paths(args.work_dir, args.blast_db)
-    assembler = Assembler.factory(args) if args.assembler else None
 
     db_conn = db.connect(args.work_dir, args.blast_db)
     db.create_blast_hits_table(db_conn)
@@ -41,6 +40,9 @@ def run(args):
         temp_dir = os.path.join(args.work_dir, temporary_dir)
         temp_dir = os.path.join(args.work_dir, 'temp_dir')  # TODO: Delete me
         os.makedirs(temp_dir, exist_ok=True)                # TODO: Delete me
+        assembler = None
+        if args.assembler:
+            assembler = Assembler.factory(args, temp_dir)
         atram_loop(args, db_conn, assembler, all_shards, temp_dir)
         output_results(args, db_conn)
 
@@ -106,12 +108,6 @@ def atram_loop(args, db_conn, assembler, all_shards, temp_dir):
 
         query = create_targets_from_contigs(
             db_conn, temp_dir, assembler, iteration)
-
-
-def early_exit(message):
-    """Early exit with message."""
-
-    logging.info(message)
 
 
 def blast_target_against_all_sras(
