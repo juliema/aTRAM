@@ -63,12 +63,11 @@ def atram_loop(args, db_conn, assembler, all_shards, temp_dir):
             output_blast_only_results(args, db_conn)
             sys.exit()
 
-        # Exit if there are no blast hits
+        Exit if there are no blast hits
         if not db.blast_hits_count(db_conn, iteration):
             logging.info('No blast hits in iteration %i', iteration)
             break
 
-        print(temp_dir)
         assembler.iteration_files(temp_dir, iteration)
 
         write_assembler_files(db_conn, assembler, iteration)
@@ -81,7 +80,8 @@ def atram_loop(args, db_conn, assembler, all_shards, temp_dir):
             sys.exit(msg)
 
         # Exit if nothing was assembled
-        if not os.path.getsize(assembler.output_file):
+        if not os.path.exists(assembler.output_file) \
+                or not os.path.getsize(assembler.output_file):
             logging.info('No new assemblies in iteration %i', iteration)
             break
 
@@ -422,7 +422,7 @@ def parse_command_line():
 
     group.add_argument('--no-long-reads', action='store_true',
                        help='Do not use long reads during assembly. '
-                            '(Abyss, Trinity)')
+                            '(Abyss, Trinity, Velvet)')
 
     max_mem = max(1, math.floor(psutil.virtual_memory().available / 1024**3))
     group.add_argument('--max-memory', default=max_mem, metavar='MEMORY',
@@ -462,13 +462,14 @@ def find_programs(args):
     if not (which('makeblastdb') and which('tblastn') and which('blastn')):
         print('We could not find the programs "makeblastdb", "tblastn", or '
               '"blastn". You either need to install them or you need adjust '
-              'the PATH environment variable with the "--path" option.')
+              'the PATH environment variable with the "--path" option so that '
+              'aTRAM can find it.')
         sys.exit()
 
     if args.assembler == 'abyss' and not which('abyss-pe'):
         print('We could not find the "abyss-pe" program. You either need to '
               'install it or you need to adjust the PATH environment variable '
-              'with the "--path" option.')
+              'with the "--path" option so that aTRAM can find it.')
         sys.exit()
 
     if args.assembler == 'abyss' and not args.no_long_reads \
@@ -482,14 +483,22 @@ def find_programs(args):
     if args.assembler == 'trinity' and not which('Trinity'):
         print('We could not find the "Trinity" program. You either need to '
               'install it or you need to adjust the PATH environment variable '
-              'with the "--path" option.')
+              'with the "--path" option so that aTRAM can find it.')
+        sys.exit()
+
+    if args.assembler == 'trinity' and args.bowtie2 and not which('bowtie2'):
+        print('We could not find the "bowtie2" program. You either need to '
+              'install it, adjust the PATH environment variable '
+              'with the "--path" option, or you may skip using this program '
+              'by not using the "--bowtie2" option.')
         sys.exit()
 
     if args.assembler == 'velvet' and \
             not (which('velveth') and which('velvetg')):
-        print('We could not find the "Trinity" program. You either need to '
-              'install it or you need to adjust the PATH environment variable '
-              'with the "--path" option.')
+        print('We could not find either the "velveth" or "velvetg" program. '
+              'You either need to install it or you need to adjust the PATH '
+              'environment variable with the "--path" option so that aTRAM '
+              'can find it.')
         sys.exit()
 
 

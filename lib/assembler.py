@@ -15,12 +15,13 @@ class Assembler:
         if args.assembler.lower() == 'trinity':
             return TrinityAssembler(args)
         elif args.assembler.lower() == 'velvet':
-            return VevetAssembler(args)
+            return VeletAssembler(args)
         elif args.assembler.lower() == 'abyss':
             return AbyssAssembler(args)
 
     def __init__(self, args):
         self.args = args
+        self.steps = []
         self.is_paired = False
         self.output_file = None
         self.long_reads_file = None
@@ -40,9 +41,16 @@ class Assembler:
         raise NotImplementedError()
 
     def assemble(self):
-        """Use the assembler to build up the contigs."""
-        cmd = self.command()
-        subprocess.check_call(cmd, shell=True)
+        """Use the assembler to build up the contigs. We take and array of
+        subprocess steps and execute them in order. We then follow this up
+        with a post assembly step.
+        """
+
+        print(self.steps)
+        for step in self.steps:
+            print(step())
+            subprocess.check_call(step(), shell=True)
+
         self.post_assembly()
 
     def post_assembly(self):
@@ -71,7 +79,11 @@ class Assembler:
 class AbyssAssembler(Assembler):
     """Wrapper for the Abyss assembler."""
 
-    def command(self):
+    def __init__(self, args):
+        super().__init__(args)
+        self.steps = [self.abyss]
+
+    def abyss(self):
         """Build the command for assembly."""
 
         cmd = ['abyss-pe']
@@ -109,11 +121,14 @@ class TrinityAssembler(Assembler):
     @property
     def work_path(self):
         """The output directory name has unique requirements."""
-        print(os.path.join(self.args.work_dir, 'trinity'))
 
         return os.path.join(self.args.work_dir, 'trinity')
 
-    def command(self):
+    def __init__(self, args):
+        super().__init__(args)
+        self.steps = [self.trinity]
+
+    def trinity(self):
         """Build the command for assembly."""
 
         cmd = ['Trinity']
@@ -145,8 +160,23 @@ class TrinityAssembler(Assembler):
         shutil.move(file_name, self.output_file)
 
 
-class VevetAssembler(Assembler):
+class VeletAssembler(Assembler):
     """Wrapper for the Velvet assembler."""
 
-    def command(self):
+    def __init__(self, args):
+        super().__init__(args)
+        self.steps = [self.velveth, self.velvetg]
+
+    def velveth(self):
         """Build the command for assembly."""
+
+        cmd = ['velveth']
+
+        return ' '.join(cmd)
+
+    def velvetg(self):
+        """Build the command for assembly."""
+
+        cmd = ['velvetg']
+
+        return ' '.join(cmd)
