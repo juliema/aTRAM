@@ -133,7 +133,7 @@ class TrinityAssembler(Assembler):
         if self.long_reads_file and not self.args.no_long_reads:
             cmd.append("--long_reads_file '{}'".format(self.long_reads_file))
 
-        if self.args.no_bowtie:
+        if not self.args.bowtie2:
             cmd.append('--no_bowtie')
 
         return ' '.join(cmd)
