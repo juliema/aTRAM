@@ -344,7 +344,7 @@ def parse_command_line():  # pylint: disable=too-many-statements
                        help='Automatically quit when a complete homolog is '
                             'recovered.')
 
-    cpus = os.cpu_count() - 4 if os.cpu_count() > 4 else 1
+    cpus = min(10, os.cpu_count() - 4 if os.cpu_count() > 4 else 1)
     group.add_argument('--cpus', '--processes', '--max-processes',
                        type=int, default=cpus,
                        help=('Number of cpus to use. This will also be used '
