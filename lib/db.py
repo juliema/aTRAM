@@ -122,10 +122,11 @@ def blast_hits_count(db_conn, iteration):
 def get_blast_hits(db_conn, iteration):
     """Get all blast hits for the iteration."""
 
-    sql = '''WITH hits AS
-        (SELECT DISTINCT seq_name FROM blast_hits WHERE iteration = ?)
-         SELECT seq_name, seq_end, seq FROM sequences WHERE seq_name IN hits
-         ORDER BY seq_name, seq_end
+    sql = '''SELECT seq_name, seq_end, seq FROM sequences
+        WHERE seq_name IN (SELECT DISTINCT seq_name
+                             FROM blast_hits
+                             WHERE iteration = ?)
+        ORDER BY seq_name, seq_end
         '''
 
     db_conn.row_factory = sqlite3.Row
