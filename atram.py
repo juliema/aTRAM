@@ -409,8 +409,8 @@ def parse_command_line():  # pylint: disable=too-many-statements
                        help='The size of the fragments used in the short-read '
                             'library The default is "300". (Velvet)')
 
-    group.add_argument('--kmer', type=int, default=31,
-                       help='k-mer size. The default is "31". (Abyss)')
+    group.add_argument('--kmer', type=int, default=64,
+                       help='k-mer size. The default is "64". (Abyss)')
 
     group.add_argument('--bowtie2', action='store_true',
                        help='Use bowtie2 during assembly. (Trinity)')
