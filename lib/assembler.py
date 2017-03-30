@@ -133,6 +133,9 @@ class TrinityAssembler(Assembler):
         cmd.append("--output '{}'".format(self.work_path))
         cmd.append('--full_cleanup')
 
+        if not self.args.bowtie2:
+            cmd.append('--no_bowtie')
+
         if self.is_paired:
             cmd.append("--left '{}'".format(self.ends_1_file))
             cmd.append("--right '{}'".format(self.ends_2_file))
@@ -142,9 +145,6 @@ class TrinityAssembler(Assembler):
 
         if self.long_reads_file and not self.args.no_long_reads:
             cmd.append("--long_reads '{}'".format(self.long_reads_file))
-
-        if not self.args.bowtie2:
-            cmd.append('--no_bowtie')
 
         return ' '.join(cmd)
 

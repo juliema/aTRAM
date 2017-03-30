@@ -417,8 +417,8 @@ def parse_command_line():  # pylint: disable=too-many-statements
     group.add_argument('--bowtie2', action='store_true',
                        help='Use bowtie2 during assembly. (Trinity)')
 
-    max_mem = max(1, math.floor(psutil.virtual_memory().available / 1024**3))
-    max_mem = '{}G'.format(max_mem / 2)
+    max_mem = '{}G'.format(
+        max(1, math.floor(psutil.virtual_memory().available / 1024**3 / 2)))
     group.add_argument('--max-memory', default=max_mem, metavar='MEMORY',
                        help=('Maximum amount of memory to use. The default is '
                              '"{}". (Trinity)').format(max_mem))
