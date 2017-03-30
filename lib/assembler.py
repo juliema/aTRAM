@@ -151,8 +151,8 @@ class TrinityAssembler(Assembler):
     def post_assembly(self):
         """This assember has a unique post assembly step."""
 
-        file_name = os.path.join(self.args.work_dir, 'trinity.Trinity.fasta')
-        shutil.move(file_name, self.output_file)
+        src = os.path.join(self.args.work_dir, 'trinity.Trinity.fasta')
+        shutil.move(src, self.output_file)
 
 
 class VelvetAssembler(Assembler):
@@ -191,3 +191,9 @@ class VelvetAssembler(Assembler):
         cmd.append('-min_contig_lgth {}'.format(self.args.min_contig_length))
 
         return ' '.join(cmd)
+
+    def post_assembly(self):
+        """This assember has a unique post assembly step."""
+
+        src = os.path.join(self.temp_dir, 'contigs.fa')
+        shutil.move(src, self.output_file)
