@@ -170,6 +170,15 @@ class VelvetAssembler(Assembler):
         cmd.append('{}'.format(self.args.kmer))
         cmd.append('-fasta')
 
+        if self.is_paired:
+            cmd.append("-shortPaired '{}' '{}'".format(
+                self.ends_1_file, self.ends_2_file))
+        else:
+            cmd.append("-shortPaired '{}'".format(self.ends_1_file))
+
+        if self.long_reads_file and not self.args.no_long_reads:
+            cmd.append("-long '{}'".format(self.long_reads_file))
+
         return ' '.join(cmd)
 
     def velvetg(self):
@@ -177,5 +186,8 @@ class VelvetAssembler(Assembler):
 
         cmd = ['velvetg']
         cmd.append('{}'.format(self.temp_dir))
+        cmd.append('-ins_length {}'.format(self.args.ins_length))
+        cmd.append('-exp_cov {}'.format(self.args.exp_coverage))
+        cmd.append('-min_contig_lgth {}'.format(self.args.min_contig_length))
 
         return ' '.join(cmd)
