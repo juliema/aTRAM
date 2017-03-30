@@ -299,6 +299,7 @@ def parse_command_line():  # pylint: disable=too-many-statements
         formatter_class=argparse.RawDescriptionHelpFormatter,
         description=textwrap.dedent(description))
 
+    # required arguments
     group = parser.add_argument_group('required arguments')
 
     group.add_argument('-b', '--blast-db', '--sra', '--db', '--database',
@@ -313,6 +314,7 @@ def parse_command_line():  # pylint: disable=too-many-statements
                        help='The path to the fasta file with sequences of '
                             'interest.')
 
+    # optional aTRAM arguments
     group = parser.add_argument_group('optional aTRAM arguments')
 
     group.add_argument('-a', '--assembler',
@@ -370,6 +372,7 @@ def parse_command_line():  # pylint: disable=too-many-statements
                             'Temporary files will be deleted if you do not '
                             'specify this argument.')
 
+    # optional values for blast-filtering contigs
     group = parser.add_argument_group(
         'optional values for blast-filtering contigs')
 
@@ -382,6 +385,7 @@ def parse_command_line():  # pylint: disable=too-many-statements
                        help='Remove blast hits that are shorter than this '
                             'length. The default is "100".')
 
+    # optional blast arguments
     group = parser.add_argument_group('optional blast arguments')
 
     group.add_argument('--db-gencode', type=int, default=1,
@@ -398,7 +402,26 @@ def parse_command_line():  # pylint: disable=too-many-statements
                             'Default is calulated based on the available '
                             'memory and the number of shards. ')
 
+    # optional assembler arguments
     group = parser.add_argument_group('optional assembler arguments')
+
+    group.add_argument('--no-long-reads', action='store_true',
+                       help='Do not use long reads during assembly. '
+                            '(Abyss, Trinity, Velvet)')
+
+    group.add_argument('--kmer', type=int, default=64,
+                       help='k-mer size. The default is "64" for Abyss and '
+                            '"31" for Velvet. Note: the maximum kmer length '
+                            'for Velvet is 31. (Abyss, Velvet)')
+
+    group.add_argument('--bowtie2', action='store_true',
+                       help='Use bowtie2 during assembly. (Trinity)')
+
+    max_mem = max(1, math.floor(psutil.virtual_memory().available / 1024**3))
+    max_mem = '{}G'.format(max_mem / 2)
+    group.add_argument('--max-memory', default=max_mem, metavar='MEMORY',
+                       help=('Maximum amount of memory to use. The default is '
+                             '"{}". (Trinity)').format(max_mem))
 
     group.add_argument('--exp-coverage', '--expected_coverage',
                        type=int, default=30,
@@ -407,25 +430,18 @@ def parse_command_line():  # pylint: disable=too-many-statements
 
     group.add_argument('--ins-length', type=int, default=300,
                        help='The size of the fragments used in the short-read '
-                            'library The default is "300". (Velvet)')
+                            'library. The default is "300". (Velvet)')
 
-    group.add_argument('--kmer', type=int, default=64,
-                       help='k-mer size. The default is "64". (Abyss)')
-
-    group.add_argument('--bowtie2', action='store_true',
-                       help='Use bowtie2 during assembly. (Trinity)')
-
-    group.add_argument('--no-long-reads', action='store_true',
-                       help='Do not use long reads during assembly. '
-                            '(Abyss, Trinity, Velvet)')
-
-    max_mem = max(1, math.floor(psutil.virtual_memory().available / 1024**3))
-    max_mem = '{}G'.format(max_mem / 2)
-    group.add_argument('--max-memory', default=max_mem, metavar='MEMORY',
-                       help=('Maximum amount of memory to use. The default is '
-                             '"{}". (Trinity)').format(max_mem))
+    group.add_argument('--min-contig-length', '--min-contig-len',
+                       type=int, default=100,
+                       help='The minimum contig length. '
+                            'The default is "100". (Velvet)')
 
     args = parser.parse_args()
+
+    # Check kmer
+    if args.assembler == 'velvet' and args.kmer > 31:
+        args.kmer = 31
 
     # Check max_memory
     if not args.max_memory.endswith('G'):
