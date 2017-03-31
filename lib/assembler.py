@@ -2,6 +2,7 @@
 
 import os
 import shutil
+import logging
 import subprocess
 
 
@@ -20,15 +21,15 @@ class Assembler:  # pylint: disable=too-many-instance-attributes
             return VelvetAssembler(args, temp_dir)
 
     def __init__(self, args, temp_dir):
-        self.args = args
-        self.steps = []
-        self.temp_dir = temp_dir
-        self.is_paired = False
-        self.output_file = None
-        self.long_reads_file = None
-        self.single_ends_file = None
-        self.ends_1_file = None
-        self.ends_2_file = None
+        self.args = args            # Parsed command line arguments
+        self.steps = []             # Assembler steps setup by the assembler
+        self.temp_dir = temp_dir    # Temp directory used for storing files
+        self.is_paired = False      # Did we find paired end sequences?
+        self.output_file = None     # Write to this file
+        self.long_reads_file = None  # Long-reads file
+        self.ends_1_file = None     # Sequneces for end 1 or single end reads
+        self.ends_2_file = None     # Sequences for end 2 reads
+        self.cwd = None             # Some assemblers need a directory change
 
     @property
     def work_path(self):
@@ -38,16 +39,29 @@ class Assembler:  # pylint: disable=too-many-instance-attributes
 
     def assemble(self):
         """Use the assembler to build up the contigs. We take and array of
-        subprocess steps and execute them in order. We then follow this up
-        with a post assembly step.
+        subprocess steps and execute them in order. We bracket this with
+        pre and post assembly steps.
         """
 
-        print(self.steps)
-        for step in self.steps:
-            print(step())
-            subprocess.check_call(step(), shell=True)
+        try:
 
-        self.post_assembly()
+            self.pre_assembly()
+
+            for step in self.steps:
+                cmd = step()
+                logging.info(cmd)
+                subprocess.check_call(cmd, shell=True)
+
+            self.post_assembly()
+
+        except Exception as exn:  # pylint: disable=broad-except
+            raise exn
+        finally:
+            if self.cwd:
+                os.chdir(self.cwd)
+
+    def pre_assembly(self):
+        """Assembers have unique pre assembly steps."""
 
     def post_assembly(self):
         """Assembers have unique post assembly steps."""
@@ -68,7 +82,6 @@ class Assembler:  # pylint: disable=too-many-instance-attributes
         self.output_file = self.path('output.fasta', iteration)
         self.ends_1_file = self.path('paired_end_1.fasta', iteration)
         self.ends_2_file = self.path('paired_end_2.fasta', iteration)
-        self.single_ends_file = self.path('single_end.fasta', iteration)
 
 
 class AbyssAssembler(Assembler):
@@ -78,6 +91,14 @@ class AbyssAssembler(Assembler):
         super().__init__(args, temp_dir)
         self.steps = [self.abyss]
 
+    def pre_assembly(self):
+        """Abyss needs to work from the current directory which will be the
+        temporary directory here.
+        """
+
+        self.cwd = os.getcwd()
+        os.chdir(self.temp_dir)
+
     def abyss(self):
         """Build the command for assembly."""
 
@@ -85,29 +106,29 @@ class AbyssAssembler(Assembler):
         cmd.append('v=-v')
         cmd.append('E=0')
         cmd.append('k={}'.format(self.args.kmer))
-        cmd.append('np={}'.format(self.args.cpus))
-        cmd.append("name='{}'".format(self.output_file))
+        # cmd.append('np={}'.format(self.args.cpus))
+        cmd.append("name={}".format(os.path.basename(self.output_file)))
 
         if self.is_paired:
-            cmd.append("in='{} {}'".format(self.ends_1_file, self.ends_2_file))
+            cmd.append("in='{} {}'".format(os.path.basename(self.ends_1_file),
+                                           os.path.basename(self.ends_2_file)))
         else:
-            cmd.append("se='{}'".format(self.ends_1_file))
+            cmd.append("se={}".format(os.path.basename(self.ends_1_file)))
 
         if self.long_reads_file and not self.args.no_long_reads:
-            cmd.append("long='{}'".format(self.long_reads_file))
+            cmd.append("long={}".format(
+                os.path.basename(self.long_reads_file)))
 
         return ' '.join(cmd)
 
     def post_assembly(self):
-        """This assember has a unique post assembly step."""
+        """This assember has unique post assembly steps."""
+
+        os.chdir(self.cwd)
 
         src = os.path.realpath(self.output_file + '-unitigs.fa')
-        dst = self.output_file
 
-        # shutil.move(src, dst)
-        with open(src) as in_file, open(dst, 'w') as out_file:
-            for line in in_file:
-                out_file.write(line)
+        shutil.copyfile(src, self.output_file)
 
 
 class TrinityAssembler(Assembler):
