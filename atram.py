@@ -250,7 +250,7 @@ def create_targets_from_contigs(db_conn, assembler, iteration):
     next query target.
     """
 
-    query = assembler.path('long_reads_file.fasta', iteration)
+    query = assembler.path('long_reads.fasta', iteration)
     assembler.long_reads_file = query
 
     with open(query, 'w') as target_file:
@@ -488,13 +488,13 @@ def find_programs(args):
               'with the "--path" option so that aTRAM can find it.')
         sys.exit()
 
-    if args.assembler == 'abyss' and not args.no_long_reads \
-            and not which('bwa'):
-        print('We could not find the "bwa-mem" program. You either need to '
-              'install it, adjust the PATH environment variable '
-              'with the "--path" option, or you may use the "--no-long-reads" '
-              'option to not use this program.')
-        sys.exit()
+    # if args.assembler == 'abyss' and not args.no_long_reads \
+    #         and not which('bwa'):
+    #     print('We could not find the "bwa-mem" program. You either need to '
+    #           'install it, adjust the PATH environment variable '
+    #           'with the "--path" option, or you may use the "--no-long-reads" '
+    #           'option to not use this program.')
+    #     sys.exit()
 
     if args.assembler == 'trinity' and not which('Trinity'):
         print('We could not find the "Trinity" program. You either need to '
