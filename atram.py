@@ -492,7 +492,7 @@ def find_programs(args):
     #         and not which('bwa'):
     #     print('We could not find the "bwa-mem" program. You either need to '
     #           'install it, adjust the PATH environment variable '
-    #           'with the "--path" option, or you may use the "--no-long-reads" '
+    #         'with the "--path" option, or you may use the "--no-long-reads" '
     #           'option to not use this program.')
     #     sys.exit()
 

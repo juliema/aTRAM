@@ -116,7 +116,8 @@ class AbyssAssembler(Assembler):
             cmd.append("se={}".format(os.path.basename(self.ends_1_file)))
 
         if self.long_reads_file and not self.args.no_long_reads:
-            cmd.append("long={}".format(
+            cmd.append("long='longa'")
+            cmd.append("longa='{}'".format(
                 os.path.basename(self.long_reads_file)))
 
         return ' '.join(cmd)
