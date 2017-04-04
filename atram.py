@@ -417,11 +417,12 @@ def parse_command_line():  # pylint: disable=too-many-statements
     group.add_argument('--bowtie2', action='store_true',
                        help='Use bowtie2 during assembly. (Trinity)')
 
-    max_mem = '{}G'.format(
-        max(1, math.floor(psutil.virtual_memory().available / 1024**3 / 2)))
+    max_mem = max(1, math.floor(
+        psutil.virtual_memory().available / 1024**3 / 2))
     group.add_argument('--max-memory', default=max_mem, metavar='MEMORY',
-                       help=('Maximum amount of memory to use. The default is '
-                             '"{}". (Trinity)').format(max_mem))
+                       type=int,
+                       help=('Maximum amount of memory to use in gigabytes. '
+                             'The default is "{}". (Trinity)').format(max_mem))
 
     group.add_argument('--exp-coverage', '--expected_coverage',
                        type=int, default=30,
@@ -443,10 +444,6 @@ def parse_command_line():  # pylint: disable=too-many-statements
     if args.assembler == 'velvet' and args.kmer > 31:
         args.kmer = 31
 
-    # Check max_memory
-    if not args.max_memory.endswith('G'):
-        args.max_memory += 'G'
-
     # Set default log file name
     if not args.log_file:
         file_name = '{}.{}.log'.format(args.blast_db, sys.argv[0][:-3])
@@ -463,9 +460,10 @@ def parse_command_line():  # pylint: disable=too-many-statements
     if args.path:
         os.environ['PATH'] = '{}:{}'.format(args.path, os.environ['PATH'])
 
-    # TODO: Calculate the max_target_seqs per shard
+    # Calculate the default max_target_seqs per shard
     if not args.max_target_seqs:
-        pass
+        all_shards = blast.all_shard_paths(args.work_dir, args.blast_db)
+        args.max_target_seqs = int(2 * args.max_memory / len(all_shards)) * 1e6
 
     find_programs(args)
 
