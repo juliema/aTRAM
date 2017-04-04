@@ -96,7 +96,7 @@ def atram_loop(args, db_conn, assembler, all_shards, temp_dir):
                 ('No contigs had a bit score greater than %i and are at '
                  'least %i long in iteration %i. The highest score for this '
                  'iteration is %d'),
-                args.bit_score, args.length, iteration, high_score)
+                args.bit_score, args.contig_length, iteration, high_score)
             break
 
         if count == db.iteration_overlap_count(db_conn, iteration):
@@ -216,7 +216,9 @@ def filter_contig_scores(args, hits_file):
     with open(hits_file) as in_file:
         for score in csv.DictReader(in_file, field_names):
             score['bit_score'] = float(score['bit_score'])
-            if score['bit_score'] >= args.bit_score:
+            if score['bit_score'] >= args.bit_score and \
+                    int(score['contig_len']) >= args.contig_length:
+                print(score['contig_len'])
                 for field in field_names[3:]:
                     score[field] = int(score[field])
                 scores[score['contig_id']] = score
@@ -264,26 +266,22 @@ def create_targets_from_contigs(db_conn, assembler, iteration):
 def output_results(args, db_conn):
     """Write the assembled contigs to a fasta file."""
 
-    seen = {}
     with open(args.output, 'w') as out_file:
         for row in db.get_all_assembled_contigs(db_conn):
 
-            if row['contig_id'] in seen:
-                continue
-            seen[row['contig_id']] = 1
+            seq = row['seq']
+            suffix = ''
+            if ((row['contig_end'] - row['contig_start']) *
+                    (row['target_end'] - row['target_start'])) < 0:
+                seq = bio.reverse_complement(seq)
+                suffix = '_REV'
 
-            header = ('>{}_{} iteration={} contig_id={} '
+            header = ('>{}_{}{} iteration={} contig_id={} '
                       'score={}\n').format(
-                          row['iteration'], row['contig_id'],
+                          row['iteration'], row['contig_id'], suffix,
                           row['iteration'], row['contig_id'], row['bit_score'])
             out_file.write(header)
-            out_file.write('{}\n'.format(row['seq']))
-            header = ('>{}_{}_REV iteration={} contig_id={} '
-                      'score={}\n').format(
-                          row['iteration'], row['contig_id'],
-                          row['iteration'], row['contig_id'], row['bit_score'])
-            out_file.write(header)
-            out_file.write('{}\n'.format(bio.reverse_complement(row['seq'])))
+            out_file.write('{}\n'.format(seq))
 
 
 def parse_command_line():  # pylint: disable=too-many-statements
@@ -381,7 +379,7 @@ def parse_command_line():  # pylint: disable=too-many-statements
                        help='Remove contigs that have a value less than this. '
                             'The default is "70.0"')
 
-    group.add_argument('--length', '--contig-length', type=int, default=100,
+    group.add_argument('--contig-length', '--length', type=int, default=100,
                        help='Remove blast hits that are shorter than this '
                             'length. The default is "100".')
 
@@ -432,11 +430,6 @@ def parse_command_line():  # pylint: disable=too-many-statements
     group.add_argument('--ins-length', type=int, default=300,
                        help='The size of the fragments used in the short-read '
                             'library. The default is "300". (Velvet)')
-
-    group.add_argument('--min-contig-length', '--min-contig-len',
-                       type=int, default=100,
-                       help='The minimum contig length. '
-                            'The default is "100". (Velvet)')
 
     args = parser.parse_args()
 
