@@ -174,6 +174,7 @@ def iteration_overlap_count(db_conn, iteration):
           ON (    curr_iter.contig_id = prev_iter.contig_id
               AND curr_iter.iteration = prev_iter.iteration + 1)
         WHERE curr_iter.iteration = ?
+          AND curr_iter.seq = prev_iter.seq
         '''
     result = db_conn.execute(sql, str(iteration))
     return result.fetchone()[0]
