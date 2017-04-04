@@ -447,23 +447,23 @@ def parse_command_line():  # pylint: disable=too-many-statements
     if not args.max_memory.endswith('G'):
         args.max_memory += 'G'
 
-    # Set degailt log file name
+    # Set default log file name
     if not args.log_file:
         file_name = '{}.{}.log'.format(args.blast_db, sys.argv[0][:-3])
         args.log_file = os.path.join(args.work_dir, file_name)
 
-    # If not --protein then probe for protein seq
+    # If not --protein then probe to see if it's a protein seq
     if not args.protein:
         with open(args.query) as in_file:
             for query in SeqIO.parse(in_file, 'fasta'):
-                if bio.is_protein(query.seq):
+                if bio.is_protein(str(query.seq)):
                     args.protein = True
 
     # Prepend to PATH environment variable if requested
     if args.path:
         os.environ['PATH'] = '{}:{}'.format(args.path, os.environ['PATH'])
 
-    # Calculate the max_target_seqs per shard
+    # TODO: Calculate the max_target_seqs per shard
     if not args.max_target_seqs:
         pass
 
