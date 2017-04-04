@@ -218,7 +218,6 @@ def filter_contig_scores(args, hits_file):
             score['bit_score'] = float(score['bit_score'])
             if score['bit_score'] >= args.bit_score and \
                     int(score['contig_len']) >= args.contig_length:
-                print(score['contig_len'])
                 for field in field_names[3:]:
                     score[field] = int(score[field])
                 scores[score['contig_id']] = score
