@@ -430,6 +430,11 @@ def parse_command_line():  # pylint: disable=too-many-statements
                        help='The size of the fragments used in the short-read '
                             'library. The default is "300". (Velvet)')
 
+    group.add_argument('--min-contig-length', '--min-contig-len',
+                       type=int, default=100,
+                       help='The minimum contig length used by the assembler '
+                            'iteself. The default is "100". (Velvet)')
+
     args = parser.parse_args()
 
     # Check kmer
