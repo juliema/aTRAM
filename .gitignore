@@ -4,3 +4,4 @@ data
 venv
 temp
 junk*
+coverage.hist
