@@ -43,22 +43,14 @@ class Assembler:  # pylint: disable=too-many-instance-attributes
         pre and post assembly steps.
         """
 
-        try:
+        self.pre_assembly()
 
-            self.pre_assembly()
+        for step in self.steps:
+            cmd = step()
+            logging.info(cmd)
+            subprocess.check_call(cmd, shell=True)
 
-            for step in self.steps:
-                cmd = step()
-                logging.info(cmd)
-                subprocess.check_call(cmd, shell=True)
-
-            self.post_assembly()
-
-        except Exception as exn:  # pylint: disable=broad-except
-            raise exn
-        finally:
-            if self.cwd:
-                os.chdir(self.cwd)
+        self.post_assembly()
 
     def pre_assembly(self):
         """Assembers have unique pre assembly steps."""
@@ -71,8 +63,9 @@ class Assembler:  # pylint: disable=too-many-instance-attributes
 
         file_name = '{}.{:02d}.{}'.format(
             self.args.blast_db, iteration, file_name)
+        rel_path = os.path.join(self.temp_dir, file_name)
 
-        return os.path.join(self.temp_dir, file_name)
+        return os.path.abspath(rel_path)
 
     def iteration_files(self, iteration):
         """Files used by the assembler. Do this at the start of each
@@ -91,41 +84,31 @@ class AbyssAssembler(Assembler):
         super().__init__(args, temp_dir)
         self.steps = [self.abyss]
 
-    def pre_assembly(self):
-        """Abyss needs to work from the current directory which will be the
-        temporary directory here.
-        """
-
-        self.cwd = os.getcwd()
-        os.chdir(self.temp_dir)
-
     def abyss(self):
         """Build the command for assembly."""
 
         cmd = ['abyss-pe']
-        cmd.append('v=-v')
+        cmd.append("-C '{}'".format(self.temp_dir))
+        # cmd.append('v=-v')
         cmd.append('E=0')
         cmd.append('k={}'.format(self.args.kmer))
         # cmd.append('np={}'.format(self.args.cpus))
-        cmd.append("name={}".format(os.path.basename(self.output_file)))
+        cmd.append("name='{}'".format(self.output_file))
 
         if self.is_paired:
-            cmd.append("in='{} {}'".format(os.path.basename(self.ends_1_file),
-                                           os.path.basename(self.ends_2_file)))
+            cmd.append("in='{} {}'".format(self.ends_1_file, self.ends_2_file))
         else:
-            cmd.append("se={}".format(os.path.basename(self.ends_1_file)))
+            cmd.append("se='{}'".format(self.ends_1_file))
 
         if self.long_reads_file and not self.args.no_long_reads:
             cmd.append("long='longa'")
-            cmd.append("longa='{}'".format(
-                os.path.basename(self.long_reads_file)))
+            cmd.append("longa='{}'".format(self.long_reads_file))
 
+        print(' '.join(cmd))
         return ' '.join(cmd)
 
     def post_assembly(self):
-        """This assember has unique post assembly steps."""
-
-        os.chdir(self.cwd)
+        """Copy the assembler output."""
 
         src = os.path.realpath(self.output_file + '-unitigs.fa')
 
@@ -171,7 +154,7 @@ class TrinityAssembler(Assembler):
         return ' '.join(cmd)
 
     def post_assembly(self):
-        """This assember has a unique post assembly step."""
+        """Copy the assembler output."""
 
         src = os.path.join(self.args.work_dir, 'trinity.Trinity.fasta')
         shutil.move(src, self.output_file)
@@ -185,7 +168,7 @@ class VelvetAssembler(Assembler):
         self.steps = [self.velveth, self.velvetg]
 
     def velveth(self):
-        """Build the command for assembly."""
+        """Build the velveth for the first assembly step."""
 
         cmd = ['velveth']
         cmd.append('{}'.format(self.temp_dir))
@@ -204,7 +187,7 @@ class VelvetAssembler(Assembler):
         return ' '.join(cmd)
 
     def velvetg(self):
-        """Build the command for assembly."""
+        """Build the velvetg for the second assembly step."""
 
         cmd = ['velvetg']
         cmd.append('{}'.format(self.temp_dir))
@@ -215,7 +198,7 @@ class VelvetAssembler(Assembler):
         return ' '.join(cmd)
 
     def post_assembly(self):
-        """This assember has a unique post assembly step."""
+        """Copy the assembler output."""
 
         src = os.path.join(self.temp_dir, 'contigs.fa')
         shutil.move(src, self.output_file)
