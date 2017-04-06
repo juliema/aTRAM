@@ -4,7 +4,6 @@ archive files and converts them into blast and sqlite3 databases.
 
 import os
 import sys
-import logging
 import argparse
 import textwrap
 import tempfile
@@ -12,18 +11,14 @@ import multiprocessing
 from datetime import date
 import numpy as np
 import lib.db as db
+import lib.log as log
 import lib.blast as blast
 
 
 def run(args):
     """Run the preprocessor."""
 
-    logging.basicConfig(
-        filename=args.log_file,
-        level=logging.DEBUG,
-        format='%(asctime)s %(levelname)s: %(message)s',
-        datefmt='%Y-%m-%d %H:%M:%S')
-    logging.info(' '.join(sys.argv))
+    log.setup(args)
 
     db_conn = db.connect(args.work_dir, args.blast_db)
     db.create_sequences_table(db_conn)
@@ -49,7 +44,7 @@ def load_seqs(args, db_conn):
 
     for file_name in args.sra_files:
 
-        logging.info('Loading "%s" into sqlite database', file_name)
+        log.info('Loading "%s" into sqlite database' % file_name)
 
         with open(file_name) as sra_file:
             batch = []  # The batch of records to insert
@@ -108,7 +103,7 @@ def assign_seqs_to_shards(args, db_conn):
     that get input into the makeblastdb statements.
     """
 
-    logging.info('Assigning sequences to shards')
+    log.info('Assigning sequences to shards')
 
     total = db.get_sequence_count(db_conn)
 
@@ -139,7 +134,7 @@ def create_blast_dbs(args, shard_list):
     DB shard.
     """
 
-    logging.info('Making blast DBs')
+    log.info('Making blast DBs')
 
     with multiprocessing.Pool(processes=args.cpus) as pool:
         results = []
@@ -149,7 +144,7 @@ def create_blast_dbs(args, shard_list):
 
         _ = [result.get() for result in results]
 
-    logging.info('Finished making blast DBs')
+    log.info('Finished making blast DBs')
 
 
 def create_blast_db(work_dir, blast_db, shard_params, shard_index):
@@ -163,7 +158,7 @@ def create_blast_db(work_dir, blast_db, shard_params, shard_index):
 
     with tempfile.NamedTemporaryFile(mode='w', dir=work_dir) as fasta_file:
         fill_blast_fasta(work_dir, blast_db, fasta_file, shard_params)
-        blast.create_db(fasta_file.name, shard_path)
+        blast.create_db(work_dir, fasta_file.name, shard_path)
 
 
 def fill_blast_fasta(work_dir, blast_db, fasta_file, shard_params):
