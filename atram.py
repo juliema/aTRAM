@@ -411,6 +411,10 @@ def parse_command_line():  # pylint: disable=too-many-statements
                             '"31" for Velvet. Note: the maximum kmer length '
                             'for Velvet is 31. (Abyss, Velvet)')
 
+    group.add_argument('--mpi', action='store_true',
+                       help='Use MPI for this assembler. The assembler '
+                            'must have been compiled to use MPI. (Abyss)')
+
     group.add_argument('--bowtie2', action='store_true',
                        help='Use bowtie2 during assembly. (Trinity)')
 

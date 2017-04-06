@@ -92,8 +92,10 @@ class AbyssAssembler(Assembler):
         # cmd.append('v=-v')
         cmd.append('E=0')
         cmd.append('k={}'.format(self.args.kmer))
-        # cmd.append('np={}'.format(self.args.cpus))
         cmd.append("name='{}'".format(self.output_file))
+
+        if self.args.mpi:
+            cmd.append('np={}'.format(self.args.cpus))
 
         if self.is_paired:
             cmd.append("in='{} {}'".format(self.ends_1_file, self.ends_2_file))
@@ -101,8 +103,8 @@ class AbyssAssembler(Assembler):
             cmd.append("se='{}'".format(self.ends_1_file))
 
         if self.long_reads_file and not self.args.no_long_reads:
-            cmd.append("long='longa'")
-            cmd.append("longa='{}'".format(self.long_reads_file))
+            cmd.append("long='LONG_READS'")
+            cmd.append("LONG_READS='{}'".format(self.long_reads_file))
 
         print(' '.join(cmd))
         return ' '.join(cmd)
