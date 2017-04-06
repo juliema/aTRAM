@@ -4,7 +4,7 @@ import os
 import re
 import sys
 import glob
-import subprocess
+import lib.log as log
 
 
 # Try to get the sequence name and which end it is from the fasta header
@@ -15,12 +15,12 @@ PARSE_HEADER = re.compile(r'^ [>@] \s* ( .* ) ( [\s/._] [12] ) \s* $',
 PARSE_RESULTS = re.compile(r'^ ( .* ) ( [\s\/_] [12] )', re.VERBOSE)
 
 
-def create_db(fasta_file, blast_db):
+def create_db(work_dir, fasta_file, blast_db):
     """Create a blast DB."""
 
     cmd = 'makeblastdb -dbtype nucl -in {} -out {}'
     cmd = cmd.format(fasta_file, blast_db)
-    subprocess.check_call(cmd, shell=True)
+    log.subcommand(cmd, work_dir)
 
 
 def against_sra(args, blast_db, query, hits_file, iteration):
@@ -42,7 +42,7 @@ def against_sra(args, blast_db, query, hits_file, iteration):
     cmd.append('-query {}'.format(query))
 
     command = ' '.join(cmd)
-    subprocess.check_call(command, shell=True)
+    log.subcommand(command, args['work_dir'])
 
 
 def against_contigs(args, blast_db, query, hits_file):
@@ -65,7 +65,7 @@ def against_contigs(args, blast_db, query, hits_file):
         "-outfmt '10 qseqid sseqid bitscore qstart qend sstart send slen'")
 
     command = ' '.join(cmd)
-    subprocess.check_call(command, shell=True)
+    log.subcommand(command, args.work_dir)
 
 
 def shard_path(work_dir, blast_db, shard_index):

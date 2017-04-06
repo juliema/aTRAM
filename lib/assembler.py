@@ -2,8 +2,7 @@
 
 import os
 import shutil
-import logging
-import subprocess
+import lib.log as log
 
 
 class Assembler:  # pylint: disable=too-many-instance-attributes
@@ -27,9 +26,8 @@ class Assembler:  # pylint: disable=too-many-instance-attributes
         self.is_paired = False      # Did we find paired end sequences?
         self.output_file = None     # Write to this file
         self.long_reads_file = None  # Long-reads file
-        self.ends_1_file = None     # Sequneces for end 1 or single end reads
-        self.ends_2_file = None     # Sequences for end 2 reads
-        self.cwd = None             # Some assemblers need a directory change
+        self.end_1_file = None     # Sequneces for end 1 reads
+        self.end_2_file = None     # Sequences for end 2 reads
 
     @property
     def work_path(self):
@@ -47,8 +45,7 @@ class Assembler:  # pylint: disable=too-many-instance-attributes
 
         for step in self.steps:
             cmd = step()
-            logging.info(cmd)
-            subprocess.check_call(cmd, shell=True)
+            log.subcommand(cmd, self.temp_dir)
 
         self.post_assembly()
 
@@ -73,8 +70,8 @@ class Assembler:  # pylint: disable=too-many-instance-attributes
         """
 
         self.output_file = self.path('output.fasta', iteration)
-        self.ends_1_file = self.path('paired_end_1.fasta', iteration)
-        self.ends_2_file = self.path('paired_end_2.fasta', iteration)
+        self.end_1_file = self.path('paired_end_1.fasta', iteration)
+        self.end_2_file = self.path('paired_end_2.fasta', iteration)
 
 
 class AbyssAssembler(Assembler):
@@ -98,13 +95,13 @@ class AbyssAssembler(Assembler):
             cmd.append('np={}'.format(self.args.cpus))
 
         if self.is_paired:
-            cmd.append("in='{} {}'".format(self.ends_1_file, self.ends_2_file))
+            cmd.append("in='{} {}'".format(self.end_1_file, self.end_2_file))
         else:
-            cmd.append("se='{}'".format(self.ends_1_file))
+            cmd.append("se='{}'".format(self.end_1_file))
 
         if self.long_reads_file and not self.args.no_long_reads:
-            cmd.append("long='LONG_READS'")
-            cmd.append("LONG_READS='{}'".format(self.long_reads_file))
+            cmd.append("long='LONGREADS'")
+            cmd.append("LONGREADS='{}'".format(self.long_reads_file))
 
         print(' '.join(cmd))
         return ' '.join(cmd)
@@ -144,10 +141,10 @@ class TrinityAssembler(Assembler):
             cmd.append('--no_bowtie')
 
         if self.is_paired:
-            cmd.append("--left '{}'".format(self.ends_1_file))
-            cmd.append("--right '{}'".format(self.ends_2_file))
+            cmd.append("--left '{}'".format(self.end_1_file))
+            cmd.append("--right '{}'".format(self.end_2_file))
         else:
-            cmd.append("-single '{}'".format(self.ends_1_file))
+            cmd.append("-single '{}'".format(self.end_1_file))
             cmd.append('--run_as_paired')
 
         if self.long_reads_file and not self.args.no_long_reads:
@@ -179,9 +176,9 @@ class VelvetAssembler(Assembler):
 
         if self.is_paired:
             cmd.append("-shortPaired '{}' '{}'".format(
-                self.ends_1_file, self.ends_2_file))
+                self.end_1_file, self.end_2_file))
         else:
-            cmd.append("-shortPaired '{}'".format(self.ends_1_file))
+            cmd.append("-shortPaired '{}'".format(self.end_1_file))
 
         if self.long_reads_file and not self.args.no_long_reads:
             cmd.append("-long '{}'".format(self.long_reads_file))

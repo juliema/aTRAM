@@ -4,7 +4,6 @@ import os
 import sys
 import csv
 import math
-import logging
 import argparse
 import textwrap
 import tempfile
@@ -14,6 +13,7 @@ import psutil
 from Bio import SeqIO
 import lib.db as db
 import lib.bio as bio
+import lib.log as log
 import lib.blast as blast
 from lib.assembler import Assembler
 
@@ -21,12 +21,7 @@ from lib.assembler import Assembler
 def run(args):
     """Setup  and run atram."""
 
-    logging.basicConfig(
-        filename=args.log_file,
-        level=logging.DEBUG,
-        format='%(asctime)s %(levelname)s: %(message)s',
-        datefmt='%Y-%m-%d %H:%M:%S')
-    logging.info(' '.join(sys.argv))
+    log.setup(args)
 
     all_shards = blast.all_shard_paths(args.work_dir, args.blast_db)
 
@@ -55,7 +50,7 @@ def atram_loop(args, db_conn, assembler, all_shards, temp_dir):
     query = args.query
 
     for iteration in range(1, args.iterations + 1):
-        logging.info('aTRAM iteration %i', iteration)
+        log.info('aTRAM iteration %i' % iteration, breaker='')
 
         blast_target_against_all_sras(
             args, temp_dir, query, all_shards, iteration)
@@ -67,7 +62,7 @@ def atram_loop(args, db_conn, assembler, all_shards, temp_dir):
 
         # Exit if there are no blast hits
         if not db.blast_hits_count(db_conn, iteration):
-            logging.info('No blast hits in iteration %i', iteration)
+            log.info('No blast hits in iteration %i' % iteration)
             break
 
         assembler.iteration_files(iteration)
@@ -75,16 +70,17 @@ def atram_loop(args, db_conn, assembler, all_shards, temp_dir):
         write_assembler_files(db_conn, assembler, iteration)
 
         try:
+            log.info('Assembling shards: iteration %i' % iteration)
             assembler.assemble()
         except Exception as exn:  # pylint: disable=broad-except
             msg = 'The assembler failed: ' + str(exn)
-            logging.error(msg)
+            log.error(msg)
             sys.exit(msg)
 
         # Exit if nothing was assembled
         if not os.path.exists(assembler.output_file) \
                 or not os.path.getsize(assembler.output_file):
-            logging.info('No new assemblies in iteration %i', iteration)
+            log.info('No new assemblies in iteration %i' % iteration)
             break
 
         high_score = filter_contigs(
@@ -92,21 +88,22 @@ def atram_loop(args, db_conn, assembler, all_shards, temp_dir):
 
         count = db.assembled_contigs_count(db_conn, iteration)
         if not count:
-            logging.info(
-                ('No contigs had a bit score greater than %i and are at '
-                 'least %i long in iteration %i. The highest score for this '
-                 'iteration is %d'),
-                args.bit_score, args.contig_length, iteration, high_score)
+            log.info(('No contigs had a bit score greater than {} and are at '
+                      'least {} long in iteration {}. The highest score for '
+                      'this iteration is {}').format(args.bit_score,
+                                                     args.contig_length,
+                                                     iteration, high_score))
             break
 
         if count == db.iteration_overlap_count(db_conn, iteration):
-            logging.info('No new contigs were found in iteration %i',
-                         iteration)
+            log.info('No new contigs were found in iteration %i' % iteration)
             break
 
         # TODO: Exit if the target was covered
 
         query = create_targets_from_contigs(db_conn, assembler, iteration)
+    else:
+        log.info('All iterations completed', breaker='')
 
 
 def blast_target_against_all_sras(
@@ -115,6 +112,8 @@ def blast_target_against_all_sras(
     map-reduce strategy here. We map the blasting of the query sequences
     and reduce the output into one fasta file.
     """
+
+    log.info('Blasting target against shards: iteration %i' % iteration)
 
     with multiprocessing.Pool(processes=args.cpus) as pool:
         results = [pool.apply_async(
@@ -159,10 +158,12 @@ def write_assembler_files(db_conn, assembler, iteration):
     end to the appropriate fasta files.
     """
 
+    log.info('Creating assembler input files: iteration %i' % iteration)
+
     assembler.is_paired = False
 
-    with open(assembler.ends_1_file, 'w') as end_1, \
-            open(assembler.ends_2_file, 'w') as end_2:
+    with open(assembler.end_1_file, 'w') as end_1, \
+            open(assembler.end_2_file, 'w') as end_2:
 
         for row in db.get_blast_hits(db_conn, iteration):
 
@@ -184,6 +185,8 @@ def write_assembler_files(db_conn, assembler, iteration):
 def output_blast_only_results(args, db_conn):
     """Output this file if we are not assembling the contigs."""
 
+    log.info('Output blast only results')
+
     with open(args.output, 'w') as out_file:
         for row in db.get_blast_hits(db_conn, 1):
             out_file.write('>{}{}\n'.format(row['seq_name'], row['seq_end']))
@@ -193,10 +196,12 @@ def output_blast_only_results(args, db_conn):
 def filter_contigs(args, db_conn, assembler, temp_dir, iteration):
     """Remove junk from the assembled contigs."""
 
+    log.info('Filtering assembled contigs: iteration %i' % iteration)
+
     blast_db = blast.temp_db(temp_dir, args.blast_db, iteration)
     hits_file = blast.output_file(temp_dir, args.blast_db, iteration)
 
-    blast.create_db(assembler.output_file, blast_db)
+    blast.create_db(temp_dir, assembler.output_file, blast_db)
 
     blast.against_contigs(args, blast_db, args.query, hits_file)
 
@@ -250,6 +255,8 @@ def create_targets_from_contigs(db_conn, assembler, iteration):
     """Crate a new file with the contigs that will be used as the
     next query target.
     """
+
+    log.info('Creating new target files: iteration %i' % iteration)
 
     query = assembler.path('long_reads.fasta', iteration)
     assembler.long_reads_file = query
