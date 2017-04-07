@@ -263,7 +263,8 @@ def parse_command_line():
 
     # Set degailt log file name
     if not args.log_file:
-        file_name = '{}.{}.log'.format(args.blast_db, sys.argv[0][:-3])
+        file_name = '{}.{}.log'.format(args.blast_db,
+                                       os.path.basename(sys.argv[0][:-3]))
         args.log_file = os.path.join(args.work_dir, file_name)
 
     return args
