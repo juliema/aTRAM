@@ -32,13 +32,14 @@ def run(args):
     # TODO: Setup starting iteration
 
     with tempfile.TemporaryDirectory(dir=args.work_dir) as temporary_dir:
-        # temp_dir = os.path.join(args.work_dir, temporary_dir)  # Debugging
-        # temp_dir = os.path.join(args.work_dir, 'temp_dir')  # For debugging
-        # os.makedirs(temp_dir, exist_ok=True)                # For debugging
+        temp_dir = os.path.join(args.work_dir, temporary_dir)  # Debugging
+        temp_dir = os.path.join(args.work_dir, 'temp_dir')     # Debugging
+        os.makedirs(temp_dir, exist_ok=True)                   # Debugging
+        # temp_dir = temporary_dir
         assembler = None
         if args.assembler:
-            assembler = Assembler.factory(args, temporary_dir)
-        atram_loop(args, db_conn, assembler, all_shards, temporary_dir)
+            assembler = Assembler.factory(args, temp_dir)
+        atram_loop(args, db_conn, assembler, all_shards, temp_dir)
         output_results(args, db_conn)
 
     db_conn.close()
