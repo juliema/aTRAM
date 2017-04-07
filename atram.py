@@ -343,13 +343,13 @@ def parse_command_line():  # pylint: disable=too-many-statements
                        help='Are the query sequences protein? '
                             'The aTRAM will guess if you skip this argument.')
 
-    group.add_argument('--fraction', type=float, default=1.0,
-                       help='Use only the specified fraction of the aTRAM '
-                            'database. The default is "1.0"')
+    # group.add_argument('--fraction', type=float, default=1.0,
+    #                    help='Use only the specified fraction of the aTRAM '
+    #                         'database. The default is "1.0"')
 
-    group.add_argument('--complete', action='store_true',
-                       help='Automatically quit when a complete homolog is '
-                            'recovered.')
+    # group.add_argument('--complete', action='store_true',
+    #                    help='Automatically quit when a complete homolog is '
+    #                         'recovered.')
 
     cpus = min(10, os.cpu_count() - 4 if os.cpu_count() > 4 else 1)
     group.add_argument('--cpus', '--processes', '--max-processes',
@@ -368,9 +368,9 @@ def parse_command_line():  # pylint: disable=too-many-statements
                             'in your $PATH then use this to prepend '
                             'directories to your path.')
 
-    group.add_argument('--start-iteration', type=int, default=5, metavar='N',
-                       help='If resuming from a previous run, which iteration '
-                            'number to start from. The default is "1".')
+    # group.add_argument('--start-iteration', type=int, default=5, metavar='N',
+    #                  help='If resuming from a previous run, which iteration '
+    #                         'number to start from. The default is "1".')
 
     group.add_argument('--temp-dir',
                        help='Store temporary files in this directory. '
