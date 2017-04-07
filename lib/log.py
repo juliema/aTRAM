@@ -1,4 +1,4 @@
-"""Common utilities"""
+"""Common logging functions."""
 
 import sys
 import logging
@@ -18,11 +18,13 @@ def setup(args):
 
 
 def subcommand(cmd, temp_dir):
-    """Handle subprocess calls with logging."""
+    """Handle subprocess calls and log their output."""
 
     logging.info(cmd)
 
     with tempfile.NamedTemporaryFile(mode='w', dir=temp_dir) as log_output:
+
+        # Note: stdout=PIPE is blocking and the program will hang if used
         subprocess.check_call(
             cmd, shell=True, stdout=log_output, stderr=log_output)
 

@@ -15,7 +15,7 @@ sub assembler {
 	my $self = shift;
 	my $short_read_file = shift;
 	my $params = shift;
-	
+
 	Configuration::initialize();
 	my ($kmer, $kmer2, $tempdir, $output_file) = 0;
 	if ((ref $params) =~ /HASH/) {
@@ -61,10 +61,9 @@ sub assembler {
 	    print OUTFH ">$contigname\n$sequence\n";
 	}
 	###### remove temp files from abyss
-	`rm $short_read_file\_temp*`; 
+	`rm $short_read_file\_temp*`;
 	###abyss paired end
-	close OUTFH;	
+	close OUTFH;
 	return $contigs;
 }
 return 1;
-
