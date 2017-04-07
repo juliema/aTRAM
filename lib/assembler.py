@@ -5,7 +5,7 @@ import shutil
 import lib.log as log
 
 
-class Assembler:  # pylint: disable=too-many-instance-attributes
+class Assembler:
     """A factory class for building the assembers."""
 
     @staticmethod
@@ -20,14 +20,14 @@ class Assembler:  # pylint: disable=too-many-instance-attributes
             return VelvetAssembler(args, temp_dir)
 
     def __init__(self, args, temp_dir):
-        self.args = args            # Parsed command line arguments
-        self.steps = []             # Assembler steps setup by the assembler
-        self.temp_dir = temp_dir    # Temp directory used for storing files
-        self.is_paired = False      # Did we find paired end sequences?
-        self.output_file = None     # Write to this file
+        self.args = args             # Parsed command line arguments
+        self.steps = []              # Assembler steps setup by the assembler
+        self.temp_dir = temp_dir     # Temp directory used for storing files
+        self.is_paired = False       # Did we find paired end sequences?
+        self.output_file = None      # Write to this file
         self.long_reads_file = None  # Long-reads file
-        self.end_1_file = None     # Sequneces for end 1 reads
-        self.end_2_file = None     # Sequences for end 2 reads
+        self.end_1_file = None       # Sequneces for end 1 reads
+        self.end_2_file = None       # Sequences for end 2 reads
 
     @property
     def work_path(self):
@@ -41,16 +41,11 @@ class Assembler:  # pylint: disable=too-many-instance-attributes
         pre and post assembly steps.
         """
 
-        self.pre_assembly()
-
         for step in self.steps:
             cmd = step()
             log.subcommand(cmd, self.temp_dir)
 
         self.post_assembly()
-
-    def pre_assembly(self):
-        """Assembers have unique pre assembly steps."""
 
     def post_assembly(self):
         """Assembers have unique post assembly steps."""
@@ -121,7 +116,7 @@ class TrinityAssembler(Assembler):
     def work_path(self):
         """The output directory name has unique requirements."""
 
-        return os.path.join(self.args.work_dir, 'trinity')
+        return os.path.join(self.temp_dir, 'trinity')
 
     def __init__(self, args, temp_dir):
         super().__init__(args, temp_dir)
@@ -155,7 +150,7 @@ class TrinityAssembler(Assembler):
     def post_assembly(self):
         """Copy the assembler output."""
 
-        src = os.path.join(self.args.work_dir, 'trinity.Trinity.fasta')
+        src = os.path.join(self.temp_dir, 'trinity.Trinity.fasta')
         shutil.move(src, self.output_file)
 
 
