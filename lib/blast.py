@@ -83,10 +83,10 @@ def all_shard_paths(work_dir, blast_db):
 
     files = glob.glob(pattern)
     if not files:
-        print(('No blast shards found. Looking for "{}"\n'
+        err = ('No blast shards found. Looking for "{}"\n'
                'Verify the --work-dir and --file-prefix options.').format(
-                   pattern[:-4]))
-        sys.exit()
+                   pattern[:-4])
+        sys.exit(err)
 
     return sorted([f[:-4] for f in files])
 
