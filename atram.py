@@ -41,25 +41,10 @@ def run(args):
     db_conn.close()
 
 
-def fraction_of_shards(args):
-    """Get the fraction of shards to use."""
-
-    all_shards = blast.all_shard_paths(args.work_dir, args.blast_db)
-    last_index = int(len(all_shards) * args.fraction)
-
-    return all_shards[:last_index]
-
-
 def atram_loop(args, db_conn, assembler, all_shards, temp_dir):
     """The run program loop."""
 
-    if args.start_iteration < 2:
-        db.create_blast_hits_table(db_conn)
-        db.create_assembled_contigs_table(db_conn)
-        query = args.query
-    else:
-        query = create_targets_from_contigs(
-            db_conn, assembler, args.start_iteration - 1)
+    query = initialize_query(args, db_conn, assembler)
 
     for iteration in range(args.start_iteration, args.iterations + 1):
         log.info('aTRAM iteration %i' % iteration, breaker='')
@@ -114,6 +99,37 @@ def atram_loop(args, db_conn, assembler, all_shards, temp_dir):
         query = create_targets_from_contigs(db_conn, assembler, iteration)
     else:
         log.info('All iterations completed', breaker='')
+
+
+def initialize_query(args, db_conn, assembler):
+    """Get the first set of query sequences."""
+
+    if args.start_iteration < 2:
+        db.create_blast_hits_table(db_conn)
+        db.create_assembled_contigs_table(db_conn)
+        query = args.query
+    else:
+        query = create_targets_from_contigs(
+            db_conn, assembler, args.start_iteration - 1)
+
+    if os.path.getsize(query) < 10:
+        err = 'There are no sequences '
+        if args.start_iteration < 2:
+            err += 'in {}'.format(args.query)
+        else:
+            err += 'for starting iteration {}'.format(args.start_iteration)
+        sys.exit(err)
+
+    return query
+
+
+def fraction_of_shards(args):
+    """Get the fraction of shards to use."""
+
+    all_shards = blast.all_shard_paths(args.work_dir, args.blast_db)
+    last_index = int(len(all_shards) * args.fraction)
+
+    return all_shards[:last_index]
 
 
 def blast_target_against_all_sras(
