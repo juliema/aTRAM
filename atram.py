@@ -26,8 +26,6 @@ def run(args):
     all_shards = fraction_of_shards(args)
 
     db_conn = db.connect(args.work_dir, args.blast_db)
-    db.create_blast_hits_table(db_conn)
-    db.create_assembled_contigs_table(db_conn)
 
     with tempfile.TemporaryDirectory(dir=args.work_dir) as temporary_dir:
         temp_dir = os.path.join(args.work_dir, temporary_dir)  # Debugging
@@ -55,9 +53,15 @@ def fraction_of_shards(args):
 def atram_loop(args, db_conn, assembler, all_shards, temp_dir):
     """The run program loop."""
 
-    query = args.query
+    if args.start_iteration < 2:
+        db.create_blast_hits_table(db_conn)
+        db.create_assembled_contigs_table(db_conn)
+        query = args.query
+    else:
+        query = create_targets_from_contigs(
+            db_conn, assembler, args.start_iteration - 1)
 
-    for iteration in range(1, args.iterations + 1):
+    for iteration in range(args.start_iteration, args.iterations + 1):
         log.info('aTRAM iteration %i' % iteration, breaker='')
 
         blast_target_against_all_sras(
@@ -309,6 +313,8 @@ def parse_command_line():  # pylint: disable=too-many-statements
         formatter_class=argparse.RawDescriptionHelpFormatter,
         description=textwrap.dedent(description))
 
+    parser.add_argument('--version', action='version', version='%(prog)s 2.0')
+
     # required arguments
     group = parser.add_argument_group('required arguments')
 
@@ -320,9 +326,10 @@ def parse_command_line():  # pylint: disable=too-many-statements
     group.add_argument('-o', '--output', required=True,
                        help='Output the aTRAM results to this file.')
 
-    group.add_argument('-q', '--query', '--target', required=True,
+    group.add_argument('-q', '--query', '--target',
                        help='The path to the fasta file with sequences of '
-                            'interest.')
+                            'interest. Required unless you specify a '
+                            '"--start-iteration".')
 
     # optional aTRAM arguments
     group = parser.add_argument_group('optional aTRAM arguments')
@@ -346,7 +353,7 @@ def parse_command_line():  # pylint: disable=too-many-statements
 
     group.add_argument('-p', '--protein', action='store_true',
                        help='Are the query sequences protein? '
-                            'The aTRAM will guess if you skip this argument.')
+                            'aTRAM will guess if you skip this argument.')
 
     group.add_argument('--fraction', type=float, default=1.0,
                        help='Use only the specified fraction of the aTRAM '
@@ -373,14 +380,15 @@ def parse_command_line():  # pylint: disable=too-many-statements
                             'in your $PATH then use this to prepend '
                             'directories to your path.')
 
-    # group.add_argument('--start-iteration', type=int, default=5, metavar='N',
-    #                  help='If resuming from a previous run, which iteration '
-    #                         'number to start from. The default is "1".')
+    group.add_argument('--start-iteration', '--restart',
+                       type=int, default=1, metavar='N',
+                       help='If resuming from a previous run, which iteration '
+                            'number to start from. The default is "1".')
 
-    group.add_argument('--temp-dir',
-                       help='Store temporary files in this directory. '
-                            'Temporary files will be deleted if you do not '
-                            'specify this argument.')
+    # group.add_argument('--temp-dir',
+    #                    help='Store temporary files in this directory. '
+    #                         'Temporary files will be deleted if you do not '
+    #                         'specify this argument.')
 
     # optional values for blast-filtering contigs
     group = parser.add_argument_group(
@@ -428,12 +436,12 @@ def parse_command_line():  # pylint: disable=too-many-statements
                        help='Use MPI for this assembler. The assembler '
                             'must have been compiled to use MPI. (Abyss)')
 
-    group.add_argument('--bowtie2', '--bowtie', action='store_true',
+    group.add_argument('--bowtie2', action='store_true',
                        help='Use bowtie2 during assembly. (Trinity)')
 
     max_mem = max(1, math.floor(
         psutil.virtual_memory().available / 1024**3 / 2))
-    group.add_argument('--max-memory', '--max-mem',
+    group.add_argument('--max-memory',
                        default=max_mem, metavar='MEMORY', type=int,
                        help=('Maximum amount of memory to use in gigabytes. '
                              'The default is "{}". (Trinity)').format(max_mem))
@@ -447,12 +455,16 @@ def parse_command_line():  # pylint: disable=too-many-statements
                        help='The size of the fragments used in the short-read '
                             'library. The default is "300". (Velvet)')
 
-    group.add_argument('--min-contig-length', '--min-contig-len',
-                       type=int, default=100,
+    group.add_argument('--min-contig-length', type=int, default=100,
                        help='The minimum contig length used by the assembler '
                             'iteself. The default is "100". (Velvet)')
 
     args = parser.parse_args()
+
+    # Check query
+    if not args.query and not args.start_iteration:
+        err = 'We need a "--query" sequence.'
+        sys.exit(err)
 
     # Check kmer
     if args.assembler == 'velvet' and args.kmer > 31:
@@ -489,46 +501,46 @@ def find_programs(args):
     """Make sure we can find the programs needed by the assembler and blast."""
 
     if not (which('makeblastdb') and which('tblastn') and which('blastn')):
-        print('We could not find the programs "makeblastdb", "tblastn", or '
-              '"blastn". You either need to install them or you need adjust '
-              'the PATH environment variable with the "--path" option so that '
-              'aTRAM can find it.')
-        sys.exit()
+        err = ('We could not find the programs "makeblastdb", "tblastn", or '
+               '"blastn". You either need to install them or you need adjust '
+               'the PATH environment variable with the "--path" option so '
+               'that aTRAM can find it.')
+        sys.exit(err)
 
     if args.assembler == 'abyss' and not which('abyss-pe'):
-        print('We could not find the "abyss-pe" program. You either need to '
-              'install it or you need to adjust the PATH environment variable '
-              'with the "--path" option so that aTRAM can find it.')
-        sys.exit()
+        err = ('We could not find the "abyss-pe" program. You either need to '
+               'install it or you need to adjust the PATH environment '
+               'variable with the "--path" option so that aTRAM can find it.')
+        sys.exit(err)
 
     if args.assembler == 'abyss' and not args.no_long_reads \
             and not which('bwa'):
-        print('We could not find the "bwa-mem" program. You either need to '
-              'install it, adjust the PATH environment variable '
-              'with the "--path" option, or you may use the "--no-long-reads" '
-              'option to not use this program.')
-        sys.exit()
+        err = ('We could not find the "bwa-mem" program. You either need to '
+               'install it, adjust the PATH environment variable '
+               'with the "--path" option, or you may use the '
+               '"--no-long-reads" option to not use this program.')
+        sys.exit(err)
 
     if args.assembler == 'trinity' and not which('Trinity'):
-        print('We could not find the "Trinity" program. You either need to '
-              'install it or you need to adjust the PATH environment variable '
-              'with the "--path" option so that aTRAM can find it.')
-        sys.exit()
+        err = ('We could not find the "Trinity" program. You either need to '
+               'install it or you need to adjust the PATH environment '
+               'variable with the "--path" option so that aTRAM can find it.')
+        sys.exit(err)
 
     if args.assembler == 'trinity' and args.bowtie2 and not which('bowtie2'):
-        print('We could not find the "bowtie2" program. You either need to '
-              'install it, adjust the PATH environment variable '
-              'with the "--path" option, or you may skip using this program '
-              'by not using the "--bowtie2" option.')
-        sys.exit()
+        err = ('We could not find the "bowtie2" program. You either need to '
+               'install it, adjust the PATH environment variable '
+               'with the "--path" option, or you may skip using this program '
+               'by not using the "--bowtie2" option.')
+        sys.exit(err)
 
     if args.assembler == 'velvet' and \
             not (which('velveth') and which('velvetg')):
-        print('We could not find either the "velveth" or "velvetg" program. '
-              'You either need to install it or you need to adjust the PATH '
-              'environment variable with the "--path" option so that aTRAM '
-              'can find it.')
-        sys.exit()
+        err = ('We could not find either the "velveth" or "velvetg" program. '
+               'You either need to install it or you need to adjust the PATH '
+               'environment variable with the "--path" option so that aTRAM '
+               'can find it.')
+        sys.exit(err)
 
 
 if __name__ == '__main__':

@@ -214,6 +214,8 @@ def parse_command_line():
                              'fastq format. You may enter more than '
                              'one file and you may use wildcards.')
 
+    parser.add_argument('--version', action='version', version='%(prog)s 2.0')
+
     group = parser.add_argument_group('preprocessor arguments')
 
     blast_db = 'atram_' + date.today().isoformat()

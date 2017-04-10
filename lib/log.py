@@ -24,7 +24,7 @@ def subcommand(cmd, temp_dir):
 
     with tempfile.NamedTemporaryFile(mode='w', dir=temp_dir) as log_output:
 
-        # Note: stdout=PIPE is blocking and the program will hang if used
+        # Note: stdout=PIPE is blocking and large logs cause a hang
         subprocess.check_call(
             cmd, shell=True, stdout=log_output, stderr=log_output)
 
