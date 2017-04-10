@@ -23,13 +23,11 @@ def run(args):
 
     log.setup(args)
 
-    all_shards = blast.all_shard_paths(args.work_dir, args.blast_db)
+    all_shards = fraction_of_shards(args)
 
     db_conn = db.connect(args.work_dir, args.blast_db)
     db.create_blast_hits_table(db_conn)
     db.create_assembled_contigs_table(db_conn)
-
-    # TODO: Setup starting iteration
 
     with tempfile.TemporaryDirectory(dir=args.work_dir) as temporary_dir:
         temp_dir = os.path.join(args.work_dir, temporary_dir)  # Debugging
@@ -43,6 +41,15 @@ def run(args):
         output_results(args, db_conn)
 
     db_conn.close()
+
+
+def fraction_of_shards(args):
+    """Get the fraction of shards to use."""
+
+    all_shards = blast.all_shard_paths(args.work_dir, args.blast_db)
+    last_index = int(len(all_shards) * args.fraction)
+
+    return all_shards[:last_index]
 
 
 def atram_loop(args, db_conn, assembler, all_shards, temp_dir):
@@ -59,7 +66,7 @@ def atram_loop(args, db_conn, assembler, all_shards, temp_dir):
         # If we don't have an assembler then we just want the blast hits
         if not args.assembler:
             output_blast_only_results(args, db_conn)
-            sys.exit()
+            break
 
         # Exit if there are no blast hits
         if not db.blast_hits_count(db_conn, iteration):
@@ -99,8 +106,6 @@ def atram_loop(args, db_conn, assembler, all_shards, temp_dir):
         if count == db.iteration_overlap_count(db_conn, iteration):
             log.info('No new contigs were found in iteration %i' % iteration)
             break
-
-        # TODO: Exit if the target was covered
 
         query = create_targets_from_contigs(db_conn, assembler, iteration)
     else:
@@ -343,9 +348,9 @@ def parse_command_line():  # pylint: disable=too-many-statements
                        help='Are the query sequences protein? '
                             'The aTRAM will guess if you skip this argument.')
 
-    # group.add_argument('--fraction', type=float, default=1.0,
-    #                    help='Use only the specified fraction of the aTRAM '
-    #                         'database. The default is "1.0"')
+    group.add_argument('--fraction', type=float, default=1.0,
+                       help='Use only the specified fraction of the aTRAM '
+                            'database. The default is "1.0"')
 
     # group.add_argument('--complete', action='store_true',
     #                    help='Automatically quit when a complete homolog is '
@@ -423,17 +428,17 @@ def parse_command_line():  # pylint: disable=too-many-statements
                        help='Use MPI for this assembler. The assembler '
                             'must have been compiled to use MPI. (Abyss)')
 
-    group.add_argument('--bowtie2', action='store_true',
+    group.add_argument('--bowtie2', '--bowtie', action='store_true',
                        help='Use bowtie2 during assembly. (Trinity)')
 
     max_mem = max(1, math.floor(
         psutil.virtual_memory().available / 1024**3 / 2))
-    group.add_argument('--max-memory', default=max_mem, metavar='MEMORY',
-                       type=int,
+    group.add_argument('--max-memory', '--max-mem',
+                       default=max_mem, metavar='MEMORY', type=int,
                        help=('Maximum amount of memory to use in gigabytes. '
                              'The default is "{}". (Trinity)').format(max_mem))
 
-    group.add_argument('--exp-coverage', '--expected_coverage',
+    group.add_argument('--exp-coverage', '--expected-coverage',
                        type=int, default=30,
                        help='The expected coverage of the region. '
                             'The default is "30". (Velvet)')
