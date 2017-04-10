@@ -19,7 +19,7 @@ from lib.assembler import Assembler
 
 
 def run(args):
-    """Setup  and run atram."""
+    """Setup and run atram."""
 
     log.setup(args)
 
@@ -28,10 +28,10 @@ def run(args):
     db_conn = db.connect(args.work_dir, args.blast_db)
 
     with tempfile.TemporaryDirectory(dir=args.work_dir) as temporary_dir:
-        temp_dir = os.path.join(args.work_dir, temporary_dir)  # Debugging
-        temp_dir = os.path.join(args.work_dir, 'temp_dir')     # Debugging
-        os.makedirs(temp_dir, exist_ok=True)                   # Debugging
-        # temp_dir = temporary_dir
+        # temp_dir = os.path.join(args.work_dir, temporary_dir)  # Debugging
+        # temp_dir = os.path.join(args.work_dir, 'temp_dir')     # Debugging
+        # os.makedirs(temp_dir, exist_ok=True)                   # Debugging
+        temp_dir = temporary_dir
         assembler = None
         if args.assembler:
             assembler = Assembler.factory(args, temp_dir)
