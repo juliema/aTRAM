@@ -1,18 +1,16 @@
 """Handle SQL functions."""
 
-import os
 import sqlite3
 
 BATCH_SIZE = 1e7  # How many sequence records to insert at a time
 
 
-def connect(work_dir, blast_db):
+def connect(blast_db):
     """Setup the DB for our processing needs and return a DB connection."""
 
     db_name = '{}.sqlite.db'.format(blast_db)
-    db_path = os.path.join(work_dir, db_name)
 
-    db_conn = sqlite3.connect(db_path)
+    db_conn = sqlite3.connect(db_name)
 
     db_conn.execute("PRAGMA page_size = {}".format(2**16))
     db_conn.execute("PRAGMA journal_mode = 'off'")

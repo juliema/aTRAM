@@ -15,12 +15,12 @@ PARSE_HEADER = re.compile(r'^ [>@] \s* ( .* ) ( [\s/._] [12] ) \s* $',
 PARSE_RESULTS = re.compile(r'^ ( .* ) ( [\s\/_] [12] )', re.VERBOSE)
 
 
-def create_db(work_dir, fasta_file, blast_db):
+def create_db(temp_dir, fasta_file, blast_db):
     """Create a blast DB."""
 
     cmd = 'makeblastdb -dbtype nucl -in {} -out {}'
     cmd = cmd.format(fasta_file, blast_db)
-    log.subcommand(cmd, work_dir)
+    log.subcommand(cmd, temp_dir)
 
 
 def against_sra(args, blast_db, query, hits_file, iteration):
@@ -68,11 +68,11 @@ def against_contigs(args, blast_db, query, hits_file):
     log.subcommand(command, args.work_dir)
 
 
-def shard_path(work_dir, blast_db, shard_index):
+def shard_path(blast_db, shard_index):
     """Create the BLAST shard DB names."""
 
     file_name = '{}.blast_{:03d}'.format(blast_db, shard_index)
-    return os.path.join(work_dir, file_name)
+    return file_name
 
 
 def all_shard_paths(work_dir, blast_db):

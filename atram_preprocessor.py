@@ -20,7 +20,7 @@ def run(args):
 
     log.setup(args)
 
-    db_conn = db.connect(args.work_dir, args.blast_db)
+    db_conn = db.connect(args.blast_db)
     db.create_sequences_table(db_conn)
     load_seqs(args, db_conn)
     db.create_sequences_index(db_conn)
@@ -140,28 +140,28 @@ def create_blast_dbs(args, shard_list):
         results = []
         for idx, params in enumerate(shard_list, 1):
             results.append(pool.apply_async(
-                create_blast_db, (args.work_dir, args.blast_db, params, idx)))
+                create_blast_db, (args.blast_db, args.temp_dir, params, idx)))
 
         _ = [result.get() for result in results]
 
     log.info('Finished making blast DBs')
 
 
-def create_blast_db(work_dir, blast_db, shard_params, shard_index):
+def create_blast_db(blast_db, temp_dir, shard_params, shard_index):
     """Create a blast DB from the shard. We fill a fasta file with the
     appropriate sequences and hand things off to the makeblastdb program.
     """
     # NOTE: Because this is called in a child process, the address space is not
     # shared with the parent (caller) hence we cannot share object variables.
 
-    shard_path = blast.shard_path(work_dir, blast_db, shard_index)
+    shard_path = blast.shard_path(blast_db, shard_index)
 
-    with tempfile.NamedTemporaryFile(mode='w', dir=work_dir) as fasta_file:
-        fill_blast_fasta(work_dir, blast_db, fasta_file, shard_params)
-        blast.create_db(work_dir, fasta_file.name, shard_path)
+    with tempfile.NamedTemporaryFile(mode='w', dir=temp_dir) as fasta_file:
+        fill_blast_fasta(blast_db, fasta_file, shard_params)
+        blast.create_db(temp_dir, fasta_file.name, shard_path)
 
 
-def fill_blast_fasta(work_dir, blast_db, fasta_file, shard_params):
+def fill_blast_fasta(blast_db, fasta_file, shard_params):
     """Fill the fasta file used as input into blast with shard sequences from
     the sqlite3 DB. We use the shard partitions passed in to determine
     which sequences to get for this shard.
@@ -169,7 +169,7 @@ def fill_blast_fasta(work_dir, blast_db, fasta_file, shard_params):
     # NOTE: Because this is called in a child process, the address space is not
     # shared with the parent (caller) hence we cannot share object variables.
 
-    db_conn = db.connect(work_dir, blast_db)
+    db_conn = db.connect(blast_db)
 
     limit, offset = shard_params
 
@@ -218,14 +218,14 @@ def parse_command_line():
 
     group = parser.add_argument_group('preprocessor arguments')
 
-    blast_db = 'atram_' + date.today().isoformat()
+    blast_db = os.path.join('.', 'atram_' + date.today().isoformat())
     group.add_argument('-b', '--blast-db', '--output', '--db',
                        default=blast_db, metavar='DB',
                        help=('This is the prefix of all of the blast '
                              'database files. So you can identify '
-                             'different blast database sets. These files '
-                             'will be placed into the DIR. The '
-                             'default is "{}".').format(blast_db))
+                             'different blast database sets. You may include '
+                             'a directory as part of the prefix. The default '
+                             'is "{}".').format(blast_db))
 
     cpus = os.cpu_count() - 4 if os.cpu_count() > 4 else 1
     group.add_argument('-c', '--cpus', '--processes', '--max-processes',
@@ -233,15 +233,14 @@ def parse_command_line():
                        help=('Number of cpus to use. Defaults to: Total CPUS '
                              ' - 4 = "{}"').format(cpus))
 
-    group.add_argument('-d', '--work-dir', default='.', metavar='DIR',
-                       help=('Where to store files needed by aTRAM.py. '
-                             'Defaults to the current '
-                             'directory "{}".'.format(os.getcwd())))
+    group.add_argument('-t', '--temp-dir', metavar='DIR',
+                       help='You may save intermediate files for '
+                            'debugging in this directory.')
 
     group.add_argument('-l', '--log-file',
                        help='Log file (full path). The default is to use the '
-                            'DIR and DB arguments to come up with a name like '
-                            'so "DIR/DB_atram_preprocessor.log"')
+                            'DB and program name to come up with a name like '
+                            '"DB_atram_preprocessor.log"')
 
     group.add_argument('-s', '--shards', '--number',
                        type=int, metavar='SHARDS',
@@ -265,9 +264,13 @@ def parse_command_line():
 
     # Set degailt log file name
     if not args.log_file:
-        file_name = '{}.{}.log'.format(args.blast_db,
-                                       os.path.basename(sys.argv[0][:-3]))
-        args.log_file = os.path.join(args.work_dir, file_name)
+        args.log_file = '{}.{}.log'.format(
+            args.blast_db, os.path.basename(sys.argv[0][:-3]))
+
+    if args.temp_dir:
+        os.makedirs(args.temp_dir, exist_ok=True)
+    else:
+        args.temp_dir = tempfile.TemporaryDirectory(prefix='atram_')
 
     return args
 
