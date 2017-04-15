@@ -9,20 +9,19 @@ class Assembler:
     """A factory class for building the assembers."""
 
     @staticmethod
-    def factory(args, temp_dir):
+    def factory(args):
         """Return the assembler based upon the configuration options."""
 
         if args.assembler.lower() == 'abyss':
-            return AbyssAssembler(args, temp_dir)
+            return AbyssAssembler(args)
         elif args.assembler.lower() == 'trinity':
-            return TrinityAssembler(args, temp_dir)
+            return TrinityAssembler(args)
         elif args.assembler.lower() == 'velvet':
-            return VelvetAssembler(args, temp_dir)
+            return VelvetAssembler(args)
 
-    def __init__(self, args, temp_dir):
+    def __init__(self, args):
         self.args = args             # Parsed command line arguments
         self.steps = []              # Assembler steps setup by the assembler
-        self.temp_dir = temp_dir     # Temp directory used for storing files
         self.is_paired = False       # Did we find paired end sequences?
         self.output_file = None      # Write to this file
         self.long_reads_file = None  # Long-reads file
@@ -33,7 +32,7 @@ class Assembler:
     def work_path(self):
         """The output directory name may have unique requirements."""
 
-        return self.args.work_dir
+        return self.args.temp_dir
 
     def assemble(self):
         """Use the assembler to build up the contigs. We take and array of
@@ -43,7 +42,7 @@ class Assembler:
 
         for step in self.steps:
             cmd = step()
-            log.subcommand(cmd, self.temp_dir)
+            log.subcommand(cmd, self.args.temp_dir)
 
         self.post_assembly()
 
@@ -55,7 +54,7 @@ class Assembler:
 
         file_name = '{}.{:02d}.{}'.format(
             self.args.blast_db, iteration, file_name)
-        rel_path = os.path.join(self.temp_dir, file_name)
+        rel_path = os.path.join(self.args.temp_dir, file_name)
 
         return os.path.abspath(rel_path)
 
@@ -72,15 +71,15 @@ class Assembler:
 class AbyssAssembler(Assembler):
     """Wrapper for the Abyss assembler."""
 
-    def __init__(self, args, temp_dir):
-        super().__init__(args, temp_dir)
+    def __init__(self, args):
+        super().__init__(args)
         self.steps = [self.abyss]
 
     def abyss(self):
         """Build the command for assembly."""
 
         cmd = ['abyss-pe']
-        cmd.append("-C '{}'".format(self.temp_dir))
+        cmd.append("-C '{}'".format(self.args.temp_dir))
         # cmd.append('v=-v')
         cmd.append('E=0')
         cmd.append('k={}'.format(self.args.kmer))
@@ -116,10 +115,10 @@ class TrinityAssembler(Assembler):
     def work_path(self):
         """The output directory name has unique requirements."""
 
-        return os.path.join(self.temp_dir, 'trinity')
+        return os.path.join(self.args.temp_dir, 'trinity')
 
-    def __init__(self, args, temp_dir):
-        super().__init__(args, temp_dir)
+    def __init__(self, args):
+        super().__init__(args)
         self.steps = [self.trinity]
 
     def trinity(self):
@@ -150,22 +149,22 @@ class TrinityAssembler(Assembler):
     def post_assembly(self):
         """Copy the assembler output."""
 
-        src = os.path.join(self.temp_dir, 'trinity.Trinity.fasta')
+        src = os.path.join(self.args.temp_dir, 'trinity.Trinity.fasta')
         shutil.move(src, self.output_file)
 
 
 class VelvetAssembler(Assembler):
     """Wrapper for the Velvet assembler."""
 
-    def __init__(self, args, temp_dir):
-        super().__init__(args, temp_dir)
+    def __init__(self, args):
+        super().__init__(args)
         self.steps = [self.velveth, self.velvetg]
 
     def velveth(self):
         """Build the velveth for the first assembly step."""
 
         cmd = ['velveth']
-        cmd.append('{}'.format(self.temp_dir))
+        cmd.append('{}'.format(self.args.temp_dir))
         cmd.append('{}'.format(self.args.kmer))
         cmd.append('-fasta')
 
@@ -184,7 +183,7 @@ class VelvetAssembler(Assembler):
         """Build the velvetg for the second assembly step."""
 
         cmd = ['velvetg']
-        cmd.append('{}'.format(self.temp_dir))
+        cmd.append('{}'.format(self.args.temp_dir))
         cmd.append('-ins_length {}'.format(self.args.ins_length))
         cmd.append('-exp_cov {}'.format(self.args.exp_coverage))
         cmd.append('-min_contig_lgth {}'.format(self.args.min_contig_length))
@@ -194,5 +193,5 @@ class VelvetAssembler(Assembler):
     def post_assembly(self):
         """Copy the assembler output."""
 
-        src = os.path.join(self.temp_dir, 'contigs.fa')
+        src = os.path.join(self.args.temp_dir, 'contigs.fa')
         shutil.move(src, self.output_file)
