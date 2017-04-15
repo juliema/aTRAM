@@ -42,7 +42,7 @@ def against_sra(args, blast_db, query, hits_file, iteration):
     cmd.append('-query {}'.format(query))
 
     command = ' '.join(cmd)
-    log.subcommand(command, args['work_dir'])
+    log.subcommand(command, args['temp_dir'])
 
 
 def against_contigs(args, blast_db, query, hits_file):
@@ -65,7 +65,7 @@ def against_contigs(args, blast_db, query, hits_file):
         "-outfmt '10 qseqid sseqid bitscore qstart qend sstart send slen'")
 
     command = ' '.join(cmd)
-    log.subcommand(command, args.work_dir)
+    log.subcommand(command, args.temp_dir)
 
 
 def shard_path(blast_db, shard_index):
@@ -75,11 +75,10 @@ def shard_path(blast_db, shard_index):
     return file_name
 
 
-def all_shard_paths(work_dir, blast_db):
+def all_shard_paths(blast_db):
     """Get all of the BLAST DB names built by the preprocessor."""
 
-    shard_pattern = '{}.blast_*.nhr'.format(blast_db)
-    pattern = os.path.join(work_dir, shard_pattern)
+    pattern = '{}.blast_*.nhr'.format(blast_db)
 
     files = glob.glob(pattern)
     if not files:

@@ -25,23 +25,16 @@ def run(args):
 
     all_shards = fraction_of_shards(args)
 
-    db_conn = db.connect(args.work_dir, args.blast_db)
+    db_conn = db.connect(args.blast_db)
 
-    with tempfile.TemporaryDirectory(dir=args.work_dir) as temporary_dir:
-        # temp_dir = os.path.join(args.work_dir, temporary_dir)  # Debugging
-        # temp_dir = os.path.join(args.work_dir, 'temp_dir')     # Debugging
-        # os.makedirs(temp_dir, exist_ok=True)                   # Debugging
-        temp_dir = temporary_dir
-        assembler = None
-        if args.assembler:
-            assembler = Assembler.factory(args, temp_dir)
-        atram_loop(args, db_conn, assembler, all_shards, temp_dir)
-        output_results(args, db_conn)
+    assembler = Assembler.factory(args) if args.assembler else None
+    atram_loop(args, db_conn, assembler, all_shards)
+    output_results(args, db_conn)
 
     db_conn.close()
 
 
-def atram_loop(args, db_conn, assembler, all_shards, temp_dir):
+def atram_loop(args, db_conn, assembler, all_shards):
     """The run program loop."""
 
     query = initialize_query(args, db_conn, assembler)
@@ -49,8 +42,7 @@ def atram_loop(args, db_conn, assembler, all_shards, temp_dir):
     for iteration in range(args.start_iteration, args.iterations + 1):
         log.info('aTRAM iteration %i' % iteration, breaker='')
 
-        blast_target_against_all_sras(
-            args, temp_dir, query, all_shards, iteration)
+        blast_target_against_all_sras(args, query, all_shards, iteration)
 
         # If we don't have an assembler then we just want the blast hits
         if not args.assembler:
@@ -80,8 +72,7 @@ def atram_loop(args, db_conn, assembler, all_shards, temp_dir):
             log.info('No new assemblies in iteration %i' % iteration)
             break
 
-        high_score = filter_contigs(
-            args, db_conn, assembler, temp_dir, iteration)
+        high_score = filter_contigs(args, db_conn, assembler, iteration)
 
         count = db.assembled_contigs_count(db_conn, iteration)
         if not count:
@@ -126,14 +117,13 @@ def initialize_query(args, db_conn, assembler):
 def fraction_of_shards(args):
     """Get the fraction of shards to use."""
 
-    all_shards = blast.all_shard_paths(args.work_dir, args.blast_db)
+    all_shards = blast.all_shard_paths(args.blast_db)
     last_index = int(len(all_shards) * args.fraction)
 
     return all_shards[:last_index]
 
 
-def blast_target_against_all_sras(
-        args, temp_dir, query, all_shards, iteration):
+def blast_target_against_all_sras(args, query, all_shards, iteration):
     """Blast the targets against the SRA databases. We're using a
     map-reduce strategy here. We map the blasting of the query sequences
     and reduce the output into one fasta file.
@@ -144,23 +134,23 @@ def blast_target_against_all_sras(
     with multiprocessing.Pool(processes=args.cpus) as pool:
         results = [pool.apply_async(
             blast_target_against_sra,
-            (dict(vars(args)), shard_path, query, temp_dir, iteration))
+            (dict(vars(args)), shard_path, query, iteration))
                    for shard_path in all_shards]
         _ = [result.get() for result in results]
 
 
-def blast_target_against_sra(args, shard_path, query, temp_dir, iteration):
+def blast_target_against_sra(args, shard_path, query, iteration):
     """Blast the target against one blast DB shard. Then write the results to
     the database.
     """
     # NOTE: Because this is called in a child process, the address space is not
     # shared with the parent (caller) hence we cannot share object variables.
 
-    output_file = blast.output_file(temp_dir, shard_path, iteration)
+    output_file = blast.output_file(args['temp_dir'], shard_path, iteration)
 
     blast.against_sra(args, shard_path, query, output_file, iteration)
 
-    db_conn = db.connect(args['work_dir'], args['blast_db'])
+    db_conn = db.connect(args['blast_db'])
 
     shard = os.path.basename(shard_path)
 
@@ -219,15 +209,15 @@ def output_blast_only_results(args, db_conn):
             out_file.write('{}\n'.format(row['seq']))
 
 
-def filter_contigs(args, db_conn, assembler, temp_dir, iteration):
+def filter_contigs(args, db_conn, assembler, iteration):
     """Remove junk from the assembled contigs."""
 
     log.info('Filtering assembled contigs: iteration %i' % iteration)
 
-    blast_db = blast.temp_db(temp_dir, args.blast_db, iteration)
-    hits_file = blast.output_file(temp_dir, args.blast_db, iteration)
+    blast_db = blast.temp_db(args.temp_dir, args.blast_db, iteration)
+    hits_file = blast.output_file(args.temp_dir, args.blast_db, iteration)
 
-    blast.create_db(temp_dir, assembler.output_file, blast_db)
+    blast.create_db(args.temp_dir, assembler.output_file, blast_db)
 
     blast.against_contigs(args, blast_db, args.query, hits_file)
 
@@ -316,7 +306,7 @@ def output_results(args, db_conn):
             out_file.write('{}\n'.format(seq))
 
 
-def parse_command_line():  # pylint: disable=too-many-statements
+def parse_command_line(temp_dir):  # pylint: disable=too-many-statements
     """Process command-line arguments."""
 
     description = """
@@ -336,7 +326,7 @@ def parse_command_line():  # pylint: disable=too-many-statements
 
     group.add_argument('-b', '--blast-db', '--sra', '--db', '--database',
                        required=True, metavar='DB',
-                       help='This needs to match the DB you '
+                       help='This needs to match the DB prefix you '
                             'entered for atram_preprocessor.py.')
 
     group.add_argument('-o', '--output', required=True,
@@ -355,13 +345,6 @@ def parse_command_line():  # pylint: disable=too-many-statements
                        help='Which assembler to use. If you do not use this '
                             'argument then aTRAM will do a single blast run '
                             'and stop before assembly.')
-
-    group.add_argument('-d', '--work-dir', default='.', metavar='DIR',
-                       help=('Which directory has the files created by '
-                             'atram_preprocessor.py. This will also be used '
-                             'as a place to store temporary files if TEMP_DIR '
-                             'is not specified. Defaults to the current '
-                             'directory "{}".'.format(os.getcwd())))
 
     group.add_argument('-i', '--iterations', type=int, default=5, metavar='N',
                        help='The number of pipline iterations. '
@@ -401,10 +384,9 @@ def parse_command_line():  # pylint: disable=too-many-statements
                        help='If resuming from a previous run, which iteration '
                             'number to start from. The default is "1".')
 
-    # group.add_argument('--temp-dir',
-    #                    help='Store temporary files in this directory. '
-    #                         'Temporary files will be deleted if you do not '
-    #                         'specify this argument.')
+    group.add_argument('-t', '--temp-dir', metavar='DIR',
+                       help='You may save intermediate files for '
+                            'debugging in this directory.')
 
     # optional values for blast-filtering contigs
     group = parser.add_argument_group(
@@ -488,9 +470,8 @@ def parse_command_line():  # pylint: disable=too-many-statements
 
     # Set default log file name
     if not args.log_file:
-        file_name = '{}.{}.log'.format(args.blast_db,
-                                       os.path.basename(sys.argv[0][:-3]))
-        args.log_file = os.path.join(args.work_dir, file_name)
+        args.log_file = '{}.{}.log'.format(
+            args.blast_db, os.path.basename(sys.argv[0][:-3]))
 
     # If not --protein then probe to see if it's a protein seq
     if not args.protein:
@@ -505,8 +486,14 @@ def parse_command_line():  # pylint: disable=too-many-statements
 
     # Calculate the default max_target_seqs per shard
     if not args.max_target_seqs:
-        all_shards = blast.all_shard_paths(args.work_dir, args.blast_db)
+        all_shards = blast.all_shard_paths(args.blast_db)
         args.max_target_seqs = int(2 * args.max_memory / len(all_shards)) * 1e6
+
+    # Make temp directory
+    if args.temp_dir:
+        os.makedirs(args.temp_dir, exist_ok=True)
+    else:
+        args.temp_dir = temp_dir
 
     find_programs(args)
 
@@ -561,5 +548,6 @@ def find_programs(args):
 
 if __name__ == '__main__':
 
-    ARGS = parse_command_line()
-    run(ARGS)
+    with tempfile.TemporaryDirectory(prefix='atram_') as TEMP_DIR:
+        ARGS = parse_command_line(TEMP_DIR)
+        run(ARGS)
