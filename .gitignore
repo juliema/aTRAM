@@ -1,7 +1,9 @@
 __pycache__
-config.txt
-data*
 venv
+data*
 temp*
 junk*
+db*
+output*
+config.txt
 coverage.hist
