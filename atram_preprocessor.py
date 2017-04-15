@@ -155,10 +155,13 @@ def create_blast_db(blast_db, temp_dir, shard_params, shard_index):
     # shared with the parent (caller) hence we cannot share object variables.
 
     shard_path = blast.shard_path(blast_db, shard_index)
+    fasta_name = '{}_{:03d}.fasta'.format(os.path.basename(sys.argv[0][:-3]),
+                                          shard_index)
+    fasta_path = os.path.join(temp_dir, fasta_name)
 
-    with tempfile.NamedTemporaryFile(mode='w', dir=temp_dir) as fasta_file:
+    with open(fasta_path, 'w') as fasta_file:
         fill_blast_fasta(blast_db, fasta_file, shard_params)
-        blast.create_db(temp_dir, fasta_file.name, shard_path)
+        blast.create_db(temp_dir, fasta_path, shard_path)
 
 
 def fill_blast_fasta(blast_db, fasta_file, shard_params):
@@ -180,7 +183,7 @@ def fill_blast_fasta(blast_db, fasta_file, shard_params):
     db_conn.close()
 
 
-def parse_command_line():
+def parse_command_line(temp_dir):
     """Process command-line arguments."""
 
     description = """
@@ -262,20 +265,27 @@ def parse_command_line():
         args.shard_count = int(total_fasta_size / 2.5e8)
         args.shard_count = args.shard_count if args.shard_count else 1
 
-    # Set degailt log file name
+    # Make output directory
+    output_dir = os.path.dirname(args.blast_db)
+    if output_dir and output_dir not in ['.']:
+        os.makedirs(output_dir, exist_ok=True)
+
+    # Set default log file name
     if not args.log_file:
         args.log_file = '{}.{}.log'.format(
             args.blast_db, os.path.basename(sys.argv[0][:-3]))
 
+    # Make temp directory
     if args.temp_dir:
         os.makedirs(args.temp_dir, exist_ok=True)
     else:
-        args.temp_dir = tempfile.TemporaryDirectory(prefix='atram_')
+        args.temp_dir = temp_dir
 
     return args
 
 
 if __name__ == '__main__':
 
-    ARGS = parse_command_line()
-    run(ARGS)
+    with tempfile.TemporaryDirectory(prefix='atram_') as temp_dir:
+        ARGS = parse_command_line(temp_dir)
+        run(ARGS)
