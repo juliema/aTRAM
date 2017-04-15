@@ -47,7 +47,7 @@ def load_seqs(args, db_conn):
         log.info('Loading "%s" into sqlite database' % file_name)
 
         with open(file_name) as sra_file:
-            batch = []  # The batch of records to insert
+            batch = []      # The batch of records to insert
 
             seq = ''        # The sequence string. A DB field
             seq_end = ''    # Which end? 1 or 2. A DB field
