@@ -286,6 +286,6 @@ def parse_command_line(temp_dir):
 
 if __name__ == '__main__':
 
-    with tempfile.TemporaryDirectory(prefix='atram_') as temp_dir:
-        ARGS = parse_command_line(temp_dir)
+    with tempfile.TemporaryDirectory(prefix='atram_') as TEMP_DIR:
+        ARGS = parse_command_line(TEMP_DIR)
         run(ARGS)
