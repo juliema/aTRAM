@@ -1,6 +1,7 @@
 """The aTRAM assembly program."""
 
 import os
+import re
 import sys
 import csv
 import math
@@ -29,7 +30,11 @@ def run(args):
 
     assembler = Assembler.factory(args) if args.assembler else None
     atram_loop(args, db_conn, assembler, all_shards)
-    output_results(args, db_conn)
+
+    if assembler:
+        output_results(args, db_conn)
+    else:
+        output_blast_only_results(args, db_conn)
 
     db_conn.close()
 
@@ -46,7 +51,6 @@ def atram_loop(args, db_conn, assembler, all_shards):
 
         # If we don't have an assembler then we just want the blast hits
         if not args.assembler:
-            output_blast_only_results(args, db_conn)
             break
 
         # Exit if there are no blast hits
@@ -458,6 +462,13 @@ def parse_command_line(temp_dir):  # pylint: disable=too-many-statements
                             'iteself. The default is "100". (Velvet)')
 
     args = parser.parse_args()
+
+    # Touch up blast DB name
+    pattern = (r'^ (.*?)'
+               r'(  \.atram(_preprocessor)?\.log'
+               r' | \.blast_\d{3}\.(nhr|nin|nsq)'
+               r' | \.sqlite\.db  )?$')
+    args.blast_db = re.sub(pattern, r'\1', args.blast_db, re.I | re.X)
 
     # Check query
     if not args.query and not args.start_iteration:
