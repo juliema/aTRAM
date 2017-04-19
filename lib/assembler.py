@@ -52,8 +52,8 @@ class Assembler:
     def path(self, file_name, iteration=0):
         """Files will go into the temp dir."""
 
-        file_name = '{}.{:02d}.{}'.format(
-            self.args.temp_dir, iteration, file_name)
+        blast_db = os.path.basename(self.args.blast_db)
+        file_name = '{}.{:02d}.{}'.format(blast_db, iteration, file_name)
         rel_path = os.path.join(self.args.temp_dir, file_name)
 
         return os.path.abspath(rel_path)
@@ -66,6 +66,12 @@ class Assembler:
         self.output_file = self.path('output.fasta', iteration)
         self.end_1_file = self.path('paired_end_1.fasta', iteration)
         self.end_2_file = self.path('paired_end_2.fasta', iteration)
+
+    @staticmethod
+    def parse_id(header):
+        """Given a fasta header line return the contig ID."""
+
+        return header.split()[0]
 
 
 class AbyssAssembler(Assembler):
@@ -97,7 +103,6 @@ class AbyssAssembler(Assembler):
             cmd.append("long='LONGREADS'")
             cmd.append("LONGREADS='{}'".format(self.long_reads_file))
 
-        print(' '.join(cmd))
         return ' '.join(cmd)
 
     def post_assembly(self):
@@ -159,6 +164,12 @@ class VelvetAssembler(Assembler):
     def __init__(self, args):
         super().__init__(args)
         self.steps = [self.velveth, self.velvetg]
+
+    @staticmethod
+    def parse_id(header):
+        """Given a fasta header line return the contig ID."""
+
+        return header
 
     def velveth(self):
         """Build the velveth for the first assembly step."""
