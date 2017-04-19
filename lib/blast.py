@@ -4,6 +4,7 @@ import os
 import re
 import sys
 import glob
+import json
 import lib.log as log
 
 
@@ -35,7 +36,7 @@ def against_sra(args, blast_db, query, hits_file, iteration):
         cmd.append('blastn')
         cmd.append('-evalue {}'.format(args['evalue']))
 
-    cmd.append("-outfmt '10 sseqid'")
+    cmd.append('-outfmt 15')
     cmd.append('-max_target_seqs {}'.format(args['max_target_seqs']))
     cmd.append('-out {}'.format(hits_file))
     cmd.append('-db {}'.format(blast_db))
@@ -61,8 +62,7 @@ def against_contigs(args, blast_db, query, hits_file):
     cmd.append('-db {}'.format(blast_db))
     cmd.append('-query {}'.format(query))
     cmd.append('-out {}'.format(hits_file))
-    cmd.append(
-        "-outfmt '10 qseqid sseqid bitscore qstart qend sstart send slen'")
+    cmd.append('-outfmt 15')
 
     command = ' '.join(cmd)
     log.subcommand(command, args.temp_dir)
@@ -102,5 +102,24 @@ def output_file(temp_dir, shrd_path, iteration):
 def temp_db(temp_dir, blast_db, iteration):
     """Generate a name for the temp DB used to filter the contigs."""
 
-    file_name = '{}.blast.{:02d}'.format(blast_db, iteration)
+    temp_name = os.path.basename(blast_db)
+    file_name = '{}.blast.{:02d}'.format(temp_name, iteration)
     return os.path.join(temp_dir, file_name)
+
+
+def hits(json_file):
+    """Extract the blast hits from the json file."""
+
+    with open(json_file) as blast_file:
+        raw = blast_file.read()
+        obj = json.loads(raw)
+
+    hits_list = []
+    for raw in obj['BlastOutput2'][0]['report']['results']['search']['hits']:
+        for i, desc in enumerate(raw['description']):
+            hit = dict(desc)
+            hit['len'] = raw['len']
+            hit.update(raw['hsps'][i])
+            hits_list.append(hit)
+
+    return hits_list

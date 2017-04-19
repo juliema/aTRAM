@@ -243,7 +243,7 @@ def parse_command_line(temp_dir):
     group.add_argument('-l', '--log-file',
                        help='Log file (full path). The default is to use the '
                             'DB and program name to come up with a name like '
-                            '"DB_atram_preprocessor.log"')
+                            '"<DB>_atram_preprocessor.log"')
 
     group.add_argument('-s', '--shards', '--number',
                        type=int, metavar='SHARDS',

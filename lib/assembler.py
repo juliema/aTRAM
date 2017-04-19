@@ -53,7 +53,7 @@ class Assembler:
         """Files will go into the temp dir."""
 
         file_name = '{}.{:02d}.{}'.format(
-            self.args.blast_db, iteration, file_name)
+            self.args.temp_dir, iteration, file_name)
         rel_path = os.path.join(self.args.temp_dir, file_name)
 
         return os.path.abspath(rel_path)
