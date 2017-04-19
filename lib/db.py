@@ -12,6 +12,7 @@ def connect(blast_db):
 
     db_conn = sqlite3.connect(db_name)
 
+    db_conn.execute("PRAGMA busy_timeout = 10000")
     db_conn.execute("PRAGMA page_size = {}".format(2**16))
     db_conn.execute("PRAGMA journal_mode = 'off'")
     db_conn.execute("PRAGMA synchronous = 'off'")
@@ -140,8 +141,9 @@ def create_assembled_contigs_table(db_conn):
     db_conn.execute('''DROP TABLE IF EXISTS assembled_contigs''')
     sql = '''CREATE TABLE assembled_contigs
         (iteration INTEGER, contig_id TEXT, seq TEXT, description TEXT,
-         bit_score NUMERIC, target_start INTEGER, target_end INTEGER,
-         contig_start INTEGER, contig_end INTEGER, contig_len INTEGER)
+         bit_score NUMERIC, len INTEGER,
+         query_from INTEGER, query_to INTEGER, query_strand TEXT,
+         hit_from INTEGER, hit_to INTEGER, hit_strand TEXT)
         '''
     db_conn.execute(sql)
 
@@ -183,9 +185,9 @@ def insert_assembled_contigs_batch(db_conn, batch):
 
     if batch:
         sql = '''INSERT INTO assembled_contigs
-            (iteration, contig_id, seq, description, bit_score,
-             target_start, target_end, contig_start, contig_end, contig_len)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            (iteration, contig_id, seq, description, bit_score, len,
+             query_from, query_to, query_strand, hit_from, hit_to, hit_strand)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             '''
         db_conn.executemany(sql, batch)
         db_conn.commit()
@@ -205,8 +207,9 @@ def get_all_assembled_contigs(db_conn):
     as the targets in the next atram iteration.
     """
 
-    sql = '''SELECT iteration, contig_id, seq, description, bit_score,
-        target_start, target_end, contig_start, contig_end, contig_len
+    sql = '''SELECT iteration, contig_id, seq, description, bit_score, len,
+                    query_from, query_to, query_strand,
+                    hit_from, hit_to, hit_strand
         FROM assembled_contigs ORDER BY bit_score DESC, iteration
         '''
 

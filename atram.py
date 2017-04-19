@@ -3,7 +3,6 @@
 import os
 import re
 import sys
-import csv
 import math
 import argparse
 import textwrap
@@ -136,6 +135,9 @@ def blast_target_against_all_sras(args, query, all_shards, iteration):
     log.info('Blasting target against shards: iteration %i' % iteration)
 
     with multiprocessing.Pool(processes=args.cpus) as pool:
+        # for shard_path in all_shards:
+        #     blast_target_against_sra(
+        #         dict(vars(args)), shard_path, query, iteration)
         results = [pool.apply_async(
             blast_target_against_sra,
             (dict(vars(args)), shard_path, query, iteration))
@@ -159,16 +161,16 @@ def blast_target_against_sra(args, shard_path, query, iteration):
     shard = os.path.basename(shard_path)
 
     batch = []
-    with open(output_file) as blast_hits:
-        for line in blast_hits:
-            match = blast.PARSE_RESULTS.match(line)
-            if match:
-                seq_name = match.group(1)
-                seq_end = match.group(2)
-            else:
-                seq_name = line
-                seq_end = ''
-            batch.append((iteration, seq_end, seq_name, shard))
+
+    for hit in blast.hits(output_file):
+        match = blast.PARSE_RESULTS.match(hit['title'])
+        if match:
+            seq_name = match.group(1)
+            seq_end = match.group(2)
+        else:
+            seq_name = hit['title']
+            seq_end = ''
+        batch.append((iteration, seq_end, seq_name, shard))
     db.insert_blast_hit_batch(db_conn, batch)
     db_conn.close()
 
@@ -232,20 +234,12 @@ def filter_contigs(args, db_conn, assembler, iteration):
 def filter_contig_scores(args, hits_file):
     """Only save contigs that have bit scores above the cut-off."""
 
-    # qseqid sseqid bitscore qstart qend sstart send slen
-    field_names = ['target_id', 'contig_id', 'bit_score',
-                   'target_start', 'target_end',
-                   'contig_start', 'contig_end', 'contig_len']
-
     scores = {}
-    with open(hits_file) as in_file:
-        for score in csv.DictReader(in_file, field_names):
-            score['bit_score'] = float(score['bit_score'])
-            if score['bit_score'] >= args.bit_score and \
-                    int(score['contig_len']) >= args.contig_length:
-                for field in field_names[3:]:
-                    score[field] = int(score[field])
-                scores[score['contig_id']] = score
+
+    for hit in blast.hits(hits_file):
+        if hit['bit_score'] >= args.bit_score and \
+                hit['len'] >= args.contig_length:
+            scores[hit['title']] = hit  # title = contig ID
     return scores
 
 
@@ -257,15 +251,12 @@ def save_contigs(db_conn, assembler, filtered_scores, iteration):
     with open(assembler.output_file) as in_file:
         for contig in SeqIO.parse(in_file, 'fasta'):
             if contig.id in filtered_scores:
-                score = filtered_scores[contig.id]
-                if score['bit_score'] > high_score:
-                    high_score = score['bit_score']
+                scr = filtered_scores[contig.id]
                 batch.append((
-                    iteration, contig.id,
-                    str(contig.seq), contig.description,
-                    score['bit_score'], score['target_start'],
-                    score['target_end'], score['contig_start'],
-                    score['contig_end'], score['contig_len']))
+                    iteration, contig.id, str(contig.seq), contig.description,
+                    scr['bit_score'], scr['len'],
+                    scr['query_from'], scr['query_to'], scr['query_strand'],
+                    scr['hit_from'], scr['hit_to'], scr['hit_strand']))
     db.insert_assembled_contigs_batch(db_conn, batch)
 
     return high_score
@@ -297,8 +288,8 @@ def output_results(args, db_conn):
 
             seq = row['seq']
             suffix = ''
-            if ((row['contig_end'] - row['contig_start']) *
-                    (row['target_end'] - row['target_start'])) < 0:
+            if ((row['hit_to'] - row['hit_from']) *
+                    (row['query_to'] - row['query_from'])) < 0:
                 seq = bio.reverse_complement(seq)
                 suffix = '_REV'
 
