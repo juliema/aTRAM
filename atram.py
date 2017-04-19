@@ -152,7 +152,8 @@ def blast_target_against_sra(args, shard_path, query, iteration):
     # NOTE: Because this is called in a child process, the address space is not
     # shared with the parent (caller) hence we cannot share object variables.
 
-    output_file = blast.output_file(args['temp_dir'], shard_path, iteration)
+    output_file = blast.output_file_name(
+        args['temp_dir'], shard_path, iteration)
 
     blast.against_sra(args, shard_path, query, output_file, iteration)
 
@@ -220,18 +221,19 @@ def filter_contigs(args, db_conn, assembler, iteration):
 
     log.info('Filtering assembled contigs: iteration %i' % iteration)
 
-    blast_db = blast.temp_db(args.temp_dir, args.blast_db, iteration)
-    hits_file = blast.output_file(args.temp_dir, args.blast_db, iteration)
+    blast_db = blast.temp_db_name(args.temp_dir, args.blast_db, iteration)
+    hits_file = blast.output_file_name(args.temp_dir, args.blast_db, iteration)
 
+    print(assembler.output_file)
     blast.create_db(args.temp_dir, assembler.output_file, blast_db)
 
     blast.against_contigs(args, blast_db, args.query, hits_file)
 
-    filtered_scores = filter_contig_scores(args, hits_file)
+    filtered_scores = filter_contig_scores(args, assembler, hits_file)
     return save_contigs(db_conn, assembler, filtered_scores, iteration)
 
 
-def filter_contig_scores(args, hits_file):
+def filter_contig_scores(args, assembler, hits_file):
     """Only save contigs that have bit scores above the cut-off."""
 
     scores = {}
@@ -239,7 +241,8 @@ def filter_contig_scores(args, hits_file):
     for hit in blast.hits(hits_file):
         if hit['bit_score'] >= args.bit_score and \
                 hit['len'] >= args.contig_length:
-            scores[hit['title']] = hit  # title = contig ID
+            key = assembler.parse_id(hit['title'])
+            scores[key] = hit
     return scores
 
 
@@ -250,8 +253,9 @@ def save_contigs(db_conn, assembler, filtered_scores, iteration):
     high_score = 0
     with open(assembler.output_file) as in_file:
         for contig in SeqIO.parse(in_file, 'fasta'):
-            if contig.id in filtered_scores:
-                scr = filtered_scores[contig.id]
+            key = assembler.parse_id(contig.description)
+            if key in filtered_scores:
+                scr = filtered_scores[key]
                 batch.append((
                     iteration, contig.id, str(contig.seq), contig.description,
                     scr['bit_score'], scr['len'],
