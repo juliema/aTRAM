@@ -134,10 +134,10 @@ def blast_target_against_all_sras(args, query, all_shards, iteration):
 
     log.info('Blasting target against shards: iteration %i' % iteration)
 
+    # for shard_path in all_shards:
+    #     blast_target_against_sra(
+    #         dict(vars(args)), shard_path, query, iteration)
     with multiprocessing.Pool(processes=args.cpus) as pool:
-        # for shard_path in all_shards:
-        #     blast_target_against_sra(
-        #         dict(vars(args)), shard_path, query, iteration)
         results = [pool.apply_async(
             blast_target_against_sra,
             (dict(vars(args)), shard_path, query, iteration))

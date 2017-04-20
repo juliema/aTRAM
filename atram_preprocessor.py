@@ -265,9 +265,9 @@ def parse_command_line(temp_dir):
         args.shard_count = int(total_fasta_size / 2.5e8)
         args.shard_count = args.shard_count if args.shard_count else 1
 
-    # Make output directory
+    # Make blast DB output directory
     output_dir = os.path.dirname(args.blast_db)
-    if output_dir and output_dir not in ['.']:
+    if output_dir and output_dir not in ['.', '..']:
         os.makedirs(output_dir, exist_ok=True)
 
     # Set default log file name
