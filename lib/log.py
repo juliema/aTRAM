@@ -35,15 +35,15 @@ def subcommand(cmd, temp_dir):
                     logging.log(logging.DEBUG, line)
 
 
-def info(msg, breaker=None):
+def info(msg, line_break=None):
     """Log and display an info message."""
 
-    if breaker is not None:
-        print(breaker)
+    if line_break is not None:
+        print(line_break)
     print(msg)
 
-    if breaker is not None:
-        logging.info(breaker)
+    if line_break is not None:
+        logging.info(line_break)
     logging.info(msg)
 
 
