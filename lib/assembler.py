@@ -58,7 +58,7 @@ class Assembler:
 
         return os.path.abspath(rel_path)
 
-    def iteration_files(self, iteration):
+    def initialize_iteration(self, iteration):
         """Files used by the assembler. Do this at the start of each
         iteration.
         """

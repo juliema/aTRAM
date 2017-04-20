@@ -28,20 +28,20 @@ def run(args):
     db_conn = db.connect(args.blast_db)
 
     assembler = Assembler.factory(args) if args.assembler else None
-    atram_loop(args, db_conn, assembler, all_shards)
+    query = initialize_query(args, db_conn, assembler)
+
+    atram_loop(args, db_conn, assembler, query, all_shards)
 
     if assembler:
-        output_results(args, db_conn)
+        output_assembly_results(args, db_conn)
     else:
         output_blast_only_results(args, db_conn)
 
     db_conn.close()
 
 
-def atram_loop(args, db_conn, assembler, all_shards):
+def atram_loop(args, db_conn, assembler, query, all_shards):
     """The main program loop."""
-
-    query = initialize_query(args, db_conn, assembler)
 
     for iteration in range(args.start_iteration, args.iterations + 1):
         log.info('aTRAM iteration %i' % iteration, line_break='')
@@ -57,7 +57,7 @@ def atram_loop(args, db_conn, assembler, all_shards):
             log.info('No blast hits in iteration %i' % iteration)
             break
 
-        assembler.iteration_files(iteration)
+        assembler.initialize_iteration(iteration)
 
         write_assembler_files(db_conn, assembler, iteration)
 
@@ -177,7 +177,7 @@ def blast_target_against_sra(args, shard_path, query, iteration):
 
 
 def write_assembler_files(db_conn, assembler, iteration):
-    """Take the matching blast hits and write the sequence and any matching
+    """Take the matching blast hits and write the sequence and its matching
     end to the appropriate fasta files.
     """
 
@@ -284,7 +284,7 @@ def create_targets_from_contigs(db_conn, assembler, iteration):
     return query
 
 
-def output_results(args, db_conn):
+def output_assembly_results(args, db_conn):
     """Write the assembled contigs to a fasta file."""
 
     with open(args.output, 'w') as out_file:
