@@ -1,4 +1,5 @@
 __pycache__
+requirements_dev.txt
 config.txt
 venv
 data*
