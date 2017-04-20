@@ -292,8 +292,7 @@ def output_results(args, db_conn):
 
             seq = row['seq']
             suffix = ''
-            if ((row['hit_to'] - row['hit_from']) *
-                    (row['query_to'] - row['query_from'])) < 0:
+            if row['query_strand'] != row['hit_strand']:
                 seq = bio.reverse_complement(seq)
                 suffix = '_REV'
 
