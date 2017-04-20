@@ -39,12 +39,12 @@ def run(args):
 
 
 def atram_loop(args, db_conn, assembler, all_shards):
-    """The run program loop."""
+    """The main program loop."""
 
     query = initialize_query(args, db_conn, assembler)
 
     for iteration in range(args.start_iteration, args.iterations + 1):
-        log.info('aTRAM iteration %i' % iteration, breaker='')
+        log.info('aTRAM iteration %i' % iteration, line_break='')
 
         blast_target_against_all_sras(args, query, all_shards, iteration)
 
@@ -92,7 +92,7 @@ def atram_loop(args, db_conn, assembler, all_shards):
 
         query = create_targets_from_contigs(db_conn, assembler, iteration)
     else:
-        log.info('All iterations completed', breaker='')
+        log.info('All iterations completed', line_break='')
 
 
 def initialize_query(args, db_conn, assembler):
