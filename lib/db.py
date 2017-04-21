@@ -82,19 +82,21 @@ def get_sequences_in_shard(db_conn, limit, offset):
     return db_conn.execute(sql)
 
 
-# ########################## blast_hits table #################################
+# ######################## sra_blast_hits table ###############################
 
-def create_blast_hits_table(db_conn):
+def create_sra_blast_hits_table(db_conn):
     """Reset the DB. Delete the tables and recreate them."""
 
-    db_conn.execute('''DROP INDEX IF EXISTS blast_hits_index''')
-    db_conn.execute('''DROP TABLE IF EXISTS blast_hits''')
-    sql = '''CREATE TABLE blast_hits
+    db_conn.execute('''DROP INDEX IF EXISTS sra_blast_hits_index''')
+    db_conn.execute('''DROP TABLE IF EXISTS sra_blast_hits''')
+    sql = '''CREATE TABLE sra_blast_hits
         (iteration INTEGER, seq_name TEXT, seq_end TEXT, shard TEXT)
         '''
     db_conn.execute(sql)
 
-    sql = 'CREATE INDEX blast_hits_index ON blast_hits (iteration, seq_name)'
+    sql = '''CREATE INDEX sra_blast_hits_index
+        ON sra_blast_hits (iteration, seq_name)
+        '''
     db_conn.execute(sql)
 
 
@@ -102,28 +104,31 @@ def insert_blast_hit_batch(db_conn, batch):
     """Insert a batch of blast hit records into the sqlite database."""
 
     if batch:
-        sql = '''INSERT INTO blast_hits
+        sql = '''INSERT INTO sra_blast_hits
             (iteration, seq_end, seq_name, shard) VALUES (?, ?, ?, ?)
             '''
         db_conn.executemany(sql, batch)
         db_conn.commit()
 
 
-def blast_hits_count(db_conn, iteration):
+def sra_blast_hits_count(db_conn, iteration):
     """Count the blast hist for the iteration."""
 
-    sql = '''SELECT COUNT(*) AS count FROM blast_hits WHERE iteration = ?'''
+    sql = '''SELECT COUNT(*) AS count
+        FROM sra_blast_hits
+        WHERE iteration = ?
+        '''
 
     result = db_conn.execute(sql, str(iteration))
     return result.fetchone()[0]
 
 
-def get_blast_hits(db_conn, iteration):
+def get_sra_blast_hits(db_conn, iteration):
     """Get all blast hits for the iteration."""
 
     sql = '''SELECT seq_name, seq_end, seq FROM sequences
         WHERE seq_name IN (SELECT DISTINCT seq_name
-                             FROM blast_hits
+                             FROM sra_blast_hits
                              WHERE iteration = ?)
         ORDER BY seq_name, seq_end
         '''
