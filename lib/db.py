@@ -44,7 +44,7 @@ def insert_sequences_batch(db_conn, batch):
 
     if batch:
         sql = '''INSERT INTO sequences (seq_name, seq_end, seq)
-            VALUES (?, ?, ?)
+                      VALUES (?, ?, ?)
             '''
         db_conn.executemany(sql, batch)
         db_conn.commit()
@@ -74,8 +74,10 @@ def get_sequences_in_shard(db_conn, limit, offset):
     """Get all sequences in a shard."""
 
     sql = '''
-        SELECT seq_name, seq_end, seq FROM sequences
-        ORDER BY seq_name LIMIT {} OFFSET {}
+        SELECT seq_name, seq_end, seq
+          FROM sequences
+         ORDER BY seq_name
+         LIMIT {} OFFSET {}
         '''
     sql = sql.format(limit, offset)
 
@@ -89,13 +91,15 @@ def create_sra_blast_hits_table(db_conn):
 
     db_conn.execute('''DROP INDEX IF EXISTS sra_blast_hits_index''')
     db_conn.execute('''DROP TABLE IF EXISTS sra_blast_hits''')
-    sql = '''CREATE TABLE sra_blast_hits
-        (iteration INTEGER, seq_name TEXT, seq_end TEXT, shard TEXT)
+    sql = '''
+        CREATE TABLE sra_blast_hits
+                   (iteration INTEGER, seq_name TEXT, seq_end TEXT, shard TEXT)
         '''
     db_conn.execute(sql)
 
-    sql = '''CREATE INDEX sra_blast_hits_index
-        ON sra_blast_hits (iteration, seq_name)
+    sql = '''
+        CREATE INDEX sra_blast_hits_index
+                  ON sra_blast_hits (iteration, seq_name)
         '''
     db_conn.execute(sql)
 
@@ -104,8 +108,10 @@ def insert_blast_hit_batch(db_conn, batch):
     """Insert a batch of blast hit records into the sqlite database."""
 
     if batch:
-        sql = '''INSERT INTO sra_blast_hits
-            (iteration, seq_end, seq_name, shard) VALUES (?, ?, ?, ?)
+        sql = '''
+            INSERT INTO sra_blast_hits
+                        (iteration, seq_end, seq_name, shard)
+                        VALUES (?, ?, ?, ?)
             '''
         db_conn.executemany(sql, batch)
         db_conn.commit()
@@ -114,9 +120,10 @@ def insert_blast_hit_batch(db_conn, batch):
 def sra_blast_hits_count(db_conn, iteration):
     """Count the blast hist for the iteration."""
 
-    sql = '''SELECT COUNT(*) AS count
-        FROM sra_blast_hits
-        WHERE iteration = ?
+    sql = '''
+        SELECT COUNT(*) AS count
+          FROM sra_blast_hits
+         WHERE iteration = ?
         '''
 
     result = db_conn.execute(sql, str(iteration))
@@ -126,15 +133,72 @@ def sra_blast_hits_count(db_conn, iteration):
 def get_sra_blast_hits(db_conn, iteration):
     """Get all blast hits for the iteration."""
 
-    sql = '''SELECT seq_name, seq_end, seq FROM sequences
-        WHERE seq_name IN (SELECT DISTINCT seq_name
-                             FROM sra_blast_hits
+    sql = '''
+        SELECT seq_name, seq_end, seq
+          FROM sequences
+         WHERE seq_name IN (SELECT DISTINCT seq_name
+                              FROM sra_blast_hits
                              WHERE iteration = ?)
-        ORDER BY seq_name, seq_end
+      ORDER BY seq_name, seq_end
         '''
 
     db_conn.row_factory = sqlite3.Row
     return db_conn.execute(sql, str(iteration))
+
+
+# ####################### contig_blast_hits table #############################
+
+def create_contig_blast_hits_table(db_conn):
+    """Reset the DB. Delete the tables and recreate them."""
+
+    db_conn.execute('''DROP INDEX IF EXISTS contig_blast_hits_index''')
+    db_conn.execute('''DROP TABLE IF EXISTS contig_blast_hits''')
+    sql = '''
+        CREATE TABLE contig_blast_hits
+                     (iteration INTEGER, contig_id TEXT, description TEXT,
+                      bit_score NUMERIC, len INTEGER,
+                      query_from INTEGER, query_to INTEGER, query_strand TEXT,
+                      hit_from INTEGER, hit_to INTEGER, hit_strand TEXT)
+        '''
+    db_conn.execute(sql)
+
+    sql = '''
+        CREATE INDEX contig_blast_hits_index
+                  ON contig_blast_hits (iteration, bit_score, len)
+        '''
+    db_conn.execute(sql)
+
+
+def insert_contig_hit_batch(db_conn, batch):
+    """Insert a batch of blast hit records into the sqlite database."""
+
+    if batch:
+        sql = '''
+            INSERT INTO contig_blast_hits
+                        (iteration, contig_id, description, bit_score, len,
+                         query_from, query_to, query_strand,
+                         hit_from, hit_to, hit_strand)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            '''
+        db_conn.executemany(sql, batch)
+        db_conn.commit()
+
+
+def get_contig_blast_hits(db_conn, iteration, bit_score, length):
+    """Get all blast hits for the iteration."""
+
+    sql = '''
+        SELECT iteration, contig_id, description, bit_score, len,
+               query_from, query_to, query_strand,
+               hit_from, hit_to, hit_strand
+          FROM contig_blast_hits
+         WHERE iteration = ?
+           AND bit_score >= ?
+           AND len >= ?
+        '''
+
+    db_conn.row_factory = sqlite3.Row
+    return db_conn.execute(sql, (str(iteration), str(bit_score), str(length)))
 
 
 # ####################### assembled_contigs table #############################
@@ -144,16 +208,18 @@ def create_assembled_contigs_table(db_conn):
 
     db_conn.execute('''DROP INDEX IF EXISTS assembled_contigs_index''')
     db_conn.execute('''DROP TABLE IF EXISTS assembled_contigs''')
-    sql = '''CREATE TABLE assembled_contigs
-        (iteration INTEGER, contig_id TEXT, seq TEXT, description TEXT,
-         bit_score NUMERIC, len INTEGER,
-         query_from INTEGER, query_to INTEGER, query_strand TEXT,
-         hit_from INTEGER, hit_to INTEGER, hit_strand TEXT)
+    sql = '''
+        CREATE TABLE assembled_contigs
+                     (iteration INTEGER, contig_id TEXT, seq TEXT,
+                      description TEXT, bit_score NUMERIC, len INTEGER,
+                      query_from INTEGER, query_to INTEGER, query_strand TEXT,
+                      hit_from INTEGER, hit_to INTEGER, hit_strand TEXT)
         '''
     db_conn.execute(sql)
 
-    sql = '''CREATE INDEX assembled_contigs_index
-        ON assembled_contigs (iteration, contig_id)
+    sql = '''
+        CREATE INDEX assembled_contigs_index
+                  ON assembled_contigs (iteration, contig_id)
         '''
     db_conn.execute(sql)
 
@@ -161,8 +227,10 @@ def create_assembled_contigs_table(db_conn):
 def assembled_contigs_count(db_conn, iteration):
     """Count the blast hist for the iteration."""
 
-    sql = '''SELECT COUNT(*) AS count
-        FROM assembled_contigs WHERE iteration = ?
+    sql = '''
+        SELECT COUNT(*) AS count
+          FROM assembled_contigs
+         WHERE iteration = ?
         '''
 
     result = db_conn.execute(sql, str(iteration))
@@ -173,13 +241,14 @@ def iteration_overlap_count(db_conn, iteration):
     """Count how many assembled contigs match what was in the last iteration.
     """
 
-    sql = '''SELECT COUNT(*) AS overlap
-        FROM assembled_contigs AS curr_iter
-        JOIN assembled_contigs AS prev_iter
-          ON (    curr_iter.contig_id = prev_iter.contig_id
-              AND curr_iter.iteration = prev_iter.iteration + 1)
-        WHERE curr_iter.iteration = ?
-          AND curr_iter.seq = prev_iter.seq
+    sql = '''
+        SELECT COUNT(*) AS overlap
+          FROM assembled_contigs AS curr_iter
+          JOIN assembled_contigs AS prev_iter
+            ON (    curr_iter.contig_id = prev_iter.contig_id
+                 AND curr_iter.iteration = prev_iter.iteration + 1)
+         WHERE curr_iter.iteration = ?
+           AND curr_iter.seq = prev_iter.seq
         '''
     result = db_conn.execute(sql, str(iteration))
     return result.fetchone()[0]
@@ -189,10 +258,13 @@ def insert_assembled_contigs_batch(db_conn, batch):
     """Insert a batch of blast hit records into the sqlite database."""
 
     if batch:
-        sql = '''INSERT INTO assembled_contigs
-            (iteration, contig_id, seq, description, bit_score, len,
-             query_from, query_to, query_strand, hit_from, hit_to, hit_strand)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        sql = '''
+            INSERT INTO assembled_contigs
+                        (iteration, contig_id, seq, description,
+                         bit_score, len,
+                         query_from, query_to, query_strand,
+                         hit_from, hit_to, hit_strand)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             '''
         db_conn.executemany(sql, batch)
         db_conn.commit()
@@ -200,7 +272,7 @@ def insert_assembled_contigs_batch(db_conn, batch):
 
 def get_assembled_contigs(db_conn, iteration):
     """Get all assembled contigs for the iteration so that we can use them
-    as the targets in the next atram iteration.
+    as the queries in the next atram iteration.
     """
 
     sql = 'SELECT contig_id, seq FROM assembled_contigs WHERE iteration = ?'
@@ -209,13 +281,15 @@ def get_assembled_contigs(db_conn, iteration):
 
 def get_all_assembled_contigs(db_conn):
     """Get all assembled contigs for the iteration so that we can use them
-    as the targets in the next atram iteration.
+    as the queries in the next atram iteration.
     """
 
-    sql = '''SELECT iteration, contig_id, seq, description, bit_score, len,
-                    query_from, query_to, query_strand,
-                    hit_from, hit_to, hit_strand
-        FROM assembled_contigs ORDER BY bit_score DESC, iteration
+    sql = '''
+        SELECT iteration, contig_id, seq, description, bit_score, len,
+               query_from, query_to, query_strand,
+               hit_from, hit_to, hit_strand
+          FROM assembled_contigs
+      ORDER BY bit_score DESC, iteration
         '''
 
     db_conn.row_factory = sqlite3.Row

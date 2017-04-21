@@ -46,7 +46,7 @@ def atram_loop(args, db_conn, assembler, query, all_shards):
     for iteration in range(args.start_iteration, args.iterations + 1):
         log.info('aTRAM iteration %i' % iteration, line_break='')
 
-        blast_target_against_all_sras(args, query, all_shards, iteration)
+        blast_query_against_all_sras(args, query, all_shards, iteration)
 
         # If we don't have an assembler then we just want the blast hits
         if not args.assembler:
@@ -90,7 +90,7 @@ def atram_loop(args, db_conn, assembler, query, all_shards):
             log.info('No new contigs were found in iteration %i' % iteration)
             break
 
-        query = create_targets_from_contigs(db_conn, assembler, iteration)
+        query = create_queries_from_contigs(db_conn, assembler, iteration)
     else:
         log.info('All iterations completed', line_break='')
 
@@ -100,10 +100,11 @@ def initialize_query(args, db_conn, assembler):
 
     if args.start_iteration < 2:
         db.create_sra_blast_hits_table(db_conn)
+        db.create_contig_blast_hits_table(db_conn)
         db.create_assembled_contigs_table(db_conn)
         query = args.query
     else:
-        query = create_targets_from_contigs(
+        query = create_queries_from_contigs(
             db_conn, assembler, args.start_iteration - 1)
 
     if os.path.getsize(query) < 10:
@@ -126,27 +127,27 @@ def fraction_of_shards(args):
     return all_shards[:last_index]
 
 
-def blast_target_against_all_sras(args, query, all_shards, iteration):
-    """Blast the targets against the SRA databases. We're using a
+def blast_query_against_all_sras(args, query, all_shards, iteration):
+    """Blast the queries against the SRA databases. We're using a
     map-reduce strategy here. We map the blasting of the query sequences
     and reduce the output into one fasta file.
     """
 
-    log.info('Blasting target against shards: iteration %i' % iteration)
+    log.info('Blasting query against shards: iteration %i' % iteration)
 
     # for shard_path in all_shards:
-    #     blast_target_against_sra(
+    #     blast_query_against_sra(
     #         dict(vars(args)), shard_path, query, iteration)
     with multiprocessing.Pool(processes=args.cpus) as pool:
         results = [pool.apply_async(
-            blast_target_against_sra,
+            blast_query_against_sra,
             (dict(vars(args)), shard_path, query, iteration))
                    for shard_path in all_shards]
         _ = [result.get() for result in results]
 
 
-def blast_target_against_sra(args, shard_path, query, iteration):
-    """Blast the target against one blast DB shard. Then write the results to
+def blast_query_against_sra(args, shard_path, query, iteration):
+    """Blast the query against one blast DB shard. Then write the results to
     the database.
     """
     # NOTE: Because this is called in a child process, the address space is not
@@ -224,62 +225,67 @@ def filter_contigs(args, db_conn, assembler, iteration):
     blast_db = blast.temp_db_name(args.temp_dir, args.blast_db, iteration)
     hits_file = blast.output_file_name(args.temp_dir, args.blast_db, iteration)
 
-    print(assembler.output_file)
     blast.create_db(args.temp_dir, assembler.output_file, blast_db)
 
     blast.against_contigs(args, blast_db, args.query, hits_file)
 
-    filtered_scores = filter_contig_scores(args, assembler, hits_file)
-    return save_contigs(db_conn, assembler, filtered_scores, iteration)
+    save_blast_against_contigs(db_conn, assembler, hits_file, iteration)
+
+    filtered_hits = {row['contig_id']: row for row in db.get_contig_blast_hits(
+        db_conn, iteration, args.bit_score, args.contig_length)}
+
+    return save_contigs(db_conn, filtered_hits, assembler, iteration)
 
 
-def filter_contig_scores(args, assembler, hits_file):
+def save_blast_against_contigs(db_conn, assembler, hits_file, iteration):
     """Only save contigs that have bit scores above the cut-off."""
 
-    scores = {}
+    batch = []
 
     for hit in blast.hits(hits_file):
-        if hit['bit_score'] >= args.bit_score and \
-                hit['len'] >= args.contig_length:
-            key = assembler.parse_id(hit['title'])
-            scores[key] = hit
-    return scores
+        contig_id = assembler.parse_contig_id(hit['title'])
+        batch.append((iteration, contig_id, hit['title'],
+                      hit['bit_score'], hit['len'],
+                      hit['query_from'], hit['query_to'], hit['query_strand'],
+                      hit['hit_from'], hit['hit_to'], hit['hit_strand']))
+
+    db.insert_contig_hit_batch(db_conn, batch)
 
 
-def save_contigs(db_conn, assembler, filtered_scores, iteration):
+def save_contigs(db_conn, filtered_hits, assembler, iteration):
     """Save the contigs to the database."""
 
     batch = []
     high_score = 0
     with open(assembler.output_file) as in_file:
         for contig in SeqIO.parse(in_file, 'fasta'):
-            key = assembler.parse_id(contig.description)
-            if key in filtered_scores:
-                scr = filtered_scores[key]
+            contig_id = assembler.parse_contig_id(contig.description)
+            if contig_id in filtered_hits:
+                hit = filtered_hits[contig_id]
                 batch.append((
                     iteration, contig.id, str(contig.seq), contig.description,
-                    scr['bit_score'], scr['len'],
-                    scr['query_from'], scr['query_to'], scr['query_strand'],
-                    scr['hit_from'], scr['hit_to'], scr['hit_strand']))
+                    hit['bit_score'], hit['len'],
+                    hit['query_from'], hit['query_to'], hit['query_strand'],
+                    hit['hit_from'], hit['hit_to'], hit['hit_strand']))
     db.insert_assembled_contigs_batch(db_conn, batch)
 
     return high_score
 
 
-def create_targets_from_contigs(db_conn, assembler, iteration):
+def create_queries_from_contigs(db_conn, assembler, iteration):
     """Crate a new file with the contigs that will be used as the
-    next query target.
+    next query query.
     """
 
-    log.info('Creating new target files: iteration %i' % iteration)
+    log.info('Creating new query files: iteration %i' % iteration)
 
     query = assembler.path('long_reads.fasta', iteration)
     assembler.long_reads_file = query
 
-    with open(query, 'w') as target_file:
+    with open(query, 'w') as query_file:
         for row in db.get_assembled_contigs(db_conn, iteration):
-            target_file.write('>{}\n'.format(row[0]))
-            target_file.write('{}\n'.format(row[1]))
+            query_file.write('>{}\n'.format(row[0]))
+            query_file.write('{}\n'.format(row[1]))
 
     return query
 
@@ -308,7 +314,7 @@ def parse_command_line(temp_dir):  # pylint: disable=too-many-statements
     """Process command-line arguments."""
 
     description = """
-        This is the aTRAM script. It takes a target sequence and
+        This is the aTRAM script. It takes a query sequence and
         a set of blast databases built with the atram_preprocessor.py script
         and builds an assembly.
         """
