@@ -53,7 +53,7 @@ def atram_loop(args, db_conn, assembler, query, all_shards):
             break
 
         # Exit if there are no blast hits
-        if not db.blast_hits_count(db_conn, iteration):
+        if not db.sra_blast_hits_count(db_conn, iteration):
             log.info('No blast hits in iteration %i' % iteration)
             break
 
@@ -99,7 +99,7 @@ def initialize_query(args, db_conn, assembler):
     """Get the first set of query sequences."""
 
     if args.start_iteration < 2:
-        db.create_blast_hits_table(db_conn)
+        db.create_sra_blast_hits_table(db_conn)
         db.create_assembled_contigs_table(db_conn)
         query = args.query
     else:
@@ -188,7 +188,7 @@ def write_assembler_files(db_conn, assembler, iteration):
     with open(assembler.end_1_file, 'w') as end_1, \
             open(assembler.end_2_file, 'w') as end_2:
 
-        for row in db.get_blast_hits(db_conn, iteration):
+        for row in db.get_sra_blast_hits(db_conn, iteration):
 
             # NOTE: Some assemblers require a slash delimiter for the seq_end
             seq_end = ''
@@ -211,7 +211,7 @@ def output_blast_only_results(args, db_conn):
     log.info('Output blast only results')
 
     with open(args.output, 'w') as out_file:
-        for row in db.get_blast_hits(db_conn, 1):
+        for row in db.get_sra_blast_hits(db_conn, 1):
             out_file.write('>{}{}\n'.format(row['seq_name'], row['seq_end']))
             out_file.write('{}\n'.format(row['seq']))
 
