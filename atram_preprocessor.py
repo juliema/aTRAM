@@ -23,6 +23,8 @@ def run(args):
     db_conn = db.connect(args.blast_db)
     db.create_sequences_table(db_conn)
     load_seqs(args, db_conn)
+
+    log.info('Creating an index for the sequence table')
     db.create_sequences_index(db_conn)
 
     shard_list = assign_seqs_to_shards(args, db_conn)

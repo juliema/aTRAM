@@ -108,7 +108,7 @@ def temp_db_name(temp_dir, blast_db, iteration):
 
 
 def hits(json_file):
-    """Extract the blast hits from the json file."""
+    """Extract the blast hits from the blast json output file."""
 
     with open(json_file) as blast_file:
         raw = blast_file.read()

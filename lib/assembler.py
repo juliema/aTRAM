@@ -68,7 +68,7 @@ class Assembler:
         self.end_2_file = self.path('paired_end_2.fasta', iteration)
 
     @staticmethod
-    def parse_id(header):
+    def parse_contig_id(header):
         """Given a fasta header line return the contig ID."""
 
         return header.split()[0]
@@ -166,7 +166,7 @@ class VelvetAssembler(Assembler):
         self.steps = [self.velveth, self.velvetg]
 
     @staticmethod
-    def parse_id(header):
+    def parse_contig_id(header):
         """Given a fasta header line return the contig ID."""
 
         return header
