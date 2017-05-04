@@ -71,7 +71,7 @@ def against_contigs(args, blast_db, query, hits_file):
 def shard_path(blast_db, shard_index):
     """Create the BLAST shard DB names."""
 
-    file_name = '{}.blast_{:03d}'.format(blast_db, shard_index)
+    file_name = '{}.{:03d}.blast'.format(blast_db, shard_index)
     return file_name
 
 
@@ -94,7 +94,7 @@ def output_file_name(temp_dir, shrd_path, iteration):
     """Create a file name for blast results."""
 
     shard_name = os.path.basename(shrd_path)
-    file_name = '{}.{}.results'.format(shard_name, iteration)
+    file_name = '{}.{:02d}.results.json'.format(shard_name, iteration)
 
     return os.path.join(temp_dir, file_name)
 
@@ -103,7 +103,7 @@ def temp_db_name(temp_dir, blast_db, iteration):
     """Generate a name for the temp DB used to filter the contigs."""
 
     temp_name = os.path.basename(blast_db)
-    file_name = '{}.blast.{:02d}'.format(temp_name, iteration)
+    file_name = '{}.{:02d}.blast'.format(temp_name, iteration)
     return os.path.join(temp_dir, file_name)
 
 
