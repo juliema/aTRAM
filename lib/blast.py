@@ -78,7 +78,7 @@ def shard_path(blast_db, shard_index):
 def all_shard_paths(blast_db):
     """Get all of the BLAST DB names built by the preprocessor."""
 
-    pattern = '{}.blast_*.nhr'.format(blast_db)
+    pattern = '{}.*.blast.nhr'.format(blast_db)
 
     files = glob.glob(pattern)
     if not files:
