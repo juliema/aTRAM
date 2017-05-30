@@ -9,8 +9,7 @@ import lib.log as log
 
 
 # Try to get the sequence name and which end it is from the fasta header
-PARSE_HEADER = re.compile(r'^ [>@] \s* ( .* ) ( [\s/._] [12] ) \s* $',
-                          re.VERBOSE)
+PARSE_HEADER = re.compile(r'^ [>@] \s* ( .*? ) ( [\s/._] [12] )', re.VERBOSE)
 
 # Parse blast hits file
 PARSE_RESULTS = re.compile(r'^ ( .* ) ( [\s\/_] [12] )', re.VERBOSE)
