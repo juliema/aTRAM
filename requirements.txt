@@ -1,7 +1,7 @@
 appdirs==1.4.3
-biopython==1.69
 numpy==1.12.1
 packaging==16.8
 psutil==5.2.2
 pyparsing==2.2.0
 six==1.10.0
+biopython==1.69
