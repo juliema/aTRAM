@@ -240,8 +240,8 @@ def parse_command_line(temp_dir):
                              ' - 4 = "{}"').format(cpus))
 
     group.add_argument('-t', '--temp-dir', metavar='DIR',
-                       help='You may save intermediate files for '
-                            'debugging in this directory.')
+                       help='You may save intermediate files for debugging '
+                            'in this directory. The directory must be empty.')
 
     group.add_argument('-l', '--log-file',
                        help='Log file (full path). The default is to use the '

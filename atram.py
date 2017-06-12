@@ -390,8 +390,8 @@ def parse_command_line(temp_dir):  # pylint: disable=too-many-statements
                             'number to start from. The default is "1".')
 
     group.add_argument('-t', '--temp-dir', metavar='DIR',
-                       help='You may save intermediate files for '
-                            'debugging in this directory.')
+                       help='You may save intermediate files for debugging '
+                            'in this directory. The directory must be empty.')
 
     # optional values for blast-filtering contigs
     group = parser.add_argument_group(
