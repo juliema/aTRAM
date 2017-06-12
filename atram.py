@@ -66,7 +66,7 @@ def atram_loop(args, db_conn, assembler, query, all_shards):
             log.info('Assembling shards with {}: iteration {}'.format(
                 args.assembler, iteration))
             assembler.assemble()
-        except Exception as exn:  # pylint: disable=broad-except
+        except Exception as exn:
             msg = 'The assembler failed: ' + str(exn)
             log.error(msg)
             sys.exit(msg)
@@ -312,7 +312,7 @@ def output_assembly_results(args, db_conn):
             out_file.write('{}\n'.format(seq))
 
 
-def parse_command_line(temp_dir):  # pylint: disable=too-many-statements
+def parse_command_line(temp_dir):
     """Process command-line arguments."""
 
     description = """
@@ -373,7 +373,7 @@ def parse_command_line(temp_dir):  # pylint: disable=too-many-statements
                        type=int, default=cpus,
                        help=('Number of cpus to use. This will also be used '
                              'for the assemblers when possible. Defaults to: '
-                             'Total CPUS  - 4 = "{}"').format(cpus))
+                             'Total CPUS - 4 = "{}"').format(cpus))
 
     group.add_argument('--log-file',
                        help='Log file (full path). The default is to use the '
