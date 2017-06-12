@@ -3,6 +3,7 @@
 import os
 import shutil
 import lib.log as log
+import lib.file_util as file_util
 
 
 class Assembler:
@@ -27,12 +28,26 @@ class Assembler:
         self.long_reads_file = None  # Long-reads file
         self.end_1_file = None       # Sequneces for end 1 reads
         self.end_2_file = None       # Sequences for end 2 reads
+        self.iteration = 0           # Current iteration
+
+    @property
+    def iter_dir(self):
+        """Get the work directory for the current iteration."""
+
+        return file_util.temp_iter_dir(self.args.temp_dir, self.iteration)
 
     @property
     def work_path(self):
         """The output directory name may have unique requirements."""
 
-        return self.args.temp_dir
+        return self.iter_dir
+
+    def iter_file(self, file_name):
+        """Build a temporary file name honoring the current iteration
+        directory.
+        """
+
+        return os.path.join(self.iter_dir, file_name)
 
     def assemble(self):
         """Use the assembler to build up the contigs. We take and array of
@@ -49,12 +64,12 @@ class Assembler:
     def post_assembly(self):
         """Assembers have unique post assembly steps."""
 
-    def path(self, file_name, iteration=0):
+    def path(self, file_name):
         """Files will go into the temp dir."""
 
         blast_db = os.path.basename(self.args.blast_db)
-        file_name = '{}.{:02d}.{}'.format(blast_db, iteration, file_name)
-        rel_path = os.path.join(self.args.temp_dir, file_name)
+        file_name = '{}.{:02d}.{}'.format(blast_db, self.iteration, file_name)
+        rel_path = self.iter_file(file_name)
 
         return os.path.abspath(rel_path)
 
@@ -63,9 +78,10 @@ class Assembler:
         iteration.
         """
 
-        self.output_file = self.path('output.fasta', iteration)
-        self.end_1_file = self.path('paired_end_1.fasta', iteration)
-        self.end_2_file = self.path('paired_end_2.fasta', iteration)
+        self.iteration = iteration
+        self.output_file = self.path('output.fasta')
+        self.end_1_file = self.path('paired_end_1.fasta')
+        self.end_2_file = self.path('paired_end_2.fasta')
 
     @staticmethod
     def parse_contig_id(header):
@@ -85,7 +101,7 @@ class AbyssAssembler(Assembler):
         """Build the command for assembly."""
 
         cmd = ['abyss-pe']
-        cmd.append("-C '{}'".format(self.args.temp_dir))
+        cmd.append("-C '{}'".format(self.work_path))
         # cmd.append('v=-v')
         cmd.append('E=0')
         cmd.append('k={}'.format(self.args.kmer))
@@ -120,7 +136,7 @@ class TrinityAssembler(Assembler):
     def work_path(self):
         """The output directory name has unique requirements."""
 
-        return os.path.join(self.args.temp_dir, 'trinity')
+        return os.path.join(self.iter_dir, 'trinity')
 
     def __init__(self, args):
         super().__init__(args)
@@ -154,7 +170,7 @@ class TrinityAssembler(Assembler):
     def post_assembly(self):
         """Copy the assembler output."""
 
-        src = os.path.join(self.args.temp_dir, 'trinity.Trinity.fasta')
+        src = os.path.join(self.iter_dir, 'trinity.Trinity.fasta')
         shutil.move(src, self.output_file)
 
 
@@ -175,7 +191,7 @@ class VelvetAssembler(Assembler):
         """Build the velveth for the first assembly step."""
 
         cmd = ['velveth']
-        cmd.append('{}'.format(self.args.temp_dir))
+        cmd.append('{}'.format(self.work_path))
         cmd.append('{}'.format(self.args.kmer))
         cmd.append('-fasta')
 
@@ -194,7 +210,7 @@ class VelvetAssembler(Assembler):
         """Build the velvetg for the second assembly step."""
 
         cmd = ['velvetg']
-        cmd.append('{}'.format(self.args.temp_dir))
+        cmd.append('{}'.format(self.work_path))
         cmd.append('-ins_length {}'.format(self.args.ins_length))
         cmd.append('-exp_cov {}'.format(self.args.exp_coverage))
         cmd.append('-min_contig_lgth {}'.format(self.args.min_contig_length))
@@ -204,5 +220,5 @@ class VelvetAssembler(Assembler):
     def post_assembly(self):
         """Copy the assembler output."""
 
-        src = os.path.join(self.args.temp_dir, 'contigs.fa')
+        src = self.iter_file('contigs.fa')
         shutil.move(src, self.output_file)
