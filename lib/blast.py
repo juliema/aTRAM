@@ -6,6 +6,7 @@ import sys
 import glob
 import json
 import lib.log as log
+import lib.file_util as file_util
 
 
 # Try to get the sequence name and which end it is from the fasta header
@@ -94,16 +95,15 @@ def output_file_name(temp_dir, shrd_path, iteration):
 
     shard_name = os.path.basename(shrd_path)
     file_name = '{}.{:02d}.results.json'.format(shard_name, iteration)
-
-    return os.path.join(temp_dir, file_name)
+    return file_util.temp_iter_file(temp_dir, iteration, file_name)
 
 
 def temp_db_name(temp_dir, blast_db, iteration):
     """Generate a name for the temp DB used to filter the contigs."""
 
-    temp_name = os.path.basename(blast_db)
-    file_name = '{}.{:02d}.blast'.format(temp_name, iteration)
-    return os.path.join(temp_dir, file_name)
+    file_name = os.path.basename(blast_db)
+    file_name = '{}.{:02d}'.format(file_name, iteration)
+    return file_util.temp_iter_file(temp_dir, iteration, file_name)
 
 
 def hits(json_file):

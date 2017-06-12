@@ -15,6 +15,7 @@ import lib.db as db
 import lib.bio as bio
 import lib.log as log
 import lib.blast as blast
+import lib.file_util as file_util
 from lib.assembler import Assembler
 
 
@@ -279,7 +280,7 @@ def create_queries_from_contigs(db_conn, assembler, iteration):
 
     log.info('Creating new query files: iteration %i' % iteration)
 
-    query = assembler.path('long_reads.fasta', iteration)
+    query = assembler.path('long_reads.fasta')
     assembler.long_reads_file = query
 
     with open(query, 'w') as query_file:
@@ -500,11 +501,7 @@ def parse_command_line(temp_dir):  # pylint: disable=too-many-statements
         all_shards = blast.all_shard_paths(args.blast_db)
         args.max_target_seqs = int(2 * args.max_memory / len(all_shards)) * 1e6
 
-    # Make temp directory
-    if args.temp_dir:
-        os.makedirs(args.temp_dir, exist_ok=True)
-    else:
-        args.temp_dir = temp_dir
+    file_util.temp_root_dir(args, temp_dir)
 
     find_programs(args)
 

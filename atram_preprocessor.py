@@ -13,6 +13,7 @@ import numpy as np
 import lib.db as db
 import lib.log as log
 import lib.blast as blast
+import lib.file_util as file_util
 
 
 def run(args):
@@ -277,11 +278,7 @@ def parse_command_line(temp_dir):
         args.log_file = '{}.{}.log'.format(
             args.blast_db, os.path.basename(sys.argv[0][:-3]))
 
-    # Make temp directory
-    if args.temp_dir:
-        os.makedirs(args.temp_dir, exist_ok=True)
-    else:
-        args.temp_dir = temp_dir
+    file_util.temp_root_dir(args, temp_dir)
 
     return args
 
