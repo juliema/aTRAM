@@ -63,7 +63,8 @@ def atram_loop(args, db_conn, assembler, query, all_shards):
         write_assembler_files(db_conn, assembler, iteration)
 
         try:
-            log.info('Assembling shards: iteration %i' % iteration)
+            log.info('Assembling shards with {}: iteration {}'.format(
+                args.assembler, iteration))
             assembler.assemble()
         except Exception as exn:  # pylint: disable=broad-except
             msg = 'The assembler failed: ' + str(exn)
