@@ -32,7 +32,7 @@ def subcommand(cmd, temp_dir):
             for line in log_input:
                 line = line.strip()
                 if line:
-                    logging.log(logging.DEBUG, line)
+                    logging.log(logging.INFO, line)
 
 
 def info(msg, line_break=None):
