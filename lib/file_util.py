@@ -1,7 +1,8 @@
 """Utility functions."""
 
 import os
-import shutil
+import sys
+# import shutil
 
 
 def temp_root_dir(args, temp_dir):
@@ -9,7 +10,9 @@ def temp_root_dir(args, temp_dir):
 
     if args.temp_dir:
         args.temp_dir = os.path.abspath(args.temp_dir)
-        shutil.rmtree(args.temp_dir, ignore_errors=True)
+        if os.listdir(args.temp_dir):
+            sys.exit('"{}" directory is not empty.'.format(args.temp_dir))
+        # shutil.rmtree(args.temp_dir, ignore_errors=True)
         os.makedirs(args.temp_dir, exist_ok=True)
     else:
         args.temp_dir = temp_dir
