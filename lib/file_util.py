@@ -36,3 +36,9 @@ def temp_iter_file(temp_dir, iteration, file_name):
 
     iter_dir = temp_iter_dir(temp_dir, iteration)
     return os.path.join(iter_dir, file_name)
+
+
+def output_file(args, file_suffix):
+    """Build the output file name."""
+
+    return '{}.{}'.format(args.output, file_suffix)

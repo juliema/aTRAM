@@ -79,20 +79,24 @@ def atram_loop(args, db_conn, assembler, query, all_shards):
 
         high_score = filter_contigs(args, db_conn, assembler, iteration)
 
-        count = db.assembled_contigs_count(db_conn, iteration)
+        count = db.assembled_contigs_count(
+            db_conn, iteration, args.bit_score, args.contig_length)
         if not count:
             log.info(('No contigs had a bit score greater than {} and are at '
                       'least {} long in iteration {}. The highest score for '
                       'this iteration is {}').format(args.bit_score,
                                                      args.contig_length,
-                                                     iteration, high_score))
+                                                     iteration,
+                                                     high_score))
             break
 
-        if count == db.iteration_overlap_count(db_conn, iteration):
+        if count == db.iteration_overlap_count(
+                db_conn, iteration, args.bit_score, args.contig_length):
             log.info('No new contigs were found in iteration %i' % iteration)
             break
 
-        query = create_queries_from_contigs(db_conn, assembler, iteration)
+        query = create_queries_from_contigs(
+            db_conn, assembler, iteration, args.bit_score, args.contig_length)
     else:
         log.info('All iterations completed', line_break='')
 
@@ -106,8 +110,11 @@ def initialize_query(args, db_conn, assembler):
         db.create_assembled_contigs_table(db_conn)
         query = args.query
     else:
-        query = create_queries_from_contigs(
-            db_conn, assembler, args.start_iteration - 1)
+        query = create_queries_from_contigs(db_conn,
+                                            assembler,
+                                            args.start_iteration - 1,
+                                            args.bit_score,
+                                            args.contig_length)
 
     if os.path.getsize(query) < 10:
         err = 'There are no sequences '
@@ -213,7 +220,8 @@ def output_blast_only_results(args, db_conn):
 
     log.info('Output blast only results')
 
-    with open(args.output, 'w') as out_file:
+    file_name = file_util.output_file(args, 'blast_only.fasta')
+    with open(file_name, 'w') as out_file:
         for row in db.get_sra_blast_hits(db_conn, 1):
             out_file.write('>{}{}\n'.format(row['seq_name'], row['seq_end']))
             out_file.write('{}\n'.format(row['seq']))
@@ -222,7 +230,7 @@ def output_blast_only_results(args, db_conn):
 def filter_contigs(args, db_conn, assembler, iteration):
     """Remove junk from the assembled contigs."""
 
-    log.info('Filtering assembled contigs: iteration %i' % iteration)
+    log.info('Saving assembled contigs: iteration %i' % iteration)
 
     blast_db = blast.temp_db_name(args.temp_dir, args.blast_db, iteration)
     hits_file = blast.output_file_name(args.temp_dir, args.blast_db, iteration)
@@ -233,10 +241,11 @@ def filter_contigs(args, db_conn, assembler, iteration):
 
     save_blast_against_contigs(db_conn, assembler, hits_file, iteration)
 
-    filtered_hits = {row['contig_id']: row for row in db.get_contig_blast_hits(
-        db_conn, iteration, args.bit_score, args.contig_length)}
+    all_hits = {row['contig_id']: row
+                for row
+                in db.get_contig_blast_hits(db_conn, iteration)}
 
-    return save_contigs(db_conn, filtered_hits, assembler, iteration)
+    return save_contigs(db_conn, all_hits, assembler, iteration)
 
 
 def save_blast_against_contigs(db_conn, assembler, hits_file, iteration):
@@ -254,7 +263,7 @@ def save_blast_against_contigs(db_conn, assembler, hits_file, iteration):
     db.insert_contig_hit_batch(db_conn, batch)
 
 
-def save_contigs(db_conn, filtered_hits, assembler, iteration):
+def save_contigs(db_conn, all_hits, assembler, iteration):
     """Save the contigs to the database."""
 
     batch = []
@@ -262,8 +271,8 @@ def save_contigs(db_conn, filtered_hits, assembler, iteration):
     with open(assembler.output_file) as in_file:
         for contig in SeqIO.parse(in_file, 'fasta'):
             contig_id = assembler.parse_contig_id(contig.description)
-            if contig_id in filtered_hits:
-                hit = filtered_hits[contig_id]
+            if contig_id in all_hits:
+                hit = all_hits[contig_id]
                 batch.append((
                     iteration, contig.id, str(contig.seq), contig.description,
                     hit['bit_score'], hit['len'],
@@ -274,7 +283,8 @@ def save_contigs(db_conn, filtered_hits, assembler, iteration):
     return high_score
 
 
-def create_queries_from_contigs(db_conn, assembler, iteration):
+def create_queries_from_contigs(
+        db_conn, assembler, iteration, bit_score, length):
     """Crate a new file with the contigs that will be used as the
     next query query.
     """
@@ -285,7 +295,8 @@ def create_queries_from_contigs(db_conn, assembler, iteration):
     assembler.long_reads_file = query
 
     with open(query, 'w') as query_file:
-        for row in db.get_assembled_contigs(db_conn, iteration):
+        for row in db.get_assembled_contigs(
+                db_conn, iteration, bit_score, length):
             query_file.write('>{}\n'.format(row[0]))
             query_file.write('{}\n'.format(row[1]))
 
@@ -295,21 +306,33 @@ def create_queries_from_contigs(db_conn, assembler, iteration):
 def output_assembly_results(args, db_conn):
     """Write the assembled contigs to a fasta file."""
 
-    with open(args.output, 'w') as out_file:
+    file_name = file_util.output_file(args, 'filtered_contigs.fasta')
+    with open(file_name, 'w') as out_file:
+        for row in db.get_all_assembled_contigs(
+                db_conn, args.bit_score, args.contig_length):
+            output_one_assembly(out_file, row)
+
+    file_name = file_util.output_file(args, 'all_contigs.fasta')
+    with open(file_name, 'w') as out_file:
         for row in db.get_all_assembled_contigs(db_conn):
+            output_one_assembly(out_file, row)
 
-            seq = row['seq']
-            suffix = ''
-            if row['query_strand'] != row['hit_strand']:
-                seq = bio.reverse_complement(seq)
-                suffix = '_REV'
 
-            header = ('>{}_{}{} iteration={} contig_id={} '
-                      'score={}\n').format(
-                          row['iteration'], row['contig_id'], suffix,
-                          row['iteration'], row['contig_id'], row['bit_score'])
-            out_file.write(header)
-            out_file.write('{}\n'.format(seq))
+def output_one_assembly(out_file, row):
+    """Write an assembly to the output fasta file."""
+
+    seq = row['seq']
+    suffix = ''
+    if row['query_strand'] != row['hit_strand']:
+        seq = bio.reverse_complement(seq)
+        suffix = '_REV'
+
+    header = ('>{}_{}{} iteration={} contig_id={} '
+              'score={}\n').format(
+                  row['iteration'], row['contig_id'], suffix,
+                  row['iteration'], row['contig_id'], row['bit_score'])
+    out_file.write(header)
+    out_file.write('{}\n'.format(seq))
 
 
 def parse_command_line(temp_dir):
@@ -336,7 +359,10 @@ def parse_command_line(temp_dir):
                             'entered for atram_preprocessor.py.')
 
     group.add_argument('-o', '--output', required=True,
-                       help='Output the aTRAM results to this file.')
+                       help='This is the prefix of all of the output files. '
+                            'So you can identify different blast output file '
+                            'sets. You may include a directory as part of the '
+                            'prefix.')
 
     group.add_argument('-q', '--query', '--target',
                        help='The path to the fasta file with sequences of '
