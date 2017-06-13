@@ -184,7 +184,7 @@ def insert_contig_hit_batch(db_conn, batch):
         db_conn.commit()
 
 
-def get_contig_blast_hits(db_conn, iteration, bit_score, length):
+def get_contig_blast_hits(db_conn, iteration):
     """Get all blast hits for the iteration."""
 
     sql = '''
@@ -193,12 +193,10 @@ def get_contig_blast_hits(db_conn, iteration, bit_score, length):
                hit_from, hit_to, hit_strand
           FROM contig_blast_hits
          WHERE iteration = ?
-           AND bit_score >= ?
-           AND len >= ?
         '''
 
     db_conn.row_factory = sqlite3.Row
-    return db_conn.execute(sql, (str(iteration), str(bit_score), str(length)))
+    return db_conn.execute(sql, str(iteration))
 
 
 # ####################### assembled_contigs table #############################
@@ -224,20 +222,23 @@ def create_assembled_contigs_table(db_conn):
     db_conn.execute(sql)
 
 
-def assembled_contigs_count(db_conn, iteration):
+def assembled_contigs_count(db_conn, iteration, bit_score, length):
     """Count the blast hist for the iteration."""
 
     sql = '''
         SELECT COUNT(*) AS count
           FROM assembled_contigs
          WHERE iteration = ?
+           AND bit_score >= ?
+           AND len >= ?
         '''
 
-    result = db_conn.execute(sql, str(iteration))
+    result = db_conn.execute(
+        sql, (str(iteration), str(bit_score), str(length)))
     return result.fetchone()[0]
 
 
-def iteration_overlap_count(db_conn, iteration):
+def iteration_overlap_count(db_conn, iteration, bit_score, length):
     """Count how many assembled contigs match what was in the last iteration.
     """
 
@@ -245,12 +246,16 @@ def iteration_overlap_count(db_conn, iteration):
         SELECT COUNT(*) AS overlap
           FROM assembled_contigs AS curr_iter
           JOIN assembled_contigs AS prev_iter
-            ON (    curr_iter.contig_id = prev_iter.contig_id
+            ON (     curr_iter.contig_id = prev_iter.contig_id
                  AND curr_iter.iteration = prev_iter.iteration + 1)
          WHERE curr_iter.iteration = ?
            AND curr_iter.seq = prev_iter.seq
+           AND curr_iter.bit_score >= ?
+           AND prev_iter.bit_score >= ?
+           AND curr_iter.len >= ?
         '''
-    result = db_conn.execute(sql, str(iteration))
+    result = db_conn.execute(
+        sql, (str(iteration), str(bit_score), str(bit_score), str(length)))
     return result.fetchone()[0]
 
 
@@ -270,16 +275,22 @@ def insert_assembled_contigs_batch(db_conn, batch):
         db_conn.commit()
 
 
-def get_assembled_contigs(db_conn, iteration):
+def get_assembled_contigs(db_conn, iteration, bit_score, length):
     """Get all assembled contigs for the iteration so that we can use them
     as the queries in the next atram iteration.
     """
 
-    sql = 'SELECT contig_id, seq FROM assembled_contigs WHERE iteration = ?'
-    return db_conn.execute(sql, str(iteration))
+    sql = '''
+        SELECT contig_id, seq
+          FROM assembled_contigs
+         WHERE iteration = ?
+           AND bit_score >= ?
+           AND len >= ?
+         '''
+    return db_conn.execute(sql, (str(iteration), str(bit_score), str(length)))
 
 
-def get_all_assembled_contigs(db_conn):
+def get_all_assembled_contigs(db_conn, bit_score=0, length=0):
     """Get all assembled contigs for the iteration so that we can use them
     as the queries in the next atram iteration.
     """
@@ -289,8 +300,10 @@ def get_all_assembled_contigs(db_conn):
                query_from, query_to, query_strand,
                hit_from, hit_to, hit_strand
           FROM assembled_contigs
+         WHERE bit_score >= ?
+           AND len >= ?
       ORDER BY bit_score DESC, iteration
         '''
 
     db_conn.row_factory = sqlite3.Row
-    return db_conn.execute(sql)
+    return db_conn.execute(sql, (str(bit_score), str(length)))
