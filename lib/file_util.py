@@ -2,7 +2,6 @@
 
 import os
 import sys
-# import shutil
 
 
 def temp_root_dir(args, temp_dir):
@@ -13,7 +12,6 @@ def temp_root_dir(args, temp_dir):
         os.makedirs(args.temp_dir, exist_ok=True)
         if os.listdir(args.temp_dir):
             sys.exit('"{}" directory is not empty.'.format(args.temp_dir))
-        # shutil.rmtree(args.temp_dir, ignore_errors=True)
     else:
         args.temp_dir = temp_dir
 
