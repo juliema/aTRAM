@@ -257,8 +257,10 @@ def save_blast_against_contigs(db_conn, assembler, hits_file, iteration):
         contig_id = assembler.parse_contig_id(hit['title'])
         batch.append((iteration, contig_id, hit['title'],
                       hit['bit_score'], hit['len'],
-                      hit['query_from'], hit['query_to'], hit['query_strand'],
-                      hit['hit_from'], hit['hit_to'], hit['hit_strand']))
+                      hit['query_from'], hit['query_to'],
+                      hit.get('query_strand', ''),
+                      hit['hit_from'], hit['hit_to'],
+                      hit.get('hit_strand', '')))
 
     db.insert_contig_hit_batch(db_conn, batch)
 
@@ -323,7 +325,8 @@ def output_one_assembly(out_file, row):
 
     seq = row['seq']
     suffix = ''
-    if row['query_strand'] != row['hit_strand']:
+    if row['query_strand'] and row['hit_strand'] and \
+            row['query_strand'] != row['hit_strand']:
         seq = bio.reverse_complement(seq)
         suffix = '_REV'
 
