@@ -38,6 +38,37 @@ URLs for software:
 * MAFFT: http://mafft.cbrc.jp/alignment/software/
 * MUSCLE: http://www.drive5.com/muscle/
 
+## Example of running a shell loop
+
+In many cases it is convenient to run aTRAM 2 as a loop, assembling a set of genes for a set of taxa. These can be set up in two parts like so:
+
+```
+# Make aTRAM libraries
+array=(sample1 sample2 sample3)
+
+for a in "${array[@]}"; # Iterate through samples
+do 
+python path_to_aTRAM/aTRAM/atram_preprocessor.py -c 16 -b path_to_atram_library/lib_${a} path_to_input/${a}_P*.fq
+done
+```
+
+The part `${a}_P*.fq` will have to be modified to match the name pattern of your input fastq files. Then, supposing we have 300 genes labeled consecutively and wish to use Abyss:
+
+```
+# Assemble genes
+array=(sample1 sample2 sample3)
+
+for a in "${array[@]}"; # Iterate through samples
+do
+for (( i=1 ; i<=300; i++ )); # Iterate through locus numbers
+do 
+python ./aTRAM/atram.py -b path_to_atram_library/lib_${a} -q path_to_reference_loci/Locus_${i}.fasta -i 5 --cpus 4  --kmer 64 -o path_to_output/lib_${a}.Locus_${i}.atram2.fasta --log-file path_to_output/lib_${a}.Locus_${i}.log -a abyss
+done
+done
+
+
+```
+
 ## Running aTRAM
 
 ### format_SRA.pl
