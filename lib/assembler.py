@@ -57,7 +57,7 @@ class Assembler:
 
         for step in self.steps:
             cmd = step()
-            log.subcommand(cmd, self.args.temp_dir)
+            log.subcommand(cmd, self.args.temp_dir, self.args.timeout)
 
         self.post_assembly()
 

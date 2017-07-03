@@ -7,6 +7,8 @@ import math
 import argparse
 import textwrap
 import tempfile
+import datetime
+import subprocess
 import multiprocessing
 from shutil import which
 import psutil
@@ -66,8 +68,13 @@ def atram_loop(args, db_conn, assembler, query, all_shards):
             log.info('Assembling shards with {}: iteration {}'.format(
                 args.assembler, iteration))
             assembler.assemble()
-        except Exception as exn:
-            msg = 'The assembler failed: ' + str(exn)
+        except TimeoutError:
+            msg = 'Time ran out for the assembler after {} (HH:MM:SS)'.format(
+                datetime.timedelta(seconds=args.timeout))
+            log.error(msg)
+            sys.exit(msg)
+        except subprocess.CalledProcessError as cpe:
+            msg = 'The assembler failed with error: ' + str(cpe.returncode)
             log.error(msg)
             sys.exit(msg)
 
@@ -422,6 +429,13 @@ def parse_command_line(temp_dir):
     group.add_argument('-t', '--temp-dir', metavar='DIR',
                        help='You may save intermediate files for debugging '
                             'in this directory. The directory must be empty.')
+
+    timeout = 300
+    group.add_argument('-T', '--timeout', metavar='SECONDS', default=timeout,
+                       type=int,
+                       help='How many seconds to wait for an assembler before '
+                            'stopping the run. To wait forever set this to 0. '
+                            'The default is "{}" (5 minutes).'.format(timeout))
 
     # optional values for blast-filtering contigs
     group = parser.add_argument_group(
