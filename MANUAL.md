@@ -1,14 +1,28 @@
-#Using aTRAM
+## Manual for using aTRAM 2.0: automated Target Restricted Assembly Method
 
-Here are the required commands for running aTRAM as well as a few things to keep in mind for maximum efficiency. Required commands are indicated and optional commands are in brackets. 
+## Background
+    1. What does it do?
+    2. How it works
 
-A more detailed manual is in progress:  http://alturl.com/d7cia
+## Installation
+     1. Python 3.0 or greater and a number of dependencies
+     2. requirements.txt
+
+You will need to have Python3 installed, as well as pip, a package manager for python. Beyond these, it is easiest to handle aTRAM 2 dependencies by setting up a virtual environment, which is a contained workspace with internally installed python libraries. Run the following code in what you intend to be your working directory:
+
+```
+virtualenv venv -p python3
+source venv/bin/activate
+pip install -r requirements.txt 
+```
+
+You should see something like `(venv)` at the beginning of your command prompt after running the second line, indicating the environment is active. Once you have verified that the requirements installed with no errors, only the second line needs to be run before each aTRAM 2 session.
+
+### Library Preparation
+     ``` python atram_preprocessor.py -b mammal_uce AH7*.fastq ```
+### Assembling Loci
 
 
-## Setup
-To determine if aTRAM can run on your computer:
-
-### configure.pl
 
 ```perl configure.pl```
  
@@ -23,6 +37,35 @@ URLs for software:
 * Trinity: http://trinityrnaseq.sourceforge.net
 * MAFFT: http://mafft.cbrc.jp/alignment/software/
 * MUSCLE: http://www.drive5.com/muscle/
+
+## Example of running a shell loop
+
+In many cases it is convenient to run aTRAM 2 as a loop, assembling a set of genes for a set of taxa. These can be set up in two parts like so:
+
+```
+# Make aTRAM libraries
+array=(sample1 sample2 sample3)
+
+for a in "${array[@]}"; # Iterate through samples
+do 
+python path_to_aTRAM/aTRAM/atram_preprocessor.py -c 4 -b path_to_atram_library/lib_${a} path_to_input/${a}_P*.fq
+done
+```
+
+The part `${a}_P*.fq` will have to be modified to match the name pattern of your input fastq files. Then, supposing we have 300 genes labeled consecutively and wish to use Abyss:
+
+```
+# Assemble genes
+array=(sample1 sample2 sample3)
+
+for a in "${array[@]}"; # Iterate through samples
+do
+for (( i=1 ; i<=300; i++ )); # Iterate through locus numbers
+do 
+python ./aTRAM/atram.py -b path_to_atram_library/lib_${a} -q path_to_reference_loci/Locus_${i}.fasta -i 5 --cpus 4  --kmer 64 -o path_to_output/lib_${a}.Locus_${i}.atram2.fasta --log-file path_to_output/lib_${a}.Locus_${i}.log -a abyss
+done
+done
+```
 
 ## Running aTRAM
 
