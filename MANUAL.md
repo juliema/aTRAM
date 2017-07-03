@@ -48,7 +48,7 @@ array=(sample1 sample2 sample3)
 
 for a in "${array[@]}"; # Iterate through samples
 do 
-python path_to_aTRAM/aTRAM/atram_preprocessor.py -c 16 -b path_to_atram_library/lib_${a} path_to_input/${a}_P*.fq
+python path_to_aTRAM/aTRAM/atram_preprocessor.py -c 4 -b path_to_atram_library/lib_${a} path_to_input/${a}_P*.fq
 done
 ```
 
@@ -65,8 +65,6 @@ do
 python ./aTRAM/atram.py -b path_to_atram_library/lib_${a} -q path_to_reference_loci/Locus_${i}.fasta -i 5 --cpus 4  --kmer 64 -o path_to_output/lib_${a}.Locus_${i}.atram2.fasta --log-file path_to_output/lib_${a}.Locus_${i}.log -a abyss
 done
 done
-
-
 ```
 
 ## Running aTRAM
