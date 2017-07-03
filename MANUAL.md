@@ -1,14 +1,18 @@
-#Using aTRAM
+## Manual for using aTRAM 2.0: automated Target Restricted Assembly Method
 
-Here are the required commands for running aTRAM as well as a few things to keep in mind for maximum efficiency. Required commands are indicated and optional commands are in brackets. 
+## Background
+    1. What does it do?
+    2. How it works
 
-A more detailed manual is in progress:  http://alturl.com/d7cia
+## Installation
+     1. Python 3.0 or greater and a number of dependencies
+     2. requirements.txt
+     
+### Library Preparation
+     ``` python atram_preprocessor.py -b mammal_uce AH7*.fastq ```
+### Assembling Loci
 
 
-## Setup
-To determine if aTRAM can run on your computer:
-
-### configure.pl
 
 ```perl configure.pl```
  
