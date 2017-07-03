@@ -19,6 +19,8 @@ class Assembler:
             return TrinityAssembler(args)
         elif args.assembler.lower() == 'velvet':
             return VelvetAssembler(args)
+        elif args.assembler.lower() == 'spades':
+            return SpadesAssembler(args)
 
     def __init__(self, args):
         self.args = args             # Parsed command line arguments
@@ -100,12 +102,11 @@ class AbyssAssembler(Assembler):
     def abyss(self):
         """Build the command for assembly."""
 
-        cmd = ['abyss-pe']
-        cmd.append("-C '{}'".format(self.work_path))
-        # cmd.append('v=-v')
-        cmd.append('E=0')
-        cmd.append('k={}'.format(self.args.kmer))
-        cmd.append("name='{}'".format(self.output_file))
+        cmd = ['abyss-pe',
+               "-C '{}'".format(self.work_path),
+               'E=0',
+               'k={}'.format(self.args.kmer),
+               "name='{}'".format(self.output_file)]
 
         if self.args.mpi:
             cmd.append('np={}'.format(self.args.cpus))
@@ -145,12 +146,12 @@ class TrinityAssembler(Assembler):
     def trinity(self):
         """Build the command for assembly."""
 
-        cmd = ['Trinity']
-        cmd.append('--seqType fa')
-        cmd.append('--max_memory {}G'.format(self.args.max_memory))
-        cmd.append('--CPU {}'.format(self.args.cpus))
-        cmd.append("--output '{}'".format(self.work_path))
-        cmd.append('--full_cleanup')
+        cmd = ['Trinity',
+               '--seqType fa',
+               '--max_memory {}G'.format(self.args.max_memory),
+               '--CPU {}'.format(self.args.cpus),
+               "--output '{}'".format(self.work_path),
+               '--full_cleanup']
 
         if not self.args.bowtie2:
             cmd.append('--no_bowtie')
@@ -190,10 +191,10 @@ class VelvetAssembler(Assembler):
     def velveth(self):
         """Build the velveth for the first assembly step."""
 
-        cmd = ['velveth']
-        cmd.append('{}'.format(self.work_path))
-        cmd.append('{}'.format(self.args.kmer))
-        cmd.append('-fasta')
+        cmd = ['velveth'
+               '{}'.format(self.work_path),
+               '{}'.format(self.args.kmer),
+               '-fasta']
 
         if self.is_paired:
             cmd.append("-shortPaired '{}' '{}'".format(
@@ -209,11 +210,11 @@ class VelvetAssembler(Assembler):
     def velvetg(self):
         """Build the velvetg for the second assembly step."""
 
-        cmd = ['velvetg']
-        cmd.append('{}'.format(self.work_path))
-        cmd.append('-ins_length {}'.format(self.args.ins_length))
-        cmd.append('-exp_cov {}'.format(self.args.exp_coverage))
-        cmd.append('-min_contig_lgth {}'.format(self.args.min_contig_length))
+        cmd = ['velvetg',
+               '{}'.format(self.work_path),
+               '-ins_length {}'.format(self.args.ins_length),
+               '-exp_cov {}'.format(self.args.exp_coverage),
+               '-min_contig_lgth {}'.format(self.args.min_contig_length)]
 
         return ' '.join(cmd)
 
@@ -222,3 +223,21 @@ class VelvetAssembler(Assembler):
 
         src = self.iter_file('contigs.fa')
         shutil.move(src, self.output_file)
+
+
+class SpadesAssembler(Assembler):
+    """Wrapper for the Spades assembler."""
+
+    def __init__(self, args):
+        super().__init__(args)
+        self.steps = [self.spades]
+
+    def spades(self):
+        """Build the command for assembly."""
+        # spades.py --only-assembler --threads 1 --cov-cutoff 8
+        # -1 lib_I9.01.paired_end_1.fasta -2 lib_I9.01.paired_end_2.fasta
+        # -o spades
+
+        cmd = ['spades.py --only-assembler']
+
+        return ' '.join(cmd)

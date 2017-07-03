@@ -383,7 +383,7 @@ def parse_command_line(temp_dir):
     group = parser.add_argument_group('optional aTRAM arguments')
 
     group.add_argument('-a', '--assembler',
-                       choices=['abyss', 'trinity', 'velvet'],
+                       choices=['abyss', 'trinity', 'velvet', 'spades'],
                        help='Which assembler to use. If you do not use this '
                             'argument then aTRAM will do a single blast run '
                             'and stop before assembly.')
@@ -430,12 +430,11 @@ def parse_command_line(temp_dir):
                        help='You may save intermediate files for debugging '
                             'in this directory. The directory must be empty.')
 
-    timeout = 300
-    group.add_argument('-T', '--timeout', metavar='SECONDS', default=timeout,
+    group.add_argument('-T', '--timeout', metavar='SECONDS', default=300,
                        type=int,
                        help='How many seconds to wait for an assembler before '
                             'stopping the run. To wait forever set this to 0. '
-                            'The default is "{}" (5 minutes).'.format(timeout))
+                            'The default is "300" (5 minutes).')
 
     # optional values for blast-filtering contigs
     group = parser.add_argument_group(
@@ -486,7 +485,7 @@ def parse_command_line(temp_dir):
     group.add_argument('--bowtie2', action='store_true',
                        help='Use bowtie2 during assembly. (Trinity)')
 
-    max_mem = max(1, math.floor(
+    max_mem = max(1.0, math.floor(
         psutil.virtual_memory().available / 1024**3 / 2))
     group.add_argument('--max-memory',
                        default=max_mem, metavar='MEMORY', type=int,
@@ -595,6 +594,12 @@ def find_programs(args):
                'You either need to install it or you need to adjust the PATH '
                'environment variable with the "--path" option so that aTRAM '
                'can find it.')
+        sys.exit(err)
+
+    if args.assembler == 'spades' and not which('spades.py'):
+        err = ('We could not find the "SPAdes" program. You either need to '
+               'install it or you need to adjust the PATH environment '
+               'variable with the "--path" option so that aTRAM can find it.')
         sys.exit(err)
 
 
