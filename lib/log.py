@@ -17,22 +17,32 @@ def setup(args):
     logging.info(' '.join(sys.argv))
 
 
-def subcommand(cmd, temp_dir):
+def subcommand(cmd, temp_dir, timeout):
     """Handle subprocess calls and log their output."""
 
     logging.info(cmd)
 
+    timeout = timeout if timeout else None
+
     with tempfile.NamedTemporaryFile(mode='w', dir=temp_dir) as log_output:
 
         # Note: stdout=PIPE is blocking and large logs cause a hang
-        subprocess.check_call(
-            cmd, shell=True, stdout=log_output, stderr=log_output)
+        try:
+            subprocess.check_call(cmd,
+                                  shell=True,
+                                  timeout=timeout,
+                                  stdout=log_output,
+                                  stderr=log_output)
 
-        with open(log_output.name) as log_input:
-            for line in log_input:
-                line = line.strip()
-                if line:
-                    logging.log(logging.INFO, line)
+        except (subprocess.CalledProcessError, TimeoutError):
+            raise
+
+        finally:
+            with open(log_output.name) as log_input:
+                for line in log_input:
+                    line = line.strip()
+                    if line:
+                        logging.log(logging.INFO, line)
 
 
 def info(msg, line_break=None):

@@ -11,4 +11,5 @@ target*
 probe*
 query*
 db*
+.idea
 !db.py
