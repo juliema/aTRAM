@@ -1,4 +1,4 @@
-"""Wrappers for the various assember programs."""
+"""Wrappers for the various assembler programs."""
 
 import os
 import shutil
@@ -7,7 +7,17 @@ import lib.file_util as file_util
 
 
 class Assembler:
-    """A factory class for building the assembers."""
+    """A factory class for building the assemblers."""
+
+    def __init__(self, args):
+        self.args = args             # Parsed command line arguments
+        self.steps = []              # Assembler steps setup by the assembler
+        self.is_paired = False       # Did we find paired end sequences?
+        self.output_file = None      # Write to this file
+        self.long_reads_file = None  # Long-reads file
+        self.end_1_file = None       # Sequences for end 1 reads
+        self.end_2_file = None       # Sequences for end 2 reads
+        self.iteration = 0           # Current iteration
 
     @staticmethod
     def factory(args):
@@ -21,16 +31,6 @@ class Assembler:
             return VelvetAssembler(args)
         elif args.assembler.lower() == 'spades':
             return SpadesAssembler(args)
-
-    def __init__(self, args):
-        self.args = args             # Parsed command line arguments
-        self.steps = []              # Assembler steps setup by the assembler
-        self.is_paired = False       # Did we find paired end sequences?
-        self.output_file = None      # Write to this file
-        self.long_reads_file = None  # Long-reads file
-        self.end_1_file = None       # Sequneces for end 1 reads
-        self.end_2_file = None       # Sequences for end 2 reads
-        self.iteration = 0           # Current iteration
 
     @property
     def iter_dir(self):
@@ -64,7 +64,7 @@ class Assembler:
         self.post_assembly()
 
     def post_assembly(self):
-        """Assembers have unique post assembly steps."""
+        """Assemblers have unique post assembly steps."""
 
     def path(self, file_name):
         """Files will go into the temp dir."""
@@ -123,7 +123,7 @@ class AbyssAssembler(Assembler):
         return ' '.join(cmd)
 
     def post_assembly(self):
-        """Copy the assembler output."""
+        """Copy the assembler output into the temp directory."""
 
         src = os.path.realpath(self.output_file + '-unitigs.fa')
 
@@ -228,16 +228,36 @@ class VelvetAssembler(Assembler):
 class SpadesAssembler(Assembler):
     """Wrapper for the Spades assembler."""
 
+    @property
+    def work_path(self):
+        """The output directory name has unique requirements."""
+
+        return os.path.join(self.iter_dir, 'spades')
+
     def __init__(self, args):
         super().__init__(args)
         self.steps = [self.spades]
 
     def spades(self):
         """Build the command for assembly."""
-        # spades.py --only-assembler --threads 1 --cov-cutoff 8
-        # -1 lib_I9.01.paired_end_1.fasta -2 lib_I9.01.paired_end_2.fasta
-        # -o spades
 
-        cmd = ['spades.py --only-assembler']
+        cmd = ['spades.py ',
+               '--only-assembler',
+               '--threads {}'.format(self.args.cpus),
+               '--memory {}'.format(self.args.max_memory),
+               '--cov-cutoff {}'.format(self.args.cov_cutoff),
+               '-o {}'.format(self.work_path)]
+
+        if self.is_paired:
+            cmd.append("--pe1-1 '{}'".format(self.end_1_file))
+            cmd.append("--pe1-2 '{}'".format(self.end_2_file))
+        else:
+            cmd.append("-pe1-12 '{}'".format(self.end_1_file))
 
         return ' '.join(cmd)
+
+    def post_assembly(self):
+        """Copy the assembler output."""
+
+        src = os.path.join(self.iter_dir, 'contigs.fasta')
+        shutil.move(src, self.output_file)

@@ -9,7 +9,7 @@ IS_PROTEIN = re.compile(r'[EFILPQ]', re.IGNORECASE)
 
 
 def reverse_complement(seq):
-    """Reverse complement a nucleotide squence. We added some wildcards."""
+    """Reverse complement a nucleotide sequence. We added some wildcards."""
 
     return seq.translate(COMPLEMENT)[::-1]
 

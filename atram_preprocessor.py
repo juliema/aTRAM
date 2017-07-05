@@ -22,6 +22,8 @@ def run(args):
     log.setup(args)
 
     db_conn = db.connect(args.blast_db)
+    db.create_version_table(db_conn)
+
     db.create_sequences_table(db_conn)
     load_seqs(args, db_conn)
 
@@ -73,7 +75,7 @@ def load_seqs(args, db_conn):
 
                     # Get data from the header
                     match = blast.PARSE_HEADER.match(line)
-                    seq_name = match.group(1) if match else ''
+                    seq_name = match.group(1) if match else line[1:].strip()
                     seq_end = match.group(2) if match else ''
 
                 # Handle fastq stuff, so skip these lines
@@ -220,7 +222,8 @@ def parse_command_line(temp_dir):
                              'fastq format. You may enter more than '
                              'one file and you may use wildcards.')
 
-    parser.add_argument('--version', action='version', version='%(prog)s 2.0')
+    parser.add_argument('--version', action='version',
+                        version='%(prog)s {}'.format(db.VERSION))
 
     group = parser.add_argument_group('preprocessor arguments')
 

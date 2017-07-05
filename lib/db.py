@@ -2,7 +2,8 @@
 
 import sqlite3
 
-BATCH_SIZE = 1e7  # How many sequence records to insert at a time
+BATCH_SIZE = 1e6  # How many sequence records to insert at a time
+VERSION = '2.0'
 
 
 def connect(blast_db):
@@ -17,6 +18,34 @@ def connect(blast_db):
     db_conn.execute("PRAGMA journal_mode = 'off'")
     db_conn.execute("PRAGMA synchronous = 'off'")
     return db_conn
+
+
+# ########################## version table ##################################
+
+def create_version_table(db_conn):
+    """Create the version table. A single record used to tell if we are
+    running a atram.py against the schema version we built with
+    atram_preprocessor.py.
+    """
+
+    db_conn.execute('''DROP TABLE IF EXISTS version''')
+    sql = 'CREATE TABLE version (label TEXT, value TEXT)'
+    db_conn.execute(sql)
+
+    sql = '''INSERT INTO version (label, value) VALUES (?, ?)'''
+    db_conn.execute(sql, ('version', VERSION))
+    db_conn.commit()
+
+
+def version(db_conn):
+    """Get the current database version."""
+
+    sql = '''SELECT value FROM version WHERE label = ?'''
+    try:
+        result = db_conn.execute(sql, 'version')
+        return result.fetchone()[0]
+    except sqlite3.OperationalError:
+        return '1.0'
 
 
 # ########################## sequences table ##################################

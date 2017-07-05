@@ -2,7 +2,6 @@
 
 import os
 import re
-import sys
 import glob
 import json
 import lib.log as log
@@ -10,10 +9,11 @@ import lib.file_util as file_util
 
 
 # Try to get the sequence name and which end it is from the fasta header
-PARSE_HEADER = re.compile(r'^ [>@] \s* ( .*? ) ( [\s/._] [12] )', re.VERBOSE)
+PARSE_HEADER = re.compile(r'^ [>@] \s* ( [^\s/._]+? ) [\s/._] ( [12] )',
+                          re.VERBOSE)
 
 # Parse blast hits file
-PARSE_RESULTS = re.compile(r'^ ( .* ) ( [\s\/_] [12] )', re.VERBOSE)
+PARSE_RESULTS = re.compile(r'^ ( [^\s/._]+? ) [\s/._] ( [12] )', re.VERBOSE)
 
 
 def create_db(temp_dir, fasta_file, blast_db):
@@ -47,7 +47,7 @@ def against_sra(args, blast_db, query, hits_file, iteration):
 
 
 def against_contigs(args, blast_db, query, hits_file):
-    """Blast the query sequence against the contings. The blast output
+    """Blast the query sequence against the contigs. The blast output
     will have the scores for later processing.
     """
 
@@ -85,7 +85,7 @@ def all_shard_paths(blast_db):
         err = ('No blast shards found. Looking for "{}"\n'
                'Verify the --work-dir and --file-prefix options.').format(
                    pattern[:-4])
-        sys.exit(err)
+        log.fatal(err)
 
     return sorted([f[:-4] for f in files])
 

@@ -17,12 +17,10 @@ def setup(args):
     logging.info(' '.join(sys.argv))
 
 
-def subcommand(cmd, temp_dir, timeout):
+def subcommand(cmd, temp_dir, timeout=None):
     """Handle subprocess calls and log their output."""
 
     logging.info(cmd)
-
-    timeout = timeout if timeout else None
 
     with tempfile.NamedTemporaryFile(mode='w', dir=temp_dir) as log_output:
 
@@ -62,3 +60,10 @@ def error(msg):
 
     print(msg)
     logging.error(msg)
+
+
+def fatal(msg):
+    """Log an error message and exit."""
+
+    error(msg)
+    sys.exit(1)

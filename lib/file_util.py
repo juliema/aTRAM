@@ -1,7 +1,7 @@
 """Utility functions."""
 
 import os
-import sys
+import lib.log as log
 
 
 def temp_root_dir(args, temp_dir):
@@ -11,7 +11,7 @@ def temp_root_dir(args, temp_dir):
         args.temp_dir = os.path.abspath(args.temp_dir)
         os.makedirs(args.temp_dir, exist_ok=True)
         if os.listdir(args.temp_dir):
-            sys.exit('"{}" directory is not empty.'.format(args.temp_dir))
+            log.fatal('"{}" directory is not empty.'.format(args.temp_dir))
     else:
         args.temp_dir = temp_dir
 

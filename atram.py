@@ -30,6 +30,14 @@ def run(args):
 
     db_conn = db.connect(args.blast_db)
 
+    # Make sure the database version matches what we built it with
+    version = db.version(db_conn)
+    if version != db.VERSION:
+        log.fatal('The database was built with version {} but you are running '
+                  'version {}. You need to rebuild the atram database by '
+                  'running atram_preprocessor.py again.'.format(
+                      version, db.VERSION))
+
     assembler = Assembler.factory(args) if args.assembler else None
     query = initialize_query(args, db_conn, assembler)
 
@@ -71,12 +79,10 @@ def atram_loop(args, db_conn, assembler, query, all_shards):
         except TimeoutError:
             msg = 'Time ran out for the assembler after {} (HH:MM:SS)'.format(
                 datetime.timedelta(seconds=args.timeout))
-            log.error(msg)
-            sys.exit(msg)
+            log.fatal(msg)
         except subprocess.CalledProcessError as cpe:
-            msg = 'The assembler failed with error: ' + str(cpe.returncode)
-            log.error(msg)
-            sys.exit(msg)
+            msg = 'The assembler failed with error: ' + str(cpe)
+            log.fatal(msg)
 
         # Exit if nothing was assembled
         if not os.path.exists(assembler.output_file) \
@@ -129,7 +135,7 @@ def initialize_query(args, db_conn, assembler):
             err += 'in {}'.format(args.query)
         else:
             err += 'for starting iteration {}'.format(args.start_iteration)
-        sys.exit(err)
+        log.fatal(err)
 
     return query
 
@@ -207,10 +213,9 @@ def write_assembler_files(db_conn, assembler, iteration):
 
         for row in db.get_sra_blast_hits(db_conn, iteration):
 
-            # NOTE: Some assemblers require a slash delimiter for the seq_end
             seq_end = ''
             if row['seq_end']:
-                seq_end = '/{}'.format(row['seq_end'][-1])
+                seq_end = '/{}'.format(row['seq_end'])
 
             if seq_end.endswith('2'):
                 assembler.is_paired = True
@@ -358,9 +363,30 @@ def parse_command_line(temp_dir):
         formatter_class=argparse.RawDescriptionHelpFormatter,
         description=textwrap.dedent(description))
 
-    parser.add_argument('--version', action='version', version='%(prog)s 2.0')
+    parser.add_argument('--version', action='version',
+                        version='%(prog)s {}'.format(db.VERSION))
 
-    # required arguments
+    required_args(parser)
+    optional_atram_args(parser)
+    optional_blast_filter_args(parser)
+    optional_blast_args(parser)
+    optional_assembler_args(parser)
+
+    args = parser.parse_args()
+
+    check_required_args(args)
+    check_optional_atram_args(args)
+    check_optional_blast_args(args, temp_dir)
+    check_optional_assembler_args(args)
+
+    find_programs(args)
+
+    return args
+
+
+def required_args(parser):
+    """Add required arguments to the parser."""
+
     group = parser.add_argument_group('required arguments')
 
     group.add_argument('-b', '--blast-db', '--sra', '--db', '--database',
@@ -379,7 +405,25 @@ def parse_command_line(temp_dir):
                             'interest. Required unless you specify a '
                             '"--start-iteration".')
 
-    # optional aTRAM arguments
+
+def check_required_args(args):
+    """Make sure required arguments are reasonable."""
+
+    # Touch up blast DB name
+    pattern = (r'^ (.*?)'
+               r'(  \.atram(_preprocessor)?\.log'
+               r' | \.blast_\d{3}\.(nhr|nin|nsq)'
+               r' | \.sqlite\.db  )?$')
+    args.blast_db = re.sub(pattern, r'\1', args.blast_db, re.I | re.X)
+
+    # Check query
+    if not args.query and not args.start_iteration:
+        log.fatal('We need a "--query" sequence.')
+
+
+def optional_atram_args(parser):
+    """Add optional atram arguments to the parser."""
+
     group = parser.add_argument_group('optional aTRAM arguments')
 
     group.add_argument('-a', '--assembler',
@@ -389,7 +433,7 @@ def parse_command_line(temp_dir):
                             'and stop before assembly.')
 
     group.add_argument('-i', '--iterations', type=int, default=5, metavar='N',
-                       help='The number of pipline iterations. '
+                       help='The number of pipeline iterations. '
                             'The default is "5".')
 
     group.add_argument('-p', '--protein', action='store_true',
@@ -409,7 +453,7 @@ def parse_command_line(temp_dir):
                        type=int, default=cpus,
                        help=('Number of cpus to use. This will also be used '
                              'for the assemblers when possible. Defaults to: '
-                             'Total CPUS - 4 = "{}"').format(cpus))
+                             'Total CPUs - 4 = "{}"').format(cpus))
 
     group.add_argument('--log-file',
                        help='Log file (full path). The default is to use the '
@@ -436,7 +480,30 @@ def parse_command_line(temp_dir):
                             'stopping the run. To wait forever set this to 0. '
                             'The default is "300" (5 minutes).')
 
-    # optional values for blast-filtering contigs
+
+def check_optional_atram_args(args):
+    """Make sure optional atram arguments are reasonable."""
+
+    # Set default log file name
+    if not args.log_file:
+        args.log_file = '{}.{}.log'.format(
+            args.blast_db, os.path.basename(sys.argv[0][:-3]))
+
+    # If not --protein then probe to see if it's a protein seq
+    if not args.protein:
+        with open(args.query) as in_file:
+            for query in SeqIO.parse(in_file, 'fasta'):
+                if bio.is_protein(str(query.seq)):
+                    args.protein = True
+
+    # Prepend to PATH environment variable if requested
+    if args.path:
+        os.environ['PATH'] = '{}:{}'.format(args.path, os.environ['PATH'])
+
+
+def optional_blast_filter_args(parser):
+    """Add optional values for blast-filtering contigs to the parser."""
+
     group = parser.add_argument_group(
         'optional values for blast-filtering contigs')
 
@@ -449,7 +516,10 @@ def parse_command_line(temp_dir):
                        help='Remove blast hits that are shorter than this '
                             'length. The default is "100".')
 
-    # optional blast arguments
+
+def optional_blast_args(parser):
+    """Add optional blast arguments to the parser."""
+
     group = parser.add_argument_group('optional blast arguments')
 
     group.add_argument('--db-gencode', type=int, default=1,
@@ -463,10 +533,24 @@ def parse_command_line(temp_dir):
     group.add_argument('--max-target-seqs', type=int, default=100000000,
                        metavar='MAX',
                        help='Maximum hit sequences per shard. '
-                            'Default is calulated based on the available '
+                            'Default is calculated based on the available '
                             'memory and the number of shards. ')
 
-    # optional assembler arguments
+
+def check_optional_blast_args(args, temp_dir):
+    """Make sure optional blast arguments are reasonable."""
+
+    # Calculate the default max_target_seqs per shard
+    if not args.max_target_seqs:
+        all_shards = blast.all_shard_paths(args.blast_db)
+        args.max_target_seqs = int(2 * args.max_memory / len(all_shards)) * 1e6
+
+    file_util.temp_root_dir(args, temp_dir)
+
+
+def optional_assembler_args(parser):
+    """Add optional assembler arguments to the parser."""
+
     group = parser.add_argument_group('optional assembler arguments')
 
     group.add_argument('--no-long-reads', action='store_true',
@@ -489,8 +573,9 @@ def parse_command_line(temp_dir):
         psutil.virtual_memory().available / 1024**3 / 2))
     group.add_argument('--max-memory',
                        default=max_mem, metavar='MEMORY', type=int,
-                       help=('Maximum amount of memory to use in gigabytes. '
-                             'The default is "{}". (Trinity)').format(max_mem))
+                       help='Maximum amount of memory to use in gigabytes. '
+                            'The default is "{}". (Trinity, Spades)'.format(
+                                max_mem))
 
     group.add_argument('--exp-coverage', '--expected-coverage',
                        type=int, default=30,
@@ -503,52 +588,31 @@ def parse_command_line(temp_dir):
 
     group.add_argument('--min-contig-length', type=int, default=100,
                        help='The minimum contig length used by the assembler '
-                            'iteself. The default is "100". (Velvet)')
+                            'itself. The default is "100". (Velvet)')
 
-    args = parser.parse_args()
+    group.add_argument('--cov-cutoff', default='off',
+                       help='Read coverage cutoff value. Must be a positive '
+                            'float value, or "auto", or "off". '
+                            'The default is "off". (Spades)')
 
-    # Touch up blast DB name
-    pattern = (r'^ (.*?)'
-               r'(  \.atram(_preprocessor)?\.log'
-               r' | \.blast_\d{3}\.(nhr|nin|nsq)'
-               r' | \.sqlite\.db  )?$')
-    args.blast_db = re.sub(pattern, r'\1', args.blast_db, re.I | re.X)
 
-    # Check query
-    if not args.query and not args.start_iteration:
-        err = 'We need a "--query" sequence.'
-        sys.exit(err)
+def check_optional_assembler_args(args):
+    """Make sure optional assembler arguments are reasonable."""
 
     # Check kmer
     if args.assembler == 'velvet' and args.kmer > 31:
         args.kmer = 31
 
-    # Set default log file name
-    if not args.log_file:
-        args.log_file = '{}.{}.log'.format(
-            args.blast_db, os.path.basename(sys.argv[0][:-3]))
-
-    # If not --protein then probe to see if it's a protein seq
-    if not args.protein:
-        with open(args.query) as in_file:
-            for query in SeqIO.parse(in_file, 'fasta'):
-                if bio.is_protein(str(query.seq)):
-                    args.protein = True
-
-    # Prepend to PATH environment variable if requested
-    if args.path:
-        os.environ['PATH'] = '{}:{}'.format(args.path, os.environ['PATH'])
-
-    # Calculate the default max_target_seqs per shard
-    if not args.max_target_seqs:
-        all_shards = blast.all_shard_paths(args.blast_db)
-        args.max_target_seqs = int(2 * args.max_memory / len(all_shards)) * 1e6
-
-    file_util.temp_root_dir(args, temp_dir)
-
-    find_programs(args)
-
-    return args
+    # Check cov_cutoff
+    if args.cov_cutoff not in ['off', 'auto']:
+        err = ('Read coverage cutoff value. Must be a positive '
+               'float value, or "auto", or "off"')
+        try:
+            value = float(args.cov_cutoff)
+        except ValueError:
+            log.fatal(err)
+        if value < 0:
+            log.fatal(err)
 
 
 def find_programs(args):
@@ -559,13 +623,13 @@ def find_programs(args):
                '"blastn". You either need to install them or you need adjust '
                'the PATH environment variable with the "--path" option so '
                'that aTRAM can find it.')
-        sys.exit(err)
+        log.fatal(err)
 
     if args.assembler == 'abyss' and not which('abyss-pe'):
         err = ('We could not find the "abyss-pe" program. You either need to '
                'install it or you need to adjust the PATH environment '
                'variable with the "--path" option so that aTRAM can find it.')
-        sys.exit(err)
+        log.fatal(err)
 
     if args.assembler == 'abyss' and not args.no_long_reads \
             and not which('bwa'):
@@ -573,20 +637,20 @@ def find_programs(args):
                'install it, adjust the PATH environment variable '
                'with the "--path" option, or you may use the '
                '"--no-long-reads" option to not use this program.')
-        sys.exit(err)
+        log.fatal(err)
 
     if args.assembler == 'trinity' and not which('Trinity'):
         err = ('We could not find the "Trinity" program. You either need to '
                'install it or you need to adjust the PATH environment '
                'variable with the "--path" option so that aTRAM can find it.')
-        sys.exit(err)
+        log.fatal(err)
 
     if args.assembler == 'trinity' and args.bowtie2 and not which('bowtie2'):
         err = ('We could not find the "bowtie2" program. You either need to '
                'install it, adjust the PATH environment variable '
                'with the "--path" option, or you may skip using this program '
                'by not using the "--bowtie2" option.')
-        sys.exit(err)
+        log.fatal(err)
 
     if args.assembler == 'velvet' and \
             not (which('velveth') and which('velvetg')):
@@ -594,13 +658,13 @@ def find_programs(args):
                'You either need to install it or you need to adjust the PATH '
                'environment variable with the "--path" option so that aTRAM '
                'can find it.')
-        sys.exit(err)
+        log.fatal(err)
 
     if args.assembler == 'spades' and not which('spades.py'):
-        err = ('We could not find the "SPAdes" program. You either need to '
+        err = ('We could not find the "Spades" program. You either need to '
                'install it or you need to adjust the PATH environment '
                'variable with the "--path" option so that aTRAM can find it.')
-        sys.exit(err)
+        log.fatal(err)
 
 
 if __name__ == '__main__':
