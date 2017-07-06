@@ -20,29 +20,29 @@ def connect(blast_db):
     return db_conn
 
 
-# ########################## version table ##################################
+# ########################## metadata table ##################################
 
-def create_version_table(db_conn):
-    """Create the version table. A single record used to tell if we are
+def create_metadata_table(db_conn):
+    """Create the metadata table. A single record used to tell if we are
     running a atram.py against the schema version we built with
     atram_preprocessor.py.
     """
 
-    db_conn.execute('''DROP TABLE IF EXISTS version''')
-    sql = 'CREATE TABLE version (label TEXT, value TEXT)'
+    db_conn.execute('''DROP TABLE IF EXISTS metadata''')
+    sql = 'CREATE TABLE metadata (label TEXT, value TEXT)'
     db_conn.execute(sql)
 
-    sql = '''INSERT INTO version (label, value) VALUES (?, ?)'''
+    sql = '''INSERT INTO metadata (label, value) VALUES (?, ?)'''
     db_conn.execute(sql, ('version', VERSION))
     db_conn.commit()
 
 
-def version(db_conn):
+def get_version(db_conn):
     """Get the current database version."""
 
-    sql = '''SELECT value FROM version WHERE label = ?'''
+    sql = '''SELECT value FROM metadata WHERE label = ?'''
     try:
-        result = db_conn.execute(sql, 'version')
+        result = db_conn.execute(sql, ('version', ))
         return result.fetchone()[0]
     except sqlite3.OperationalError:
         return '1.0'
@@ -128,7 +128,7 @@ def create_sra_blast_hits_table(db_conn):
 
     sql = '''
         CREATE INDEX sra_blast_hits_index
-                  ON sra_blast_hits (iteration, seq_name)
+                  ON sra_blast_hits (iteration, seq_name, seq_end)
         '''
     db_conn.execute(sql)
 
@@ -147,7 +147,7 @@ def insert_blast_hit_batch(db_conn, batch):
 
 
 def sra_blast_hits_count(db_conn, iteration):
-    """Count the blast hist for the iteration."""
+    """Count the blast hist for select the iteration."""
 
     sql = '''
         SELECT COUNT(*) AS count
@@ -173,6 +173,26 @@ def get_sra_blast_hits(db_conn, iteration):
 
     db_conn.row_factory = sqlite3.Row
     return db_conn.execute(sql, str(iteration))
+
+
+def get_blast_hits_by_end_count(db_conn, iteration, end_count):
+    """Get all blast hits for the iteration."""
+
+    sql = '''
+        SELECT seq_name, seq_end, seq
+          FROM sequences
+         WHERE seq_name IN (SELECT seq_name
+                              FROM sequences
+                             WHERE seq_name IN (SELECT DISTINCT seq_name
+                                                  FROM sra_blast_hits
+                                                 WHERE iteration = ?)
+                          GROUP BY seq_name
+                            HAVING COUNT(*) = ?)
+      ORDER BY seq_name, seq_end
+        '''
+
+    db_conn.row_factory = sqlite3.Row
+    return db_conn.execute(sql, (str(iteration), end_count))
 
 
 # ####################### contig_blast_hits table #############################

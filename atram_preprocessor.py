@@ -22,7 +22,7 @@ def run(args):
     log.setup(args)
 
     db_conn = db.connect(args.blast_db)
-    db.create_version_table(db_conn)
+    db.create_metadata_table(db_conn)
 
     db.create_sequences_table(db_conn)
     load_seqs(args, db_conn)
@@ -182,7 +182,8 @@ def fill_blast_fasta(blast_db, fasta_file, shard_params):
     limit, offset = shard_params
 
     for row in db.get_sequences_in_shard(db_conn, limit, offset):
-        fasta_file.write('>{}{}\n'.format(row[0], row[1]))
+        seq_end = '/{}'.format(row[1]) if row[1] else ''
+        fasta_file.write('>{}{}\n'.format(row[0], seq_end))
         fasta_file.write('{}\n'.format(row[2]))
 
     db_conn.close()

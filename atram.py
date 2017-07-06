@@ -18,7 +18,7 @@ import lib.bio as bio
 import lib.log as log
 import lib.blast as blast
 import lib.file_util as file_util
-from lib.assembler import Assembler
+from lib.assembler import factory
 
 
 def run(args):
@@ -31,14 +31,14 @@ def run(args):
     db_conn = db.connect(args.blast_db)
 
     # Make sure the database version matches what we built it with
-    version = db.version(db_conn)
+    version = db.get_version(db_conn)
     if version != db.VERSION:
         log.fatal('The database was built with version {} but you are running '
                   'version {}. You need to rebuild the atram database by '
                   'running atram_preprocessor.py again.'.format(
                       version, db.VERSION))
 
-    assembler = Assembler.factory(args) if args.assembler else None
+    assembler = factory(args) if args.assembler else None
     query = initialize_query(args, db_conn, assembler)
 
     atram_loop(args, db_conn, assembler, query, all_shards)
@@ -70,7 +70,7 @@ def atram_loop(args, db_conn, assembler, query, all_shards):
 
         assembler.initialize_iteration(iteration)
 
-        write_assembler_files(db_conn, assembler, iteration)
+        assembler.write_input_files(db_conn)
 
         try:
             log.info('Assembling shards with {}: iteration {}'.format(
@@ -85,8 +85,8 @@ def atram_loop(args, db_conn, assembler, query, all_shards):
             log.fatal(msg)
 
         # Exit if nothing was assembled
-        if not os.path.exists(assembler.output_file) \
-                or not os.path.getsize(assembler.output_file):
+        if not os.path.exists(assembler.file['output']) \
+                or not os.path.getsize(assembler.file['output']):
             log.info('No new assemblies in iteration %i' % iteration)
             break
 
@@ -199,34 +199,6 @@ def blast_query_against_sra(args, shard_path, query, iteration):
     db_conn.close()
 
 
-def write_assembler_files(db_conn, assembler, iteration):
-    """Take the matching blast hits and write the sequence and its matching
-    end to the appropriate fasta files.
-    """
-
-    log.info('Creating assembler input files: iteration %i' % iteration)
-
-    assembler.is_paired = False
-
-    with open(assembler.end_1_file, 'w') as end_1, \
-            open(assembler.end_2_file, 'w') as end_2:
-
-        for row in db.get_sra_blast_hits(db_conn, iteration):
-
-            seq_end = ''
-            if row['seq_end']:
-                seq_end = '/{}'.format(row['seq_end'])
-
-            if seq_end.endswith('2'):
-                assembler.is_paired = True
-                out_file = end_2
-            else:
-                out_file = end_1
-
-            out_file.write('>{}{}\n'.format(row['seq_name'], seq_end))
-            out_file.write('{}\n'.format(row['seq']))
-
-
 def output_blast_only_results(args, db_conn):
     """Output this file if we are not assembling the contigs."""
 
@@ -247,7 +219,7 @@ def filter_contigs(args, db_conn, assembler, iteration):
     blast_db = blast.temp_db_name(args.temp_dir, args.blast_db, iteration)
     hits_file = blast.output_file_name(args.temp_dir, args.blast_db, iteration)
 
-    blast.create_db(args.temp_dir, assembler.output_file, blast_db)
+    blast.create_db(args.temp_dir, assembler.file['output'], blast_db)
 
     blast.against_contigs(args, blast_db, args.query, hits_file)
 
@@ -282,7 +254,7 @@ def save_contigs(db_conn, all_hits, assembler, iteration):
 
     batch = []
     high_score = 0
-    with open(assembler.output_file) as in_file:
+    with open(assembler.file['output']) as in_file:
         for contig in SeqIO.parse(in_file, 'fasta'):
             contig_id = assembler.parse_contig_id(contig.description)
             if contig_id in all_hits:
@@ -306,7 +278,7 @@ def create_queries_from_contigs(
     log.info('Creating new query files: iteration %i' % iteration)
 
     query = assembler.path('long_reads.fasta')
-    assembler.long_reads_file = query
+    assembler.file['long_reads'] = query
 
     with open(query, 'w') as query_file:
         for row in db.get_assembled_contigs(
