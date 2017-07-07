@@ -4,6 +4,10 @@
     1. What does it do?
     2. How it works
 
+aTRAM 2.0 is a major overhaul of the aTRAM approach to assembling loci from phylogenomic data. The new code has been reimplemented in python, and the approach to short read library construction is completely revamped, resulting in major performance improvements.
+
+aTRAM ("automated target restricted assembly method") is an iterative assembler that performs reference-guided local de novo assemblies using a variety of available methods. It is well-suited to various tasks where NGS data needs to be queried for gene sequences, such as phylogenomics. The design philosophy is modular and expandable, with support to date for four de-novo assemblers to date: Velvet, Abyss, SOAP, and Spades.
+
 ## Installation
      1. Python 3.0 or greater and a number of dependencies
      2. Dependencies given in requirements.txt
