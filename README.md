@@ -4,9 +4,9 @@
     1. What does it do?
     2. How it works
 
-aTRAM 2.0 is a major overhaul of the aTRAM approach to assembling loci from phylogenomic data. The new code has been reimplemented in python, and the approach to short read library construction is completely revamped, resulting in major performance improvements.
+aTRAM 2.0 is a major overhaul of the aTRAM approach to assembling loci from NGS data. The new code has been reimplemented in python, and the approach to short read library construction is completely revamped, resulting in major performance and assembly improvements.
 
-aTRAM ("automated target restricted assembly method") is an iterative assembler that performs reference-guided local de novo assemblies using a variety of available methods. It is well-suited to various tasks where NGS data needs to be queried for gene sequences, such as phylogenomics. The design philosophy is modular and expandable, with support to date for four de-novo assemblers to date: Velvet, Abyss, SOAP, and Spades.
+aTRAM ("automated target restricted assembly method") is an iterative assembler that performs reference-guided local de novo assemblies using a variety of available methods. It is well-suited to various tasks where NGS data needs to be queried for gene sequences, such as phylogenomics. The design philosophy is modular and expandable, with support for four de-novo assemblers to date: Velvet, Abyss, Trinity, and Spades.
 
 ## Installation
      1. Python 3.0 or greater and a number of dependencies
@@ -34,7 +34,7 @@ URLs for software:
 * Spades: http://bioinf.spbau.ru/spades
 
 ### Library Preparation
-Use atram_preprocessor.py for this. You can either list the forward and reverse read files, or glob them with wildcards as below. Note that aTRAM 2 is not backwards compatible with aTRAM 1 libraries; it is also best to rebuild any libraries after major updates. 
+Use atram_preprocessor.py for this. You can either list the forward and reverse read files, or glob them with wildcards as below. Under the hood, aTRAM 2 is building a SQLite3 database for rapid read retrieval. Note that aTRAM 2 is not backwards compatible with aTRAM 1 libraries; it is also best to rebuild any libraries after major updates. 
 
 ``` python path_to_aTRAM/atram_preprocessor.py -c NUMBER_OF_THREADS -b path_to_atram_library/LIBRARY_PREFIX READ_NAME*.fastq ```
   
