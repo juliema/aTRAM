@@ -1,6 +1,7 @@
 """Utility functions."""
 
 import os
+from shutil import which
 import lib.log as log
 
 
@@ -40,3 +41,55 @@ def output_file(args, file_suffix):
     """Build the output file name."""
 
     return '{}.{}'.format(args.output, file_suffix)
+
+
+def find_programs(args):
+    """Make sure we can find the programs needed by the assembler and blast."""
+
+    if not (which('makeblastdb') and which('tblastn') and which('blastn')):
+        err = ('We could not find the programs "makeblastdb", "tblastn", or '
+               '"blastn". You either need to install them or you need adjust '
+               'the PATH environment variable with the "--path" option so '
+               'that aTRAM can find it.')
+        log.fatal(err)
+
+    if args.assembler == 'abyss' and not which('abyss-pe'):
+        err = ('We could not find the "abyss-pe" program. You either need to '
+               'install it or you need to adjust the PATH environment '
+               'variable with the "--path" option so that aTRAM can find it.')
+        log.fatal(err)
+
+    if args.assembler == 'abyss' and not args.no_long_reads \
+            and not which('bwa'):
+        err = ('We could not find the "bwa-mem" program. You either need to '
+               'install it, adjust the PATH environment variable '
+               'with the "--path" option, or you may use the '
+               '"--no-long-reads" option to not use this program.')
+        log.fatal(err)
+
+    if args.assembler == 'trinity' and not which('Trinity'):
+        err = ('We could not find the "Trinity" program. You either need to '
+               'install it or you need to adjust the PATH environment '
+               'variable with the "--path" option so that aTRAM can find it.')
+        log.fatal(err)
+
+    if args.assembler == 'trinity' and args.bowtie2 and not which('bowtie2'):
+        err = ('We could not find the "bowtie2" program. You either need to '
+               'install it, adjust the PATH environment variable '
+               'with the "--path" option, or you may skip using this program '
+               'by not using the "--bowtie2" option.')
+        log.fatal(err)
+
+    if args.assembler == 'velvet' and \
+            not (which('velveth') and which('velvetg')):
+        err = ('We could not find either the "velveth" or "velvetg" program. '
+               'You either need to install it or you need to adjust the PATH '
+               'environment variable with the "--path" option so that aTRAM '
+               'can find it.')
+        log.fatal(err)
+
+    if args.assembler == 'spades' and not which('spades.py'):
+        err = ('We could not find the "Spades" program. You either need to '
+               'install it or you need to adjust the PATH environment '
+               'variable with the "--path" option so that aTRAM can find it.')
+        log.fatal(err)

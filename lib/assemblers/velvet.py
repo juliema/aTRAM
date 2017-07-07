@@ -1,4 +1,4 @@
-"""The Trinity assembler."""
+"""Wrapper for the Velvet assembler."""
 
 import shutil
 from lib.assemblers.base import BaseAssembler

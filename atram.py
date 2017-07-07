@@ -3,22 +3,19 @@
 import os
 import re
 import sys
-import math
 import argparse
 import textwrap
 import tempfile
 import datetime
 import subprocess
 import multiprocessing
-from shutil import which
-import psutil
 from Bio import SeqIO
 import lib.db as db
 import lib.bio as bio
 import lib.log as log
 import lib.blast as blast
 import lib.file_util as file_util
-from lib.assembler import factory
+import lib.assembler as assembly
 
 
 def main(args):
@@ -38,7 +35,7 @@ def main(args):
                   'running atram_preprocessor.py again.'.format(
                       version, db.VERSION))
 
-    assembler = factory(args) if args.assembler else None
+    assembler = assembly.factory(args) if args.assembler else None
     query = initialize_query(args, db_conn, assembler)
 
     atram_loop(args, db_conn, assembler, query, all_shards)
@@ -341,20 +338,20 @@ def parse_command_line(temp_dir):
                         version='%(prog)s {}'.format(db.VERSION))
 
     required_args(parser)
-    optional_atram_args(parser)
-    optional_filter_args(parser)
-    optional_blast_args(parser)
-    optional_assembler_args(parser)
+    optional_args(parser)
+    filter_args(parser)
+    blast.command_line_args(parser)
+    assembly.command_line_args(parser)
 
     args = parser.parse_args()
 
     check_required_args(args)
-    check_optional_atram_args(args)
-    check_optional_filter_args(args)
-    check_optional_blast_args(args, temp_dir)
-    check_optional_assembler_args(args)
+    check_optional_args(args)
+    check_filter_args(args)
+    blast.check_command_line_args(args, temp_dir)
+    assembly.check_command_line_args(args)
 
-    find_programs(args)
+    file_util.find_programs(args)
 
     return args
 
@@ -396,7 +393,7 @@ def check_required_args(args):
         log.fatal('We need a "--query" sequence.')
 
 
-def optional_atram_args(parser):
+def optional_args(parser):
     """Add optional atram arguments to the parser."""
 
     group = parser.add_argument_group('optional aTRAM arguments')
@@ -419,10 +416,6 @@ def optional_atram_args(parser):
                        help='Use only the specified fraction of the aTRAM '
                             'database. The default is "1.0"')
 
-    # group.add_argument('--complete', action='store_true',
-    #                    help='Automatically quit when a complete homolog is '
-    #                         'recovered.')
-
     cpus = min(10, os.cpu_count() - 4 if os.cpu_count() > 4 else 1)
     group.add_argument('--cpus', '--processes', '--max-processes',
                        type=int, default=cpus,
@@ -433,7 +426,7 @@ def optional_atram_args(parser):
     group.add_argument('--log-file',
                        help='Log file (full path). The default is to use the '
                             'DIR and DB arguments to come up with a name like '
-                            'so "DIR/DB_atram.log"')
+                            'so: "DIR/DB_atram.log"')
 
     group.add_argument('--path',
                        help='If the assembler or blast you want to use is not '
@@ -456,7 +449,7 @@ def optional_atram_args(parser):
                             'The default is "300" (5 minutes).')
 
 
-def check_optional_atram_args(args):
+def check_optional_args(args):
     """Make sure optional atram arguments are reasonable."""
 
     # Set default log file name
@@ -476,7 +469,7 @@ def check_optional_atram_args(args):
         os.environ['PATH'] = '{}:{}'.format(args.path, os.environ['PATH'])
 
 
-def optional_filter_args(parser):
+def filter_args(parser):
     """Add optional values for blast-filtering contigs to the parser."""
 
     group = parser.add_argument_group(
@@ -485,11 +478,13 @@ def optional_filter_args(parser):
     group.add_argument('--bit-score', type=float, default=70.0,
                        metavar='SCORE',
                        help='Remove contigs that have a value less than this. '
-                            'The default is "70.0"')
+                            'The default is "70.0". This is turned off by the '
+                            '--no-filter argument.')
 
     group.add_argument('--contig-length', '--length', type=int, default=100,
                        help='Remove blast hits that are shorter than this '
-                            'length. The default is "100".')
+                            'length. The default is "100". This is turned '
+                            'off by the --no-filter argument.')
 
     group.add_argument('--no-filter', action='store_true',
                        help='Do not filter the assembled contigs. This will: '
@@ -497,162 +492,12 @@ def optional_filter_args(parser):
                             'to 0')
 
 
-def check_optional_filter_args(args):
+def check_filter_args(args):
     """Make sure the optional blast filter arguments are reasonable."""
 
     if args.no_filter:
         args.bit_score = 0
         args.contig_length = 0
-
-
-def optional_blast_args(parser):
-    """Add optional blast arguments to the parser."""
-
-    group = parser.add_argument_group('optional blast arguments')
-
-    group.add_argument('--db-gencode', type=int, default=1,
-                       metavar='CODE',
-                       help='The genetic code to use during blast runs. '
-                            'The default is "1".')
-
-    group.add_argument('--evalue', type=float, default=1e-10,
-                       help='The default evalue is "1e-10".')
-
-    group.add_argument('--max-target-seqs', type=int, default=100000000,
-                       metavar='MAX',
-                       help='Maximum hit sequences per shard. '
-                            'Default is calculated based on the available '
-                            'memory and the number of shards. ')
-
-
-def check_optional_blast_args(args, temp_dir):
-    """Make sure optional blast arguments are reasonable."""
-
-    # Calculate the default max_target_seqs per shard
-    if not args.max_target_seqs:
-        all_shards = blast.all_shard_paths(args.blast_db)
-        args.max_target_seqs = int(2 * args.max_memory / len(all_shards)) * 1e6
-
-    file_util.temp_root_dir(args, temp_dir)
-
-
-def optional_assembler_args(parser):
-    """Add optional assembler arguments to the parser."""
-
-    group = parser.add_argument_group('optional assembler arguments')
-
-    group.add_argument('--no-long-reads', action='store_true',
-                       help='Do not use long reads during assembly. '
-                            '(Abyss, Trinity, Velvet)')
-
-    group.add_argument('--kmer', type=int, default=64,
-                       help='k-mer size. The default is "64" for Abyss and '
-                            '"31" for Velvet. Note: the maximum kmer length '
-                            'for Velvet is 31. (Abyss, Velvet)')
-
-    group.add_argument('--mpi', action='store_true',
-                       help='Use MPI for this assembler. The assembler '
-                            'must have been compiled to use MPI. (Abyss)')
-
-    group.add_argument('--bowtie2', action='store_true',
-                       help='Use bowtie2 during assembly. (Trinity)')
-
-    max_mem = max(1.0, math.floor(
-        psutil.virtual_memory().available / 1024**3 / 2))
-    group.add_argument('--max-memory',
-                       default=max_mem, metavar='MEMORY', type=int,
-                       help='Maximum amount of memory to use in gigabytes. '
-                            'The default is "{}". (Trinity, Spades)'.format(
-                                max_mem))
-
-    group.add_argument('--exp-coverage', '--expected-coverage',
-                       type=int, default=30,
-                       help='The expected coverage of the region. '
-                            'The default is "30". (Velvet)')
-
-    group.add_argument('--ins-length', type=int, default=300,
-                       help='The size of the fragments used in the short-read '
-                            'library. The default is "300". (Velvet)')
-
-    group.add_argument('--min-contig-length', type=int, default=100,
-                       help='The minimum contig length used by the assembler '
-                            'itself. The default is "100". (Velvet)')
-
-    group.add_argument('--cov-cutoff', default='off',
-                       help='Read coverage cutoff value. Must be a positive '
-                            'float value, or "auto", or "off". '
-                            'The default is "off". (Spades)')
-
-
-def check_optional_assembler_args(args):
-    """Make sure optional assembler arguments are reasonable."""
-
-    # Check kmer
-    if args.assembler == 'velvet' and args.kmer > 31:
-        args.kmer = 31
-
-    # Check cov_cutoff
-    if args.cov_cutoff not in ['off', 'auto']:
-        err = ('Read coverage cutoff value. Must be a positive '
-               'float value, or "auto", or "off"')
-        try:
-            value = float(args.cov_cutoff)
-        except ValueError:
-            log.fatal(err)
-        if value < 0:
-            log.fatal(err)
-
-
-def find_programs(args):
-    """Make sure we can find the programs needed by the assembler and blast."""
-
-    if not (which('makeblastdb') and which('tblastn') and which('blastn')):
-        err = ('We could not find the programs "makeblastdb", "tblastn", or '
-               '"blastn". You either need to install them or you need adjust '
-               'the PATH environment variable with the "--path" option so '
-               'that aTRAM can find it.')
-        log.fatal(err)
-
-    if args.assembler == 'abyss' and not which('abyss-pe'):
-        err = ('We could not find the "abyss-pe" program. You either need to '
-               'install it or you need to adjust the PATH environment '
-               'variable with the "--path" option so that aTRAM can find it.')
-        log.fatal(err)
-
-    if args.assembler == 'abyss' and not args.no_long_reads \
-            and not which('bwa'):
-        err = ('We could not find the "bwa-mem" program. You either need to '
-               'install it, adjust the PATH environment variable '
-               'with the "--path" option, or you may use the '
-               '"--no-long-reads" option to not use this program.')
-        log.fatal(err)
-
-    if args.assembler == 'trinity' and not which('Trinity'):
-        err = ('We could not find the "Trinity" program. You either need to '
-               'install it or you need to adjust the PATH environment '
-               'variable with the "--path" option so that aTRAM can find it.')
-        log.fatal(err)
-
-    if args.assembler == 'trinity' and args.bowtie2 and not which('bowtie2'):
-        err = ('We could not find the "bowtie2" program. You either need to '
-               'install it, adjust the PATH environment variable '
-               'with the "--path" option, or you may skip using this program '
-               'by not using the "--bowtie2" option.')
-        log.fatal(err)
-
-    if args.assembler == 'velvet' and \
-            not (which('velveth') and which('velvetg')):
-        err = ('We could not find either the "velveth" or "velvetg" program. '
-               'You either need to install it or you need to adjust the PATH '
-               'environment variable with the "--path" option so that aTRAM '
-               'can find it.')
-        log.fatal(err)
-
-    if args.assembler == 'spades' and not which('spades.py'):
-        err = ('We could not find the "Spades" program. You either need to '
-               'install it or you need to adjust the PATH environment '
-               'variable with the "--path" option so that aTRAM can find it.')
-        log.fatal(err)
 
 
 if __name__ == '__main__':

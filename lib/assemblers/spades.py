@@ -1,4 +1,4 @@
-"""The Spades assembler."""
+"""Wrapper for the Spades assembler."""
 
 import os
 import shutil

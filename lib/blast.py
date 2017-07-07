@@ -122,3 +122,34 @@ def hits(json_file):
             hits_list.append(hit)
 
     return hits_list
+
+
+def command_line_args(parser):
+    """Add optional blast arguments to the command-line parser."""
+
+    group = parser.add_argument_group('optional blast arguments')
+
+    group.add_argument('--db-gencode', type=int, default=1,
+                       metavar='CODE',
+                       help='The genetic code to use during blast runs. '
+                            'The default is "1".')
+
+    group.add_argument('--evalue', type=float, default=1e-10,
+                       help='The default evalue is "1e-10".')
+
+    group.add_argument('--max-target-seqs', type=int, default=100000000,
+                       metavar='MAX',
+                       help='Maximum hit sequences per shard. '
+                            'Default is calculated based on the available '
+                            'memory and the number of shards.')
+
+
+def check_command_line_args(args, temp_dir):
+    """Make sure optional blast arguments are reasonable."""
+
+    # Calculate the default max_target_seqs per shard
+    if not args.max_target_seqs:
+        all_shards = all_shard_paths(args.blast_db)
+        args.max_target_seqs = int(2 * args.max_memory / len(all_shards)) * 1e6
+
+    file_util.temp_root_dir(args, temp_dir)

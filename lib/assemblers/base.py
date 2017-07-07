@@ -1,4 +1,4 @@
-"""Base class for the various assembler programs."""
+"""Base class for the various assembler wrappers."""
 
 import os
 import lib.db as db
@@ -7,7 +7,7 @@ import lib.file_util as file_util
 
 
 class BaseAssembler:
-    """A base class forS the assemblers."""
+    """A base class for the assemblers."""
 
     def __init__(self, args):
         self.args = args    # Parsed command line arguments

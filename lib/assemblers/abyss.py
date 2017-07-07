@@ -1,4 +1,4 @@
-"""The Abyss assembler."""
+"""Wrapper for the Abyss assembler."""
 
 import os
 import shutil

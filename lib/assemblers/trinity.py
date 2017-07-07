@@ -1,4 +1,4 @@
-"""The Trinity assembler."""
+"""Wrapper for the Trinity assembler."""
 
 import os
 import shutil
