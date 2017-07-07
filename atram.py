@@ -293,7 +293,7 @@ def create_queries_from_contigs(
 def output_assembly_results(args, db_conn):
     """Write the assembled contigs to a fasta file."""
 
-    if args.no_filter:
+    if not args.no_filter:
         file_name = file_util.output_file(args, 'filtered_contigs.fasta')
         with open(file_name, 'w') as out_file:
             for row in db.get_all_assembled_contigs(
