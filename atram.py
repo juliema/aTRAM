@@ -21,7 +21,7 @@ import lib.file_util as file_util
 from lib.assembler import factory
 
 
-def run(args):
+def main(args):
     """Setup and run atram."""
 
     log.setup(args)
@@ -115,7 +115,9 @@ def atram_loop(args, db_conn, assembler, query, all_shards):
 
 
 def initialize_query(args, db_conn, assembler):
-    """Get the first set of query sequences."""
+    """Get the first set of query sequences. Handle a restart of atram by
+    getting the data from the given iteration and setting up an input file.
+    """
 
     if args.start_iteration < 2:
         db.create_sra_blast_hits_table(db_conn)
@@ -141,7 +143,9 @@ def initialize_query(args, db_conn, assembler):
 
 
 def fraction_of_shards(args):
-    """Get the fraction of shards to use."""
+    """Get the fraction of shards to use. This is so that we can blast against
+    a portion of the blast DBs we build.
+    """
 
     all_shards = blast.all_shard_paths(args.blast_db)
     last_index = int(len(all_shards) * args.fraction)
@@ -157,9 +161,6 @@ def blast_query_against_all_sras(args, query, all_shards, iteration):
 
     log.info('Blasting query against shards: iteration %i' % iteration)
 
-    # for shard_path in all_shards:
-    #     blast_query_against_sra(
-    #         dict(vars(args)), shard_path, query, iteration)
     with multiprocessing.Pool(processes=args.cpus) as pool:
         results = [pool.apply_async(
             blast_query_against_sra,
@@ -233,7 +234,7 @@ def filter_contigs(args, db_conn, assembler, iteration):
 
 
 def save_blast_against_contigs(db_conn, assembler, hits_file, iteration):
-    """Only save contigs that have bit scores above the cut-off."""
+    """Save all of the blast hits."""
 
     batch = []
 
@@ -340,7 +341,7 @@ def parse_command_line(temp_dir):
 
     required_args(parser)
     optional_atram_args(parser)
-    optional_blast_filter_args(parser)
+    optional_filter_args(parser)
     optional_blast_args(parser)
     optional_assembler_args(parser)
 
@@ -348,6 +349,7 @@ def parse_command_line(temp_dir):
 
     check_required_args(args)
     check_optional_atram_args(args)
+    check_optional_filter_args(args)
     check_optional_blast_args(args, temp_dir)
     check_optional_assembler_args(args)
 
@@ -473,7 +475,7 @@ def check_optional_atram_args(args):
         os.environ['PATH'] = '{}:{}'.format(args.path, os.environ['PATH'])
 
 
-def optional_blast_filter_args(parser):
+def optional_filter_args(parser):
     """Add optional values for blast-filtering contigs to the parser."""
 
     group = parser.add_argument_group(
@@ -487,6 +489,19 @@ def optional_blast_filter_args(parser):
     group.add_argument('--contig-length', '--length', type=int, default=100,
                        help='Remove blast hits that are shorter than this '
                             'length. The default is "100".')
+
+    group.add_argument('--no-filter', action='store_true',
+                       help='Do not filter the assembled contigs. This will: '
+                            'set both the --bit-score and --contig-length '
+                            'to 0')
+
+
+def check_optional_filter_args(args):
+    """Make sure the optional blast filter arguments are reasonable."""
+
+    if args.no_filter:
+        args.bit_score = 0
+        args.contig_length = 0
 
 
 def optional_blast_args(parser):
@@ -643,4 +658,4 @@ if __name__ == '__main__':
 
     with tempfile.TemporaryDirectory(prefix='atram_') as TEMP_DIR:
         ARGS = parse_command_line(TEMP_DIR)
-        run(ARGS)
+        main(ARGS)

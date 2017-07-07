@@ -16,7 +16,7 @@ import lib.blast as blast
 import lib.file_util as file_util
 
 
-def run(args):
+def main(args):
     """Run the preprocessor."""
 
     log.setup(args)
@@ -291,4 +291,4 @@ if __name__ == '__main__':
 
     with tempfile.TemporaryDirectory(prefix='atram_') as TEMP_DIR:
         ARGS = parse_command_line(TEMP_DIR)
-        run(ARGS)
+        main(ARGS)
