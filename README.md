@@ -40,9 +40,15 @@ Use atram_preprocessor.py for this. You can either list the forward and reverse 
   
 ### Assembling Loci
 
-``` python path_to_aTRAM/atram.py -b path_to_atram_library/LIBRARY_PREFIX -q path_to_reference_loci/Locus.fasta -i NUMBER_OF_ITERATIONS --cpus NUMBER_OF_THREADS  --kmer KMER_NUMBER -o path_to_output/LIBRARY_PREFIX.Locus.atram2.fasta --log-file path_to_output/LIBRARY_PREFIX.Locus.log -a ASSEMBLER_CHOICE```
+``` 
+python path_to_aTRAM/atram.py -b path_to_atram_library/LIBRARY_PREFIX -q path_to_reference_loci/Locus.fasta -i NUMBER_OF_ITERATIONS --cpus NUMBER_OF_THREADS  --kmer KMER_NUMBER -o path_to_output/LIBRARY_PREFIX.Locus.atram2.fasta --log-file path_to_output/LIBRARY_PREFIX.Locus.log -a ASSEMBLER_CHOICE
+```
 
-Fill in the capitalized portions with your options, and fill in the paths.
+Fill in the capitalized portions with your options, and fill in the paths. 
+
+There are many more options than this, so for reference list them like so:
+
+```python path_to_atram/atram.py -h```
 
 ## Example of running a shell loop
 
