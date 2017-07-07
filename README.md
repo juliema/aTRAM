@@ -8,6 +8,9 @@ aTRAM 2.0 is a major overhaul of the aTRAM approach to assembling loci from NGS 
 
 aTRAM ("automated target restricted assembly method") is an iterative assembler that performs reference-guided local de novo assemblies using a variety of available methods. It is well-suited to various tasks where NGS data needs to be queried for gene sequences, such as phylogenomics. The design philosophy is modular and expandable, with support for four de-novo assemblers to date: Velvet, Abyss, Trinity, and Spades.
 
+Cite like so:
+```Allen, JM, DI Huang, QC Cronk, KP Johnson. 2015. aTRAM automated target restricted assembly method a fast method for assembling loci across divergent taxa from next-generation sequencing data. BMC Bioinformatics 16:98 DOI 10.1186/s12859-015-0515-2```
+
 ## Installation
      1. Python 3.0 or greater and a number of dependencies
      2. Dependencies given in requirements.txt
@@ -64,4 +67,17 @@ python path_to_aTRAM/atram_preprocessor.py -c 4 -b path_to_atram_library/lib_${a
 done
 ```
 
+The part `${a}_P*.fq` will have to be modified to match the name pattern of your input fastq files. Then, supposing we have 300 genes labeled consecutively and wish to use Abyss:
 
+```
+# Assemble genes
+array=(sample1 sample2 sample3)
+
+for a in "${array[@]}"; # Iterate through samples
+do
+for (( i=1 ; i<=300; i++ )); # Iterate through locus numbers
+do 
+python ./aTRAM/atram.py -b path_to_atram_library/lib_${a} -q path_to_reference_loci/Locus_${i}.fasta -i 5 --cpus 4  --kmer 64 -o path_to_output/lib_${a}.Locus_${i}.atram2.fasta --log-file path_to_output/lib_${a}.Locus_${i}.log -a abyss
+done
+done
+```
