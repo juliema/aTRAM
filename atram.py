@@ -293,11 +293,12 @@ def create_queries_from_contigs(
 def output_assembly_results(args, db_conn):
     """Write the assembled contigs to a fasta file."""
 
-    file_name = file_util.output_file(args, 'filtered_contigs.fasta')
-    with open(file_name, 'w') as out_file:
-        for row in db.get_all_assembled_contigs(
-                db_conn, args.bit_score, args.contig_length):
-            output_one_assembly(out_file, row)
+    if args.no_filter:
+        file_name = file_util.output_file(args, 'filtered_contigs.fasta')
+        with open(file_name, 'w') as out_file:
+            for row in db.get_all_assembled_contigs(
+                    db_conn, args.bit_score, args.contig_length):
+                output_one_assembly(out_file, row)
 
     file_name = file_util.output_file(args, 'all_contigs.fasta')
     with open(file_name, 'w') as out_file:
