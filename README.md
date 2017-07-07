@@ -1,58 +1,57 @@
-##	aTRAM: automated Target Restricted Assembly Method
-doi:10.5281/zenodo.10431
+## Manual for using aTRAM 2.0: automated Target Restricted Assembly Method
 
-aTRAM performs targeted de novo assembly of loci from paired-end Illumina runs. 
+## Background
+    1. What does it do?
+    2. How it works
 
-When using this software please cite:
+## Installation
+     1. Python 3.0 or greater and a number of dependencies
+     2. Dependencies given in requirements.txt
 
-```Allen, JM, DI Huang, QC Cronk, KP Johnson. 2015. aTRAM automated target restricted assembly method a fast method for assembling loci across divergent taxa from next-generation sequencing data. BMC Bioinformatics 16:98 DOI 10.1186/s12859-015-0515-2```
-
-###Installation###
-aTRAM can be run directly from the downloaded Github repo. To make sure you have all the software required by aTRAM, we provide ```configure.pl``` to check for dependencies.
-
-On OSX, aTRAM is also available through [Homebrew](https://github.com/Homebrew/homebrew-science). Run ```brew tap homebrew/science``` and then ```brew install atram``` to install version 1.04.
-
-if you get an error with gcc try ```brew install homebrew/versions/gcc48``` then ```brew install atram```
-
-
-###Preparing an aTRAM database###
-Given an Illumina paired-end short-read archive in fastq or fasta form, create a master aTRAM database from the short reads:
-
-```format_sra.pl -input my_pe_library.fa|fq -out my_atram_db```
-
-###Finding a homolog with aTRAM###
-Given an aTRAM database and a target sequence in fasta form, run the main aTRAM script:
-
-```aTRAM.pl -reads my_atram_db -target target.fasta [-ins_length int] [-exp_coverage int] [-iterations int] [-output filename]```
-
-aTRAM has many command-line options as well:
+You will need to have Python3 installed, as well as pip, a package manager for python. Beyond these, it is easiest to handle aTRAM 2 dependencies by setting up a virtual environment, which is a contained workspace with internally installed python libraries. Run the following code in what you intend to be your working directory:
 
 ```
-  pipeline parameters:
-  -sra|database|db: aTRAM database name (already run through format_sra.pl).
-  -target:          fasta file with sequences of interest.
-  -output:	        optional: the prefix for the pipeline's output files (default name is the same as -sra).
-  -log_file:        optional: a file to store output of the pipeline.
-  -tempfiles:       optional: use this name to save the intermediate files from the run.
-  -iterations:      optional: the number of pipeline iterations (default 5).
-  -start_iteration: optional: if resuming from previous run, which iteration number to start from (default 0).
-
-  optional parameters:
-  -protein:         if the target sequence is a protein fasta file (not mandatory, aTRAM will guess).
-  -complete:        if specified, automatically quits when a complete homolog is recovered.
-  -fraction:        if specified, use only specified fraction of the aTRAM database.
-  -processes:       if specified, aTRAM will use no more than this number of processes for multiprocessing.
-
-  optional assembly parameters:
-  -assembler:       software to be used for targeted assembly (default is Velvet).
-  -ins_length:	    the size of the fragments used in the short-read library (default 300).
-  -exp_coverage:    the expected coverage of the region for velvetg (default 30).
-  -kmer:            kmer size for assemblers that use it (default 31).
-
-  optional values for searching short reads:
-  -evalue:          default value is 10e-10.
-
-  optional values for blast-filtering contigs:
-  -bitscore:        default value is 70.
-  -length:          default value is 100.
+virtualenv venv -p python3
+source venv/bin/activate
+pip install -r requirements.txt 
 ```
+
+You should see something like `(venv)` at the beginning of your command prompt after running the second line, indicating the environment is active. Once you have verified that the requirements installed with no errors, only the second line needs to be run before each aTRAM 2 session.
+
+If you choose not to use virtual environments, you will likely have to specify python3.
+
+URLs for software:
+
+* BLAST: http://blast.ncbi.nlm.nih.gov/Blast.cgi?PAGE_TYPE=BlastDocs&DOC_TYPE=Download
+* Velvet: https://www.ebi.ac.uk/~zerbino/velvet/
+* Trinity: http://trinityrnaseq.sourceforge.net
+* MAFFT: http://mafft.cbrc.jp/alignment/software/
+* MUSCLE: http://www.drive5.com/muscle/
+* Spades: http://bioinf.spbau.ru/spades
+
+### Library Preparation
+Use atram_preprocessor.py for this. You can either list the forward and reverse read files, or glob them with wildcards as below. Note that aTRAM 2 is not backwards compatible with aTRAM 1 libraries; it is also best to rebuild any libraries after major updates. 
+
+``` python path_to_aTRAM/atram_preprocessor.py -c NUMBER_OF_THREADS -b path_to_atram_library/LIBRARY_PREFIX READ_NAME*.fastq ```
+  
+### Assembling Loci
+
+``` python path_to_aTRAM/atram.py -b path_to_atram_library/LIBRARY_PREFIX -q path_to_reference_loci/Locus.fasta -i NUMBER_OF_ITERATIONS --cpus NUMBER_OF_THREADS  --kmer KMER_NUMBER -o path_to_output/LIBRARY_PREFIX.Locus.atram2.fasta --log-file path_to_output/LIBRARY_PREFIX.Locus.log -a ASSEMBLER_CHOICE```
+
+Fill in the capitalized portions with your options, and fill in the paths.
+
+## Example of running a shell loop
+
+In many cases it is convenient to run aTRAM 2 as a loop, assembling a set of genes for a set of taxa. These can be set up in two parts like so:
+
+```
+# Make aTRAM libraries
+array=(sample1 sample2 sample3)
+
+for a in "${array[@]}"; # Iterate through samples
+do 
+python path_to_aTRAM/atram_preprocessor.py -c 4 -b path_to_atram_library/lib_${a} path_to_input/${a}_P*.fq
+done
+```
+
+
