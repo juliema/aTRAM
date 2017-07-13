@@ -219,9 +219,9 @@ def parse_command_line(temp_dir):
         description=textwrap.dedent(description))
 
     parser.add_argument(dest='sra_files', metavar='FASTA_FILE', nargs='+',
-                        help='Sequence read archive files in fasta or '
-                             'fastq format. You may enter more than '
-                             'one file and you may use wildcards.')
+                        help='''Sequence read archive files in fasta or
+                             fastq format. You may enter more than
+                             one file and you may use wildcards.''')
 
     parser.add_argument('--version', action='version',
                         version='%(prog)s {}'.format(db.VERSION))
@@ -231,33 +231,33 @@ def parse_command_line(temp_dir):
     blast_db = os.path.join('.', 'atram_' + date.today().isoformat())
     group.add_argument('-b', '--blast-db', '--output', '--db',
                        default=blast_db, metavar='DB',
-                       help=('This is the prefix of all of the blast '
-                             'database files. So you can identify '
-                             'different blast database sets. You may include '
-                             'a directory as part of the prefix. The default '
-                             'is "{}".').format(blast_db))
+                       help='''This is the prefix of all of the blast
+                            database files. So you can identify
+                            different blast database sets. You may include
+                            a directory as part of the prefix. The default
+                            is "{}".'''.format(blast_db))
 
     cpus = os.cpu_count() - 4 if os.cpu_count() > 4 else 1
     group.add_argument('-c', '--cpus', '--processes', '--max-processes',
                        type=int, default=cpus,
-                       help=('Number of cpus to use. Defaults to: Total CPUS '
-                             ' - 4 = "{}"').format(cpus))
+                       help='''Number of cpus to use. Defaults to: Total CPUS
+                            - 4 = "{}"'''.format(cpus))
 
     group.add_argument('-t', '--temp-dir', metavar='DIR',
-                       help='You may save intermediate files for debugging '
-                            'in this directory. The directory must be empty.')
+                       help='''You may save intermediate files for debugging
+                            in this directory. The directory must be empty.''')
 
     group.add_argument('-l', '--log-file',
-                       help='Log file (full path). The default is to use the '
-                            'DB and program name to come up with a name like '
-                            '"<DB>_atram_preprocessor.log"')
+                       help='''Log file (full path). The default is to use the
+                            DB and program name to come up with a name like
+                            "<DB>_atram_preprocessor.log"''')
 
     group.add_argument('-s', '--shards', '--number',
                        type=int, metavar='SHARDS',
                        dest='shard_count',
-                       help='Number of blast DB shards to create. '
-                            'The default is to have each shard contain '
-                            'roughly 250MB of sequence data.')
+                       help='''Number of blast DB shards to create.
+                            The default is to have each shard contain
+                            roughly 250MB of sequence data.''')
 
     args = parser.parse_args()
 

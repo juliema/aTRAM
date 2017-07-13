@@ -363,19 +363,19 @@ def required_args(parser):
 
     group.add_argument('-b', '--blast-db', '--sra', '--db', '--database',
                        required=True, metavar='DB',
-                       help='This needs to match the DB prefix you '
-                            'entered for atram_preprocessor.py.')
+                       help='''This needs to match the DB prefix you
+                            entered for atram_preprocessor.py.''')
 
     group.add_argument('-o', '--output', required=True,
-                       help='This is the prefix of all of the output files. '
-                            'So you can identify different blast output file '
-                            'sets. You may include a directory as part of the '
-                            'prefix.')
+                       help='''This is the prefix of all of the output files.
+                            So you can identify different blast output file
+                            sets. You may include a directory as part of the
+                            prefix.''')
 
     group.add_argument('-q', '--query', '--target',
-                       help='The path to the fasta file with sequences of '
-                            'interest. Required unless you specify a '
-                            '"--start-iteration".')
+                       help='''The path to the fasta file with sequences of
+                            interest. Required unless you specify a
+                            "--start-iteration".''')
 
 
 def check_required_args(args):
@@ -400,53 +400,53 @@ def optional_args(parser):
 
     group.add_argument('-a', '--assembler',
                        choices=['abyss', 'trinity', 'velvet', 'spades'],
-                       help='Which assembler to use. If you do not use this '
-                            'argument then aTRAM will do a single blast run '
-                            'and stop before assembly.')
+                       help='''Which assembler to use. If you do not use this
+                            argument then aTRAM will do a single blast run
+                            and stop before assembly.''')
 
     group.add_argument('-i', '--iterations', type=int, default=5, metavar='N',
-                       help='The number of pipeline iterations. '
-                            'The default is "5".')
+                       help='''The number of pipeline iterations.
+                            The default is "5".''')
 
     group.add_argument('-p', '--protein', action='store_true',
-                       help='Are the query sequences protein? '
-                            'aTRAM will guess if you skip this argument.')
+                       help='''Are the query sequences protein?
+                            aTRAM will guess if you skip this argument.''')
 
     group.add_argument('--fraction', type=float, default=1.0,
-                       help='Use only the specified fraction of the aTRAM '
-                            'database. The default is "1.0"')
+                       help='''Use only the specified fraction of the aTRAM
+                            database. The default is "1.0"''')
 
     cpus = min(10, os.cpu_count() - 4 if os.cpu_count() > 4 else 1)
     group.add_argument('--cpus', '--processes', '--max-processes',
                        type=int, default=cpus,
-                       help=('Number of cpus to use. This will also be used '
-                             'for the assemblers when possible. Defaults to: '
-                             'Total CPUs - 4 = "{}"').format(cpus))
+                       help='''Number of cpus to use. This will also be used
+                            for the assemblers when possible. Defaults to:
+                            Total CPUs - 4 = "{}"'''.format(cpus))
 
     group.add_argument('--log-file',
-                       help='Log file (full path). The default is to use the '
-                            'DIR and DB arguments to come up with a name like '
-                            'so: "DIR/DB_atram.log"')
+                       help='''Log file (full path). The default is to use the
+                            DIR and DB arguments to come up with a name like
+                            so: "DIR/DB_atram.log"''')
 
     group.add_argument('--path',
-                       help='If the assembler or blast you want to use is not '
-                            'in your $PATH then use this to prepend '
-                            'directories to your path.')
+                       help='''If the assembler or blast you want to use is not
+                            in your $PATH then use this to prepend
+                            directories to your path.''')
 
     group.add_argument('--start-iteration', '--restart',
                        type=int, default=1, metavar='N',
-                       help='If resuming from a previous run, which iteration '
-                            'number to start from. The default is "1".')
+                       help='''If resuming from a previous run, which iteration
+                            number to start from. The default is "1".''')
 
     group.add_argument('-t', '--temp-dir', metavar='DIR',
-                       help='You may save intermediate files for debugging '
-                            'in this directory. The directory must be empty.')
+                       help='''You may save intermediate files for debugging
+                            in this directory. The directory must be empty.''')
 
     group.add_argument('-T', '--timeout', metavar='SECONDS', default=300,
                        type=int,
-                       help='How many seconds to wait for an assembler before '
-                            'stopping the run. To wait forever set this to 0. '
-                            'The default is "300" (5 minutes).')
+                       help='''How many seconds to wait for an assembler before
+                            stopping the run. To wait forever set this to 0.
+                            The default is "300" (5 minutes).''')
 
 
 def check_optional_args(args):
@@ -477,19 +477,19 @@ def filter_args(parser):
 
     group.add_argument('--bit-score', type=float, default=70.0,
                        metavar='SCORE',
-                       help='Remove contigs that have a value less than this. '
-                            'The default is "70.0". This is turned off by the '
-                            '--no-filter argument.')
+                       help='''Remove contigs that have a value less than this.
+                            The default is "70.0". This is turned off by the
+                            --no-filter argument.''')
 
     group.add_argument('--contig-length', '--length', type=int, default=100,
-                       help='Remove blast hits that are shorter than this '
-                            'length. The default is "100". This is turned '
-                            'off by the --no-filter argument.')
+                       help='''Remove blast hits that are shorter than this
+                            length. The default is "100". This is turned
+                            off by the --no-filter argument.''')
 
     group.add_argument('--no-filter', action='store_true',
-                       help='Do not filter the assembled contigs. This will: '
-                            'set both the --bit-score and --contig-length '
-                            'to 0')
+                       help='''Do not filter the assembled contigs. This will:
+                            set both the --bit-score and --contig-length
+                            to 0''')
 
 
 def check_filter_args(args):
