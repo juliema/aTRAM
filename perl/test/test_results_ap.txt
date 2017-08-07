@@ -1,3 +1,0 @@
-target	sample	contig	bitscore	percentcoverage
-region	test	3.4_len_2346_cov_5.7	3301	0.70
-complete	test	2.1_len_764_cov_5.4	646	0.85
