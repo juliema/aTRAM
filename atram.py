@@ -1,8 +1,8 @@
 """The aTRAM assembly program."""
 
 import os
+from os.path import basename, exists, getsize
 import re
-import sys
 import argparse
 import textwrap
 import tempfile
@@ -19,25 +19,21 @@ import lib.assembler as assembly
 
 
 def main(args):
-    """Setup and run atram."""
+    """Setup and run atram for each blast-db/query pair."""
 
-    log.setup(args)
+    for blast_db in args.blast_db:
+        db_conn = db.connect(args.blast_db)
+        db.check_db_versions(db_conn)  # Make sure the database versions match
+
+        for query_file in args.query:
+            log_file_name = log.file_name(args, blast_db, query_file)
+            log.setup(log_file_name)
 
     all_shards = fraction_of_shards(args)
 
-    db_conn = db.connect(args.blast_db)
-
-    # Make sure the database version matches what we built it with
-    version = db.get_version(db_conn)
-    if version != db.VERSION:
-        log.fatal('The database was built with version {} but you are running '
-                  'version {}. You need to rebuild the atram database by '
-                  'running atram_preprocessor.py again.'.format(
-                      version, db.VERSION))
-
     assembler = assembly.factory(args) if args.assembler else None
-    query = initialize_query(args, db_conn, assembler)
 
+    query = initialize_query(args, db_conn, assembler)
     atram_loop(args, db_conn, assembler, query, all_shards)
 
     if assembler:
@@ -57,7 +53,7 @@ def atram_loop(args, db_conn, assembler, query, all_shards):
         blast_query_against_all_sras(args, query, all_shards, iteration)
 
         # If we don't have an assembler then we just want the blast hits
-        if not args.assembler:
+        if not assembler:
             break
 
         # Exit if there are no blast hits
@@ -82,8 +78,8 @@ def atram_loop(args, db_conn, assembler, query, all_shards):
             log.fatal(msg)
 
         # Exit if nothing was assembled
-        if not os.path.exists(assembler.file['output']) \
-                or not os.path.getsize(assembler.file['output']):
+        if not exists(assembler.file['output']) \
+                or not getsize(assembler.file['output']):
             log.info('No new assemblies in iteration %i' % iteration)
             break
 
@@ -116,7 +112,7 @@ def initialize_query(args, db_conn, assembler):
     getting the data from the given iteration and setting up an input file.
     """
 
-    if args.start_iteration < 2:
+    if args.start_iteration == 1:
         db.create_sra_blast_hits_table(db_conn)
         db.create_contig_blast_hits_table(db_conn)
         db.create_assembled_contigs_table(db_conn)
@@ -128,9 +124,9 @@ def initialize_query(args, db_conn, assembler):
                                             args.bit_score,
                                             args.contig_length)
 
-    if os.path.getsize(query) < 10:
+    if getsize(query) < 10:
         err = 'There are no sequences '
-        if args.start_iteration < 2:
+        if args.start_iteration == 1:
             err += 'in {}'.format(args.query)
         else:
             err += 'for starting iteration {}'.format(args.start_iteration)
@@ -163,7 +159,7 @@ def blast_query_against_all_sras(args, query, all_shards, iteration):
             blast_query_against_sra,
             (dict(vars(args)), shard_path, query, iteration))
                    for shard_path in all_shards]
-        _ = [result.get() for result in results]
+        _ = [result.get() for result in results]  # noqa
 
 
 def blast_query_against_sra(args, shard_path, query, iteration):
@@ -180,7 +176,7 @@ def blast_query_against_sra(args, shard_path, query, iteration):
 
     db_conn = db.connect(args['blast_db'])
 
-    shard = os.path.basename(shard_path)
+    shard = basename(shard_path)
 
     batch = []
 
@@ -325,12 +321,21 @@ def parse_command_line(temp_dir):
     """Process command-line arguments."""
 
     description = """
-        This is the aTRAM script. It takes a query sequence and
-        a set of blast databases built with the atram_preprocessor.py script
-        and builds an assembly.
+        This is the aTRAM script. It takes a query sequence and a blast
+        database built with the atram_preprocessor.py script and builds an
+        assembly.
+
+        If you specify more than one query sequence and/or more than one blast
+        database then aTRAM will build one assembly for each query/blast
+        DB pair.
+
+        NOTE: You may use a text file to hold the command-line arguments
+        like: @/path/to/args.txt. This is particularly useful when specifying
+        multiple blast databases or multiple query sequences.
         """
 
     parser = argparse.ArgumentParser(
+        fromfile_prefix_chars='@',
         formatter_class=argparse.RawDescriptionHelpFormatter,
         description=textwrap.dedent(description))
 
@@ -362,9 +367,20 @@ def required_args(parser):
     group = parser.add_argument_group('required arguments')
 
     group.add_argument('-b', '--blast-db', '--sra', '--db', '--database',
-                       required=True, metavar='DB',
+                       required=True, metavar='DB', action='append',
                        help='''This needs to match the DB prefix you
-                            entered for atram_preprocessor.py.''')
+                            entered for atram_preprocessor.py. You may repeat
+                            this argument to run the --query sequence(s)
+                            against multiple blast databases.''')
+
+    group.add_argument('-q', '--query', '--target', required=True,
+                       action='append',
+                       help='''The path to the fasta file with sequences of
+                            interest. Required unless you specify a
+                            "--start-iteration". You may have multiple query
+                            sequences in one file or you may repeat this
+                            argument. In either case, each --query sequence
+                            will be run against every --blast-db.''')
 
     group.add_argument('-o', '--output', required=True,
                        help='''This is the prefix of all of the output files.
@@ -372,25 +388,21 @@ def required_args(parser):
                             sets. You may include a directory as part of the
                             prefix.''')
 
-    group.add_argument('-q', '--query', '--target',
-                       help='''The path to the fasta file with sequences of
-                            interest. Required unless you specify a
-                            "--start-iteration".''')
-
 
 def check_required_args(args):
     """Make sure required arguments are reasonable."""
 
-    # Touch up blast DB name
+    # Touch up blast DB names
     pattern = (r'^ (.*?)'
                r'(  \.atram(_preprocessor)?\.log'
                r' | \.blast_\d{3}\.(nhr|nin|nsq)'
                r' | \.sqlite\.db  )?$')
-    args.blast_db = re.sub(pattern, r'\1', args.blast_db, re.I | re.X)
+    for i, blast_db in enumerate(args.blast_db):
+        args.blast_db[i] = re.sub(pattern, r'\1', blast_db, re.I | re.X)
 
     # Check query
     if not args.query and not args.start_iteration:
-        log.fatal('We need a "--query" sequence.')
+        log.fatal('We need at least one "--query" sequence.')
 
 
 def optional_args(parser):
@@ -451,11 +463,6 @@ def optional_args(parser):
 
 def check_optional_args(args):
     """Make sure optional atram arguments are reasonable."""
-
-    # Set default log file name
-    if not args.log_file:
-        args.log_file = '{}.{}.log'.format(
-            args.blast_db, os.path.basename(sys.argv[0][:-3]))
 
     # If not --protein then probe to see if it's a protein seq
     if not args.protein:

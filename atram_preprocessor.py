@@ -147,7 +147,7 @@ def create_blast_dbs(args, shard_list):
             results.append(pool.apply_async(
                 create_blast_db, (args.blast_db, args.temp_dir, params, idx)))
 
-        _ = [result.get() for result in results]
+        _ = [result.get() for result in results]  # noqa
 
     log.info('Finished making blast DBs')
 
