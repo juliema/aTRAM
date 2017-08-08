@@ -81,5 +81,5 @@ def test_assign_seqs_to_shards(monkeypatch):
     shard_count = 3
     shard_list = atram_preprocessor.assign_seqs_to_shards(True, shard_count)
 
-    # A list of pairs of LIMIT and OFFSET for queries that build shards
+    # A list of pairs of LIMIT and OFFSET pairs for queries that build shards
     assert shard_list == [(34, 0), (32, 34), (34, 66)]

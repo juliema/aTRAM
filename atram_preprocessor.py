@@ -32,7 +32,7 @@ def main(args):
     db.create_sequences_index(db_conn)
 
     shard_list = assign_seqs_to_shards(db_conn, args.shard_count)
-    create_blast_dbs(args, shard_list)
+    create_blast_dbs(shard_list, args.cpus, args.blast_db, args.temp_dir)
 
     db_conn.close()
 
@@ -135,18 +135,18 @@ def assign_seqs_to_shards(db_conn, shard_count):
     return list(zip(limits, offsets[:-1]))
 
 
-def create_blast_dbs(args, shard_list):
+def create_blast_dbs(shard_list, cpus, blast_db, temp_dir):
     """Assign processes to make the blast DBs. One process for each blast
     DB shard.
     """
 
     log.info('Making blast DBs')
 
-    with multiprocessing.Pool(processes=args.cpus) as pool:
+    with multiprocessing.Pool(processes=cpus) as pool:
         results = []
         for idx, params in enumerate(shard_list, 1):
             results.append(pool.apply_async(
-                create_blast_db, (args.blast_db, args.temp_dir, params, idx)))
+                create_blast_db, (blast_db, temp_dir, params, idx)))
 
         _ = [result.get() for result in results]  # noqa
 
@@ -190,7 +190,7 @@ def fill_blast_fasta(blast_db, fasta_file, shard_params):
     db_conn.close()
 
 
-def parse_command_line(temp_dir):
+def parse_command_line(temp_dir_default):
     """Process command-line arguments."""
 
     description = """
@@ -262,29 +262,17 @@ def parse_command_line(temp_dir):
 
     args = parser.parse_args()
 
-    # Set default --shard-count
-    if not args.shard_count:
-        total_fasta_size = 0
-        for file_name in args.sra_files:
-            file_size = os.path.getsize(file_name)
-            if file_name.lower().endswith('q'):
-                file_size /= 2  # Guessing that fastq files ~2x fasta files
-            total_fasta_size += file_size
-        args.shard_count = int(total_fasta_size / 2.5e8)
-        args.shard_count = args.shard_count if args.shard_count else 1
+    args.temp_dir = file_util.temp_root_dir(args.temp_dir, temp_dir_default)
+    args.shard_count = blast.default_shard_count(
+        args.shard_count, args.sra_files)
 
-    # Make blast DB output directory
-    output_dir = os.path.dirname(args.blast_db)
-    if output_dir and output_dir not in ['.', '..']:
-        os.makedirs(output_dir, exist_ok=True)
-
-    file_util.temp_root_dir(args, temp_dir)
+    blast.make_blast_output_dir(args.blast_db)
 
     return args
 
 
 if __name__ == '__main__':
 
-    with tempfile.TemporaryDirectory(prefix='atram_') as TEMP_DIR:
-        ARGS = parse_command_line(TEMP_DIR)
+    with tempfile.TemporaryDirectory(prefix='atram_') as TEMP_DIR_DEFAULT:
+        ARGS = parse_command_line(TEMP_DIR_DEFAULT)
         main(ARGS)

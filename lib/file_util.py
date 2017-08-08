@@ -5,16 +5,18 @@ from shutil import which
 import lib.log as log
 
 
-def temp_root_dir(args, temp_dir):
+def temp_root_dir(temp_dir_arg, temp_dir_default):
     """Make a temporary root directory. Verify that it is clean."""
 
-    if args.temp_dir:
-        args.temp_dir = os.path.abspath(args.temp_dir)
-        os.makedirs(args.temp_dir, exist_ok=True)
-        if os.listdir(args.temp_dir):
-            log.fatal('"{}" directory is not empty.'.format(args.temp_dir))
-    else:
-        args.temp_dir = temp_dir
+    temp_dir = temp_dir_default
+
+    if temp_dir_arg:
+        temp_dir = os.path.abspath(temp_dir_arg)
+        os.makedirs(temp_dir, exist_ok=True)
+        if os.listdir(temp_dir):
+            log.fatal('"{}" directory is not empty.'.format(temp_dir_arg))
+
+    return temp_dir
 
 
 def temp_iter_dir(temp_dir, iteration):
@@ -37,10 +39,10 @@ def temp_iter_file(temp_dir, iteration, file_name):
     return os.path.join(iter_dir, file_name)
 
 
-def output_file(args, file_suffix):
+def output_file(output_prefix, file_suffix):
     """Build the output file name."""
 
-    return '{}.{}'.format(args.output, file_suffix)
+    return '{}.{}'.format(output_prefix, file_suffix)
 
 
 def find_programs(args):

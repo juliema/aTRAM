@@ -205,7 +205,7 @@ def output_blast_only_results(args, db_conn):
 
     log.info('Output blast only results')
 
-    file_name = file_util.output_file(args, 'blast_only.fasta')
+    file_name = file_util.output_file(args.output, 'blast_only.fasta')
     with open(file_name, 'w') as out_file:
         for row in db.get_sra_blast_hits(db_conn, 1):
             out_file.write('>{}{}\n'.format(row['seq_name'], row['seq_end']))
@@ -294,13 +294,14 @@ def output_assembly_results(args, db_conn):
     """Write the assembled contigs to a fasta file."""
 
     if not args.no_filter:
-        file_name = file_util.output_file(args, 'filtered_contigs.fasta')
+        file_name = file_util.output_file(
+            args.output, 'filtered_contigs.fasta')
         with open(file_name, 'w') as out_file:
             for row in db.get_all_assembled_contigs(
                     db_conn, args.bit_score, args.contig_length):
                 output_one_assembly(out_file, row)
 
-    file_name = file_util.output_file(args, 'all_contigs.fasta')
+    file_name = file_util.output_file(args.output, 'all_contigs.fasta')
     with open(file_name, 'w') as out_file:
         for row in db.get_all_assembled_contigs(db_conn):
             output_one_assembly(out_file, row)
@@ -324,7 +325,7 @@ def output_one_assembly(out_file, row):
     out_file.write('{}\n'.format(seq))
 
 
-def parse_command_line(temp_dir):
+def parse_command_line(temp_dir_default):
     """Process command-line arguments."""
 
     description = """
@@ -360,7 +361,9 @@ def parse_command_line(temp_dir):
     check_required_args(args)
     check_optional_args(args)
     check_filter_args(args)
-    blast.check_command_line_args(args, temp_dir)
+    args.temp_dir = file_util.temp_root_dir(args.temp_dir, temp_dir_default)
+    args.max_target_seqs = blast.default_max_target_seqs(
+        args.max_target_seqs, args.blast_db, args.max_memory)
     assembly.check_command_line_args(args)
 
     file_util.find_programs(args)
@@ -509,6 +512,6 @@ def check_filter_args(args):
 
 if __name__ == '__main__':
 
-    with tempfile.TemporaryDirectory(prefix='atram_') as TEMP_DIR:
-        ARGS = parse_command_line(TEMP_DIR)
+    with tempfile.TemporaryDirectory(prefix='atram_') as TEMP_DIR_DEFAULT:
+        ARGS = parse_command_line(TEMP_DIR_DEFAULT)
         main(ARGS)
