@@ -19,35 +19,36 @@ import lib.file_util as file_util
 def main(args):
     """Run the preprocessor."""
 
-    log.setup(args)
+    log_file = log.file_name(args.log_file, args.blast_db)
+    log.setup(log_file)
 
     db_conn = db.connect(args.blast_db)
     db.create_metadata_table(db_conn)
 
     db.create_sequences_table(db_conn)
-    load_seqs(args, db_conn)
+    load_seqs(db_conn, args.sra_files)
 
     log.info('Creating an index for the sequence table')
     db.create_sequences_index(db_conn)
 
-    shard_list = assign_seqs_to_shards(args, db_conn)
+    shard_list = assign_seqs_to_shards(db_conn, args.shard_count)
     create_blast_dbs(args, shard_list)
 
     db_conn.close()
 
 
-def load_seqs(args, db_conn):
+def load_seqs(db_conn, sra_files):
     """A hand rolled version of "Bio.SeqIO". It's faster because we can
     take shortcuts due to its limited use.
 
     We're using a very simple state machine on lines to do the parsing.
         1) header      (exactly 1 line)  Starts with a '>' or an '@'
         2) sequence    (1 or more lines) Starts with a letter
-        3) fastq stuff (0 or more lines) Starts with a '+', Look for header
+        3) fastq stuff (0 or more lines) Starts with a '+' on the 1st line
         4) Either go back to 1 or end
     """
 
-    for file_name in args.sra_files:
+    for file_name in sra_files:
 
         log.info('Loading "%s" into sqlite database' % file_name)
 
@@ -96,7 +97,7 @@ def load_seqs(args, db_conn):
             db.insert_sequences_batch(db_conn, batch)
 
 
-def assign_seqs_to_shards(args, db_conn):
+def assign_seqs_to_shards(db_conn, shard_count):
     """Put the sequences into the DB shards. What we doing is dividing all
     of the input sequences into shard_count bucket of sequences. If there
     are two ends of a sequence we have to make sure that both ends (1 & 2)
@@ -113,7 +114,7 @@ def assign_seqs_to_shards(args, db_conn):
     total = db.get_sequence_count(db_conn)
 
     # This creates a list of roughly equal partition indexes
-    offsets = np.linspace(0, total, dtype=int, num=args.shard_count + 1)
+    offsets = np.linspace(0, total, dtype=int, num=shard_count + 1)
 
     # Checking to make sure we don't split up the ends of a sequence
     for i in range(1, len(offsets) - 1):
@@ -276,11 +277,6 @@ def parse_command_line(temp_dir):
     output_dir = os.path.dirname(args.blast_db)
     if output_dir and output_dir not in ['.', '..']:
         os.makedirs(output_dir, exist_ok=True)
-
-    # Set default log file name
-    if not args.log_file:
-        args.log_file = '{}.{}.log'.format(
-            args.blast_db, os.path.basename(sys.argv[0][:-3]))
 
     file_util.temp_root_dir(args, temp_dir)
 

@@ -19,17 +19,24 @@ import lib.assembler as assembly
 
 
 def main(args):
-    """Setup and run atram for each blast-db/query pair."""
+    """Setup and run atram for each blast-db/query pair. This loops thru all of
+    the blast databses and every sequence in the query fata files and then
+    runs the atram main loop for each."""
 
     for blast_db in args.blast_db:
         db_conn = db.connect(args.blast_db)
         db.check_db_versions(db_conn)  # Make sure the database versions match
 
-        for query_file in args.query:
-            log_file_name = log.file_name(args, blast_db, query_file)
-            log.setup(log_file_name)
+        # We may not want the entire DB for highly redundant libraries
+        all_shards = fraction_of_shards(blast_db, args.fraction)
 
-    all_shards = fraction_of_shards(args)
+        for query_file in args.query:
+            log_file = log.file_name(args.log_file, blast_db, query_file)
+            log.setup(log_file)
+
+            with open(query_file) as in_file:
+                for query in SeqIO.parse(in_file, 'fasta'):
+                    query_seq = str(query.seq)
 
     assembler = assembly.factory(args) if args.assembler else None
 
@@ -135,13 +142,13 @@ def initialize_query(args, db_conn, assembler):
     return query
 
 
-def fraction_of_shards(args):
+def fraction_of_shards(blast_db, fraction):
     """Get the fraction of shards to use. This is so that we can blast against
     a portion of the blast DBs we build.
     """
 
-    all_shards = blast.all_shard_paths(args.blast_db)
-    last_index = int(len(all_shards) * args.fraction)
+    all_shards = blast.all_shard_paths(blast_db)
+    last_index = int(len(all_shards) * fraction)
 
     return all_shards[:last_index]
 
@@ -463,13 +470,6 @@ def optional_args(parser):
 
 def check_optional_args(args):
     """Make sure optional atram arguments are reasonable."""
-
-    # If not --protein then probe to see if it's a protein seq
-    if not args.protein:
-        with open(args.query) as in_file:
-            for query in SeqIO.parse(in_file, 'fasta'):
-                if bio.is_protein(str(query.seq)):
-                    args.protein = True
 
     # Prepend to PATH environment variable if requested
     if args.path:

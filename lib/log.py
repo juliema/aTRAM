@@ -1,31 +1,36 @@
 """Common logging functions."""
 
-from os.path import basename
+from os.path import basename, splitext
 import sys
 import logging
 import tempfile
 import subprocess
 
 
-def setup(name):
+def setup(log_file):
     """Standard logger setup."""
 
     logging.basicConfig(
-        filename=name,
+        filename=log_file,
         level=logging.DEBUG,
         format='%(asctime)s %(levelname)s: %(message)s',
         datefmt='%Y-%m-%d %H:%M:%S')
     logging.info(' '.join(sys.argv))
 
 
-def file_name(args, blast_db, query_file):
-    """Setup default log file name for each run."""
+def file_name(log_file, blast_db, query_file=''):
+    """Setup default log file name for each run. Honor user's argument if
+    given."""
 
-    if args.log_file:
-        return args.log_file
+    if log_file:
+        return log_file
 
-    program = basename(sys.argv[0][:-3])
-    return '{}.{}.{}.log'.format(blast_db, query_file, program)
+    program, _ = splitext(basename(sys.argv[0]))
+
+    if query_file:
+        return '{}.{}.{}.log'.format(blast_db, query_file, program)
+
+    return '{}.{}.log'.format(blast_db, program)
 
 
 def subcommand(cmd, temp_dir, timeout=None):
