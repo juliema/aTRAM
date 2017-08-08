@@ -19,20 +19,21 @@ import lib.file_util as file_util
 def main(args):
     """Run the preprocessor."""
 
-    log_file = log.file_name(args.log_file, args.blast_db)
+    log_file = log.file_name(args['log_file'], args['blast_db'])
     log.setup(log_file)
 
-    db_conn = db.connect(args.blast_db)
+    db_conn = db.connect(args['blast_db'])
     db.create_metadata_table(db_conn)
 
     db.create_sequences_table(db_conn)
-    load_seqs(db_conn, args.sra_files)
+    load_seqs(db_conn, args['sra_files'])
 
     log.info('Creating an index for the sequence table')
     db.create_sequences_index(db_conn)
 
-    shard_list = assign_seqs_to_shards(db_conn, args.shard_count)
-    create_blast_dbs(shard_list, args.cpus, args.blast_db, args.temp_dir)
+    shard_list = assign_seqs_to_shards(db_conn, args['shard_count'])
+    create_blast_dbs(
+        shard_list, args['cpus'], args['blast_db'], args['temp_dir'])
 
     db_conn.close()
 
@@ -260,13 +261,14 @@ def parse_command_line(temp_dir_default):
                             The default is to have each shard contain
                             roughly 250MB of sequence data.''')
 
-    args = parser.parse_args()
+    args = vars(parser.parse_args())
 
-    args.temp_dir = file_util.temp_root_dir(args.temp_dir, temp_dir_default)
-    args.shard_count = blast.default_shard_count(
-        args.shard_count, args.sra_files)
+    args['temp_dir'] = file_util.temp_root_dir(
+        args['temp_dir'], temp_dir_default)
+    args['shard_count'] = blast.default_shard_count(
+        args['shard_count'], args['sra_files'])
 
-    blast.make_blast_output_dir(args.blast_db)
+    blast.make_blast_output_dir(args['blast_db'])
 
     return args
 

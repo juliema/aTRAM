@@ -2,7 +2,6 @@
 
 import os
 from os.path import basename, exists, getsize
-import re
 import argparse
 import textwrap
 import tempfile
@@ -23,41 +22,47 @@ def main(args):
     the blast databses and every sequence in the query fata files and then
     runs the atram main loop for each."""
 
-    for blast_db in args.blast_db:
-        db_conn = db.connect(args.blast_db)
+    # Loop thru every blast DB setup with atram_preprocessor.py
+    for blast_db in args['blast_db']:
+        db_conn = db.connect(blast_db)
         db.check_db_versions(db_conn)  # Make sure the database versions match
 
         # We may not want the entire DB for highly redundant libraries
-        all_shards = fraction_of_shards(blast_db, args.fraction)
+        all_shards = fraction_of_shards(blast_db, args['fraction'])
 
-        for query_file in args.query:
-            log_file = log.file_name(args.log_file, blast_db, query_file)
+        # Now loop thru every query fasta file
+        for query_file in args['query']:
+            log_file = log.file_name(args['log_file'], blast_db, query_file)
             log.setup(log_file)
 
             with open(query_file) as in_file:
-                for query in SeqIO.parse(in_file, 'fasta'):
-                    query_seq = str(query.seq)
 
-    assembler = assembly.factory(args) if args.assembler else None
+                # Now loop thru every sequence in the query fasta file
+                for query_rec in SeqIO.parse(in_file, 'fasta'):
+                    assembler = None
+                    if args['assembler']:
+                        assembler = assembly.factory(args)
 
-    query = initialize_query(args, db_conn, assembler)
-    atram_loop(args, db_conn, assembler, query, all_shards)
+                    query = initialize_query(
+                        db_conn, assembler, str(query_rec.seq), args)
 
-    if assembler:
-        output_assembly_results(args, db_conn)
-    else:
-        output_blast_only_results(args, db_conn)
+                    atram_loop(db_conn, assembler, query, all_shards, args)
 
-    db_conn.close()
+                    if assembler:
+                        output_assembly_results(db_conn, args['output'], args)
+                    else:
+                        output_blast_only_results(db_conn, args['output'])
+
+        db_conn.close()
 
 
-def atram_loop(args, db_conn, assembler, query, all_shards):
+def atram_loop(db_conn, assembler, query, all_shards, args):
     """The main program loop."""
 
-    for iteration in range(args.start_iteration, args.iterations + 1):
+    for iteration in range(args['start_iteration'], args['iterations'] + 1):
         log.info('aTRAM iteration %i' % iteration, line_break='')
 
-        blast_query_against_all_sras(args, query, all_shards, iteration)
+        blast_query_against_all_sras(query, all_shards, iteration, args)
 
         # If we don't have an assembler then we just want the blast hits
         if not assembler:
@@ -74,11 +79,11 @@ def atram_loop(args, db_conn, assembler, query, all_shards):
 
         try:
             log.info('Assembling shards with {}: iteration {}'.format(
-                args.assembler, iteration))
+                args['assembler'], iteration))
             assembler.assemble()
         except TimeoutError:
             msg = 'Time ran out for the assembler after {} (HH:MM:SS)'.format(
-                datetime.timedelta(seconds=args.timeout))
+                datetime.timedelta(seconds=args['timeout']))
             log.fatal(msg)
         except subprocess.CalledProcessError as cpe:
             msg = 'The assembler failed with error: ' + str(cpe)
@@ -93,50 +98,47 @@ def atram_loop(args, db_conn, assembler, query, all_shards):
         high_score = filter_contigs(args, db_conn, assembler, iteration)
 
         count = db.assembled_contigs_count(
-            db_conn, iteration, args.bit_score, args.contig_length)
+            db_conn, iteration, args['bit_score'], args['contig_length'])
         if not count:
             log.info(('No contigs had a bit score greater than {} and are at '
                       'least {} long in iteration {}. The highest score for '
-                      'this iteration is {}').format(args.bit_score,
-                                                     args.contig_length,
+                      'this iteration is {}').format(args['bit_score'],
+                                                     args['contig_length'],
                                                      iteration,
                                                      high_score))
             break
 
         if count == db.iteration_overlap_count(
-                db_conn, iteration, args.bit_score, args.contig_length):
+                db_conn, iteration, args['bit_score'], args['contig_length']):
             log.info('No new contigs were found in iteration %i' % iteration)
             break
 
         query = create_queries_from_contigs(
-            db_conn, assembler, iteration, args.bit_score, args.contig_length)
+            db_conn, assembler, iteration, args)
     else:
         log.info('All iterations completed', line_break='')
 
 
-def initialize_query(args, db_conn, assembler):
+def initialize_query(db_conn, assembler, query, args):
     """Get the first set of query sequences. Handle a restart of atram by
     getting the data from the given iteration and setting up an input file.
     """
 
-    if args.start_iteration == 1:
+    if args['start_iteration'] == 1:
         db.create_sra_blast_hits_table(db_conn)
         db.create_contig_blast_hits_table(db_conn)
         db.create_assembled_contigs_table(db_conn)
-        query = args.query
     else:
-        query = create_queries_from_contigs(db_conn,
-                                            assembler,
-                                            args.start_iteration - 1,
-                                            args.bit_score,
-                                            args.contig_length)
-
+        start_iteration = args['start_iteration'] - 1
+        query = create_queries_from_contigs(
+            db_conn, assembler, start_iteration, args)
     if getsize(query) < 10:
         err = 'There are no sequences '
-        if args.start_iteration == 1:
-            err += 'in {}'.format(args.query)
+        if args['start_iteration'] == 1:
+            err += 'in {}'.format(args['query'])
         else:
-            err += 'for starting iteration {}'.format(args.start_iteration)
+            err += 'for starting iteration {}'.format(
+                args['start_iteration'])
         log.fatal(err)
 
     return query
@@ -153,7 +155,7 @@ def fraction_of_shards(blast_db, fraction):
     return all_shards[:last_index]
 
 
-def blast_query_against_all_sras(args, query, all_shards, iteration):
+def blast_query_against_all_sras(query, all_shards, iteration, args):
     """Blast the queries against the SRA databases. We're using a
     map-reduce strategy here. We map the blasting of the query sequences
     and reduce the output into one fasta file.
@@ -164,17 +166,17 @@ def blast_query_against_all_sras(args, query, all_shards, iteration):
     with multiprocessing.Pool(processes=args.cpus) as pool:
         results = [pool.apply_async(
             blast_query_against_sra,
-            (dict(vars(args)), shard_path, query, iteration))
+            (shard_path, query, iteration, dict(vars(args))))
                    for shard_path in all_shards]
         _ = [result.get() for result in results]  # noqa
 
 
-def blast_query_against_sra(args, shard_path, query, iteration):
+def blast_query_against_sra(shard_path, query, iteration, args):
     """Blast the query against one blast DB shard. Then write the results to
     the database.
     """
     # NOTE: Because this is called in a child process, the address space is not
-    # shared with the parent (caller) hence we cannot share object variables.
+    # shared with the parent (caller). Hence we cannot share object variables.
 
     output_file = blast.output_file_name(
         args['temp_dir'], shard_path, iteration)
@@ -200,12 +202,12 @@ def blast_query_against_sra(args, shard_path, query, iteration):
     db_conn.close()
 
 
-def output_blast_only_results(args, db_conn):
+def output_blast_only_results(db_conn, output):
     """Output this file if we are not assembling the contigs."""
 
     log.info('Output blast only results')
 
-    file_name = file_util.output_file(args.output, 'blast_only.fasta')
+    file_name = file_util.output_file(output, 'blast_only.fasta')
     with open(file_name, 'w') as out_file:
         for row in db.get_sra_blast_hits(db_conn, 1):
             out_file.write('>{}{}\n'.format(row['seq_name'], row['seq_end']))
@@ -222,7 +224,12 @@ def filter_contigs(args, db_conn, assembler, iteration):
 
     blast.create_db(args.temp_dir, assembler.file['output'], blast_db)
 
-    blast.against_contigs(args, blast_db, args.query, hits_file)
+    blast.against_contigs(blast_db,
+                          args.query,
+                          hits_file,
+                          protein=args.protein,
+                          db_gencode=args.db_gencode,
+                          temp_dir=args.temp_dir)
 
     save_blast_against_contigs(db_conn, assembler, hits_file, iteration)
 
@@ -270,8 +277,7 @@ def save_contigs(db_conn, all_hits, assembler, iteration):
     return high_score
 
 
-def create_queries_from_contigs(
-        db_conn, assembler, iteration, bit_score, length):
+def create_queries_from_contigs(db_conn, assembler, iteration, args):
     """Crate a new file with the contigs that will be used as the
     next query query.
     """
@@ -283,25 +289,25 @@ def create_queries_from_contigs(
 
     with open(query, 'w') as query_file:
         for row in db.get_assembled_contigs(
-                db_conn, iteration, bit_score, length):
+                db_conn, iteration, args['bit_score'], args['length']):
             query_file.write('>{}\n'.format(row[0]))
             query_file.write('{}\n'.format(row[1]))
 
     return query
 
 
-def output_assembly_results(args, db_conn):
+def output_assembly_results(db_conn, output, args):
     """Write the assembled contigs to a fasta file."""
 
-    if not args.no_filter:
+    if not args['no_filter']:
         file_name = file_util.output_file(
-            args.output, 'filtered_contigs.fasta')
+            output, 'filtered_contigs.fasta')
         with open(file_name, 'w') as out_file:
             for row in db.get_all_assembled_contigs(
-                    db_conn, args.bit_score, args.contig_length):
+                    db_conn, args['bit_score'], args['contig_length']):
                 output_one_assembly(out_file, row)
 
-    file_name = file_util.output_file(args.output, 'all_contigs.fasta')
+    file_name = file_util.output_file(output, 'all_contigs.fasta')
     with open(file_name, 'w') as out_file:
         for row in db.get_all_assembled_contigs(db_conn):
             output_one_assembly(out_file, row)
@@ -350,28 +356,41 @@ def parse_command_line(temp_dir_default):
     parser.add_argument('--version', action='version',
                         version='%(prog)s {}'.format(db.VERSION))
 
-    required_args(parser)
-    optional_args(parser)
-    filter_args(parser)
+    required_command_line_args(parser)
+    optional_command_line_args(parser)
+    filter_command_line_args(parser)
     blast.command_line_args(parser)
     assembly.command_line_args(parser)
 
-    args = parser.parse_args()
+    args = vars(parser.parse_args())
 
-    check_required_args(args)
-    check_optional_args(args)
-    check_filter_args(args)
-    args.temp_dir = file_util.temp_root_dir(args.temp_dir, temp_dir_default)
-    args.max_target_seqs = blast.default_max_target_seqs(
-        args.max_target_seqs, args.blast_db, args.max_memory)
-    assembly.check_command_line_args(args)
+    args['cov_cutoff'] = assembly.default_cov_cutoff(args['cov_cutoff'])
+    args['blast_db'] = blast.touchup_blast_db_names(args['blast_db'])
+    args['kmer'] = assembly.default_kmer(args['kmer'], args['assembler'])
+    args['temp_dir'] = file_util.temp_root_dir(
+        args['temp_dir'], temp_dir_default)
+    args['max_target_seqs'] = blast.default_max_target_seqs(
+        args['max_target_seqs'], args['blast_db'], args['max_memory'])
 
-    file_util.find_programs(args)
+    if args['no_filter']:
+        args['bit_score'] = 0
+        args['contig_length'] = 0
+
+    # Check query
+    if not args['query'] and not args['start_iteration']:
+        log.fatal('We need at least one "--query" sequence.')
+
+    # Prepend to PATH environment variable if requested
+    if args['path']:
+        os.environ['PATH'] = '{}:{}'.format(args['path'], os.environ['PATH'])
+
+    file_util.find_programs(
+        args['assembler'], args['no_long_reads'], args['bowtie2'])
 
     return args
 
 
-def required_args(parser):
+def required_command_line_args(parser):
     """Add required arguments to the parser."""
 
     group = parser.add_argument_group('required arguments')
@@ -399,23 +418,7 @@ def required_args(parser):
                             prefix.''')
 
 
-def check_required_args(args):
-    """Make sure required arguments are reasonable."""
-
-    # Touch up blast DB names
-    pattern = (r'^ (.*?)'
-               r'(  \.atram(_preprocessor)?\.log'
-               r' | \.blast_\d{3}\.(nhr|nin|nsq)'
-               r' | \.sqlite\.db  )?$')
-    for i, blast_db in enumerate(args.blast_db):
-        args.blast_db[i] = re.sub(pattern, r'\1', blast_db, re.I | re.X)
-
-    # Check query
-    if not args.query and not args.start_iteration:
-        log.fatal('We need at least one "--query" sequence.')
-
-
-def optional_args(parser):
+def optional_command_line_args(parser):
     """Add optional atram arguments to the parser."""
 
     group = parser.add_argument_group('optional aTRAM arguments')
@@ -471,15 +474,7 @@ def optional_args(parser):
                             The default is "300" (5 minutes).''')
 
 
-def check_optional_args(args):
-    """Make sure optional atram arguments are reasonable."""
-
-    # Prepend to PATH environment variable if requested
-    if args.path:
-        os.environ['PATH'] = '{}:{}'.format(args.path, os.environ['PATH'])
-
-
-def filter_args(parser):
+def filter_command_line_args(parser):
     """Add optional values for blast-filtering contigs to the parser."""
 
     group = parser.add_argument_group(
@@ -500,14 +495,6 @@ def filter_args(parser):
                        help='''Do not filter the assembled contigs. This will:
                             set both the --bit-score and --contig-length
                             to 0''')
-
-
-def check_filter_args(args):
-    """Make sure the optional blast filter arguments are reasonable."""
-
-    if args.no_filter:
-        args.bit_score = 0
-        args.contig_length = 0
 
 
 if __name__ == '__main__':
