@@ -46,16 +46,16 @@ def against_sra(args, blast_db, query, hits_file, iteration):
     log.subcommand(command, args['temp_dir'])
 
 
-def against_contigs(args, blast_db, query, hits_file):
+def against_contigs(blast_db, query, hits_file, **kwargs):
     """Blast the query sequence against the contigs. The blast output
     will have the scores for later processing.
     """
 
     cmd = []
 
-    if args.protein:
+    if kwargs['protein']:
         cmd.append('tblastn')
-        cmd.append('-db_gencode {}'.format(args.db_gencode))
+        cmd.append('-db_gencode {}'.format(kwargs['db_gencode']))
     else:
         cmd.append('blastn')
 
@@ -65,7 +65,7 @@ def against_contigs(args, blast_db, query, hits_file):
     cmd.append('-outfmt 15')
 
     command = ' '.join(cmd)
-    log.subcommand(command, args.temp_dir)
+    log.subcommand(command, kwargs['temp_dir'])
 
 
 def shard_path(blast_db, shard_index):
@@ -144,12 +144,50 @@ def command_line_args(parser):
                             'memory and the number of shards.')
 
 
-def check_command_line_args(args, temp_dir):
-    """Make sure optional blast arguments are reasonable."""
+def default_max_target_seqs(max_target_seqs, blast_db, max_memory):
+    """Calculate the default max_target_seqs per shard."""
 
-    # Calculate the default max_target_seqs per shard
-    if not args.max_target_seqs:
-        all_shards = all_shard_paths(args.blast_db)
-        args.max_target_seqs = int(2 * args.max_memory / len(all_shards)) * 1e6
+    if not max_target_seqs:
+        all_shards = all_shard_paths(blast_db)
+        max_target_seqs = int(2 * max_memory / len(all_shards)) * 1e6
+    return max_target_seqs
 
-    file_util.temp_root_dir(args, temp_dir)
+
+def default_shard_count(shard_count, sra_files):
+    """Calulate the default number of shards."""
+
+    if not shard_count:
+        total_fasta_size = 0
+        for file_name in sra_files:
+            file_size = os.path.getsize(file_name)
+            if file_name.lower().endswith('q'):
+                file_size /= 2  # Guessing that fastq files ~2x fasta files
+            total_fasta_size += file_size
+        shard_count = int(total_fasta_size / 2.5e8)
+        shard_count = shard_count if shard_count else 1
+
+    return shard_count
+
+
+def make_blast_output_dir(blast_db):
+    """Make blast DB output directory."""
+
+    output_dir = os.path.dirname(blast_db)
+    if output_dir and output_dir not in ['.', '..']:
+        os.makedirs(output_dir, exist_ok=True)
+
+
+def touchup_blast_db_names(blast_dbs):
+    """Allow users to enter blast DB names with various suffixes."""
+
+    pattern = (r'^ (.*?)'
+               r'(  \.atram(_preprocessor)?\.log'
+               r' | \.blast_\d{3}\.(nhr|nin|nsq)'
+               r' | \.sqlite\.db  )?$')
+
+    db_names = []
+
+    for blast_db in blast_dbs:
+        db_names.append(re.sub(pattern, r'\1', blast_db, re.I | re.X))
+
+    return db_names

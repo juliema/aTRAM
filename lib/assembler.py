@@ -6,25 +6,27 @@ from lib.assemblers.abyss import AbyssAssembler
 from lib.assemblers.spades import SpadesAssembler
 from lib.assemblers.trinity import TrinityAssembler
 from lib.assemblers.velvet import VelvetAssembler
+from lib.assemblers.none import NoneAssembler
 
 
 def factory(args):
     """Return the assembler based upon the configuration options."""
 
-    if args.assembler.lower() == 'abyss':
+    name = args.assembler.lower()
+    if name == 'abyss':
         return AbyssAssembler(args)
-    elif args.assembler.lower() == 'trinity':
+    elif name == 'trinity':
         return TrinityAssembler(args)
-    elif args.assembler.lower() == 'velvet':
+    elif name == 'velvet':
         return VelvetAssembler(args)
-    elif args.assembler.lower() == 'spades':
+    elif name == 'spades':
         return SpadesAssembler(args)
+    elif name == 'spades':
+        return NoneAssembler(args)
 
 
 def command_line_args(parser):
     """Add command-line arguments for the assemblers."""
-
-    # TODO: Move these into the appropriate assembler files and assemble here
 
     group = parser.add_argument_group('optional assembler arguments')
 
@@ -71,20 +73,26 @@ def command_line_args(parser):
                             'The default is "off". (Spades)')
 
 
-def check_command_line_args(args):
-    """Make sure assembler command-line arguments are reasonable."""
+def default_kmer(kmer, assembler):
+    """Setup default kmer argument."""
 
-    # Check kmer
-    if args.assembler == 'velvet' and args.kmer > 31:
-        args.kmer = 31
+    if assembler == 'velvet' and kmer > 31:
+        kmer = 31
 
-    # Check cov_cutoff
-    if args.cov_cutoff not in ['off', 'auto']:
+    return kmer
+
+
+def default_cov_cutoff(cov_cutoff):
+    """Setup default coverage cutoff argument."""
+
+    if cov_cutoff not in ['off', 'auto']:
         err = ('Read coverage cutoff value. Must be a positive '
                'float value, or "auto", or "off"')
         try:
-            value = float(args.cov_cutoff)
+            value = float(cov_cutoff)
         except ValueError:
             log.fatal(err)
         if value < 0:
             log.fatal(err)
+
+    return cov_cutoff
