@@ -1,5 +1,6 @@
 """Format the data so that atram can use it later. It takes sequence read
-archive files and converts them into blast and sqlite3 databases.
+archive (SRA) files and converts them into coordinated blast and sqlite3
+databases.
 """
 
 import os
@@ -145,9 +146,9 @@ def create_blast_dbs(shard_list, cpus, blast_db, temp_dir):
 
     with multiprocessing.Pool(processes=cpus) as pool:
         results = []
-        for idx, params in enumerate(shard_list, 1):
+        for idx, shard_params in enumerate(shard_list, 1):
             results.append(pool.apply_async(
-                create_blast_db, (blast_db, temp_dir, params, idx)))
+                create_blast_db, (blast_db, temp_dir, shard_params, idx)))
 
         _ = [result.get() for result in results]  # noqa
 
@@ -158,8 +159,6 @@ def create_blast_db(blast_db, temp_dir, shard_params, shard_index):
     """Create a blast DB from the shard. We fill a fasta file with the
     appropriate sequences and hand things off to the makeblastdb program.
     """
-    # NOTE: Because this is called in a child process, the address space is not
-    # shared with the parent (caller) hence we cannot share object variables.
 
     shard_path = blast.shard_path(blast_db, shard_index)
     fasta_name = '{}_{:03d}.fasta'.format(os.path.basename(sys.argv[0][:-3]),
@@ -173,11 +172,9 @@ def create_blast_db(blast_db, temp_dir, shard_params, shard_index):
 
 def fill_blast_fasta(blast_db, fasta_file, shard_params):
     """Fill the fasta file used as input into blast with shard sequences from
-    the sqlite3 DB. We use the shard partitions passed in to determine
-    which sequences to get for this shard.
+    the sqlite3 DB. We use the shard partitions passed in to determine which
+    sequences to get for this shard.
     """
-    # NOTE: Because this is called in a child process, the address space is not
-    # shared with the parent (caller) hence we cannot share object variables.
 
     db_conn = db.connect(blast_db)
 
@@ -226,7 +223,7 @@ def parse_command_line(temp_dir_default):
                              one file and you may use wildcards.''')
 
     parser.add_argument('--version', action='version',
-                        version='%(prog)s {}'.format(db.VERSION))
+                        version='%(prog)s {}'.format(file_util.VERSION))
 
     group = parser.add_argument_group('preprocessor arguments')
 

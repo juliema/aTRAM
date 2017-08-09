@@ -6,19 +6,23 @@ from lib.assemblers.abyss import AbyssAssembler
 from lib.assemblers.spades import SpadesAssembler
 from lib.assemblers.trinity import TrinityAssembler
 from lib.assemblers.velvet import VelvetAssembler
+from lib.assemblers.none import NoneAssembler
 
 
 def factory(args):
     """Return the assembler based upon the configuration options."""
 
-    if args.assembler.lower() == 'abyss':
+    name = args.assembler.lower()
+    if name == 'abyss':
         return AbyssAssembler(args)
-    elif args.assembler.lower() == 'trinity':
+    elif name == 'trinity':
         return TrinityAssembler(args)
-    elif args.assembler.lower() == 'velvet':
+    elif name == 'velvet':
         return VelvetAssembler(args)
-    elif args.assembler.lower() == 'spades':
+    elif name == 'spades':
         return SpadesAssembler(args)
+    elif name == 'spades':
+        return NoneAssembler(args)
 
 
 def command_line_args(parser):

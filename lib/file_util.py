@@ -4,6 +4,8 @@ import os
 from shutil import which
 import lib.log as log
 
+VERSION = '2.1'
+
 
 def temp_root_dir(temp_dir_arg, temp_dir_default):
     """Make a temporary root directory. Verify that it is clean."""

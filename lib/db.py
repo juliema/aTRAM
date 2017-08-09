@@ -4,7 +4,6 @@ import sqlite3
 import lib.log as log
 
 BATCH_SIZE = 1e6  # How many sequence records to insert at a time
-VERSION = '2.0'
 
 
 def connect(blast_db):
@@ -18,20 +17,28 @@ def connect(blast_db):
     db_conn.execute("PRAGMA page_size = {}".format(2**16))
     db_conn.execute("PRAGMA journal_mode = 'off'")
     db_conn.execute("PRAGMA synchronous = 'off'")
+
+    check_versions(db_conn)  # Make sure the database versions match
+
     return db_conn
 
 
 # ########################### misc functions #################################
 
-def check_db_versions(db_conn):
+# DB DB_VERSION != aTRAM version. Don't force DB changes until required. Do it
+# will tend to lag the program version.
+DB_VERSION = '2.0'
+
+
+def check_versions(db_conn):
     """Make sure the database version matches what we built it with."""
 
     version = get_version(db_conn)
-    if version != VERSION:
+    if version != DB_VERSION:
         log.fatal('The database was built with version {} but you are running '
                   'version {}. You need to rebuild the atram database by '
                   'running atram_preprocessor.py again.'.format(
-                      version, VERSION))
+                      version, DB_VERSION))
 
 
 # ########################## metadata table ##################################
@@ -47,7 +54,7 @@ def create_metadata_table(db_conn):
     db_conn.execute(sql)
 
     sql = '''INSERT INTO metadata (label, value) VALUES (?, ?)'''
-    db_conn.execute(sql, ('version', VERSION))
+    db_conn.execute(sql, ('version', DB_VERSION))
     db_conn.commit()
 
 
