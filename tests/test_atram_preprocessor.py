@@ -4,7 +4,6 @@
 # pylint: disable=unused-argument
 # pylint: disable=global-statement
 
-# import builtins
 from os.path import join
 import lib.db as db
 import atram_preprocessor

@@ -30,7 +30,7 @@ def main(args):
         if args['split_queries']:
             queries = split_queries(args)
         else:
-            queries = unified_queries(args)
+            queries = (q for q in args['query'])
 
         for query in queries:
             print(query)
@@ -41,19 +41,24 @@ def split_queries(args):
     to put each query record into its own file for the blast queries.
     """
 
-    for query_file_name in args['query']:
-        with open(query_file_name) as query_file:
+    for query_in_file_name in args['query']:
+        with open(query_in_file_name) as query_file:
             for query_rec in SeqIO.parse(query_file, 'fasta'):
-                query_file_name = ''
-                # Put the sequence into a separate file
+
+                query_file_name = file_util.temp_file(
+                    args['temp_file'], 'sequence_01.fasta')
+
+                write_seq(query_file_name, query_rec.id, str(query_rec.seq))
+
                 yield query_file_name
 
 
-def unified_queries(args):
-    """Handle each query file as a query target."""
+def write_seq(file_name, seq_id, seq):
+    """Write the sequence to a fasta file."""
 
-    for query_file_name in args['query']:
-        yield query_file_name
+    with open(file_name, 'w') as query_file:
+        query_file.write('>{}\n'.format(seq_id))
+        query_file.write('{}\n'.format(seq))
 
 
 def main_old(args):

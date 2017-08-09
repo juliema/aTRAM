@@ -1,6 +1,7 @@
 """Utility functions."""
 
 import os
+from os.path import abspath, join
 from shutil import which
 import lib.log as log
 
@@ -13,7 +14,7 @@ def temp_root_dir(temp_dir_arg, temp_dir_default):
     temp_dir = temp_dir_default
 
     if temp_dir_arg:
-        temp_dir = os.path.abspath(temp_dir_arg)
+        temp_dir = abspath(temp_dir_arg)
         os.makedirs(temp_dir, exist_ok=True)
         if os.listdir(temp_dir):
             log.fatal('"{}" directory is not empty.'.format(temp_dir_arg))
@@ -27,7 +28,7 @@ def temp_iter_dir(temp_dir, iteration):
     """
 
     iter_name = 'iteration_{:02d}'.format(iteration)
-    iter_dir = os.path.join(temp_dir, iter_name)
+    iter_dir = join(temp_dir, iter_name)
     os.makedirs(iter_dir, exist_ok=True)
     return iter_dir
 
@@ -38,7 +39,13 @@ def temp_iter_file(temp_dir, iteration, file_name):
     """
 
     iter_dir = temp_iter_dir(temp_dir, iteration)
-    return os.path.join(iter_dir, file_name)
+    return join(iter_dir, file_name)
+
+
+def temp_file(temp_dir, file_name):
+    """Create a temporary file in the root of the temporary directory."""
+
+    return join(temp_dir, file_name)
 
 
 def output_file(output_prefix, file_suffix):

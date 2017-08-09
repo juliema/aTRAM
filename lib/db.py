@@ -25,8 +25,8 @@ def connect(blast_db):
 
 # ########################### misc functions #################################
 
-# DB DB_VERSION != aTRAM version. Don't force DB changes until required. Do it
-# will tend to lag the program version.
+# DB_VERSION != file_util.VERSION. Don't force DB changes until required. So
+# this version will tend to lag the program version.
 DB_VERSION = '2.0'
 
 

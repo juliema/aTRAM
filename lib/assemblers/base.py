@@ -19,7 +19,7 @@ class BaseAssembler:
     def iter_dir(self):
         """Get the work directory for the current iteration."""
 
-        return file_util.temp_iter_dir(self.args.temp_dir, self.iteration)
+        return file_util.temp_iter_dir(self.args['temp_dir'], self.iteration)
 
     @property
     def work_path(self):
@@ -42,7 +42,7 @@ class BaseAssembler:
 
         for step in self.steps:
             cmd = step()
-            log.subcommand(cmd, self.args.temp_dir, self.args.timeout)
+            log.subcommand(cmd, self.args['temp_dir'], self.args['timeout'])
 
         self.post_assembly()
 
@@ -52,7 +52,7 @@ class BaseAssembler:
     def path(self, file_name):
         """Files will go into the temp dir."""
 
-        blast_db = os.path.basename(self.args.blast_db)
+        blast_db = os.path.basename(self.args['blast_db'])
         file_name = '{}.{:02d}.{}'.format(blast_db, self.iteration, file_name)
         rel_path = self.iter_file(file_name)
 
