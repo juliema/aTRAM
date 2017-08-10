@@ -17,6 +17,8 @@ import lib.log as log
 import lib.blast as blast
 import lib.file_util as file_util
 
+__all__ = ('preprocess', )
+
 
 def preprocess(args):
     """Run the preprocessor."""

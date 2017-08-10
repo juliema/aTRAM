@@ -6,7 +6,7 @@ import lib.log as log
 BATCH_SIZE = 1e6  # How many sequence records to insert at a time
 
 
-def connect(blast_db):
+def connect(blast_db, check_version=False):
     """Setup the DB for our processing needs and return a DB connection."""
     db_name = '{}.sqlite.db'.format(blast_db)
 
@@ -17,7 +17,8 @@ def connect(blast_db):
     db_conn.execute("PRAGMA journal_mode = 'off'")
     db_conn.execute("PRAGMA synchronous = 'off'")
 
-    check_versions(db_conn)  # Make sure the database versions match
+    if check_version:
+        check_versions(db_conn)  # Make sure the database versions match
 
     return db_conn
 

@@ -4,8 +4,8 @@
 __pycache__
 
 venv
-temp/*
-junk/*
+temp*
+junk*
 input/*
 output/*
 query/*

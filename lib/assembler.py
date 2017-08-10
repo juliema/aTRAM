@@ -11,7 +11,7 @@ from lib.assemblers.none import NoneAssembler
 
 def factory(args, db_conn):
     """Return the assembler based upon the configuration options."""
-    name = args.assembler.lower()
+    name = args['assembler'].lower()
     if name == 'abyss':
         return AbyssAssembler(args, db_conn)
     elif name == 'trinity':

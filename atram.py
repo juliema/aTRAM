@@ -15,26 +15,29 @@ import lib.file_util as file_util
 import lib.assembler as assembly
 
 
+__all__ = ('assemble', )
+
+
 def assemble(args):
-    """Loop thru every blast/query pair and run an assembly for each."""
+    """Loop thru every blast/query pair and run an assembly for each one."""
     queries = split_queries(args) if args['split_queries'] else args['query']
 
     for blast_db in args['blast_db']:
 
-        db_conn = db.connect(blast_db)
+        with db.connect(blast_db, check_version=True) as db_conn:
 
-        for query in queries:
+            for query in queries:
 
-            log_file = log.file_name(args['log_file'], blast_db, query)
-            log.setup(log_file)
+                clean_database(db_conn)
 
-            assembler = assembly.factory(args, db_conn)
+                log_file = log.file_name(args['log_file'], blast_db, query)
+                log.setup(log_file)
 
-            assembly_loop(args, blast_db, query, db_conn, assembler)
+                assembler = assembly.factory(args, db_conn)
 
-            assembler.write_final_output(db_conn, blast_db, query)
+                assembly_loop(args, blast_db, query, db_conn, assembler)
 
-        db_conn.close()
+                assembler.write_final_output(blast_db, query)
 
 
 def split_queries(args):
@@ -43,6 +46,8 @@ def split_queries(args):
     We put each query record into its own file for blast queries.
     """
     queries = []
+
+    file_util.temp_subdir(args['temp_dir'], 'queries')
 
     for query_path in args['query']:
 
@@ -54,7 +59,7 @@ def split_queries(args):
                 query_id = re.sub(r'\W+', '_', rec.id)
 
                 query_file = file_util.temp_file(
-                    args['temp_file'], 'queries',
+                    args['temp_dir'], 'queries',
                     '{}_{}_{}.fasta'.format(query_name, query_id, i))
 
                 write_query_seq(query_file, rec.id, str(rec.seq))
@@ -71,17 +76,26 @@ def write_query_seq(file_name, seq_id, seq):
         query_file.write('{}\n'.format(seq))
 
 
+def clean_database(db_conn):
+    """Setup the database for an atram run."""
+    db.create_sra_blast_hits_table(db_conn)
+    db.create_contig_blast_hits_table(db_conn)
+    db.create_assembled_contigs_table(db_conn)
+
+
 def assembly_loop(args, blast_db, query, db_conn, assembler):
     """Iterate the assembly processes."""
     for iteration in range(1, args['iterations'] + 1):
         log.info('aTRAM iteration %i' % iteration, line_break='')
 
+        file_util.temp_iter_dir(args['temp_dir'], iteration)
+
+        assembler.initialize_iteration(blast_db, iteration)
+
         blast_query_against_all_shards(args, blast_db, query, iteration)
 
         if assembler.blast_only or assembler.no_blast_hits:
             break
-
-        assembler.initialize_iteration(iteration)
 
         assembler.write_input_files(db_conn)
 
@@ -119,7 +133,7 @@ def blast_query_against_all_shards(args, blast_db, query, iteration):
     with multiprocessing.Pool(processes=args['cpus']) as pool:
         results = [pool.apply_async(
             blast_query_against_one_shard,
-            (shard_path, query, iteration, dict(vars(args))))
+            (args, blast_db, query, shard_path, iteration))
                    for shard_path in all_shards]
         _ = [result.get() for result in results]  # noqa
 
@@ -134,7 +148,8 @@ def shard_fraction(args, blast_db):
     return all_shards[:last_index]
 
 
-def blast_query_against_one_shard(shard_path, query, iteration, args):
+def blast_query_against_one_shard(
+        args, blast_db, query, shard_path, iteration):
     """Blast the query against one blast DB shard.
 
     Then write the results to the database.
@@ -144,7 +159,7 @@ def blast_query_against_one_shard(shard_path, query, iteration, args):
 
     blast.against_sra(args, shard_path, query, output_file, iteration)
 
-    db_conn = db.connect(args['blast_db'])
+    db_conn = db.connect(blast_db)
 
     shard = basename(shard_path)
 

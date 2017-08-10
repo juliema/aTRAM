@@ -15,8 +15,6 @@ def temp_root_dir(temp_dir_arg, temp_dir_default):
     if temp_dir_arg:
         temp_dir = abspath(temp_dir_arg)
         os.makedirs(temp_dir, exist_ok=True)
-        if os.listdir(temp_dir):
-            log.fatal('"{}" directory is not empty.'.format(temp_dir_arg))
 
     return temp_dir
 

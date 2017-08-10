@@ -10,7 +10,7 @@ class TrinityAssembler(BaseAssembler):
 
     def __init__(self, args, db_conn):
         """Build the assembler."""
-        super().__init__(args)
+        super().__init__(args, db_conn)
         self.steps = [self.trinity]
 
     @property

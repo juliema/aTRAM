@@ -25,31 +25,31 @@ def file_name(log_file, blast_db, query_file=''):
     if log_file:
         return log_file
 
-    program, _ = splitext(basename(sys.argv[0]))
+    program = splitext(basename(sys.argv[0]))[0]
 
     if query_file:
+        query_file = splitext(basename(query_file))[0]
         return '{}.{}.{}.log'.format(blast_db, query_file, program)
 
     return '{}.{}.log'.format(blast_db, program)
 
 
 def subcommand(cmd, temp_dir, timeout=None):
-    """Handle subprocess calls and log their output."""
+    """Handle subprocess calls and log their output.
+
+    Note: stdout=PIPE is blocking and large logs cause a hang.
+    """
     logging.info(cmd)
 
     with tempfile.NamedTemporaryFile(mode='w', dir=temp_dir) as log_output:
-
-        # Note: stdout=PIPE is blocking and large logs cause a hang
         try:
             subprocess.check_call(cmd,
                                   shell=True,
                                   timeout=timeout,
                                   stdout=log_output,
                                   stderr=log_output)
-
         except (subprocess.CalledProcessError, TimeoutError):
             raise
-
         finally:
             with open(log_output.name) as log_input:
                 for line in log_input:

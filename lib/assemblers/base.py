@@ -118,28 +118,28 @@ class BaseAssembler:
     def post_assembly(self):
         """The assembler may have unique post assembly steps."""
 
-    def path(self, file_name):
+    def path(self, blast_db, file_name):
         """Put files into the temp dir."""
-        blast_db = basename(self.args['blast_db'])
+        blast_db = basename(blast_db)
         file_name = '{}.{:02d}.{}'.format(blast_db, self.iteration, file_name)
         rel_path = self.iter_file(file_name)
 
         return abspath(rel_path)
 
-    def initialize_iteration(self, iteration):
+    def initialize_iteration(self, blast_db, iteration):
         """Setup file names used by the assembler.
 
         Do this at the start of each iteration.
         """
         self.iteration = iteration
 
-        self.file['output'] = self.path('output.fasta')
+        self.file['output'] = self.path(blast_db, 'output.fasta')
         self.file['long_reads'] = ''  # Set up in atram.py for now
-        self.file['paired_1'] = self.path('paired_end_1.fasta')
-        self.file['paired_2'] = self.path('paired_end_2.fasta')
-        self.file['single_1'] = self.path('single_end_1.fasta')
-        self.file['single_2'] = self.path('single_end_2.fasta')
-        self.file['single_any'] = self.path('single_end_any.fasta')
+        self.file['paired_1'] = self.path(blast_db, 'paired_end_1.fasta')
+        self.file['paired_2'] = self.path(blast_db, 'paired_end_2.fasta')
+        self.file['single_1'] = self.path(blast_db, 'single_end_1.fasta')
+        self.file['single_2'] = self.path(blast_db, 'single_end_2.fasta')
+        self.file['single_any'] = self.path(blast_db, 'single_end_any.fasta')
 
         self.file['paired_count'] = 0       # paired_1 and paired_2 count
         self.file['single_1_count'] = 0
