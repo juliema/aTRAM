@@ -31,8 +31,8 @@ def test_split_queries(monkeypatch):
 
     file_names = ['tests/data/split_queries1.txt']
 
-    queries = list(atram.split_queries(
-        {'temp_dir': 'temp_dir', 'query': file_names}))
+    queries = atram.split_queries(
+        {'temp_dir': 'temp_dir', 'query': file_names})
 
     fasta = [
         'temp_dir/queries/split_queries1_seq1_1_1.fasta',
