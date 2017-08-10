@@ -5,7 +5,7 @@ from os.path import abspath, join
 from shutil import which
 import lib.log as log
 
-VERSION = '2.1'
+VERSION = '2.0'
 
 
 def temp_root_dir(temp_dir_arg, temp_dir_default):
