@@ -1,6 +1,7 @@
-"""Format the data so that atram can use it later. It takes sequence read
-archive (SRA) files and converts them into coordinated blast and sqlite3
-databases.
+"""Format the data so that atram can use it later.
+
+It takes sequence read archive (SRA) files and converts them into coordinated
+blast and sqlite3 databases.
 """
 
 import os
@@ -17,9 +18,8 @@ import lib.blast as blast
 import lib.file_util as file_util
 
 
-def main(args):
+def preprocess(args):
     """Run the preprocessor."""
-
     log_file = log.file_name(args['log_file'], args['blast_db'])
     log.setup(log_file)
 
@@ -33,15 +33,15 @@ def main(args):
     db.create_sequences_index(db_conn)
 
     shard_list = assign_seqs_to_shards(db_conn, args['shard_count'])
-    create_blast_dbs(
-        shard_list, args['cpus'], args['blast_db'], args['temp_dir'])
+    create_all_blast_shards(args, shard_list)
 
     db_conn.close()
 
 
 def load_seqs(db_conn, sra_files):
-    """A hand rolled version of "Bio.SeqIO". It's faster because we can
-    take shortcuts due to its limited use.
+    """A hand rolled version of "Bio.SeqIO".
+
+    It's faster because we can take shortcuts due to its limited use.
 
     We're using a very simple state machine on lines to do the parsing.
         1) header      (exactly 1 line)  Starts with a '>' or an '@'
@@ -49,7 +49,6 @@ def load_seqs(db_conn, sra_files):
         3) fastq stuff (0 or more lines) Starts with a '+' on the 1st line
         4) Either go back to 1 or end
     """
-
     for file_name in sra_files:
 
         log.info('Loading "%s" into sqlite database' % file_name)
@@ -100,17 +99,17 @@ def load_seqs(db_conn, sra_files):
 
 
 def assign_seqs_to_shards(db_conn, shard_count):
-    """Put the sequences into the DB shards. What we doing is dividing all
-    of the input sequences into shard_count bucket of sequences. If there
-    are two ends of a sequence we have to make sure that both ends (1 & 2)
-    wind up in the same shard. These shards will then be turned into blast
-    databases.
+    """Put the sequences into the DB shards.
+
+    What we doing is dividing all of the input sequences into shard_count
+    bucket of sequences. If there are two ends of a sequence we have to make
+    sure that both ends (1 & 2) wind up in the same shard. These shards will
+    then be turned into blast databases.
 
     This will build up an array of "LIMIT len OFFSET start" parameters for
     SQL SELECT statements that are used for building the shard fasta files
     that get input into the makeblastdb statements.
     """
-
     log.info('Assigning sequences to shards')
 
     total = db.get_sequence_count(db_conn)
@@ -137,45 +136,46 @@ def assign_seqs_to_shards(db_conn, shard_count):
     return list(zip(limits, offsets[:-1]))
 
 
-def create_blast_dbs(shard_list, cpus, blast_db, temp_dir):
-    """Assign processes to make the blast DBs. One process for each blast
-    DB shard.
-    """
+def create_all_blast_shards(args, shard_list):
+    """Assign processes to make the blast DBs.
 
+    One process for each blast DB shard.
+    """
     log.info('Making blast DBs')
 
-    with multiprocessing.Pool(processes=cpus) as pool:
+    with multiprocessing.Pool(processes=args['cpus']) as pool:
         results = []
         for idx, shard_params in enumerate(shard_list, 1):
             results.append(pool.apply_async(
-                create_blast_db, (blast_db, temp_dir, shard_params, idx)))
+                create_one_blast_shard, (args, shard_params, idx)))
 
         _ = [result.get() for result in results]  # noqa
 
     log.info('Finished making blast DBs')
 
 
-def create_blast_db(blast_db, temp_dir, shard_params, shard_index):
-    """Create a blast DB from the shard. We fill a fasta file with the
-    appropriate sequences and hand things off to the makeblastdb program.
-    """
+def create_one_blast_shard(args, shard_params, shard_index):
+    """Create a blast DB from the shard.
 
-    shard_path = blast.shard_path(blast_db, shard_index)
+    We fill a fasta file with the appropriate sequences and hand things off
+    to the makeblastdb program.
+    """
+    shard_path = blast.shard_path(args['blast_db'], shard_index)
     fasta_name = '{}_{:03d}.fasta'.format(os.path.basename(sys.argv[0][:-3]),
                                           shard_index)
-    fasta_path = os.path.join(temp_dir, fasta_name)
+    fasta_path = os.path.join(args['temp_dir'], fasta_name)
 
     with open(fasta_path, 'w') as fasta_file:
-        fill_blast_fasta(blast_db, fasta_file, shard_params)
-        blast.create_db(temp_dir, fasta_path, shard_path)
+        fill_blast_fasta(args['blast_db'], fasta_file, shard_params)
+        blast.create_db(args['temp_dir'], fasta_path, shard_path)
 
 
 def fill_blast_fasta(blast_db, fasta_file, shard_params):
-    """Fill the fasta file used as input into blast with shard sequences from
-    the sqlite3 DB. We use the shard partitions passed in to determine which
-    sequences to get for this shard.
-    """
+    """Fill the fasta file used as input into blast.
 
+    Use sequences from the sqlite3 DB. We use the shard partitions passed in to
+    determine which sequences to get for this shard.
+    """
     db_conn = db.connect(blast_db)
 
     limit, offset = shard_params
@@ -190,7 +190,6 @@ def fill_blast_fasta(blast_db, fasta_file, shard_params):
 
 def parse_command_line(temp_dir_default):
     """Process command-line arguments."""
-
     description = """
         This script prepares data for use by the atram.py
         script. It takes fasta or fastq files of paired-end (or
@@ -274,4 +273,4 @@ if __name__ == '__main__':
 
     with tempfile.TemporaryDirectory(prefix='atram_') as TEMP_DIR_DEFAULT:
         ARGS = parse_command_line(TEMP_DIR_DEFAULT)
-        main(ARGS)
+        preprocess(ARGS)

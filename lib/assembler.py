@@ -9,25 +9,23 @@ from lib.assemblers.velvet import VelvetAssembler
 from lib.assemblers.none import NoneAssembler
 
 
-def factory(args):
+def factory(args, db_conn):
     """Return the assembler based upon the configuration options."""
-
     name = args.assembler.lower()
     if name == 'abyss':
-        return AbyssAssembler(args)
+        return AbyssAssembler(args, db_conn)
     elif name == 'trinity':
-        return TrinityAssembler(args)
+        return TrinityAssembler(args, db_conn)
     elif name == 'velvet':
-        return VelvetAssembler(args)
+        return VelvetAssembler(args, db_conn)
     elif name == 'spades':
-        return SpadesAssembler(args)
-    elif name == 'spades':
-        return NoneAssembler(args)
+        return SpadesAssembler(args, db_conn)
+    elif name == 'none':
+        return NoneAssembler(args, db_conn)
 
 
 def command_line_args(parser):
     """Add command-line arguments for the assemblers."""
-
     group = parser.add_argument_group('optional assembler arguments')
 
     group.add_argument('--no-long-reads', action='store_true',
@@ -75,7 +73,6 @@ def command_line_args(parser):
 
 def default_kmer(kmer, assembler):
     """Setup default kmer argument."""
-
     if assembler == 'velvet' and kmer > 31:
         kmer = 31
 
@@ -84,7 +81,6 @@ def default_kmer(kmer, assembler):
 
 def default_cov_cutoff(cov_cutoff):
     """Setup default coverage cutoff argument."""
-
     if cov_cutoff not in ['off', 'auto']:
         err = ('Read coverage cutoff value. Must be a positive '
                'float value, or "auto", or "off"')

@@ -1,4 +1,4 @@
-"""Handle SQL functions."""
+"""Handle database functions."""
 
 import sqlite3
 import lib.log as log
@@ -8,7 +8,6 @@ BATCH_SIZE = 1e6  # How many sequence records to insert at a time
 
 def connect(blast_db):
     """Setup the DB for our processing needs and return a DB connection."""
-
     db_name = '{}.sqlite.db'.format(blast_db)
 
     db_conn = sqlite3.connect(db_name)
@@ -32,7 +31,6 @@ DB_VERSION = '2.0'
 
 def check_versions(db_conn):
     """Make sure the database version matches what we built it with."""
-
     version = get_version(db_conn)
     if version != DB_VERSION:
         log.fatal('The database was built with version {} but you are running '
@@ -44,11 +42,11 @@ def check_versions(db_conn):
 # ########################## metadata table ##################################
 
 def create_metadata_table(db_conn):
-    """Create the metadata table. A single record used to tell if we are
-    running a atram.py against the schema version we built with
-    atram_preprocessor.py.
-    """
+    """Create the metadata table.
 
+    A single record used to tell if we are running atram.py against the
+    schema version we built with atram_preprocessor.py.
+    """
     db_conn.execute('''DROP TABLE IF EXISTS metadata''')
     sql = 'CREATE TABLE metadata (label TEXT, value TEXT)'
     db_conn.execute(sql)
@@ -60,7 +58,6 @@ def create_metadata_table(db_conn):
 
 def get_version(db_conn):
     """Get the current database version."""
-
     sql = '''SELECT value FROM metadata WHERE label = ?'''
     try:
         result = db_conn.execute(sql, ('version', ))
@@ -73,7 +70,6 @@ def get_version(db_conn):
 
 def create_sequences_table(db_conn):
     """Create the sequence table."""
-
     db_conn.execute('''DROP INDEX IF EXISTS seq_names''')
     db_conn.execute('''DROP TABLE IF EXISTS sequences''')
     sql = 'CREATE TABLE sequences (seq_name TEXT, seq_end TEXT, seq TEXT)'
@@ -81,17 +77,16 @@ def create_sequences_table(db_conn):
 
 
 def create_sequences_index(db_conn):
-    """Create the sequences index after we build the table. This speeds up the
-    program significantly.
-    """
+    """Create the sequences index after we build the table.
 
+    This speeds up the program significantly.
+    """
     sql = 'CREATE INDEX sequences_index ON sequences (seq_name, seq_end)'
     db_conn.execute(sql)
 
 
 def insert_sequences_batch(db_conn, batch):
-    """Insert a batch of sequence records into the sqlite database."""
-
+    """Insert a batch of sequence records into the database."""
     if batch:
         sql = '''INSERT INTO sequences (seq_name, seq_end, seq)
                       VALUES (?, ?, ?)
@@ -102,17 +97,16 @@ def insert_sequences_batch(db_conn, batch):
 
 def get_sequence_count(db_conn):
     """Get the number of sequences in the table."""
-
     result = db_conn.execute('SELECT COUNT(*) FROM sequences')
     return result.fetchone()[0]
 
 
 def get_two_sequences(db_conn, offset):
-    """Get two sequences at the given offset. This is used for calculating
-    where to cut-off a shard in the table. We want the shard to contain both
-    paired ends of a sequence.
-    """
+    """Get two sequences at the given offset.
 
+    This is used for calculating where to cut-off a shard in the table. We want
+    the shard to contain both paired ends of a sequence.
+    """
     sql = 'SELECT seq_name FROM sequences ORDER BY seq_name LIMIT 2 OFFSET {}'
     result = db_conn.execute(sql.format(offset))
     first = result.fetchone()[0]
@@ -122,7 +116,6 @@ def get_two_sequences(db_conn, offset):
 
 def get_sequences_in_shard(db_conn, limit, offset):
     """Get all sequences in a shard."""
-
     sql = '''
         SELECT seq_name, seq_end, seq
           FROM sequences
@@ -137,8 +130,10 @@ def get_sequences_in_shard(db_conn, limit, offset):
 # ######################## sra_blast_hits table ###############################
 
 def create_sra_blast_hits_table(db_conn):
-    """Reset the DB. Delete the tables and recreate them."""
+    """Reset the DB.
 
+    Delete the tables and recreate them.
+    """
     db_conn.execute('''DROP INDEX IF EXISTS sra_blast_hits_index''')
     db_conn.execute('''DROP TABLE IF EXISTS sra_blast_hits''')
     sql = '''
@@ -155,8 +150,7 @@ def create_sra_blast_hits_table(db_conn):
 
 
 def insert_blast_hit_batch(db_conn, batch):
-    """Insert a batch of blast hit records into the sqlite database."""
-
+    """Insert a batch of blast hit records into the database."""
     if batch:
         sql = '''
             INSERT INTO sra_blast_hits
@@ -169,7 +163,6 @@ def insert_blast_hit_batch(db_conn, batch):
 
 def sra_blast_hits_count(db_conn, iteration):
     """Count the blast hist for select the iteration."""
-
     sql = '''
         SELECT COUNT(*) AS count
           FROM sra_blast_hits
@@ -182,7 +175,6 @@ def sra_blast_hits_count(db_conn, iteration):
 
 def get_sra_blast_hits(db_conn, iteration):
     """Get all blast hits for the iteration."""
-
     sql = '''
         SELECT seq_name, seq_end, seq
           FROM sequences
@@ -198,7 +190,6 @@ def get_sra_blast_hits(db_conn, iteration):
 
 def get_blast_hits_by_end_count(db_conn, iteration, end_count):
     """Get all blast hits for the iteration."""
-
     sql = '''
         SELECT seq_name, seq_end, seq
           FROM sequences
@@ -219,8 +210,7 @@ def get_blast_hits_by_end_count(db_conn, iteration, end_count):
 # ####################### contig_blast_hits table #############################
 
 def create_contig_blast_hits_table(db_conn):
-    """Reset the DB. Delete the tables and recreate them."""
-
+    """Reset the database. Delete the tables and recreate them."""
     db_conn.execute('''DROP INDEX IF EXISTS contig_blast_hits_index''')
     db_conn.execute('''DROP TABLE IF EXISTS contig_blast_hits''')
     sql = '''
@@ -240,8 +230,7 @@ def create_contig_blast_hits_table(db_conn):
 
 
 def insert_contig_hit_batch(db_conn, batch):
-    """Insert a batch of blast hit records into the sqlite database."""
-
+    """Insert a batch of blast hit records into the database."""
     if batch:
         sql = '''
             INSERT INTO contig_blast_hits
@@ -256,7 +245,6 @@ def insert_contig_hit_batch(db_conn, batch):
 
 def get_contig_blast_hits(db_conn, iteration):
     """Get all blast hits for the iteration."""
-
     sql = '''
         SELECT iteration, contig_id, description, bit_score, len,
                query_from, query_to, query_strand,
@@ -272,8 +260,7 @@ def get_contig_blast_hits(db_conn, iteration):
 # ####################### assembled_contigs table #############################
 
 def create_assembled_contigs_table(db_conn):
-    """Reset the DB. Delete the tables and recreate them."""
-
+    """Reset the database. Delete the tables and recreate them."""
     db_conn.execute('''DROP INDEX IF EXISTS assembled_contigs_index''')
     db_conn.execute('''DROP TABLE IF EXISTS assembled_contigs''')
     sql = '''
@@ -294,7 +281,6 @@ def create_assembled_contigs_table(db_conn):
 
 def assembled_contigs_count(db_conn, iteration, bit_score, length):
     """Count the blast hist for the iteration."""
-
     sql = '''
         SELECT COUNT(*) AS count
           FROM assembled_contigs
@@ -309,9 +295,7 @@ def assembled_contigs_count(db_conn, iteration, bit_score, length):
 
 
 def iteration_overlap_count(db_conn, iteration, bit_score, length):
-    """Count how many assembled contigs match what was in the last iteration.
-    """
-
+    """Count how many assembled contigs match what's in the last iteration."""
     sql = '''
         SELECT COUNT(*) AS overlap
           FROM assembled_contigs AS curr_iter
@@ -330,8 +314,7 @@ def iteration_overlap_count(db_conn, iteration, bit_score, length):
 
 
 def insert_assembled_contigs_batch(db_conn, batch):
-    """Insert a batch of blast hit records into the sqlite database."""
-
+    """Insert a batch of blast hit records into the database."""
     if batch:
         sql = '''
             INSERT INTO assembled_contigs
@@ -346,10 +329,10 @@ def insert_assembled_contigs_batch(db_conn, batch):
 
 
 def get_assembled_contigs(db_conn, iteration, bit_score, length):
-    """Get all assembled contigs for the iteration so that we can use them
-    as the queries in the next atram iteration.
-    """
+    """Get all assembled contigs for the iteration.
 
+    We will use them as the queries in the next atram iteration.
+    """
     sql = '''
         SELECT contig_id, seq
           FROM assembled_contigs
@@ -361,10 +344,7 @@ def get_assembled_contigs(db_conn, iteration, bit_score, length):
 
 
 def get_all_assembled_contigs(db_conn, bit_score=0, length=0):
-    """Get all assembled contigs for the iteration so that we can use them
-    as the queries in the next atram iteration.
-    """
-
+    """Get all assembled contigs."""
     sql = '''
         SELECT iteration, contig_id, seq, description, bit_score, len,
                query_from, query_to, query_strand,

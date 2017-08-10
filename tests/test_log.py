@@ -1,6 +1,6 @@
-"""Testing functions in lib/log.py"""
+"""Testing functions in lib/log."""
 
-# pylint: disable=missing-docstring
+# pylama: ignore=D103
 
 import lib.log as log
 

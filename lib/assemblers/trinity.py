@@ -8,19 +8,18 @@ from lib.assemblers.base import BaseAssembler
 class TrinityAssembler(BaseAssembler):
     """Wrapper for the trinity assembler."""
 
-    @property
-    def work_path(self):
-        """The output directory name has unique requirements."""
-
-        return os.path.join(self.iter_dir, 'trinity')
-
-    def __init__(self, args):
+    def __init__(self, args, db_conn):
+        """Build the assembler."""
         super().__init__(args)
         self.steps = [self.trinity]
 
+    @property
+    def work_path(self):
+        """The output directory name has unique requirements."""
+        return os.path.join(self.iter_dir, 'trinity')
+
     def trinity(self):
         """Build the command for assembly."""
-
         cmd = ['Trinity',
                '--seqType fa',
                '--max_memory {}G'.format(self.args.max_memory),
@@ -52,6 +51,5 @@ class TrinityAssembler(BaseAssembler):
 
     def post_assembly(self):
         """Copy the assembler output."""
-
         src = os.path.join(self.iter_dir, 'trinity.Trinity.fasta')
         shutil.move(src, self.file['output'])

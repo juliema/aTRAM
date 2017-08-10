@@ -1,8 +1,6 @@
-"""Testing functions in atram_preprocessor.py"""
+"""Testing functions in atram_preprocessor."""
 
-# pylint: disable=missing-docstring
-# pylint: disable=unused-argument
-# pylint: disable=global-statement
+# pylama: ignore=D103
 
 from os.path import join
 import lib.db as db

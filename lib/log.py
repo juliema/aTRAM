@@ -9,7 +9,6 @@ import subprocess
 
 def setup(log_file):
     """Standard logger setup."""
-
     logging.basicConfig(
         filename=log_file,
         level=logging.DEBUG,
@@ -19,9 +18,10 @@ def setup(log_file):
 
 
 def file_name(log_file, blast_db, query_file=''):
-    """Setup default log file name for each run. Honor user's argument if
-    given."""
+    """Setup default log file name for each run.
 
+    Honor user's argument if given.
+    """
     if log_file:
         return log_file
 
@@ -35,7 +35,6 @@ def file_name(log_file, blast_db, query_file=''):
 
 def subcommand(cmd, temp_dir, timeout=None):
     """Handle subprocess calls and log their output."""
-
     logging.info(cmd)
 
     with tempfile.NamedTemporaryFile(mode='w', dir=temp_dir) as log_output:
@@ -61,7 +60,6 @@ def subcommand(cmd, temp_dir, timeout=None):
 
 def info(msg, line_break=None):
     """Log and display an info message."""
-
     if line_break is not None:
         print(line_break)
     print(msg)
@@ -73,13 +71,11 @@ def info(msg, line_break=None):
 
 def error(msg):
     """Log and display an error message."""
-
     print(msg)
     logging.error(msg)
 
 
 def fatal(msg):
     """Log an error message and exit."""
-
     error(msg)
     sys.exit(1)

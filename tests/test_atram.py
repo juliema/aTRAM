@@ -1,27 +1,23 @@
-"""Testing functions in atram.py"""
+"""Testing functions in atram."""
 
-# pylint: disable=missing-docstring
-# pylint: disable=unused-argument
-# pylint: disable=global-statement
-# pylint: disable=too-few-public-methods
+# pylama: ignore=D103
 
 import atram
 
 
 # ============================================================================
-# Mock functions in the db module
+# Mock functions in atram itself
 
-# Mocking the sequences table. It will hold the tuples that get inserted into
-# the table.
+# Mocking write_seq so that we don't need to write to files
 
-WRITE_SEQ_DATA = []
-WRITE_SEQ_COUNT = 0
+WRITE_QUERY_SEQ_DATA = []
+WRITE_QUERY_SEQ_COUNT = 0
 
 
-def mock_write_seq(file_name, seq_id, seq):
-    global WRITE_SEQ_DATA, WRITE_SEQ_COUNT
-    WRITE_SEQ_COUNT += 1
-    WRITE_SEQ_DATA.append({'file': file_name, 'id': seq_id, 'seq': seq})
+def mock_write_query_seq(file_name, seq_id, seq):
+    global WRITE_QUERY_SEQ_DATA, WRITE_QUERY_SEQ_COUNT
+    WRITE_QUERY_SEQ_COUNT += 1
+    WRITE_QUERY_SEQ_DATA.append({'file': file_name, 'id': seq_id, 'seq': seq})
 
 
 # ============================================================================
@@ -29,21 +25,27 @@ def mock_write_seq(file_name, seq_id, seq):
 
 
 def test_split_queries(monkeypatch):
-    global WRITE_SEQ_DATA, WRITE_SEQ_COUNT
+    global WRITE_QUERY_SEQ_DATA, WRITE_QUERY_SEQ_COUNT
 
-    monkeypatch.setattr(atram, 'write_seq', mock_write_seq)
+    monkeypatch.setattr(atram, 'write_query_seq', mock_write_query_seq)
 
     file_names = ['tests/data/split_queries1.txt']
 
     queries = list(atram.split_queries(
-        {'temp_file': 'tests', 'query': file_names}))
+        {'temp_file': 'temp_dir', 'query': file_names}))
 
-    assert WRITE_SEQ_COUNT == 3
+    fasta = [
+        'temp_dir/queries/split_queries1_seq1_1_1.fasta',
+        'temp_dir/queries/split_queries1_seq2_2_2_2.fasta',
+        'temp_dir/queries/split_queries1_seq3_3.fasta',
+        'temp_dir/queries/split_queries1_seq1_1_4.fasta']
 
-    for query in queries:
-        assert query == 'tests/sequence_01.fasta'
+    assert WRITE_QUERY_SEQ_COUNT == 4
 
-    for i, datum in enumerate(WRITE_SEQ_DATA, 1):
-        assert datum['file'] == 'tests/sequence_01.fasta'
-        assert datum['id'] == 'seq{}'.format(i)
-        assert datum['seq'] == ['', 'A', 'C', 'G'][i] * (i * 10)
+    assert queries == fasta
+
+    assert WRITE_QUERY_SEQ_DATA == [
+        {'file': fasta[0], 'id': 'seq1/1', 'seq': 'A' * 10},
+        {'file': fasta[1], 'id': 'seq2:2/2', 'seq': 'C' * 20},
+        {'file': fasta[2], 'id': 'seq3', 'seq': 'G' * 30},
+        {'file': fasta[3], 'id': 'seq1+1', 'seq': 'T' * 10}]
