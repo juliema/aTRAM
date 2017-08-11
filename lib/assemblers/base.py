@@ -18,12 +18,8 @@ class BaseAssembler:
         self.steps = []     # Assembler steps setup by the assembler
         self.file = {}      # Files and record counts
         self.iteration = 0  # Current iteration
-        self.db_conn = db_conn
-
-    @property
-    def blast_only(self):
-        """Use this to flag if the assembler should exit early."""
-        return False
+        self.db_conn = db_conn  # Save the DB connection
+        self.blast_only = False  # Used to short-circuit the assembler
 
     @property
     def iter_dir(self):

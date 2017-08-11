@@ -10,6 +10,7 @@ input/*
 output/*
 query/*
 db/*
+perl/*
 
 # test-related
 .coverage

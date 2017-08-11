@@ -3,31 +3,20 @@
 # pylama: ignore=D103
 
 import atram
+import tests.mock as mock
 
 
 # ============================================================================
 # Mock functions in atram itself
-
-# Mocking write_seq so that we don't need to write to files
-
-WRITE_QUERY_SEQ_DATA = []
-WRITE_QUERY_SEQ_COUNT = 0
-
-
-def mock_write_query_seq(file_name, seq_id, seq):
-    global WRITE_QUERY_SEQ_DATA, WRITE_QUERY_SEQ_COUNT
-    WRITE_QUERY_SEQ_COUNT += 1
-    WRITE_QUERY_SEQ_DATA.append({'file': file_name, 'id': seq_id, 'seq': seq})
-
 
 # ============================================================================
 # Tests start here
 
 
 def test_split_queries(monkeypatch):
-    global WRITE_QUERY_SEQ_DATA, WRITE_QUERY_SEQ_COUNT
+    mock.HISTORY = []
 
-    monkeypatch.setattr(atram, 'write_query_seq', mock_write_query_seq)
+    mock.mock(monkeypatch, atram, 'write_query_seq')
 
     file_names = ['tests/data/split_queries1.txt']
 
@@ -40,12 +29,14 @@ def test_split_queries(monkeypatch):
         'temp_dir/queries/split_queries1_seq3_3.fasta',
         'temp_dir/queries/split_queries1_seq1_1_4.fasta']
 
-    assert WRITE_QUERY_SEQ_COUNT == 4
-
     assert queries == fasta
 
-    assert WRITE_QUERY_SEQ_DATA == [
-        {'file': fasta[0], 'id': 'seq1/1', 'seq': 'A' * 10},
-        {'file': fasta[1], 'id': 'seq2:2/2', 'seq': 'C' * 20},
-        {'file': fasta[2], 'id': 'seq3', 'seq': 'G' * 30},
-        {'file': fasta[3], 'id': 'seq1+1', 'seq': 'T' * 10}]
+    assert mock.HISTORY == [
+        {'module': 'atram', 'func': 'write_query_seq',
+            'file_name': fasta[0], 'seq_id': 'seq1/1', 'seq': 'A' * 10},
+        {'module': 'atram', 'func': 'write_query_seq',
+            'file_name': fasta[1], 'seq_id': 'seq2:2/2', 'seq': 'C' * 20},
+        {'module': 'atram', 'func': 'write_query_seq',
+            'file_name': fasta[2], 'seq_id': 'seq3', 'seq': 'G' * 30},
+        {'module': 'atram', 'func': 'write_query_seq',
+            'file_name': fasta[3], 'seq_id': 'seq1+1', 'seq': 'T' * 10}]

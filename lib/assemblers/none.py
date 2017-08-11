@@ -12,6 +12,7 @@ class NoneAssembler(BaseAssembler):
         """Build the assembler."""
         super().__init__(args, db_conn)
         self.steps = []
+        self.blast_only = True  # Used to short-circuit the assembler
 
     @property
     def blast_only(self):
