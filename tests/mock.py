@@ -11,11 +11,14 @@ def mock(monkeypatch, module, func_name, returns=None):
     """Append the function call to the history.
 
     Save all of the arguments of each function call in the order they
-    were called.
+    were called. You can pass in a set of return values in the returns
+    function. If it is a list the return values will cycle thru the list
+    returning each item in turn. For simple data types the cycle is one item.
     """
     func = module.__dict__.get(func_name)
     sig = inspect.signature(func)
     arg_names = [p for p in sig.parameters]
+
     if returns:
         returns = [returns] if not isinstance(returns, list) else returns
         returns = cycle(returns)

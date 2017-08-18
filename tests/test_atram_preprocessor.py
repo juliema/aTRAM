@@ -10,6 +10,7 @@ import tests.mock as mock
 
 
 def test_load_seq(monkeypatch):
+    mock.history = []
     db.BATCH_SIZE = 5
 
     mock.mock(monkeypatch, db, 'insert_sequences_batch')
