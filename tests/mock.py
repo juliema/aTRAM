@@ -1,6 +1,7 @@
 """Utility to mock function calls."""
 
 import inspect
+from itertools import cycle
 
 history = []
 returns = {}
@@ -15,6 +16,9 @@ def mock(monkeypatch, module, func_name, returns=None):
     func = module.__dict__.get(func_name)
     sig = inspect.signature(func)
     arg_names = [p for p in sig.parameters]
+    if returns:
+        returns = [returns] if not isinstance(returns, list) else returns
+        returns = cycle(returns)
 
     def mocked(*args, **kwargs):
         hist = {arg_names[i]: a for i, a in enumerate(args)}
@@ -22,7 +26,7 @@ def mock(monkeypatch, module, func_name, returns=None):
         hist['func'] = func_name
         history.append(hist)
         if returns:
-            return returns
+            return next(returns)
 
     monkeypatch.setattr(module, func_name, mocked)
 

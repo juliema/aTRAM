@@ -44,10 +44,8 @@ def test_load_seq(monkeypatch):
 
 
 def test_assign_seqs_to_shards(monkeypatch):
-    pairs = {33: ('seq1', 'seq2'),
-             66: ('seq3', 'seq3')}
-
-    monkeypatch.setattr(db, 'get_two_sequences', lambda d, i: pairs[i])
+    mock.mock(monkeypatch, db, 'get_two_sequences', returns=[('seq1', 'seq2'),
+                                                             ('seq3', 'seq3')])
     mock.mock(monkeypatch, db, 'get_sequence_count', returns=100)
 
     shard_list = atram_preprocessor.assign_seqs_to_shards(True, 3)
