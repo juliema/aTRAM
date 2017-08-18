@@ -4,10 +4,10 @@ import inspect
 from itertools import cycle
 
 history = []
-returns = {}
+monkeypatch = None
 
 
-def mock(monkeypatch, module, func_name, returns=None):
+def it(module, func_name, returns=None):
     """Append the function call to the history.
 
     Save all of the arguments of each function call in the order they
@@ -35,10 +35,15 @@ def mock(monkeypatch, module, func_name, returns=None):
 
 
 def filter(module, func):
-    """Filter the history to get only specific function calls."""
+    """Filter the history to get only specific function calls.
+
+    Remove the given module and functions names. They are known.
+    """
     hist = []
     filt = [h for h in history if h['module'] == module and h['func'] == func]
+
     for h in filt:
-        call = {k: v for k, v in h.items() if k not in ['module', 'func']}
-        hist.append(call)
+        func_call = {k: v for k, v in h.items() if k not in ['module', 'func']}
+        hist.append(func_call)
+
     return hist

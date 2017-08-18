@@ -6,10 +6,8 @@ import atram
 import tests.mock as mock
 
 
-def test_split_queries(monkeypatch):
-    mock.history = []
-
-    mock.mock(monkeypatch, atram, 'write_query_seq')
+def test_split_queries():
+    mock.it(atram, 'write_query_seq')
 
     file_names = ['tests/data/split_queries1.txt']
 

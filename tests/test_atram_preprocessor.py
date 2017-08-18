@@ -9,11 +9,10 @@ import lib.blast as blast
 import tests.mock as mock
 
 
-def test_load_seq(monkeypatch):
-    mock.history = []
+def test_load_seq():
     db.BATCH_SIZE = 5
 
-    mock.mock(monkeypatch, db, 'insert_sequences_batch')
+    mock.it(db, 'insert_sequences_batch')
 
     file_1 = join('tests', 'data', 'load_seq1.txt')
     file_2 = join('tests', 'data', 'load_seq2.txt')
@@ -44,10 +43,10 @@ def test_load_seq(monkeypatch):
             ('seq8', '2', 'TTTTTTTTTTCCCCCCCCCC')]}]
 
 
-def test_assign_seqs_to_shards(monkeypatch):
-    mock.mock(monkeypatch, db, 'get_two_sequences', returns=[('seq1', 'seq2'),
-                                                             ('seq3', 'seq3')])
-    mock.mock(monkeypatch, db, 'get_sequence_count', returns=100)
+def test_assign_seqs_to_shards():
+    mock.it(db, 'get_sequence_count', returns=100)
+    mock.it(db, 'get_two_sequences', returns=[('seq1', 'seq2'),
+                                              ('seq3', 'seq3')])
 
     shard_list = atram_preprocessor.assign_seqs_to_shards(True, 3)
 
@@ -56,11 +55,10 @@ def test_assign_seqs_to_shards(monkeypatch):
     assert shard_list == [(34, 0), (32, 34), (34, 66)]
 
 
-def test_create_one_blast_shard(monkeypatch):
-    mock.history = []
-    mock.mock(monkeypatch, blast, 'create_db')
-    mock.mock(monkeypatch, blast, 'shard_path', returns='shard/path')
-    mock.mock(monkeypatch, atram_preprocessor, 'fill_blast_fasta')
+def test_create_one_blast_shard():
+    mock.it(blast, 'create_db')
+    mock.it(blast, 'shard_path', returns='shard/path')
+    mock.it(atram_preprocessor, 'fill_blast_fasta')
 
     args = {'blast_db': 'my_blast_db', 'temp_dir': 'my_temp_dir'}
     shard_params = ['limit', 'offset']
