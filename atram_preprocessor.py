@@ -58,7 +58,7 @@ def load_seqs(db_conn, sra_files):
         with open(file_name) as sra_file:
             batch = []      # The batch of records to insert
 
-            seq = ''        # The sequence string. A DB field
+            seq = []        # It will become the sequence string. A DB field
             seq_end = ''    # Which end? 1 or 2. A DB field
             seq_name = ''   # Name from the fasta file. A DB field
             is_seq = True   # The state machine's only flag for state
@@ -72,9 +72,9 @@ def load_seqs(db_conn, sra_files):
                 # Handle a header line
                 elif line[0] in ['>', '@']:
                     if seq:  # Append last record to the batch?
-                        batch.append((seq_name, seq_end, seq))
+                        batch.append((seq_name, seq_end, ''.join(seq)))
 
-                    seq = ''        # Reset the sequence
+                    seq = []        # Reset the sequence
                     is_seq = True   # Reset the state flag
 
                     # Get data from the header
@@ -88,14 +88,14 @@ def load_seqs(db_conn, sra_files):
 
                 # Handle sequence lines
                 elif line[0].isalpha() and is_seq:
-                    seq += line.rstrip()  # ''.join([strs])
+                    seq.append(line.rstrip())
 
                 if len(batch) >= db.BATCH_SIZE:
                     db.insert_sequences_batch(db_conn, batch)
                     batch = []
 
             if seq:
-                batch.append((seq_name, seq_end, seq))
+                batch.append((seq_name, seq_end, ''.join(seq)))
 
             db.insert_sequences_batch(db_conn, batch)
 
@@ -167,12 +167,12 @@ def create_one_blast_shard(args, shard_params, shard_index):
                                           shard_index)
     fasta_path = os.path.join(args['temp_dir'], fasta_name)
 
-    with open(fasta_path, 'w') as fasta_file:
-        fill_blast_fasta(args['blast_db'], fasta_file, shard_params)
-        blast.create_db(args['temp_dir'], fasta_path, shard_path)
+    fill_blast_fasta(args['blast_db'], fasta_path, shard_params)
+
+    blast.create_db(args['temp_dir'], fasta_path, shard_path)
 
 
-def fill_blast_fasta(blast_db, fasta_file, shard_params):
+def fill_blast_fasta(blast_db, fasta_path, shard_params):
     """Fill the fasta file used as input into blast.
 
     Use sequences from the sqlite3 DB. We use the shard partitions passed in to
@@ -182,10 +182,11 @@ def fill_blast_fasta(blast_db, fasta_file, shard_params):
 
     limit, offset = shard_params
 
-    for row in db.get_sequences_in_shard(db_conn, limit, offset):
-        seq_end = '/{}'.format(row[1]) if row[1] else ''
-        fasta_file.write('>{}{}\n'.format(row[0], seq_end))
-        fasta_file.write('{}\n'.format(row[2]))
+    with open(fasta_path, 'w') as fasta_file:
+        for row in db.get_sequences_in_shard(db_conn, limit, offset):
+            seq_end = '/{}'.format(row[1]) if row[1] else ''
+            fasta_file.write('>{}{}\n'.format(row[0], seq_end))
+            fasta_file.write('{}\n'.format(row[2]))
 
     db_conn.close()
 

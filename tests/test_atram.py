@@ -6,15 +6,8 @@ import atram
 import tests.mock as mock
 
 
-# ============================================================================
-# Mock functions in atram itself
-
-# ============================================================================
-# Tests start here
-
-
 def test_split_queries(monkeypatch):
-    mock.HISTORY = []
+    mock.history = []
 
     mock.mock(monkeypatch, atram, 'write_query_seq')
 
@@ -31,7 +24,7 @@ def test_split_queries(monkeypatch):
 
     assert queries == fasta
 
-    assert mock.HISTORY == [
+    assert mock.history == [
         {'module': 'atram', 'func': 'write_query_seq',
             'file_name': fasta[0], 'seq_id': 'seq1/1', 'seq': 'A' * 10},
         {'module': 'atram', 'func': 'write_query_seq',

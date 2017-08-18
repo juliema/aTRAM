@@ -16,10 +16,10 @@ PARSE_HEADER = re.compile(r'^ [>@] \s* ( [^\s/._]+? ) [\s/._] ( [12] )',
 PARSE_RESULTS = re.compile(r'^ ( [^\s/._]+? ) [\s/._] ( [12] )', re.VERBOSE)
 
 
-def create_db(temp_dir, fasta_file, blast_db):
+def create_db(temp_dir, fasta_file, shard_path):
     """Create a blast database."""
     cmd = 'makeblastdb -dbtype nucl -in {} -out {}'
-    cmd = cmd.format(fasta_file, blast_db)
+    cmd = cmd.format(fasta_file, shard_path)
     log.subcommand(cmd, temp_dir)
 
 
