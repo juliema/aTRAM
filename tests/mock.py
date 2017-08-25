@@ -15,6 +15,11 @@ def it(module, func_name, returns=None):
     function. If it is a list the return values will cycle thru the list
     returning each item in turn. For simple data types the cycle is one item.
     """
+    global history
+
+    if returns:
+        returns = cycle(returns)
+
     func = module.__dict__.get(func_name)
     sig = inspect.signature(func)
     arg_names = [p for p in sig.parameters]
