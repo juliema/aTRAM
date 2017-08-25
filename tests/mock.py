@@ -17,15 +17,12 @@ def it(module, func_name, returns=None):
     """
     global history
 
-    if returns:
-        returns = cycle(returns)
-
     func = module.__dict__.get(func_name)
     sig = inspect.signature(func)
     arg_names = [p for p in sig.parameters]
 
-    if returns:
-        returns = [returns] if not isinstance(returns, list) else returns
+    if returns is not None:
+        returns = returns if isinstance(returns, list) else [returns]
         returns = cycle(returns)
 
     def mocked(*args, **kwargs):
