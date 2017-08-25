@@ -3,13 +3,72 @@
 # pylama: ignore=D103
 
 from os.path import join
+import tempfile
 import atram_preprocessor
 import lib.db as db
+import lib.log as log
 import lib.blast as blast
 import tests.mock as mock
 
 
-def test_load_seq():
+def test_preprocess():
+    args = {
+        'log_file': 'log_file_arg',
+        'blast_db': 'blast_db_arg',
+        'sra_files': 'sra_files_arg',
+        'shard_count': 'shard_count_arg'
+    }
+
+    mock.it(log, 'file_name', 'log_file_name')
+    mock.it(log, 'setup')
+    mock.context(db, 'connect', 'my_connection')
+    mock.it(db, 'create_metadata_table')
+    mock.it(db, 'create_sequences_table')
+    mock.it(atram_preprocessor, 'load_seqs')
+    mock.it(log, 'info')
+    mock.it(db, 'create_sequences_index')
+    mock.it(atram_preprocessor, 'assign_seqs_to_shards', 'shard_list')
+    mock.it(atram_preprocessor, 'create_all_blast_shards')
+
+    atram_preprocessor.preprocess(args)
+
+    assert mock.history == [
+        {'blast_db': 'blast_db_arg',
+         'func': 'file_name',
+         'log_file': 'log_file_arg',
+         'module': 'lib.log'},
+        {'func': 'setup', 'log_file': 'log_file_name', 'module': 'lib.log'},
+        {'blast_db': 'blast_db_arg', 'func': 'connect', 'module': 'lib.db'},
+        {'db_conn': 'my_connection',
+         'func': 'create_metadata_table',
+         'module': 'lib.db'},
+        {'db_conn': 'my_connection',
+         'func': 'create_sequences_table',
+         'module': 'lib.db'},
+        {'db_conn': 'my_connection',
+         'func': 'load_seqs',
+         'module': 'atram_preprocessor',
+         'sra_files': 'sra_files_arg'},
+        {'func': 'info',
+         'module': 'lib.log',
+         'msg': 'Creating an index for the sequence table'},
+        {'db_conn': 'my_connection',
+         'func': 'create_sequences_index',
+         'module': 'lib.db'},
+        {'db_conn': 'my_connection',
+         'func': 'assign_seqs_to_shards',
+         'module': 'atram_preprocessor',
+         'shard_count': 'shard_count_arg'},
+        {'args': {'blast_db': 'blast_db_arg',
+                  'log_file': 'log_file_arg',
+                  'shard_count': 'shard_count_arg',
+                  'sra_files': 'sra_files_arg'},
+         'func': 'create_all_blast_shards',
+         'module': 'atram_preprocessor',
+         'shard_list': 'shard_list'}]
+
+
+def test_load_seqs():
     db.BATCH_SIZE = 5
 
     mock.it(db, 'insert_sequences_batch')
@@ -85,3 +144,42 @@ def test_create_one_blast_shard():
     assert history == [{'fasta_file': 'my_temp_dir/pyt_011.fasta',
                         'shard_path': 'shard/path',
                         'temp_dir': 'my_temp_dir'}]
+
+
+def test_fill_blast_fasta():
+    mock.context(db, 'connect', 'my_connection')
+
+    # We want to return an array of tuples as one item
+    mock.it(db, 'get_sequences_in_shard', [[
+        ('seq1', '1', 'AAAAAAAAAA'),
+        ('seq1', '2', 'CCCCCCCCCC'),
+        ('seq2', '', 'GGGGGGGGGG'),
+        ('seq3', '1', 'TTTTTTTTTT')]])
+
+    with tempfile.TemporaryDirectory(prefix='test_') as temp_dir:
+        blast_db = 'test_blast_db'
+        fasta_path = join(temp_dir, 'test_output.fasta')
+        shard_params = (100, 200)  # limit and offset
+
+        atram_preprocessor.fill_blast_fasta(blast_db, fasta_path, shard_params)
+
+        with open(fasta_path) as test_file:
+            assert test_file.read() == (
+                '>seq1/1\n'
+                'AAAAAAAAAA\n'
+                '>seq1/2\n'
+                'CCCCCCCCCC\n'
+                '>seq2\n'
+                'GGGGGGGGGG\n'
+                '>seq3/1\n'
+                'TTTTTTTTTT\n')
+
+    assert mock.history == [
+        {'blast_db': 'test_blast_db',
+         'func': 'connect',
+         'module': 'lib.db'},
+        {'db_conn': 'my_connection',
+         'func': 'get_sequences_in_shard',
+         'limit': 100,
+         'module': 'lib.db',
+         'offset': 200}]

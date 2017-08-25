@@ -13,3 +13,7 @@ def test_file_name_default():
 def test_file_name_arg():
     file_name = log.file_name('test.log', 'blast_db', 'query_file')
     assert file_name == 'test.log'
+
+
+def test_info_default():
+    pass

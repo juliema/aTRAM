@@ -1,4 +1,5 @@
-"""Format the data so that atram can use it later.
+"""
+Format the data so that atram can use it later.
 
 It takes sequence read archive (SRA) files and converts them into coordinated
 blast and sqlite3 databases.
@@ -25,23 +26,22 @@ def preprocess(args):
     log_file = log.file_name(args['log_file'], args['blast_db'])
     log.setup(log_file)
 
-    db_conn = db.connect(args['blast_db'])
-    db.create_metadata_table(db_conn)
+    with db.connect(args['blast_db']) as db_conn:
+        db.create_metadata_table(db_conn)
 
-    db.create_sequences_table(db_conn)
-    load_seqs(db_conn, args['sra_files'])
+        db.create_sequences_table(db_conn)
+        load_seqs(db_conn, args['sra_files'])
 
-    log.info('Creating an index for the sequence table')
-    db.create_sequences_index(db_conn)
+        log.info('Creating an index for the sequence table')
+        db.create_sequences_index(db_conn)
 
-    shard_list = assign_seqs_to_shards(db_conn, args['shard_count'])
-    create_all_blast_shards(args, shard_list)
-
-    db_conn.close()
+        shard_list = assign_seqs_to_shards(db_conn, args['shard_count'])
+        create_all_blast_shards(args, shard_list)
 
 
 def load_seqs(db_conn, sra_files):
-    """A hand rolled version of "Bio.SeqIO".
+    """
+    A hand rolled version of "Bio.SeqIO".
 
     It's faster because we can take shortcuts due to its limited use.
 
@@ -101,7 +101,8 @@ def load_seqs(db_conn, sra_files):
 
 
 def assign_seqs_to_shards(db_conn, shard_count):
-    """Put the sequences into the DB shards.
+    """
+    Put the sequences into the DB shards.
 
     What we doing is dividing all of the input sequences into shard_count
     bucket of sequences. If there are two ends of a sequence we have to make
@@ -143,7 +144,8 @@ def assign_seqs_to_shards(db_conn, shard_count):
 
 
 def create_all_blast_shards(args, shard_list):
-    """Assign processes to make the blast DBs.
+    """
+    Assign processes to make the blast DBs.
 
     One process for each blast DB shard.
     """
@@ -161,7 +163,8 @@ def create_all_blast_shards(args, shard_list):
 
 
 def create_one_blast_shard(args, shard_params, shard_index):
-    """Create a blast DB from the shard.
+    """
+    Create a blast DB from the shard.
 
     We fill a fasta file with the appropriate sequences and hand things off
     to the makeblastdb program.
@@ -177,22 +180,20 @@ def create_one_blast_shard(args, shard_params, shard_index):
 
 
 def fill_blast_fasta(blast_db, fasta_path, shard_params):
-    """Fill the fasta file used as input into blast.
+    """
+    Fill the fasta file used as input into blast.
 
     Use sequences from the sqlite3 DB. We use the shard partitions passed in to
     determine which sequences to get for this shard.
     """
-    db_conn = db.connect(blast_db)
+    with db.connect(blast_db) as db_conn:
+        limit, offset = shard_params
 
-    limit, offset = shard_params
-
-    with open(fasta_path, 'w') as fasta_file:
-        for row in db.get_sequences_in_shard(db_conn, limit, offset):
-            seq_end = '/{}'.format(row[1]) if row[1] else ''
-            fasta_file.write('>{}{}\n'.format(row[0], seq_end))
-            fasta_file.write('{}\n'.format(row[2]))
-
-    db_conn.close()
+        with open(fasta_path, 'w') as fasta_file:
+            for row in db.get_sequences_in_shard(db_conn, limit, offset):
+                seq_end = '/{}'.format(row[1]) if row[1] else ''
+                fasta_file.write('>{}{}\n'.format(row[0], seq_end))
+                fasta_file.write('{}\n'.format(row[2]))
 
 
 def parse_command_line(temp_dir_default):

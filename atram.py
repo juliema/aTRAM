@@ -41,7 +41,8 @@ def assemble(args):
 
 
 def split_queries(args):
-    """Handle every record as a separate query target.
+    """
+    Handle every record as a separate query target.
 
     We put each query record into its own file for blast queries.
     """
@@ -121,7 +122,8 @@ def assembly_loop(args, blast_db, query, db_conn, assembler):
 
 
 def blast_query_against_all_shards(args, blast_db, query, iteration):
-    """Blast the query against the SRA databases.
+    """
+    Blast the query against the SRA databases.
 
     We're using a map-reduce strategy here. We map the blasting of the query
     sequences and reduce the output into one fasta file.
@@ -139,7 +141,8 @@ def blast_query_against_all_shards(args, blast_db, query, iteration):
 
 
 def shard_fraction(args, blast_db):
-    """Get the shards we are using.
+    """
+    Get the shards we are using.
 
     We may not want the entire DB for highly redundant libraries.
     """
@@ -150,7 +153,8 @@ def shard_fraction(args, blast_db):
 
 def blast_query_against_one_shard(
         args, blast_db, query, shard_path, iteration):
-    """Blast the query against one blast DB shard.
+    """
+    Blast the query against one blast DB shard.
 
     Then write the results to the database.
     """

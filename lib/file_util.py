@@ -37,7 +37,8 @@ def iter_dir_name(temp_dir, iteration):
 
 
 def temp_iter_dir(temp_dir, iteration):
-    """Make a temp directory for the iteration.
+    """
+    Make a temp directory for the iteration.
 
     Make sure that the iteration directory exists.
     """
