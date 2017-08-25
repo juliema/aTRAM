@@ -105,8 +105,12 @@ def assign_seqs_to_shards(db_conn, shard_count):
 
     What we doing is dividing all of the input sequences into shard_count
     bucket of sequences. If there are two ends of a sequence we have to make
-    sure that both ends (1 & 2) wind up in the same shard. These shards will
-    then be turned into blast databases.
+    sure that both ends (1 & 2) wind up in the same shard. So if a putative
+    shard boundary might break up a sequence pair we push the boundary forward
+    by one (shard boundary = the OFFSET in the part of the SQL statement).
+    If not, then we leave the shard boundary alone.
+
+    These shards will then be turned into blast databases.
 
     This will build up an array of "LIMIT len OFFSET start" parameters for
     SQL SELECT statements that are used for building the shard fasta files
@@ -122,8 +126,8 @@ def assign_seqs_to_shards(db_conn, shard_count):
     # Checking to make sure we don't split up the ends of a sequence
     for i in range(1, len(offsets) - 1):
 
-        # Get the first two sequences of a partition
-        first, second = db.get_two_sequences(db_conn, offsets[i])
+        # Get the first two sequences of a possible partition
+        first, second = db.get_shard_cut_pair(db_conn, offsets[i])
 
         # If both have the same name then both sequences will be in the
         # same partition and we're done. If they have different names then

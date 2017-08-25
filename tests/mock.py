@@ -12,7 +12,7 @@ def it(module, func_name, returns=None):
 
     Save all of the arguments of each function call in the order they
     were called. You can pass in a set of return values in the returns
-    function. If it is a list the return values will cycle thru the list
+    argument. If it is a list the return values will cycle thru the list
     returning each item in turn. For simple data types the cycle is one item.
     """
     global history

@@ -45,13 +45,20 @@ def test_load_seq():
 
 def test_assign_seqs_to_shards():
     mock.it(db, 'get_sequence_count', returns=100)
-    mock.it(db, 'get_two_sequences', returns=[('seq1', 'seq2'),
-                                              ('seq3', 'seq3')])
+    mock.it(db, 'get_shard_cut_pair', returns=[('seq1', 'seq2'),
+                                               ('seq3', 'seq3')])
 
+    # We are breaking the database into three shards. The endpoints and lengths
+    # of the shards will be adjusted based upon where pairs of sequences fall.
     shard_list = atram_preprocessor.assign_seqs_to_shards(True, 3)
 
     # A list of pairs of LIMIT and OFFSET pairs for queries that build shards
-    # The values will depend on what is returned from get_two_sequences
+    # The values will depend on what is returned from get_shard_cut_pair.
+    #   1) The first pair always starts at 0
+    #   2) Because the sequences for the first pair are different the offset
+    #      will be pused forward one from 33 to 34.
+    #   3) Because the
+
     assert shard_list == [(34, 0), (32, 34), (34, 66)]
 
 

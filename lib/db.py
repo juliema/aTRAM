@@ -102,8 +102,8 @@ def get_sequence_count(db_conn):
     return result.fetchone()[0]
 
 
-def get_two_sequences(db_conn, offset):
-    """Get two sequences at the given offset.
+def get_shard_cut_pair(db_conn, offset):
+    """Get the first two sequences at the given offset.
 
     This is used for calculating where to cut-off a shard in the table. We want
     the shard to contain both paired ends of a sequence.
