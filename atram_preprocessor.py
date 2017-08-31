@@ -102,20 +102,18 @@ def load_seqs(db_conn, sra_files):
 
 def assign_seqs_to_shards(db_conn, shard_count):
     """
-    Put the sequences into the DB shards.
+    Assign sequences to blast DB shards.
 
-    What we doing is dividing all of the input sequences into shard_count
-    bucket of sequences. If there are two ends of a sequence we have to make
-    sure that both ends (1 & 2) wind up in the same shard. So if a putative
-    shard boundary might break up a sequence pair we push the boundary forward
-    by one (shard boundary = the OFFSET in the part of the SQL statement).
-    If not, then we leave the shard boundary alone.
+    We are dividing all of the input sequences into shard_count buckets of
+    sequences. If there are two ends of a sequence we have to make sure that
+    both ends (1 & 2) wind up in the same shard.
 
-    These shards will then be turned into blast databases.
+    What we do is look at two sequence names at the shard boundary. If they are
+    the same then the chard boundary is fine where it is. But if they are
+    different then the second sequence is either the start of a sequence pair
+    or a singleton so we can safely start the shard at the second sequence.
 
-    This will build up an array of "LIMIT len OFFSET start" parameters for
-    SQL SELECT statements that are used for building the shard fasta files
-    that get input into the makeblastdb statements.
+    Note: This will only work for sequence pairs. Which is all we care about.
     """
     log.info('Assigning sequences to shards')
 

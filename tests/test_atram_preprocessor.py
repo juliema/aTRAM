@@ -108,15 +108,16 @@ def test_assign_seqs_to_shards():
                                                ('seq3', 'seq3')])
 
     # We are breaking the database into three shards. The endpoints and lengths
-    # of the shards will be adjusted based upon where pairs of sequences fall.
+    # of the shards will be adjusted based upon where pairs of sequences call.
     shard_list = atram_preprocessor.assign_seqs_to_shards(True, 3)
 
-    # A list of pairs of LIMIT and OFFSET pairs for queries that build shards
-    # The values will depend on what is returned from get_shard_cut_pair.
-    #   1) The first pair always starts at 0
+    # A list of pairs of (LIMIT, OFFSET) for queries that build shards
+    # The LIMIT/lengths are calculated from current & previous offsets
+    # The OFFSET will depend on what is returned from get_shard_cut_pair
+    #   1) The first pair always has offset 0
     #   2) Because the sequences for the first pair are different the offset
-    #      will be pused forward one from 33 to 34.
-    #   3) Because the
+    #      will be pushed forward one from 33 to 34
+    #   3) Because the sequences are the same the offset will stay at 66.
 
     assert shard_list == [(34, 0), (32, 34), (34, 66)]
 

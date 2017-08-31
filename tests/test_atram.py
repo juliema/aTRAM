@@ -13,7 +13,7 @@ import tests.mock as mock
 
 class MockAssembler:
     def write_final_output(self, *args):
-        hist = {a: args[i] for i, a in enumerate(['blast_db', 'query'])}
+        hist = {'blast_db': args[0], 'query': args[1]}
         hist['module'] = 'MockAssembler'
         hist['func'] = 'write_final_output'
         mock.history.append(hist)
@@ -115,3 +115,55 @@ def test_clean_database():
         {'func': 'create_sra_blast_hits_table', 'db_conn': 'my_db_conn'},
         {'func': 'create_contig_blast_hits_table', 'db_conn': 'my_db_conn'},
         {'func': 'create_assembled_contigs_table', 'db_conn': 'my_db_conn'}]
+
+
+# def test_assembly_loop_one_iteration():
+#     pass
+#
+#
+# def test_assembly_loop_multiple_iterations():
+#     pass
+#
+#
+# def test_assembly_loop_blast_only():
+#     pass
+#
+#
+# def test_assembly_loop_no_blast_hits():
+#     pass
+#
+#
+# def test_assembly_loop_nothing_assembled():
+#     pass
+#
+#
+# def test_assembly_loop_no_assembled_contigs_count():
+#     pass
+#
+#
+# def test_assembly_loop_no_new_contigs():
+#     pass
+#
+#
+# def test_shard_fraction():
+#     pass
+#
+#
+# def test_blast_query_against_one_shard():
+#     pass
+#
+#
+# def test_filter_contigs():
+#     pass
+#
+#
+# def test_save_blast_against_contigs():
+#     pass
+#
+#
+# def test_save_contigs():
+#     pass
+#
+#
+# def test_create_query_from_contigs():
+#     pass
