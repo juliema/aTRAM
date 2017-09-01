@@ -16,10 +16,10 @@ PARSE_HEADER = re.compile(r'^ [>@] \s* ( [^\s/._]+? ) [\s/._] ( [12] )',
 PARSE_RESULTS = re.compile(r'^ ( [^\s/._]+? ) [\s/._] ( [12] )', re.VERBOSE)
 
 
-def create_db(temp_dir, fasta_file, shard_path):
+def create_db(temp_dir, fasta_file, shard):
     """Create a blast database."""
     cmd = 'makeblastdb -dbtype nucl -in {} -out {}'
-    cmd = cmd.format(fasta_file, shard_path)
+    cmd = cmd.format(fasta_file, shard)
     log.subcommand(cmd, temp_dir)
 
 
@@ -90,14 +90,14 @@ def output_file_name(temp_dir, shrd_path, iteration):
     """Create a file name for blast results."""
     shard_name = os.path.basename(shrd_path)
     file_name = '{}.{:02d}.results.json'.format(shard_name, iteration)
-    return file_util.temp_iter_file(temp_dir, iteration, file_name)
+    return file_util.temp_iter_file(temp_dir, file_name)
 
 
 def temp_db_name(temp_dir, blast_db, iteration):
     """Generate a name for the temp DB used to filter the contigs."""
     file_name = os.path.basename(blast_db)
     file_name = '{}.{:02d}'.format(file_name, iteration)
-    return file_util.temp_iter_file(temp_dir, iteration, file_name)
+    return file_util.temp_iter_file(temp_dir, file_name)
 
 
 def hits(json_file):

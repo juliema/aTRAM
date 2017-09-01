@@ -91,7 +91,7 @@ def assembly_loop(args, blast_db, query, db_conn, assembler):
 
         file_util.temp_iter_dir(args['temp_dir'], blast_db, query, iteration)
 
-        assembler.initialize_iteration(blast_db, iteration)
+        assembler.initialize_iteration(blast_db, query, iteration)
 
         blast_query_against_all_shards(args, blast_db, query, iteration)
 
@@ -135,8 +135,7 @@ def blast_query_against_all_shards(args, blast_db, query, iteration):
     with multiprocessing.Pool(processes=args['cpus']) as pool:
         results = [pool.apply_async(
             blast_query_against_one_shard,
-            (args, blast_db, query, shard_path, iteration))
-                   for shard_path in all_shards]
+            (args, blast_db, query, shard, iteration)) for shard in all_shards]
         _ = [result.get() for result in results]  # noqa
 
 
@@ -151,21 +150,20 @@ def shard_fraction(args, blast_db):
     return all_shards[:last_index]
 
 
-def blast_query_against_one_shard(
-        args, blast_db, query, shard_path, iteration):
+def blast_query_against_one_shard(args, blast_db, query, shard, iteration):
     """
     Blast the query against one blast DB shard.
 
     Then write the results to the database.
     """
     output_file = blast.output_file_name(
-        args['temp_dir'], shard_path, iteration)
+        args['temp_dir'], shard, iteration)
 
-    blast.against_sra(args, shard_path, query, output_file, iteration)
+    blast.against_sra(args, shard, query, output_file, iteration)
 
     db_conn = db.connect(blast_db)
 
-    shard = basename(shard_path)
+    shard = basename(shard)
 
     batch = []
 

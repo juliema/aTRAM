@@ -28,13 +28,7 @@ class AbyssAssembler(BaseAssembler):
             cmd.append("in='{} {}'".format(
                 self.file['paired_1'], self.file['paired_2']))
 
-        single_ends = []
-        if self.file['single_1_count']:
-            single_ends.append(self.file['single_1'])
-        if self.file['single_2_count']:
-            single_ends.append(self.file['single_2'])
-        if self.file['single_any_count']:
-            single_ends.append(self.file['single_any'])
+        single_ends = self.get_single_ends()
         if single_ends:
             cmd.append("se='{}'".format(' '.join(single_ends)))
 

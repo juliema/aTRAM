@@ -14,24 +14,29 @@ class BaseAssembler:
 
     def __init__(self, args, db_conn):
         """Build the assembler."""
-        self.args = args    # Parsed command line arguments
-        self.steps = []     # Assembler steps setup by the assembler
-        self.file = {}      # Files and record counts
-        self.iteration = 0  # Current iteration
+        self.args = args      # Parsed command line arguments
+        self.steps = []       # Assembler steps setup by the assembler
+        self.file = {}        # Files and record counts
+        self.iteration = 0    # Current iteration
+        self.query_file = ''  # Current query file name
+        self.blast_db = ''    # Current blast DB name
         self.db_conn = db_conn  # Save the DB connection
         self.blast_only = False  # Used to short-circuit the assembler
 
     def iter_dir(self):
         """Get the work directory for the current iteration."""
-        return file_util.temp_iter_dir(self.args['temp_dir'], self.iteration)
+        return file_util.temp_iter_dir(self.args['temp_dir'],
+                                       self.blast_db,
+                                       self.query_file,
+                                       self.iteration)
 
     def work_path(self):
         """The output directory name may have unique requirements."""
-        return self.iter_dir
+        return self.iter_dir()
 
     def iter_file(self, file_name):
         """Build a temporary file in the current iteration directory."""
-        return join(self.iter_dir, file_name)
+        return join(self.iter_dir(), file_name)
 
     def run(self):
         """Try to assemble the input."""
@@ -76,10 +81,10 @@ class BaseAssembler:
             log.info('No contigs had a bit score greater than {} and are at '
                      'least {} long in iteration {}. The highest score for '
                      'this iteration is {}'.format(
-                            self.args['bit_score'],
-                            self.args['contig_length'],
-                            self.iteration,
-                            high_score))
+                         self.args['bit_score'],
+                         self.args['contig_length'],
+                         self.iteration,
+                         high_score))
         return count
 
     def no_new_contigs(self, count):
@@ -110,28 +115,31 @@ class BaseAssembler:
     def post_assembly(self):
         """The assembler may have unique post assembly steps."""
 
-    def path(self, blast_db, file_name):
+    def path(self, file_name):
         """Put files into the temp dir."""
-        blast_db = basename(blast_db)
-        file_name = '{}.{:02d}.{}'.format(blast_db, self.iteration, file_name)
+        blast_db = basename(self.blast_db)
+        file_name = '{}.{}.{:02d}.{}'.format(
+            blast_db, self.query_file, self.iteration, file_name)
         rel_path = self.iter_file(file_name)
 
         return abspath(rel_path)
 
-    def initialize_iteration(self, blast_db, iteration):
+    def initialize_iteration(self, blast_db, query_file, iteration):
         """Setup file names used by the assembler.
 
         Do this at the start of each iteration.
         """
+        self.blast_db = blast_db
+        self.query_file = query_file
         self.iteration = iteration
 
-        self.file['output'] = self.path(blast_db, 'output.fasta')
+        self.file['output'] = self.path('output.fasta')
         self.file['long_reads'] = ''  # Set up in atram.py for now
-        self.file['paired_1'] = self.path(blast_db, 'paired_end_1.fasta')
-        self.file['paired_2'] = self.path(blast_db, 'paired_end_2.fasta')
-        self.file['single_1'] = self.path(blast_db, 'single_end_1.fasta')
-        self.file['single_2'] = self.path(blast_db, 'single_end_2.fasta')
-        self.file['single_any'] = self.path(blast_db, 'single_end_any.fasta')
+        self.file['paired_1'] = self.path('paired_1.fasta')
+        self.file['paired_2'] = self.path('paired_2.fasta')
+        self.file['single_1'] = self.path('single_1.fasta')
+        self.file['single_2'] = self.path('single_2.fasta')
+        self.file['single_any'] = self.path('single_any.fasta')
 
         self.file['paired_count'] = 0       # paired_1 and paired_2 count
         self.file['single_1_count'] = 0
@@ -239,3 +247,14 @@ class BaseAssembler:
 
         output_file.write(header)
         output_file.write('{}\n'.format(seq))
+
+    def get_single_ends(self):
+        """Gather single ends files for the assembly command. """
+        single_ends = []
+        if self.file['single_1_count']:
+            single_ends.append(self.file['single_1'])
+        if self.file['single_2_count']:
+            single_ends.append(self.file['single_2'])
+        if self.file['single_any_count']:
+            single_ends.append(self.file['single_any'])
+        return single_ends

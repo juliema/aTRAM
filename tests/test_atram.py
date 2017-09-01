@@ -7,6 +7,7 @@ import tempfile
 import atram
 import lib.db as db
 import lib.log as log
+import lib.blast as blast
 import lib.file_util as file_util
 import lib.assembler as assembly
 from lib.assemblers.base import BaseAssembler
@@ -142,7 +143,8 @@ def test_assembly_loop_one_iter():
                'blast_db': 'a_blast_db'}]
     assert expect == mock.filter('lib.file_util', 'temp_iter_dir')
 
-    expect = [{'blast_db': 'a_blast_db', 'iteration': 1}]
+    expect = [
+        {'blast_db': 'a_blast_db', 'iteration': 1, 'query_file': 'a_query'}]
     assert expect == mock.filter('BaseAssembler', 'initialize_iteration')
 
     expect = [{'args': {'temp_dir': 'my_temp_dir', 'iterations': 1},
@@ -182,7 +184,29 @@ def test_assembly_loop_one_iter():
 # def test_assembly_loop_no_new_contigs():
 
 
-# def test_shard_fraction():
+def test_shard_fraction_one():
+    args = {'fraction': 1.0}
+    returns = ['1st', '2nd', '3rd', '4th']
+    mock.it(blast, 'all_shard_paths', returns=[returns])
+
+    shards = atram.shard_fraction(args, 'my_blast_db')
+
+    assert returns == shards
+
+    expect = [{'blast_db': 'my_blast_db'}]
+    assert expect == mock.filter('lib.blast', 'all_shard_paths')
+
+
+def test_shard_fraction_half():
+    args = {'fraction': 0.5}
+    mock.it(blast, 'all_shard_paths', returns=[['1st', '2nd', '3rd', '4th']])
+
+    shards = atram.shard_fraction(args, 'my_blast_db')
+
+    assert ['1st', '2nd'] == shards
+
+    expect = [{'blast_db': 'my_blast_db'}]
+    assert expect == mock.filter('lib.blast', 'all_shard_paths')
 
 
 # def test_blast_query_against_one_shard():

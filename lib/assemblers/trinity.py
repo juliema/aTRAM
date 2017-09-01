@@ -15,7 +15,7 @@ class TrinityAssembler(BaseAssembler):
 
     def work_path(self):
         """The output directory name has unique requirements."""
-        return os.path.join(self.iter_dir, 'trinity')
+        return os.path.join(self.iter_dir(), 'trinity')
 
     def trinity(self):
         """Build the command for assembly."""
@@ -33,13 +33,7 @@ class TrinityAssembler(BaseAssembler):
             cmd.append("--left '{}'".format(self.file['paired_1']))
             cmd.append("--right '{}'".format(self.file['paired_2']))
         else:
-            single_ends = []
-            if self.file['single_1_count']:
-                single_ends.append(self.file['single_1'])
-            if self.file['single_2_count']:
-                single_ends.append(self.file['single_2'])
-            if self.file['single_any_count']:
-                single_ends.append(self.file['single_any'])
+            single_ends = self.get_single_ends()
             if single_ends:
                 cmd.append("-single '{}'".format(','.join(single_ends)))
 
@@ -50,5 +44,5 @@ class TrinityAssembler(BaseAssembler):
 
     def post_assembly(self):
         """Copy the assembler output."""
-        src = os.path.join(self.iter_dir, 'trinity.Trinity.fasta')
+        src = os.path.join(self.iter_dir(), 'trinity.Trinity.fasta')
         shutil.move(src, self.file['output'])

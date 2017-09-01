@@ -91,34 +91,41 @@ def test_load_seqs():
     atram_preprocessor.load_seqs('connection', [file_1, file_2])
 
     expect = [
-        {'module': 'lib.log',
-         'func': 'info',
-         'msg': 'Loading "tests/data/load_seq1.txt" into sqlite database'},
-        {'module': 'lib.db', 'func': 'insert_sequences_batch',
-         'db_conn': 'connection',
-         'batch': [
-             ('seq1', '1', 'AAAAAAAAAA'),
-             ('seq2', '1', 'AAAAAAAAAAGGGGGGGGGG'),
-             ('seq3', '1', 'AAAAAAAAAA'),
-             ('seq4', '1', 'AAAAAAAAAA'),
-             ('seq5/3', '', 'AAAAAAAAAAGGGGGGGGGG')]},
-        {'module': 'lib.db', 'func': 'insert_sequences_batch',
-         'db_conn': 'connection',
-         'batch': [
-            ('seq1', '2', 'AAAAAAAAAA'),
-            ('seq2', '2', 'AAAAAAAAAAGGGGGGGGGG'),
-            ('seq3', '2', 'AAAAAAAAAA'),
-            ('seq4', '2', 'AAAAAAAAAAGGGGGGGGGG')]},
-        {'module': 'lib.log',
-         'func': 'info',
-         'msg': 'Loading "tests/data/load_seq2.txt" into sqlite database'},
-        {'module': 'lib.db', 'func': 'insert_sequences_batch',
-         'db_conn': 'connection',
-         'batch': [
-            ('seq6', '1', 'TTTTTTTTTT'),
-            ('seq7', '1', 'TTTTTTTTTTCCCCCCCCCC'),
-            ('seq8/a.1 suffix', '', 'TTTTTTTTTT'),
-            ('seq8', '2', 'TTTTTTTTTTCCCCCCCCCC')]}]
+        {
+            'module': 'lib.log',
+            'func': 'info',
+            'msg': 'Loading "tests/data/load_seq1.txt" into sqlite database'
+        }, {
+            'module': 'lib.db',
+            'func': 'insert_sequences_batch',
+            'db_conn': 'connection',
+            'batch': [
+                ('seq1', '1', 'AAAAAAAAAA'),
+                ('seq2', '1', 'AAAAAAAAAAGGGGGGGGGG'),
+                ('seq3', '1', 'AAAAAAAAAA'),
+                ('seq4', '1', 'AAAAAAAAAA'),
+                ('seq5/3', '', 'AAAAAAAAAAGGGGGGGGGG')]
+        }, {
+            'module': 'lib.db',
+            'func': 'insert_sequences_batch',
+            'db_conn': 'connection',
+            'batch': [
+                ('seq1', '2', 'AAAAAAAAAA'),
+                ('seq2', '2', 'AAAAAAAAAAGGGGGGGGGG'),
+                ('seq3', '2', 'AAAAAAAAAA'),
+                ('seq4', '2', 'AAAAAAAAAAGGGGGGGGGG')]
+        }, {
+            'module': 'lib.log',
+            'func': 'info',
+            'msg': 'Loading "tests/data/load_seq2.txt" into sqlite database'
+        }, {
+            'module': 'lib.db', 'func': 'insert_sequences_batch',
+            'db_conn': 'connection',
+            'batch': [
+                ('seq6', '1', 'TTTTTTTTTT'),
+                ('seq7', '1', 'TTTTTTTTTTCCCCCCCCCC'),
+                ('seq8/a.1 suffix', '', 'TTTTTTTTTT'),
+                ('seq8', '2', 'TTTTTTTTTTCCCCCCCCCC')]}]
     assert expect == mock.history
 
 
@@ -165,7 +172,7 @@ def test_create_one_blast_shard():
     assert expect == mock.filter('atram_preprocessor', 'fill_blast_fasta')
 
     expect = [{'fasta_file': 'my_temp_dir/pyt_011.fasta',
-               'shard_path': 'shard/path',
+               'shard': 'shard/path',
                'temp_dir': 'my_temp_dir'}]
     assert expect == mock.filter('lib.blast', 'create_db')
 

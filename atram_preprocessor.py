@@ -166,14 +166,14 @@ def create_one_blast_shard(args, shard_params, shard_index):
     We fill a fasta file with the appropriate sequences and hand things off
     to the makeblastdb program.
     """
-    shard_path = blast.shard_path(args['blast_db'], shard_index)
+    shard = blast.shard_path(args['blast_db'], shard_index)
     fasta_name = '{}_{:03d}.fasta'.format(os.path.basename(sys.argv[0][:-3]),
                                           shard_index)
     fasta_path = os.path.join(args['temp_dir'], fasta_name)
 
     fill_blast_fasta(args['blast_db'], fasta_path, shard_params)
 
-    blast.create_db(args['temp_dir'], fasta_path, shard_path)
+    blast.create_db(args['temp_dir'], fasta_path, shard)
 
 
 def fill_blast_fasta(blast_db, fasta_path, shard_params):
