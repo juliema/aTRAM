@@ -19,7 +19,6 @@ def test_preprocess():
         'shard_count': 'shard_count_arg'
     }
 
-    mock.it(log, 'file_name', 'log_file_name')
     mock.it(log, 'setup')
     mock.context(db, 'connect', 'my_connection')
     mock.it(db, 'create_metadata_table')
@@ -32,52 +31,69 @@ def test_preprocess():
 
     atram_preprocessor.preprocess(args)
 
-    assert mock.history == [
-        {'blast_db': 'blast_db_arg',
-         'func': 'file_name',
-         'log_file': 'log_file_arg',
-         'module': 'lib.log'},
-        {'func': 'setup', 'log_file': 'log_file_name', 'module': 'lib.log'},
-        {'blast_db': 'blast_db_arg', 'func': 'connect', 'module': 'lib.db'},
-        {'db_conn': 'my_connection',
-         'func': 'create_metadata_table',
-         'module': 'lib.db'},
-        {'db_conn': 'my_connection',
-         'func': 'create_sequences_table',
-         'module': 'lib.db'},
-        {'db_conn': 'my_connection',
-         'func': 'load_seqs',
-         'module': 'atram_preprocessor',
-         'sra_files': 'sra_files_arg'},
-        {'func': 'info',
-         'module': 'lib.log',
-         'msg': 'Creating an index for the sequence table'},
-        {'db_conn': 'my_connection',
-         'func': 'create_sequences_index',
-         'module': 'lib.db'},
-        {'db_conn': 'my_connection',
-         'func': 'assign_seqs_to_shards',
-         'module': 'atram_preprocessor',
-         'shard_count': 'shard_count_arg'},
-        {'args': {'blast_db': 'blast_db_arg',
-                  'log_file': 'log_file_arg',
-                  'shard_count': 'shard_count_arg',
-                  'sra_files': 'sra_files_arg'},
-         'func': 'create_all_blast_shards',
-         'module': 'atram_preprocessor',
-         'shard_list': 'shard_list'}]
+    expect = [
+        {
+            'module': 'lib.log',
+            'func': 'setup',
+            'blast_db': 'blast_db_arg',
+            'log_file': 'log_file_arg',
+        }, {
+            'module': 'lib.db',
+            'blast_db': 'blast_db_arg',
+            'func': 'connect',
+        }, {
+            'module': 'lib.db',
+            'func': 'create_metadata_table',
+            'db_conn': 'my_connection',
+        }, {
+            'module': 'lib.db',
+            'func': 'create_sequences_table',
+            'db_conn': 'my_connection',
+        }, {
+            'module': 'atram_preprocessor',
+            'func': 'load_seqs',
+            'db_conn': 'my_connection',
+            'sra_files': 'sra_files_arg',
+        }, {
+            'module': 'lib.log',
+            'func': 'info',
+            'msg': 'Creating an index for the sequence table',
+        }, {
+            'db_conn': 'my_connection',
+            'func': 'create_sequences_index',
+            'module': 'lib.db'
+        }, {
+            'module': 'atram_preprocessor',
+            'db_conn': 'my_connection',
+            'func': 'assign_seqs_to_shards',
+            'shard_count': 'shard_count_arg',
+        }, {
+            'module': 'atram_preprocessor',
+            'func': 'create_all_blast_shards',
+            'shard_list': 'shard_list',
+            'args': {
+                'blast_db': 'blast_db_arg',
+                'log_file': 'log_file_arg',
+                'shard_count': 'shard_count_arg',
+                'sra_files': 'sra_files_arg'},
+        }]
+    assert expect == mock.history
 
 
 def test_load_seqs():
     db.BATCH_SIZE = 5
 
+    mock.it(log, 'info')
     mock.it(db, 'insert_sequences_batch')
 
     file_1 = join('tests', 'data', 'load_seq1.txt')
     file_2 = join('tests', 'data', 'load_seq2.txt')
     atram_preprocessor.load_seqs('connection', [file_1, file_2])
 
-    assert mock.history == [
+    expect = [
+        {'module': 'lib.log',
+         'func': 'info',
+         'msg': 'Loading "tests/data/load_seq1.txt" into sqlite database'},
         {'module': 'lib.db', 'func': 'insert_sequences_batch',
          'db_conn': 'connection',
          'batch': [
@@ -93,6 +109,9 @@ def test_load_seqs():
             ('seq2', '2', 'AAAAAAAAAAGGGGGGGGGG'),
             ('seq3', '2', 'AAAAAAAAAA'),
             ('seq4', '2', 'AAAAAAAAAAGGGGGGGGGG')]},
+        {'module': 'lib.log',
+         'func': 'info',
+         'msg': 'Loading "tests/data/load_seq2.txt" into sqlite database'},
         {'module': 'lib.db', 'func': 'insert_sequences_batch',
          'db_conn': 'connection',
          'batch': [
@@ -100,9 +119,11 @@ def test_load_seqs():
             ('seq7', '1', 'TTTTTTTTTTCCCCCCCCCC'),
             ('seq8/a.1 suffix', '', 'TTTTTTTTTT'),
             ('seq8', '2', 'TTTTTTTTTTCCCCCCCCCC')]}]
+    assert expect == mock.history
 
 
 def test_assign_seqs_to_shards():
+    mock.it(log, 'info')
     mock.it(db, 'get_sequence_count', returns=100)
     mock.it(db, 'get_shard_cut_pair', returns=[('seq1', 'seq2'),
                                                ('seq3', 'seq3')])
@@ -119,7 +140,10 @@ def test_assign_seqs_to_shards():
     #      will be pushed forward one from 33 to 34
     #   3) Because the sequences are the same the offset will stay at 66.
 
-    assert shard_list == [(34, 0), (32, 34), (34, 66)]
+    assert [(34, 0), (32, 34), (34, 66)] == shard_list
+
+    expect = [{'msg': 'Assigning sequences to shards'}]
+    assert expect == mock.filter('lib.log', 'info')
 
 
 def test_create_one_blast_shard():
@@ -132,19 +156,18 @@ def test_create_one_blast_shard():
 
     atram_preprocessor.create_one_blast_shard(args, shard_params, 11)
 
-    history = mock.filter('lib.blast', 'shard_path')
-    assert history == [{'blast_db': 'my_blast_db',
-                        'shard_index': 11}]
+    expect = [{'blast_db': 'my_blast_db', 'shard_index': 11}]
+    assert expect == mock.filter('lib.blast', 'shard_path')
 
-    history = mock.filter('atram_preprocessor', 'fill_blast_fasta')
-    assert history == [{'blast_db': 'my_blast_db',
-                        'fasta_path': 'my_temp_dir/pyt_011.fasta',
-                        'shard_params': ['limit', 'offset']}]
+    expect = [{'blast_db': 'my_blast_db',
+               'fasta_path': 'my_temp_dir/pyt_011.fasta',
+               'shard_params': ['limit', 'offset']}]
+    assert expect == mock.filter('atram_preprocessor', 'fill_blast_fasta')
 
-    history = mock.filter('lib.blast', 'create_db')
-    assert history == [{'fasta_file': 'my_temp_dir/pyt_011.fasta',
-                        'shard_path': 'shard/path',
-                        'temp_dir': 'my_temp_dir'}]
+    expect = [{'fasta_file': 'my_temp_dir/pyt_011.fasta',
+               'shard_path': 'shard/path',
+               'temp_dir': 'my_temp_dir'}]
+    assert expect == mock.filter('lib.blast', 'create_db')
 
 
 def test_fill_blast_fasta():
@@ -165,7 +188,7 @@ def test_fill_blast_fasta():
         atram_preprocessor.fill_blast_fasta(blast_db, fasta_path, shard_params)
 
         with open(fasta_path) as test_file:
-            assert test_file.read() == (
+            expect = (
                 '>seq1/1\n'
                 'AAAAAAAAAA\n'
                 '>seq1/2\n'
@@ -174,8 +197,9 @@ def test_fill_blast_fasta():
                 'GGGGGGGGGG\n'
                 '>seq3/1\n'
                 'TTTTTTTTTT\n')
+            assert expect == test_file.read()
 
-    assert mock.history == [
+    expect = [
         {'blast_db': 'test_blast_db',
          'func': 'connect',
          'module': 'lib.db'},
@@ -184,3 +208,4 @@ def test_fill_blast_fasta():
          'limit': 100,
          'module': 'lib.db',
          'offset': 200}]
+    assert expect == mock.history

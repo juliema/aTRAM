@@ -31,7 +31,6 @@ def assemble(args):
                 clean_database(db_conn)
 
                 log.setup(args['log_file'], blast_db, query)
-                # log.setup(log_file)
 
                 assembler = assembly.factory(args, db_conn)
 

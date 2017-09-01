@@ -11,11 +11,11 @@ FORMATTER = logging.Formatter('%(asctime)s %(levelname)s: %(message)s',
                               datefmt='%Y-%m-%d %H:%M:%S')
 
 
-def setup(log_file, blast_db, query):
+def setup(log_file, blast_db, query_file=''):
     """Standard logger setup."""
     global LOGGER
 
-    log_file = file_name(log_file, blast_db, query)
+    log_file = file_name(log_file, blast_db, query_file)
 
     handler = logging.FileHandler(log_file)
     handler.setFormatter(FORMATTER)
@@ -29,12 +29,6 @@ def setup(log_file, blast_db, query):
     LOGGER.setLevel(logging.DEBUG)
     LOGGER.addHandler(handler)
     LOGGER.addHandler(stream)
-    # logging.basicConfig(
-    #     filename=log_file,
-    #     level=logging.DEBUG,
-    #     format='%(asctime)s %(levelname)s: %(message)s',
-    #     datefmt='%Y-%m-%d %H:%M:%S')
-    # logging.info(' '.join(sys.argv))
 
 
 def file_name(log_file, blast_db, query_file=''):

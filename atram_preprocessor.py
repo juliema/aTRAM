@@ -23,8 +23,7 @@ __all__ = ('preprocess', )
 
 def preprocess(args):
     """Run the preprocessor."""
-    log_file = log.file_name(args['log_file'], args['blast_db'])
-    log.setup(log_file)
+    log.setup(args['log_file'], args['blast_db'])
 
     with db.connect(args['blast_db']) as db_conn:
         db.create_metadata_table(db_conn)

@@ -27,18 +27,16 @@ def test_assemble():
         'log_file': 'my_log_file'}
     mock.context(db, 'connect', 'my_connection')
     mock.it(atram, 'clean_database')
-    mock.it(log, 'file_name', 'my_new_log_file')
     mock.it(log, 'setup')
     mock.it(assembly, 'factory', MockAssembler())
     mock.it(atram, 'assembly_loop')
 
     atram.assemble(args)
 
-    history = mock.filter('atram', 'clean_database')
-    assert history == [{'db_conn': 'my_connection'}] * 4
+    expect = [{'db_conn': 'my_connection'}] * 4
+    assert expect == mock.filter('atram', 'clean_database')
 
-    history = mock.filter('lib.log', 'file_name')
-    assert history == [
+    expect = [
         {'blast_db': 'my_blast_db1',
          'log_file': 'my_log_file',
          'query_file': 'my_query1'},
@@ -51,19 +49,17 @@ def test_assemble():
         {'blast_db': 'my_blast_db2',
          'log_file': 'my_log_file',
          'query_file': 'my_query2'}]
+    assert expect == mock.filter('lib.log', 'setup')
 
-    history = mock.filter('lib.log', 'setup')
-    assert history == [{'log_file': 'my_new_log_file'}] * 4
+    expect = [{'args': args, 'db_conn': 'my_connection'}] * 4
+    assert expect == mock.filter('lib.assembler', 'factory')
 
-    history = mock.filter('lib.assembler', 'factory')
-    assert history == [{'args': args, 'db_conn': 'my_connection'}] * 4
-
-    history = mock.filter('MockAssembler', 'write_final_output')
-    assert history == [
+    expect = [
         {'blast_db': 'my_blast_db1', 'query': 'my_query1'},
         {'blast_db': 'my_blast_db1', 'query': 'my_query2'},
         {'blast_db': 'my_blast_db2', 'query': 'my_query1'},
         {'blast_db': 'my_blast_db2', 'query': 'my_query2'}]
+    assert expect == mock.filter('MockAssembler', 'write_final_output')
 
 
 def test_split_queries():
@@ -80,15 +76,14 @@ def test_split_queries():
     queries = atram.split_queries(
         {'temp_dir': 'temp_dir', 'query': file_names})
 
-    history = mock.filter('atram', 'write_query_seq')
+    assert fasta == queries
 
-    assert queries == fasta
-
-    assert history == [
+    expect = [
         {'file_name': fasta[0], 'seq_id': 'seq1/1', 'seq': 'A' * 10},
         {'file_name': fasta[1], 'seq_id': 'seq2:2/2', 'seq': 'C' * 20},
         {'file_name': fasta[2], 'seq_id': 'seq3', 'seq': 'G' * 30},
         {'file_name': fasta[3], 'seq_id': 'seq1+1', 'seq': 'T' * 10}]
+    assert expect == mock.filter('atram', 'write_query_seq')
 
 
 def test_write_query_seq():
@@ -98,9 +93,10 @@ def test_write_query_seq():
         atram.write_query_seq(path, 'my sequence name', 'aaaacccgggtt')
 
         with open(path) as test_file:
-            assert test_file.read() == (
+            expect = (
                 '>my sequence name\n'
                 'aaaacccgggtt\n')
+            assert expect == test_file.read()
 
 
 def test_clean_database():
@@ -110,11 +106,11 @@ def test_clean_database():
 
     atram.clean_database('my_db_conn')
 
-    history = mock.filter('lib.db')
-    assert history == [
+    expect = [
         {'func': 'create_sra_blast_hits_table', 'db_conn': 'my_db_conn'},
         {'func': 'create_contig_blast_hits_table', 'db_conn': 'my_db_conn'},
         {'func': 'create_assembled_contigs_table', 'db_conn': 'my_db_conn'}]
+    assert expect == mock.filter('lib.db')
 
 
 # def test_assembly_loop_one_iteration():
