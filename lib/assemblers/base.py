@@ -21,12 +21,10 @@ class BaseAssembler:
         self.db_conn = db_conn  # Save the DB connection
         self.blast_only = False  # Used to short-circuit the assembler
 
-    @property
     def iter_dir(self):
         """Get the work directory for the current iteration."""
         return file_util.temp_iter_dir(self.args['temp_dir'], self.iteration)
 
-    @property
     def work_path(self):
         """The output directory name may have unique requirements."""
         return self.iter_dir
@@ -49,7 +47,6 @@ class BaseAssembler:
             msg = 'The assembler failed with error: ' + str(cpe)
             log.fatal(msg)
 
-    @property
     def no_blast_hits(self):
         """Make sure we have blast hits."""
         if not db.sra_blast_hits_count(self.db_conn, self.iteration):
@@ -58,7 +55,6 @@ class BaseAssembler:
 
         return False
 
-    @property
     def nothing_assembled(self):
         """Make there is assembler output."""
         if not exists(self.file['output']) \

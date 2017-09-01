@@ -31,25 +31,26 @@ def temp_file(temp_dir, subdir, file_name):
     return join(temp_dir, subdir, file_name)
 
 
-def iter_dir_name(temp_dir, iteration):
+def iter_dir_name(temp_dir, blast_db, query_file, iteration):
     """Make a directory name from the iteration."""
-    return join(temp_dir, 'iteration_{:02d}'.format(iteration))
+    name = '{}_{}_iteration_{:02d}'.format(blast_db, query_file, iteration)
+    return join(temp_dir, name)
 
 
-def temp_iter_dir(temp_dir, iteration):
+def temp_iter_dir(temp_dir, blast_db, query_file, iteration):
     """
     Make a temp directory for the iteration.
 
     Make sure that the iteration directory exists.
     """
-    path = iter_dir_name(temp_dir, iteration)
+    path = iter_dir_name(temp_dir, blast_db, query_file, iteration)
     os.makedirs(path, exist_ok=True)
     return path
 
 
-def temp_iter_file(temp_dir, iteration, file_name):
-    """Make a temporary file name that is inside of the iteration directory."""
-    return join(iter_dir_name(temp_dir, iteration), file_name)
+def temp_iter_file(temp_dir, file_name):
+    """Make a temporary file name that is inside of a temporary directory."""
+    return join(temp_dir, file_name)
 
 
 def output_file(output_prefix, file_suffix):

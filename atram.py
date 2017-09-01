@@ -86,22 +86,23 @@ def clean_database(db_conn):
 def assembly_loop(args, blast_db, query, db_conn, assembler):
     """Iterate the assembly processes."""
     for iteration in range(1, args['iterations'] + 1):
-        log.info('aTRAM iteration %i' % iteration)
+        log.info('aTRAM blast DB = "{}", query = "{}", iteration {}'.format(
+            blast_db, query, iteration))
 
-        file_util.temp_iter_dir(args['temp_dir'], iteration)
+        file_util.temp_iter_dir(args['temp_dir'], blast_db, query, iteration)
 
         assembler.initialize_iteration(blast_db, iteration)
 
         blast_query_against_all_shards(args, blast_db, query, iteration)
 
-        if assembler.blast_only or assembler.no_blast_hits:
+        if assembler.blast_only or assembler.no_blast_hits():
             break
 
-        assembler.write_input_files(db_conn)
+        assembler.write_input_files()
 
         assembler.run()
 
-        if assembler.nothing_assembled:
+        if assembler.nothing_assembled():
             break
 
         high_score = filter_contigs(args, db_conn, assembler, iteration)

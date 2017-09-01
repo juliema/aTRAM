@@ -1,5 +1,7 @@
 """Utility to mock function calls."""
 
+# pylama: ignore=D103,D101,D102,D105
+
 import inspect
 from itertools import cycle
 from contextlib import contextmanager
@@ -8,7 +10,7 @@ history = []
 monkeypatch = None
 
 
-def it(module, func_name, returns=None):
+def it(container, callee, returns=None):
     """
     Append the function call to the history.
 
@@ -19,7 +21,11 @@ def it(module, func_name, returns=None):
     """
     global history
 
-    func = module.__dict__.get(func_name)
+    if inspect.ismodule(container):
+        func = container.__dict__.get(callee)
+    else:  # is class
+        func = getattr(container, callee)
+
     sig = inspect.signature(func)
     arg_names = [p for p in sig.parameters]
 
@@ -29,16 +35,19 @@ def it(module, func_name, returns=None):
 
     def mocked(*args, **kwargs):
         hist = {arg_names[i]: a for i, a in enumerate(args)}
-        hist['module'] = module.__name__
-        hist['func'] = func_name
+        if inspect.ismodule(container):
+            hist['module'] = container.__name__
+        else:  # is class
+            hist['module'] = container.__class__.__name__
+        hist['func'] = callee
         history.append(hist)
         if returns:
             return next(returns)
 
-    monkeypatch.setattr(module, func_name, mocked)
+    monkeypatch.setattr(container, callee, mocked)
 
 
-def context(module, func_name, returns):
+def context(module, callee, returns):
     """
     Append the function call to the history.
 
@@ -47,7 +56,7 @@ def context(module, func_name, returns):
     """
     global history
 
-    func = module.__dict__.get(func_name)
+    func = module.__dict__.get(callee)
     sig = inspect.signature(func)
     arg_names = [p for p in sig.parameters]
 
@@ -58,11 +67,11 @@ def context(module, func_name, returns):
     def mocked(*args, **kwargs):
         hist = {arg_names[i]: a for i, a in enumerate(args)}
         hist['module'] = module.__name__
-        hist['func'] = func_name
+        hist['func'] = callee
         history.append(hist)
         yield next(returns)
 
-    monkeypatch.setattr(module, func_name, mocked)
+    monkeypatch.setattr(module, callee, mocked)
 
 
 def filter(module, func=None):

@@ -14,11 +14,6 @@ class NoneAssembler(BaseAssembler):
         self.steps = []
         self.blast_only = True  # Used to short-circuit the assembler
 
-    @property
-    def blast_only(self):
-        """Use this to flag if the assembler should exit early."""
-        return True
-
     def write_final_output(self, blast_db, query):
         """Output this file if we are not assembling the contigs."""
         prefix = self.final_output_prefix(blast_db, query)

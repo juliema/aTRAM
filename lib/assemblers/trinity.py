@@ -13,7 +13,6 @@ class TrinityAssembler(BaseAssembler):
         super().__init__(args, db_conn)
         self.steps = [self.trinity]
 
-    @property
     def work_path(self):
         """The output directory name has unique requirements."""
         return os.path.join(self.iter_dir, 'trinity')
