@@ -30,8 +30,8 @@ def assemble(args):
 
                 clean_database(db_conn)
 
-                log_file = log.file_name(args['log_file'], blast_db, query)
-                log.setup(log_file)
+                log.setup(args['log_file'], blast_db, query)
+                # log.setup(log_file)
 
                 assembler = assembly.factory(args, db_conn)
 
@@ -87,7 +87,7 @@ def clean_database(db_conn):
 def assembly_loop(args, blast_db, query, db_conn, assembler):
     """Iterate the assembly processes."""
     for iteration in range(1, args['iterations'] + 1):
-        log.info('aTRAM iteration %i' % iteration, line_break='')
+        log.info('aTRAM iteration %i' % iteration)
 
         file_util.temp_iter_dir(args['temp_dir'], iteration)
 
@@ -118,7 +118,7 @@ def assembly_loop(args, blast_db, query, db_conn, assembler):
         query = create_query_from_contigs(args, db_conn, assembler, iteration)
 
     else:
-        log.info('All iterations completed', line_break='')
+        log.info('All iterations completed')
 
 
 def blast_query_against_all_shards(args, blast_db, query, iteration):
@@ -324,14 +324,14 @@ def required_command_line_args(parser):
     group = parser.add_argument_group('required arguments')
 
     group.add_argument('-b', '--blast-db', '--sra', '--db', '--database',
-                       required=True, metavar='DB', action='append',
+                       required=True, metavar='DB', nargs='+',
                        help='''This needs to match the DB prefix you
                             entered for atram_preprocessor.py. You may repeat
                             this argument to run the --query sequence(s)
                             against multiple blast databases.''')
 
     group.add_argument('-q', '--query', '--target', '--probe',
-                       required=True, action='append',
+                       required=True, nargs='+',
                        help='''The path to the fasta file with sequences of
                             interest. Required unless you specify a
                             "--start-iteration". You may have multiple query

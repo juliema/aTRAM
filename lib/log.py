@@ -6,15 +6,35 @@ import logging
 import tempfile
 import subprocess
 
+LOGGER = None  # Global logger so we can switch between queries & blast DBs
+FORMATTER = logging.Formatter('%(asctime)s %(levelname)s: %(message)s',
+                              datefmt='%Y-%m-%d %H:%M:%S')
 
-def setup(log_file):
+
+def setup(log_file, blast_db, query):
     """Standard logger setup."""
-    logging.basicConfig(
-        filename=log_file,
-        level=logging.DEBUG,
-        format='%(asctime)s %(levelname)s: %(message)s',
-        datefmt='%Y-%m-%d %H:%M:%S')
-    logging.info(' '.join(sys.argv))
+    global LOGGER
+
+    log_file = file_name(log_file, blast_db, query)
+
+    handler = logging.FileHandler(log_file)
+    handler.setFormatter(FORMATTER)
+    handler.setLevel(logging.DEBUG)
+
+    stream = logging.StreamHandler()
+    stream.setFormatter(FORMATTER)
+    stream.setLevel(logging.INFO)
+
+    LOGGER = logging.getLogger(log_file)
+    LOGGER.setLevel(logging.DEBUG)
+    LOGGER.addHandler(handler)
+    LOGGER.addHandler(stream)
+    # logging.basicConfig(
+    #     filename=log_file,
+    #     level=logging.DEBUG,
+    #     format='%(asctime)s %(levelname)s: %(message)s',
+    #     datefmt='%Y-%m-%d %H:%M:%S')
+    # logging.info(' '.join(sys.argv))
 
 
 def file_name(log_file, blast_db, query_file=''):
@@ -38,8 +58,9 @@ def subcommand(cmd, temp_dir, timeout=None):
     """Handle subprocess calls and log their output.
 
     Note: stdout=PIPE is blocking and large logs cause a hang.
+    So we don't use it.
     """
-    logging.info(cmd)
+    LOGGER.debug(cmd)
 
     with tempfile.NamedTemporaryFile(mode='w', dir=temp_dir) as log_output:
         try:
@@ -55,24 +76,17 @@ def subcommand(cmd, temp_dir, timeout=None):
                 for line in log_input:
                     line = line.strip()
                     if line:
-                        logging.log(logging.INFO, line)
+                        LOGGER.debug(line)
 
 
-def info(msg, line_break=None):
-    """Log and display an info message."""
-    if line_break is not None:
-        print(line_break)
-    print(msg)
-
-    if line_break is not None:
-        logging.info(line_break)
-    logging.info(msg)
+def info(msg):
+    """Log an info message."""
+    LOGGER.info(msg)
 
 
 def error(msg):
-    """Log and display an error message."""
-    print(msg)
-    logging.error(msg)
+    """Log an error message."""
+    LOGGER.error(msg)
 
 
 def fatal(msg):
