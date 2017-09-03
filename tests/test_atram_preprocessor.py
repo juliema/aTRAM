@@ -1,9 +1,8 @@
 """Testing functions in atram_preprocessor."""
 
-# pylama: ignore=D103
-
 from os.path import join
 import tempfile
+import hypothesis.strategies as st
 import atram_preprocessor
 import lib.db as db
 import lib.log as log
@@ -12,21 +11,21 @@ import tests.mock as mock
 
 
 def test_preprocess():
+    db_conn = st.text()
+    shard_list = st.text()
     args = {
-        'log_file': 'log_file_arg',
-        'blast_db': 'blast_db_arg',
-        'sra_files': 'sra_files_arg',
-        'shard_count': 'shard_count_arg'
-    }
-
+        'log_file': st.text(),
+        'blast_db': st.text(),
+        'sra_files': st.text(),
+        'shard_count': st.text()}
     mock.it(log, 'setup')
-    mock.context(db, 'connect', 'my_connection')
+    mock.context(db, 'connect', db_conn)
     mock.it(db, 'create_metadata_table')
     mock.it(db, 'create_sequences_table')
     mock.it(atram_preprocessor, 'load_seqs')
     mock.it(log, 'info')
     mock.it(db, 'create_sequences_index')
-    mock.it(atram_preprocessor, 'assign_seqs_to_shards', 'shard_list')
+    mock.it(atram_preprocessor, 'assign_seqs_to_shards', shard_list)
     mock.it(atram_preprocessor, 'create_all_blast_shards')
 
     atram_preprocessor.preprocess(args)
@@ -35,47 +34,43 @@ def test_preprocess():
         {
             'module': 'lib.log',
             'func': 'setup',
-            'blast_db': 'blast_db_arg',
-            'log_file': 'log_file_arg',
+            'blast_db': args['blast_db'],
+            'log_file': args['log_file'],
         }, {
             'module': 'lib.db',
-            'blast_db': 'blast_db_arg',
             'func': 'connect',
+            'blast_db': args['blast_db'],
         }, {
             'module': 'lib.db',
             'func': 'create_metadata_table',
-            'db_conn': 'my_connection',
+            'db_conn': db_conn,
         }, {
             'module': 'lib.db',
             'func': 'create_sequences_table',
-            'db_conn': 'my_connection',
+            'db_conn': db_conn,
         }, {
             'module': 'atram_preprocessor',
             'func': 'load_seqs',
-            'db_conn': 'my_connection',
-            'sra_files': 'sra_files_arg',
+            'db_conn': db_conn,
+            'sra_files': args['sra_files'],
         }, {
             'module': 'lib.log',
             'func': 'info',
             'msg': 'Creating an index for the sequence table',
         }, {
-            'db_conn': 'my_connection',
+            'module': 'lib.db',
             'func': 'create_sequences_index',
-            'module': 'lib.db'
+            'db_conn': db_conn,
         }, {
             'module': 'atram_preprocessor',
-            'db_conn': 'my_connection',
             'func': 'assign_seqs_to_shards',
-            'shard_count': 'shard_count_arg',
+            'db_conn': db_conn,
+            'shard_count': args['shard_count'],
         }, {
             'module': 'atram_preprocessor',
             'func': 'create_all_blast_shards',
-            'shard_list': 'shard_list',
-            'args': {
-                'blast_db': 'blast_db_arg',
-                'log_file': 'log_file_arg',
-                'shard_count': 'shard_count_arg',
-                'sra_files': 'sra_files_arg'},
+            'shard_list': shard_list,
+            'args': args,
         }]
     assert expect == mock.history
 

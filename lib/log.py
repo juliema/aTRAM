@@ -12,7 +12,7 @@ FORMATTER = logging.Formatter('%(asctime)s %(levelname)s: %(message)s',
 
 
 def setup(log_file, blast_db, query_file=''):
-    """Standard logger setup."""
+    """Logger setup."""
     global LOGGER
 
     log_file = file_name(log_file, blast_db, query_file)
@@ -32,7 +32,8 @@ def setup(log_file, blast_db, query_file=''):
 
 
 def file_name(log_file, blast_db, query_file=''):
-    """Setup default log file name for each run.
+    """
+    Create the log file name for each run.
 
     Honor user's argument if given.
     """
@@ -49,7 +50,8 @@ def file_name(log_file, blast_db, query_file=''):
 
 
 def subcommand(cmd, temp_dir, timeout=None):
-    """Handle subprocess calls and log their output.
+    """
+    Call a subprocess and log the output.
 
     Note: stdout=PIPE is blocking and large logs cause a hang.
     So we don't use it.
@@ -58,11 +60,12 @@ def subcommand(cmd, temp_dir, timeout=None):
 
     with tempfile.NamedTemporaryFile(mode='w', dir=temp_dir) as log_output:
         try:
-            subprocess.check_call(cmd,
-                                  shell=True,
-                                  timeout=timeout,
-                                  stdout=log_output,
-                                  stderr=log_output)
+            subprocess.check_call(
+                cmd,
+                shell=True,
+                timeout=timeout,
+                stdout=log_output,
+                stderr=log_output)
         except (subprocess.CalledProcessError, TimeoutError):
             raise
         finally:

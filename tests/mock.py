@@ -1,7 +1,5 @@
 """Utility to mock function calls."""
 
-# pylama: ignore=D103,D101,D102,D105
-
 import inspect
 from itertools import cycle
 from contextlib import contextmanager

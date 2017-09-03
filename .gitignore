@@ -16,6 +16,7 @@ admin/*
 # test-related
 .coverage
 .cache
+.hypothesis
 
 # developer environments
 .idea

@@ -249,7 +249,7 @@ class BaseAssembler:
         output_file.write('{}\n'.format(seq))
 
     def get_single_ends(self):
-        """Gather single ends files for the assembly command. """
+        """Gather single ends files for the assembly command."""
         single_ends = []
         if self.file['single_1_count']:
             single_ends.append(self.file['single_1'])

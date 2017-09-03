@@ -45,7 +45,8 @@ def against_sra(args, blast_db, query, hits_file, iteration):
 
 
 def against_contigs(blast_db, query, hits_file, **kwargs):
-    """Blast the query sequence against the contigs.
+    """
+    Blast the query sequence against the contigs.
 
     The blast output will have the scores for later processing.
     """

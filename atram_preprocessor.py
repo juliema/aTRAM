@@ -1,5 +1,5 @@
 """
-Format the data so that atram can use it later.
+Format the data so that atram can use it later in atram itself.
 
 It takes sequence read archive (SRA) files and converts them into coordinated
 blast and sqlite3 databases.
@@ -40,9 +40,10 @@ def preprocess(args):
 
 def load_seqs(db_conn, sra_files):
     """
-    A hand rolled version of "Bio.SeqIO".
+    Load sequences from a fasta/fastq file into the atram database.
 
-    It's faster because we can take shortcuts due to its limited use.
+    A hand rolled version of "Bio.SeqIO". It's faster because we can take
+    shortcuts due to its limited use.
 
     We're using a very simple state machine on lines to do the parsing.
         1) header      (exactly 1 line)  Starts with a '>' or an '@'
@@ -152,7 +153,8 @@ def create_all_blast_shards(args, shard_list):
         results = []
         for idx, shard_params in enumerate(shard_list, 1):
             results.append(pool.apply_async(
-                create_one_blast_shard, (args, shard_params, idx)))
+                create_one_blast_shard,
+                (args, shard_params, idx)))
 
         _ = [result.get() for result in results]  # noqa
 

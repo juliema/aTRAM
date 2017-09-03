@@ -10,6 +10,7 @@ import multiprocessing
 from Bio import SeqIO
 import lib.db as db
 import lib.log as log
+import lib.bio as bio
 import lib.blast as blast
 import lib.file_util as file_util
 import lib.assembler as assembly
@@ -41,7 +42,7 @@ def assemble(args):
 
 def split_queries(args):
     """
-    Handle every record as a separate query target.
+    Create query target for every record in a query file.
 
     We put each query record into its own file for blast queries.
     """
@@ -59,7 +60,8 @@ def split_queries(args):
                 query_id = re.sub(r'\W+', '_', rec.id)
 
                 query_file = file_util.temp_file(
-                    args['temp_dir'], 'queries',
+                    args['temp_dir'],
+                    'queries',
                     '{}_{}_{}.fasta'.format(query_name, query_id, i))
 
                 write_query_seq(query_file, rec.id, str(rec.seq))
@@ -77,7 +79,7 @@ def write_query_seq(file_name, seq_id, seq):
 
 
 def clean_database(db_conn):
-    """Setup the database for an atram run."""
+    """Create database tables for an atram run."""
     db.create_sra_blast_hits_table(db_conn)
     db.create_contig_blast_hits_table(db_conn)
     db.create_assembled_contigs_table(db_conn)
@@ -134,8 +136,9 @@ def blast_query_against_all_shards(args, blast_db, query, iteration):
 
     with multiprocessing.Pool(processes=args['cpus']) as pool:
         results = [pool.apply_async(
-            blast_query_against_one_shard,
-            (args, blast_db, query, shard, iteration)) for shard in all_shards]
+                blast_query_against_one_shard,
+                (args, blast_db, query, shard, iteration))
+            for shard in all_shards]
         _ = [result.get() for result in results]  # noqa
 
 
@@ -233,10 +236,18 @@ def save_contigs(db_conn, all_hits, assembler, iteration):
             if contig_id in all_hits:
                 hit = all_hits[contig_id]
                 batch.append((
-                    iteration, contig.id, str(contig.seq), contig.description,
-                    hit['bit_score'], hit['len'],
-                    hit['query_from'], hit['query_to'], hit['query_strand'],
-                    hit['hit_from'], hit['hit_to'], hit['hit_strand']))
+                    iteration,
+                    contig.id,
+                    str(contig.seq),
+                    contig.description,
+                    hit['bit_score'],
+                    hit['len'],
+                    hit['query_from'],
+                    hit['query_to'],
+                    hit['query_strand'],
+                    hit['hit_from'],
+                    hit['hit_to'],
+                    hit['hit_strand']))
     db.insert_assembled_contigs_batch(db_conn, batch)
 
     return high_score
@@ -303,9 +314,8 @@ def parse_command_line(temp_dir_default):
         args['bit_score'] = 0
         args['contig_length'] = 0
 
-    # Check query
-    if not args['query'] and not args['start_iteration']:
-        log.fatal('We need at least one "--query" sequence.')
+    if not args['protein']:
+        args['protein'] = bio.fasta_file_has_protein(args['query'])
 
     # Prepend to PATH environment variable if requested
     if args['path']:

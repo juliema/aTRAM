@@ -1,9 +1,8 @@
 """Testing functions in atram."""
 
-# pylama: ignore=D103,D101,D102
-
 from os.path import join
 import tempfile
+import hypothesis.strategies as st
 import atram
 import lib.db as db
 import lib.log as log
@@ -15,13 +14,14 @@ import tests.mock as mock
 
 
 def test_assemble():
+    db_conn = st.text()
     args = {
         'split_queries': False,
-        'query': ['my_query1', 'my_query2'],
-        'blast_db': ['my_blast_db1', 'my_blast_db2'],
-        'log_file': 'my_log_file'}
-    assembler = BaseAssembler(args, 'my_connection')
-    mock.context(db, 'connect', 'my_connection')
+        'query': [st.text(), st.text()],
+        'blast_db': [st.text(), st.text()],
+        'log_file': st.text()}
+    assembler = BaseAssembler(args, db_conn)
+    mock.context(db, 'connect', db_conn)
     mock.it(atram, 'clean_database')
     mock.it(log, 'setup')
     mock.it(assembly, 'factory', assembler)
@@ -30,34 +30,32 @@ def test_assemble():
 
     atram.assemble(args)
 
-    expect = [{'db_conn': 'my_connection'}] * 4
+    expect = [{'db_conn': db_conn}] * 4
     assert expect == mock.filter('atram', 'clean_database')
 
     expect = [
-        {'blast_db': 'my_blast_db1',
-         'log_file': 'my_log_file',
-         'query_file': 'my_query1'},
-        {'blast_db': 'my_blast_db1',
-         'log_file': 'my_log_file',
-         'query_file': 'my_query2'},
-        {'blast_db': 'my_blast_db2',
-         'log_file': 'my_log_file',
-         'query_file': 'my_query1'},
-        {'blast_db': 'my_blast_db2',
-         'log_file': 'my_log_file',
-         'query_file': 'my_query2'}]
+        {'blast_db': args['blast_db'][0],
+         'log_file': args['log_file'],
+         'query_file': args['query'][0]},
+        {'blast_db': args['blast_db'][0],
+         'log_file': args['log_file'],
+         'query_file': args['query'][1]},
+        {'blast_db': args['blast_db'][1],
+         'log_file': args['log_file'],
+         'query_file': args['query'][0]},
+        {'blast_db': args['blast_db'][1],
+         'log_file': args['log_file'],
+         'query_file': args['query'][1]}]
     assert expect == mock.filter('lib.log', 'setup')
 
-    expect = [{'args': args, 'db_conn': 'my_connection'}] * 4
+    expect = [{'args': args, 'db_conn': db_conn}] * 4
     assert expect == mock.filter('lib.assembler', 'factory')
 
-    from pprint import pprint
-    pprint(mock.history)
     expect = [
-        {'blast_db': 'my_blast_db1', 'query': 'my_query1'},
-        {'blast_db': 'my_blast_db1', 'query': 'my_query2'},
-        {'blast_db': 'my_blast_db2', 'query': 'my_query1'},
-        {'blast_db': 'my_blast_db2', 'query': 'my_query2'}]
+        {'blast_db': args['blast_db'][0], 'query': args['query'][0]},
+        {'blast_db': args['blast_db'][0], 'query': args['query'][1]},
+        {'blast_db': args['blast_db'][1], 'query': args['query'][0]},
+        {'blast_db': args['blast_db'][1], 'query': args['query'][1]}]
     assert expect == mock.filter('BaseAssembler', 'write_final_output')
 
 
@@ -113,8 +111,11 @@ def test_clean_database():
 
 
 def test_assembly_loop_one_iter():
-    args = {'temp_dir': 'my_temp_dir', 'iterations': 1}
-    assembler = BaseAssembler(args, 'my_connection')
+    db_conn = st.text()
+    blast_db = st.text()
+    query = st.text()
+    args = {'temp_dir': st.text(), 'iterations': 1}
+    assembler = BaseAssembler(args, db_conn)
     assembler.blast_only = False
 
     mock.it(log, 'info')
@@ -130,26 +131,26 @@ def test_assembly_loop_one_iter():
     mock.it(assembler, 'no_new_contigs', False)
     mock.it(atram, 'create_query_from_contigs', 'my_query')
 
-    atram.assembly_loop(args, 'a_blast_db', 'a_query', 'a_db_conn', assembler)
+    atram.assembly_loop(args, blast_db, query, db_conn, assembler)
 
-    expect = [{'msg': ('aTRAM blast DB = "a_blast_db", '
-                       'query = "a_query", iteration 1')},
+    expect = [{'msg': 'aTRAM blast DB = "{}", query = "{}", '
+               'iteration {}'.format(blast_db, query, 1)},
               {'msg': 'All iterations completed'}]
     assert expect == mock.filter('lib.log', 'info')
 
-    expect = [{'temp_dir': 'my_temp_dir',
+    expect = [{'temp_dir': args['temp_dir'],
                'iteration': 1,
-               'query_file': 'a_query',
-               'blast_db': 'a_blast_db'}]
+               'query_file': query,
+               'blast_db': blast_db}]
     assert expect == mock.filter('lib.file_util', 'temp_iter_dir')
 
     expect = [
-        {'blast_db': 'a_blast_db', 'iteration': 1, 'query_file': 'a_query'}]
+        {'blast_db': blast_db, 'iteration': 1, 'query_file': query}]
     assert expect == mock.filter('BaseAssembler', 'initialize_iteration')
 
-    expect = [{'args': {'temp_dir': 'my_temp_dir', 'iterations': 1},
-               'blast_db': 'a_blast_db',
-               'query': 'a_query',
+    expect = [{'args': {'temp_dir': args['temp_dir'], 'iterations': 1},
+               'blast_db': blast_db,
+               'query': query,
                'iteration': 1}]
     assert expect == mock.filter('atram', 'blast_query_against_all_shards')
 
@@ -159,8 +160,8 @@ def test_assembly_loop_one_iter():
     assert [{}] == mock.filter('BaseAssembler', 'nothing_assembled')
     assert [{'count': 11}] == mock.filter('BaseAssembler', 'no_new_contigs')
 
-    expect = [{'args': {'temp_dir': 'my_temp_dir', 'iterations': 1},
-               'db_conn': 'a_db_conn',
+    expect = [{'args': {'temp_dir': args['temp_dir'], 'iterations': 1},
+               'db_conn': db_conn,
                'assembler': assembler,
                'iteration': 1}]
     assert expect == mock.filter('atram', 'create_query_from_contigs')
