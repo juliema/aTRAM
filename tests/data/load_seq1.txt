@@ -4,7 +4,7 @@ AAAAAAAAAA
 AAAAAAAAAA
 GGGGGGGGGG
 
->seq3.1 suffix
+>seq3 1 suffix
 AAAAAAAAAA
 
 +
@@ -27,7 +27,7 @@ GGGGGGGGGG
 TTTTTTTTTT
 TTTTTTTTTT
 
-@seq3.2 suffix
+@seq3 2 suffix
 
 AAAAAAAAAA
 

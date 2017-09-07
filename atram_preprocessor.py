@@ -29,7 +29,7 @@ def preprocess(args):
         db.create_metadata_table(db_conn)
 
         db.create_sequences_table(db_conn)
-        load_seqs(db_conn, args['sra_files'])
+        load_seqs(args, db_conn)
 
         log.info('Creating an index for the sequence table')
         db.create_sequences_index(db_conn)
@@ -38,66 +38,77 @@ def preprocess(args):
         create_all_blast_shards(args, shard_list)
 
 
-def load_seqs(db_conn, sra_files):
-    """
-    Load sequences from a fasta/fastq file into the atram database.
+def load_seqs(args, db_conn):
+    """Load sequences from a fasta/fastq files into the atram database."""
+    # We have to clamp the end suffix depending on the file type.
+    for (arg, clamp) in [('mixed_ends', None), ('end_1', '1'),
+                         ('end_2', '2'), ('single_ends', '')]:
+        if args[arg]:
+            for file_name in args[arg]:
+                load_one_file(db_conn, file_name, clamp)
 
-    A hand rolled version of "Bio.SeqIO". It's faster because we can take
-    shortcuts due to its limited use.
 
-    We're using a very simple state machine on lines to do the parsing.
-        1) header      (exactly 1 line)  Starts with a '>' or an '@'
-        2) sequence    (1 or more lines) Starts with a letter
-        3) fastq stuff (0 or more lines) Starts with a '+' on the 1st line
-        4) Either go back to 1 or end
-    """
-    for file_name in sra_files:
+def load_one_file(db_conn, file_name, seq_end_clamp=None):
+    """Load sequences from a fasta/fastq file into the atram database."""
+    # A hand rolled version of "Bio.SeqIO". It's faster because we can take
+    # shortcuts due to its limited functionality.
 
-        log.info('Loading "%s" into sqlite database' % file_name)
+    # We're using a very simple state machine on lines to do the parsing.
+    #     1) header      (exactly 1 line)  Starts with a '>' or an '@'
+    #     2) sequence    (1 or more lines) Starts with a letter
+    #     3) fastq stuff (0 or more lines) Starts with a '+' on the 1st line
+    #     4) Either go back to 1 or end
+    log.info('Loading "%s" into sqlite database' % file_name)
 
-        with open(file_name) as sra_file:
-            batch = []      # The batch of records to insert
+    with open(file_name) as sra_file:
+        batch = []      # The batch of records to insert
 
-            seq = []        # It will become the sequence string. A DB field
-            seq_end = ''    # Which end? 1 or 2. A DB field
-            seq_name = ''   # Name from the fasta file. A DB field
-            is_seq = True   # The state machine's only flag for state
+        seq = []        # It will become the sequence string. A DB field
+        seq_end = ''    # Which end? 1 or 2. A DB field
+        seq_name = ''   # Name from the fasta file. A DB field
+        is_seq = True   # The state machine's only flag for state
 
-            for line in sra_file:
+        for line in sra_file:
 
-                # Skip blank lines
-                if not line:
-                    pass
+            # Skip blank lines
+            if not line:
+                pass
 
-                # Handle a header line
-                elif line[0] in ['>', '@']:
-                    if seq:  # Append last record to the batch?
-                        batch.append((seq_name, seq_end, ''.join(seq)))
+            # Handle a header line
+            elif line[0] in ['>', '@']:
+                if seq:  # Append last record to the batch?
+                    batch.append((seq_name, seq_end, ''.join(seq)))
 
-                    seq = []        # Reset the sequence
-                    is_seq = True   # Reset the state flag
+                seq = []        # Reset the sequence
+                is_seq = True   # Reset the state flag
 
-                    # Get data from the header
-                    match = blast.PARSE_HEADER.match(line)
-                    seq_name = match.group(1) if match else line[1:].strip()
-                    seq_end = match.group(2) if match else ''
+                # Get data from the header
+                match = blast.PARSE_HEADER.match(line)
+                seq_name = match.group(1) if match else line[1:].strip()
 
-                # Handle fastq stuff, so skip these lines
-                elif line[0] == '+':
-                    is_seq = False
+                # Sequence end either equals its clamp value or we get it
+                # from the header line
+                if seq_end_clamp is None:
+                    seq_end = match.group(2) if match.group(2) else ''
+                else:
+                    seq_end = seq_end_clamp
 
-                # Handle sequence lines
-                elif line[0].isalpha() and is_seq:
-                    seq.append(line.rstrip())
+            # Handle fastq stuff, so skip these lines
+            elif line[0] == '+':
+                is_seq = False
 
-                if len(batch) >= db.BATCH_SIZE:
-                    db.insert_sequences_batch(db_conn, batch)
-                    batch = []
+            # Handle sequence lines
+            elif line[0].isalpha() and is_seq:
+                seq.append(line.rstrip())
 
-            if seq:
-                batch.append((seq_name, seq_end, ''.join(seq)))
+            if len(batch) >= db.BATCH_SIZE:
+                db.insert_sequences_batch(db_conn, batch)
+                batch = []
 
-            db.insert_sequences_batch(db_conn, batch)
+        if seq:
+            batch.append((seq_name, seq_end, ''.join(seq)))
+
+        db.insert_sequences_batch(db_conn, batch)
 
 
 def assign_seqs_to_shards(db_conn, shard_count):
@@ -223,10 +234,39 @@ def parse_command_line(temp_dir_default):
         formatter_class=argparse.RawDescriptionHelpFormatter,
         description=textwrap.dedent(description))
 
-    parser.add_argument(dest='sra_files', metavar='FASTA_FILE', nargs='+',
-                        help='''Sequence read archive files in fasta or
-                             fastq format. You may enter more than
-                             one file and you may use wildcards.''')
+    parser.add_argument('--mixed-ends', '-m', metavar='FASTA', nargs='+',
+                        action='append',
+                        help='''Sequence read archive files that have a mix of
+                             both end 1 and end 2 sequences. The sequence names
+                             MUST have an end suffix like "/1" or "_2". The
+                             files are in fasta or fastq format. You may enter
+                             more than one file or you may use wildcards.''')
+
+    parser.add_argument('--end-1', '-1', metavar='FASTA', nargs='+',
+                        action='append',
+                        help='''Sequence read archive files that have only
+                             end 1 sequences. The sequence names do not need an
+                             end suffix, we will assume the suffix is always 1.
+                             The files are in fasta or fastq format. You may
+                             enter more than one file or you may use
+                             wildcards.''')
+
+    parser.add_argument('--end-2', '-2', metavar='FASTA', nargs='+',
+                        action='append',
+                        help='''Sequence read archive files that have only
+                             end 2 sequences. The sequence names do not need an
+                             end suffix, we will assume the suffix is always 2.
+                             The files are in fasta or fastq format. You may
+                             enter more than one file or you may use
+                             wildcards.''')
+
+    parser.add_argument('--single-ends', '-S', metavar='FASTA', nargs='+',
+                        action='append',
+                        help='''Sequence read archive files that have only
+                             unpaired sequences. Any sequence end suffixes will
+                             be ignored. The files are in fasta or fastq
+                             format. You may enter more than one file or you
+                             may use wildcards.''')
 
     parser.add_argument('--version', action='version',
                         version='%(prog)s {}'.format(file_util.VERSION))
@@ -268,8 +308,12 @@ def parse_command_line(temp_dir_default):
 
     args['temp_dir'] = file_util.temp_root_dir(
         args['temp_dir'], temp_dir_default)
+
+    all_files = arg.get('mixed_ends', []) + args.get('end_1', []) \
+        + args.get('end_2', []) + args.get('single_ends', [])
+
     args['shard_count'] = blast.default_shard_count(
-        args['shard_count'], args['sra_files'])
+        args['shard_count'], all_files)
 
     blast.make_blast_output_dir(args['blast_db'])
 

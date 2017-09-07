@@ -9,11 +9,11 @@ import lib.file_util as file_util
 
 
 # Try to get the sequence name and which end it is from the fasta header
-PARSE_HEADER = re.compile(r'^ [>@] \s* ( [^\s/._]+? ) [\s/._] ( [12] )',
+PARSE_HEADER = re.compile(r'^ [>@] \s* ( [^\s/_]+ ) [\s/_]? ( [12] )?',
                           re.VERBOSE)
 
 # Parse blast hits file
-PARSE_RESULTS = re.compile(r'^ ( [^\s/._]+? ) [\s/._] ( [12] )', re.VERBOSE)
+PARSE_RESULTS = re.compile(r'^ ( [^\s/_]+ ) [\s/_] ( [12] )', re.VERBOSE)
 
 
 def create_db(temp_dir, fasta_file, shard):

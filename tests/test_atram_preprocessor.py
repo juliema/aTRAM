@@ -51,8 +51,8 @@ def test_preprocess():
         }, {
             'module': 'atram_preprocessor',
             'func': 'load_seqs',
+            'args': args,
             'db_conn': db_conn,
-            'sra_files': args['sra_files'],
         }, {
             'module': 'lib.log',
             'func': 'info',
@@ -75,15 +75,14 @@ def test_preprocess():
     assert expect == mock.history
 
 
-def test_load_seqs():
+def test_load_one_file_1():
     db.BATCH_SIZE = 5
 
     mock.it(log, 'info')
     mock.it(db, 'insert_sequences_batch')
 
     file_1 = join('tests', 'data', 'load_seq1.txt')
-    file_2 = join('tests', 'data', 'load_seq2.txt')
-    atram_preprocessor.load_seqs('connection', [file_1, file_2])
+    atram_preprocessor.load_one_file('connection', file_1)
 
     expect = [
         {
@@ -99,7 +98,7 @@ def test_load_seqs():
                 ('seq2', '1', 'AAAAAAAAAAGGGGGGGGGG'),
                 ('seq3', '1', 'AAAAAAAAAA'),
                 ('seq4', '1', 'AAAAAAAAAA'),
-                ('seq5/3', '', 'AAAAAAAAAAGGGGGGGGGG')]
+                ('seq5', '', 'AAAAAAAAAAGGGGGGGGGG')]
         }, {
             'module': 'lib.db',
             'func': 'insert_sequences_batch',
@@ -109,18 +108,34 @@ def test_load_seqs():
                 ('seq2', '2', 'AAAAAAAAAAGGGGGGGGGG'),
                 ('seq3', '2', 'AAAAAAAAAA'),
                 ('seq4', '2', 'AAAAAAAAAAGGGGGGGGGG')]
-        }, {
+        }]
+    assert expect == mock.history
+
+
+def test_load_one_file_2():
+    db.BATCH_SIZE = 5
+
+    mock.it(log, 'info')
+    mock.it(db, 'insert_sequences_batch')
+
+    file_1 = join('tests', 'data', 'load_seq2.txt')
+    atram_preprocessor.load_one_file('connection', file_1)
+
+    expect = [
+        {
             'module': 'lib.log',
             'func': 'info',
             'msg': 'Loading "tests/data/load_seq2.txt" into sqlite database'
         }, {
-            'module': 'lib.db', 'func': 'insert_sequences_batch',
+            'module': 'lib.db',
+            'func': 'insert_sequences_batch',
             'db_conn': 'connection',
             'batch': [
                 ('seq6', '1', 'TTTTTTTTTT'),
                 ('seq7', '1', 'TTTTTTTTTTCCCCCCCCCC'),
-                ('seq8/a.1 suffix', '', 'TTTTTTTTTT'),
-                ('seq8', '2', 'TTTTTTTTTTCCCCCCCCCC')]}]
+                ('seq8', '', 'TTTTTTTTTT'),
+                ('seq8', '2', 'TTTTTTTTTTCCCCCCCCCC')]
+        }]
     assert expect == mock.history
 
 
