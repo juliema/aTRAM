@@ -6,7 +6,6 @@ import subprocess
 import lib.db as db
 import lib.log as log
 import lib.bio as bio
-import lib.file_util as file_util
 
 
 class BaseAssembler:
@@ -14,35 +13,60 @@ class BaseAssembler:
 
     def __init__(self, args, db_conn):
         """Build the assembler."""
-        self.args = args      # Parsed command line arguments
-        self.steps = []       # Assembler steps setup by the assembler
-        self.file = {}        # Files and record counts
-        self.iteration = 0    # Current iteration
-        self.query_file = ''  # Current query file name
-        self.blast_db = ''    # Current blast DB name
-        self.db_conn = db_conn  # Save the DB connection
+        self.args = args         # Parsed command line arguments
         self.blast_only = False  # Used to short-circuit the assembler
+        self.steps = []          # Assembler steps setup by the assembler
+        self.file = {}           # Files and record counts
+        self.state = {
+            'iteration': 0,      # Current iteration
+            'query_file': '',    # Current query file name
+            'blast_db': '',      # Current blast DB name
+            'db_conn': db_conn}  # Save the DB connection
+
+    def initialize_iteration(self, blast_db, query_file, iteration):
+        """Setup file names used by the assembler.
+
+        Do this at the start of each iteration.
+        """
+        self.state['blast_db'] = basename(blast_db)
+        self.state['query_file'] = basename(query_file)
+        self.state['iteration'] = iteration
+
+        self.file['long_reads'] = ''  # Set up in atram.py for now
+        self.file['output'] = self.iter_file('output.fasta')
+        self.file['paired_1'] = self.iter_file('paired_1.fasta')
+        self.file['paired_2'] = self.iter_file('paired_2.fasta')
+        self.file['single_1'] = self.iter_file('single_1.fasta')
+        self.file['single_2'] = self.iter_file('single_2.fasta')
+        self.file['single_any'] = self.iter_file('single_any.fasta')
+
+        self.file['paired_count'] = 0       # paired_1 and paired_2 count
+        self.file['single_1_count'] = 0
+        self.file['single_2_count'] = 0
+        self.file['single_any_count'] = 0
 
     def iter_dir(self):
         """Get the work directory for the current iteration."""
-        return file_util.temp_iter_dir(self.args['temp_dir'],
-                                       self.blast_db,
-                                       self.query_file,
-                                       self.iteration)
-
-    def work_path(self):
-        """The output directory name may have unique requirements."""
-        return self.iter_dir()
+        name = '{}_{}_iteration_{:02d}'.format(
+            self.state['blast_db'],
+            self.state['query_file'],
+            self.state['iteration'])
+        return join(self.args['temp_dir'], name)
 
     def iter_file(self, file_name):
-        """Build a temporary file in the current iteration directory."""
-        return join(self.iter_dir(), file_name)
+        """Put files into the temp dir."""
+        rel_path = join(self.iter_dir(), file_name)
+        return abspath(rel_path)
+
+    def work_path(self):
+        """Assembler output directory name may have unique requirements."""
+        return self.iter_dir()
 
     def run(self):
         """Try to assemble the input."""
         try:
             log.info('Assembling shards with {}: iteration {}'.format(
-                self.args['assembler'], self.iteration))
+                self.args['assembler'], self.state['iteration']))
             self.assemble()
         except TimeoutError:
             msg = 'Time ran out for the assembler after {} (HH:MM:SS)'.format(
@@ -54,26 +78,26 @@ class BaseAssembler:
 
     def no_blast_hits(self):
         """Make sure we have blast hits."""
-        if not db.sra_blast_hits_count(self.db_conn, self.iteration):
-            log.info('No blast hits in iteration %i' % self.iteration)
+        if not db.sra_blast_hits_count(
+                self.state['db_conn'], self.state['iteration']):
+            log.info('No blast hits in iteration %i' % self.state['iteration'])
             return True
-
         return False
 
     def nothing_assembled(self):
         """Make there is assembler output."""
         if not exists(self.file['output']) \
                 or not getsize(self.file['output']):
-            log.info('No new assemblies in iteration %i' % self.iteration)
+            log.info('No new assemblies in iteration {}'.format(
+                self.state['iteration']))
             return True
-
         return False
 
     def assembled_contigs_count(self, high_score):
         """How many contigs were assembled and are above the thresholds."""
         count = db.assembled_contigs_count(
-            self.db_conn,
-            self.iteration,
+            self.state['db_conn'],
+            self.state['iteration'],
             self.args['bit_score'],
             self.args['contig_length'])
 
@@ -83,21 +107,20 @@ class BaseAssembler:
                      'this iteration is {}'.format(
                          self.args['bit_score'],
                          self.args['contig_length'],
-                         self.iteration,
+                         self.state['iteration'],
                          high_score))
         return count
 
     def no_new_contigs(self, count):
         """Make the are new contigs in the assembler output."""
         if count == db.iteration_overlap_count(
-                self.db_conn,
-                self.iteration,
+                self.state['db_conn'],
+                self.state['iteration'],
                 self.args['bit_score'],
                 self.args['contig_length']):
-            log.info(
-                'No new contigs were found in iteration %i' % self.iteration)
+            log.info('No new contigs were found in iteration {}'.format(
+                self.state['iteration']))
             return True
-
         return False
 
     def assemble(self):
@@ -109,42 +132,10 @@ class BaseAssembler:
         for step in self.steps:
             cmd = step()
             log.subcommand(cmd, self.args['temp_dir'], self.args['timeout'])
-
         self.post_assembly()
 
     def post_assembly(self):
         """The assembler may have unique post assembly steps."""
-
-    def path(self, file_name):
-        """Put files into the temp dir."""
-        blast_db = basename(self.blast_db)
-        file_name = '{}.{}.{:02d}.{}'.format(
-            blast_db, self.query_file, self.iteration, file_name)
-        rel_path = self.iter_file(file_name)
-
-        return abspath(rel_path)
-
-    def initialize_iteration(self, blast_db, query_file, iteration):
-        """Setup file names used by the assembler.
-
-        Do this at the start of each iteration.
-        """
-        self.blast_db = blast_db
-        self.query_file = query_file
-        self.iteration = iteration
-
-        self.file['output'] = self.path('output.fasta')
-        self.file['long_reads'] = ''  # Set up in atram.py for now
-        self.file['paired_1'] = self.path('paired_1.fasta')
-        self.file['paired_2'] = self.path('paired_2.fasta')
-        self.file['single_1'] = self.path('single_1.fasta')
-        self.file['single_2'] = self.path('single_2.fasta')
-        self.file['single_any'] = self.path('single_any.fasta')
-
-        self.file['paired_count'] = 0       # paired_1 and paired_2 count
-        self.file['single_1_count'] = 0
-        self.file['single_2_count'] = 0
-        self.file['single_any_count'] = 0
 
     @staticmethod
     def parse_contig_id(header):
@@ -153,14 +144,14 @@ class BaseAssembler:
 
     def write_input_files(self):
         """Write blast hits and matching ends to fasta files."""
-        log.info(
-            'Writing assembler input files: iteration %i' % self.iteration)
+        log.info('Writing assembler input files: iteration {}'.format(
+            self.state['iteration']))
 
         with open(self.file['paired_1'], 'w') as end_1, \
                 open(self.file['paired_2'], 'w') as end_2:
 
             for row in db.get_blast_hits_by_end_count(
-                    self.db_conn, self.iteration, 2):
+                    self.state['db_conn'], self.state['iteration'], 2):
 
                 self.file['paired_count'] += 1
                 out_file = end_1 if row['seq_end'] == '1' else end_2
@@ -174,7 +165,7 @@ class BaseAssembler:
                 open(self.file['single_any'], 'w') as end_any:
 
             for row in db.get_blast_hits_by_end_count(
-                    self.db_conn, self.iteration, 1):
+                    self.state['db_conn'], self.state['iteration'], 1):
 
                 if row['seq_end'] == '1':
                     out_file = end_1
@@ -213,10 +204,12 @@ class BaseAssembler:
         if self.args['no_filter']:
             return
 
-        file_name = file_util.output_file(prefix, 'filtered_contigs.fasta')
+        file_name = '{}.{}'.format(prefix, 'filtered_contigs.fasta')
 
         contigs = db.get_all_assembled_contigs(
-            self.db_conn, self.args['bit_score'], self.args['contig_length'])
+            self.state['db_conn'],
+            self.args['bit_score'],
+            self.args['contig_length'])
 
         with open(file_name, 'w') as output_file:
             for contig in contigs:
@@ -224,10 +217,10 @@ class BaseAssembler:
 
     def write_all_contigs(self, prefix):
         """Write all contigs to a final ouput file."""
-        file_name = file_util.output_file(prefix, 'all_contigs.fasta')
+        file_name = '{}.{}'.format(prefix, 'all_contigs.fasta')
 
         with open(file_name, 'w') as output_file:
-            for contig in db.get_all_assembled_contigs(self.db_conn):
+            for contig in db.get_all_assembled_contigs(self.state['db_conn']):
                 self.output_assembled_contig(output_file, contig)
 
     @staticmethod

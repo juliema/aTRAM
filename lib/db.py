@@ -3,6 +3,9 @@
 import sqlite3
 import lib.log as log
 
+ATRAM_VERSION = '2.0'
+DB_VERSION = '2.0'
+
 BATCH_SIZE = 1e6  # How many sequence records to insert at a time
 
 
@@ -25,10 +28,8 @@ def connect(blast_db, check_version=False):
 
 # ########################### misc functions #################################
 
-# DB_VERSION != file_util.VERSION. Don't force DB changes until required. So
-# this version will tend to lag the program version.
-DB_VERSION = '2.0'
-
+# DB_VERSION != version in DB. Don't force DB changes until required. So
+# this version will tend to lag ATRAM_VERSION.
 
 def check_versions(db_conn):
     """Make sure the database version matches what we built it with."""

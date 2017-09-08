@@ -16,7 +16,6 @@ import numpy as np
 import lib.db as db
 import lib.log as log
 import lib.blast as blast
-import lib.file_util as file_util
 
 __all__ = ('preprocess', )
 
@@ -179,7 +178,7 @@ def create_one_blast_shard(args, shard_params, shard_index):
     We fill a fasta file with the appropriate sequences and hand things off
     to the makeblastdb program.
     """
-    shard = blast.shard_path(args['blast_db'], shard_index)
+    shard = '{}.{:03d}.blast'.format(args['blast_db'], shard_index)
     fasta_name = '{}_{:03d}.fasta'.format(os.path.basename(sys.argv[0][:-3]),
                                           shard_index)
     fasta_path = os.path.join(args['temp_dir'], fasta_name)
@@ -235,7 +234,6 @@ def parse_command_line(temp_dir_default):
         description=textwrap.dedent(description))
 
     parser.add_argument('--mixed-ends', '-m', metavar='FASTA', nargs='+',
-                        action='append',
                         help='''Sequence read archive files that have a mix of
                              both end 1 and end 2 sequences. The sequence names
                              MUST have an end suffix like "/1" or "_2". The
@@ -243,7 +241,6 @@ def parse_command_line(temp_dir_default):
                              more than one file or you may use wildcards.''')
 
     parser.add_argument('--end-1', '-1', metavar='FASTA', nargs='+',
-                        action='append',
                         help='''Sequence read archive files that have only
                              end 1 sequences. The sequence names do not need an
                              end suffix, we will assume the suffix is always 1.
@@ -252,7 +249,6 @@ def parse_command_line(temp_dir_default):
                              wildcards.''')
 
     parser.add_argument('--end-2', '-2', metavar='FASTA', nargs='+',
-                        action='append',
                         help='''Sequence read archive files that have only
                              end 2 sequences. The sequence names do not need an
                              end suffix, we will assume the suffix is always 2.
@@ -261,7 +257,6 @@ def parse_command_line(temp_dir_default):
                              wildcards.''')
 
     parser.add_argument('--single-ends', '-S', metavar='FASTA', nargs='+',
-                        action='append',
                         help='''Sequence read archive files that have only
                              unpaired sequences. Any sequence end suffixes will
                              be ignored. The files are in fasta or fastq
@@ -269,7 +264,7 @@ def parse_command_line(temp_dir_default):
                              may use wildcards.''')
 
     parser.add_argument('--version', action='version',
-                        version='%(prog)s {}'.format(file_util.VERSION))
+                        version='%(prog)s {}'.format(db.ATRAM_VERSION))
 
     group = parser.add_argument_group('preprocessor arguments')
 
@@ -306,11 +301,16 @@ def parse_command_line(temp_dir_default):
 
     args = vars(parser.parse_args())
 
-    args['temp_dir'] = file_util.temp_root_dir(
-        args['temp_dir'], temp_dir_default)
+    # Setup temp dir
+    if not args['temp_dir']:
+        args['temp_dir'] = temp_dir_default
+    else:
+        os.makedirs(args['temp_dir'], exist_ok=True)
 
-    all_files = arg.get('mixed_ends', []) + args.get('end_1', []) \
-        + args.get('end_2', []) + args.get('single_ends', [])
+    all_files = []
+    for arg in ['mixed_ends', 'end_1', 'end_2', 'single_ends']:
+        if args.get(arg):
+            all_files.extend([i for i in args[arg]])
 
     args['shard_count'] = blast.default_shard_count(
         args['shard_count'], all_files)

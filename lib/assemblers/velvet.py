@@ -20,8 +20,8 @@ class VelvetAssembler(BaseAssembler):
     def velveth(self):
         """Build the velveth for the first assembly step."""
         cmd = ['velveth',
-               '{}'.format(self.work_path),
-               '{}'.format(self.args.kmer),
+               '{}'.format(self.work_path()),
+               '{}'.format(self.args['kmer']),
                '-fasta']
 
         if self.file['paired_count']:
@@ -38,7 +38,7 @@ class VelvetAssembler(BaseAssembler):
         if single_ends:
             cmd.append("-short {}".format(' '.join(single_ends)))
 
-        if self.file['long_reads'] and not self.args.no_long_reads:
+        if self.file['long_reads'] and not self.args['no_long_reads']:
             cmd.append("-long '{}'".format(self.file['long_reads']))
 
         return ' '.join(cmd)
@@ -46,10 +46,10 @@ class VelvetAssembler(BaseAssembler):
     def velvetg(self):
         """Build the velvetg for the second assembly step."""
         cmd = ['velvetg',
-               '{}'.format(self.work_path),
-               '-ins_length {}'.format(self.args.ins_length),
-               '-exp_cov {}'.format(self.args.exp_coverage),
-               '-min_contig_lgth {}'.format(self.args.min_contig_length)]
+               '{}'.format(self.work_path()),
+               '-ins_length {}'.format(self.args['ins_length']),
+               '-exp_cov {}'.format(self.args['exp_coverage']),
+               '-min_contig_lgth {}'.format(self.args['min_contig_length'])]
 
         return ' '.join(cmd)
 

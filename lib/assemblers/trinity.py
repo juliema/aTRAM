@@ -21,12 +21,12 @@ class TrinityAssembler(BaseAssembler):
         """Build the command for assembly."""
         cmd = ['Trinity',
                '--seqType fa',
-               '--max_memory {}G'.format(self.args.max_memory),
-               '--CPU {}'.format(self.args.cpus),
-               "--output '{}'".format(self.work_path),
+               '--max_memory {}G'.format(self.args['max_memory']),
+               '--CPU {}'.format(self.args['cpus']),
+               "--output '{}'".format(self.work_path()),
                '--full_cleanup']
 
-        if not self.args.bowtie2:
+        if not self.args['bowtie2']:
             cmd.append('--no_bowtie')
 
         if self.file['paired_count']:
@@ -37,7 +37,7 @@ class TrinityAssembler(BaseAssembler):
             if single_ends:
                 cmd.append("-single '{}'".format(','.join(single_ends)))
 
-        if self.file['long_reads'] and not self.args.no_long_reads:
+        if self.file['long_reads'] and not self.args['no_long_reads']:
             cmd.append("--long_reads '{}'".format(self.file['long_reads']))
 
         return ' '.join(cmd)

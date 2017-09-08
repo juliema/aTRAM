@@ -33,6 +33,8 @@ def it(container, callee, returns=None):
 
     def mocked(*args, **kwargs):
         hist = {arg_names[i]: a for i, a in enumerate(args)}
+        if kwargs:
+            hist.update(kwargs)
         if inspect.ismodule(container):
             hist['module'] = container.__name__
         else:  # is class

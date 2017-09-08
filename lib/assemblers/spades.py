@@ -21,10 +21,10 @@ class SpadesAssembler(BaseAssembler):
         """Build the command for assembly."""
         cmd = ['spades.py ',
                '--only-assembler',
-               '--threads {}'.format(self.args.cpus),
-               '--memory {}'.format(self.args.max_memory),
-               '--cov-cutoff {}'.format(self.args.cov_cutoff),
-               '-o {}'.format(self.work_path)]
+               '--threads {}'.format(self.args['cpus']),
+               '--memory {}'.format(self.args['max_memory']),
+               '--cov-cutoff {}'.format(self.args['cov_cutoff']),
+               '-o {}'.format(self.work_path())]
 
         if self.file['paired_count']:
             cmd.append("--pe1-1 '{}'".format(self.file['paired_1']))
@@ -41,5 +41,5 @@ class SpadesAssembler(BaseAssembler):
 
     def post_assembly(self):
         """Copy the assembler output."""
-        src = os.path.join(self.work_path, 'contigs.fasta')
+        src = os.path.join(self.work_path(), 'contigs.fasta')
         shutil.move(src, self.file['output'])

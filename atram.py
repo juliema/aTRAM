@@ -2,7 +2,8 @@
 
 import re
 import os
-from os.path import basename, splitext
+from os.path import basename, splitext, join
+from shutil import which
 import argparse
 import textwrap
 import tempfile
@@ -12,7 +13,6 @@ import lib.db as db
 import lib.log as log
 import lib.bio as bio
 import lib.blast as blast
-import lib.file_util as file_util
 import lib.assembler as assembly
 
 
@@ -48,7 +48,8 @@ def split_queries(args):
     """
     queries = []
 
-    file_util.temp_subdir(args['temp_dir'], 'queries')
+    path = join(args['temp_dir'], 'queries')
+    os.makedirs(path, exist_ok=True)
 
     for query_path in args['query']:
 
@@ -59,9 +60,8 @@ def split_queries(args):
 
                 query_id = re.sub(r'\W+', '_', rec.id)
 
-                query_file = file_util.temp_file(
-                    args['temp_dir'],
-                    'queries',
+                query_file = join(
+                    path,
                     '{}_{}_{}.fasta'.format(query_name, query_id, i))
 
                 write_query_seq(query_file, rec.id, str(rec.seq))
@@ -91,9 +91,9 @@ def assembly_loop(args, blast_db, query, db_conn, assembler):
         log.info('aTRAM blast DB = "{}", query = "{}", iteration {}'.format(
             blast_db, query, iteration))
 
-        file_util.temp_iter_dir(args['temp_dir'], blast_db, query, iteration)
-
         assembler.initialize_iteration(blast_db, query, iteration)
+
+        os.makedirs(assembler.iter_dir(), exist_ok=True)
 
         blast_query_against_all_shards(args, blast_db, query, iteration)
 
@@ -136,9 +136,9 @@ def blast_query_against_all_shards(args, blast_db, query, iteration):
 
     with multiprocessing.Pool(processes=args['cpus']) as pool:
         results = [pool.apply_async(
-                blast_query_against_one_shard,
-                (args, blast_db, query, shard, iteration))
-            for shard in all_shards]
+            blast_query_against_one_shard,
+            (args, blast_db, query, shard, iteration))
+                   for shard in all_shards]
         _ = [result.get() for result in results]  # noqa
 
 
@@ -257,7 +257,7 @@ def create_query_from_contigs(args, db_conn, assembler, iteration):
     """Crate a new file with the contigs used as the next query."""
     log.info('Creating new query files: iteration %i' % iteration)
 
-    query = assembler.path('long_reads.fasta')
+    query = assembler.iter_file('long_reads.fasta')
     assembler.file['long_reads'] = query
 
     with open(query, 'w') as query_file:
@@ -291,7 +291,7 @@ def parse_command_line(temp_dir_default):
         description=textwrap.dedent(description))
 
     parser.add_argument('--version', action='version',
-                        version='%(prog)s {}'.format(file_util.VERSION))
+                        version='%(prog)s {}'.format(db.ATRAM_VERSION))
 
     required_command_line_args(parser)
     optional_command_line_args(parser)
@@ -305,10 +305,14 @@ def parse_command_line(temp_dir_default):
     args['cov_cutoff'] = assembly.default_cov_cutoff(args['cov_cutoff'])
     args['blast_db'] = blast.touchup_blast_db_names(args['blast_db'])
     args['kmer'] = assembly.default_kmer(args['kmer'], args['assembler'])
-    args['temp_dir'] = file_util.temp_root_dir(
-        args['temp_dir'], temp_dir_default)
     args['max_target_seqs'] = blast.default_max_target_seqs(
         args['max_target_seqs'], args['blast_db'], args['max_memory'])
+
+    # Setup temp dir
+    if not args['temp_dir']:
+        args['temp_dir'] = temp_dir_default
+    else:
+        os.makedirs(args['temp_dir'], exist_ok=True)
 
     if args['no_filter']:
         args['bit_score'] = 0
@@ -321,10 +325,58 @@ def parse_command_line(temp_dir_default):
     if args['path']:
         os.environ['PATH'] = '{}:{}'.format(args['path'], os.environ['PATH'])
 
-    file_util.find_programs(
-        args['assembler'], args['no_long_reads'], args['bowtie2'])
+    find_programs(args['assembler'], args['no_long_reads'], args['bowtie2'])
 
     return args
+
+
+def find_programs(assembler, no_long_reads, bowtie2):
+    """Make sure we can find the programs needed by the assembler and blast."""
+    if not (which('makeblastdb') and which('tblastn') and which('blastn')):
+        err = ('We could not find the programs "makeblastdb", "tblastn", or '
+               '"blastn". You either need to install them or you need adjust '
+               'the PATH environment variable with the "--path" option so '
+               'that aTRAM can find it.')
+        log.fatal(err)
+
+    if assembler == 'abyss' and not which('abyss-pe'):
+        err = ('We could not find the "abyss-pe" program. You either need to '
+               'install it or you need to adjust the PATH environment '
+               'variable with the "--path" option so that aTRAM can find it.')
+        log.fatal(err)
+
+    if assembler == 'abyss' and not no_long_reads and not which('bwa'):
+        err = ('We could not find the "bwa-mem" program. You either need to '
+               'install it, adjust the PATH environment variable '
+               'with the "--path" option, or you may use the '
+               '"--no-long-reads" option to not use this program.')
+        log.fatal(err)
+
+    if assembler == 'trinity' and not which('Trinity'):
+        err = ('We could not find the "Trinity" program. You either need to '
+               'install it or you need to adjust the PATH environment '
+               'variable with the "--path" option so that aTRAM can find it.')
+        log.fatal(err)
+
+    if assembler == 'trinity' and bowtie2 and not which('bowtie2'):
+        err = ('We could not find the "bowtie2" program. You either need to '
+               'install it, adjust the PATH environment variable '
+               'with the "--path" option, or you may skip using this program '
+               'by not using the "--bowtie2" option.')
+        log.fatal(err)
+
+    if assembler == 'velvet' and not (which('velveth') and which('velvetg')):
+        err = ('We could not find either the "velveth" or "velvetg" program. '
+               'You either need to install it or you need to adjust the PATH '
+               'environment variable with the "--path" option so that aTRAM '
+               'can find it.')
+        log.fatal(err)
+
+    if assembler == 'spades' and not which('spades.py'):
+        err = ('We could not find the "Spades" program. You either need to '
+               'install it or you need to adjust the PATH environment '
+               'variable with the "--path" option so that aTRAM can find it.')
+        log.fatal(err)
 
 
 def required_command_line_args(parser):

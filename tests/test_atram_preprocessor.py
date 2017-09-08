@@ -165,7 +165,6 @@ def test_assign_seqs_to_shards():
 
 def test_create_one_blast_shard():
     mock.it(blast, 'create_db')
-    mock.it(blast, 'shard_path', returns='shard/path')
     mock.it(atram_preprocessor, 'fill_blast_fasta')
 
     args = {'blast_db': 'my_blast_db', 'temp_dir': 'my_temp_dir'}
@@ -173,16 +172,13 @@ def test_create_one_blast_shard():
 
     atram_preprocessor.create_one_blast_shard(args, shard_params, 11)
 
-    expect = [{'blast_db': 'my_blast_db', 'shard_index': 11}]
-    assert expect == mock.filter('lib.blast', 'shard_path')
-
     expect = [{'blast_db': 'my_blast_db',
                'fasta_path': 'my_temp_dir/pyt_011.fasta',
                'shard_params': ['limit', 'offset']}]
     assert expect == mock.filter('atram_preprocessor', 'fill_blast_fasta')
 
     expect = [{'fasta_file': 'my_temp_dir/pyt_011.fasta',
-               'shard': 'shard/path',
+               'shard': 'my_blast_db.011.blast',
                'temp_dir': 'my_temp_dir'}]
     assert expect == mock.filter('lib.blast', 'create_db')
 

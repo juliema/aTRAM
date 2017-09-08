@@ -16,13 +16,13 @@ class AbyssAssembler(BaseAssembler):
     def abyss(self):
         """Build the command for assembly."""
         cmd = ['abyss-pe',
-               "-C '{}'".format(self.work_path),
+               "-C '{}'".format(self.work_path()),
                'E=0',
-               'k={}'.format(self.args.kmer),
+               'k={}'.format(self.args['kmer']),
                "name='{}'".format(self.file['output'])]
 
-        if self.args.mpi:
-            cmd.append('np={}'.format(self.args.cpus))
+        if self.args['mpi']:
+            cmd.append('np={}'.format(self.args['cpus']))
 
         if self.file['paired_count']:
             cmd.append("in='{} {}'".format(
@@ -32,7 +32,7 @@ class AbyssAssembler(BaseAssembler):
         if single_ends:
             cmd.append("se='{}'".format(' '.join(single_ends)))
 
-        if self.file['long_reads'] and not self.args.no_long_reads:
+        if self.file['long_reads'] and not self.args['no_long_reads']:
             cmd.append("long='LONGREADS'")
             cmd.append("LONGREADS='{}'".format(self.file['long_reads']))
 

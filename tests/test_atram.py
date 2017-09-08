@@ -1,5 +1,6 @@
 """Testing functions in atram."""
 
+import os
 from os.path import join
 import tempfile
 import hypothesis.strategies as st
@@ -7,7 +8,6 @@ import atram
 import lib.db as db
 import lib.log as log
 import lib.blast as blast
-import lib.file_util as file_util
 import lib.assembler as assembly
 from lib.assemblers.base import BaseAssembler
 import tests.mock as mock
@@ -114,13 +114,18 @@ def test_assembly_loop_one_iter():
     db_conn = st.text()
     blast_db = st.text()
     query = st.text()
+    iter_dir = st.text()
     args = {'temp_dir': st.text(), 'iterations': 1}
+
     assembler = BaseAssembler(args, db_conn)
     assembler.blast_only = False
+    assembler.state['query_file'] = query
+    assembler.state['blast_db'] = blast_db
 
     mock.it(log, 'info')
-    mock.it(file_util, 'temp_iter_dir')
     mock.it(assembler, 'initialize_iteration')
+    mock.it(assembler, 'iter_dir', iter_dir)
+    mock.it(os, 'makedirs')
     mock.it(atram, 'blast_query_against_all_shards')
     mock.it(assembler, 'no_blast_hits', False)
     mock.it(assembler, 'write_input_files')
@@ -134,19 +139,18 @@ def test_assembly_loop_one_iter():
     atram.assembly_loop(args, blast_db, query, db_conn, assembler)
 
     expect = [{'msg': 'aTRAM blast DB = "{}", query = "{}", '
-               'iteration {}'.format(blast_db, query, 1)},
+                      'iteration {}'.format(blast_db, query, 1)},
               {'msg': 'All iterations completed'}]
     assert expect == mock.filter('lib.log', 'info')
-
-    expect = [{'temp_dir': args['temp_dir'],
-               'iteration': 1,
-               'query_file': query,
-               'blast_db': blast_db}]
-    assert expect == mock.filter('lib.file_util', 'temp_iter_dir')
 
     expect = [
         {'blast_db': blast_db, 'iteration': 1, 'query_file': query}]
     assert expect == mock.filter('BaseAssembler', 'initialize_iteration')
+
+    assert [{}] == mock.filter('BaseAssembler', 'iter_dir')
+
+    expect = [{'name': iter_dir, 'exist_ok': True}]
+    assert expect == mock.filter('os', 'makedirs')
 
     expect = [{'args': {'temp_dir': args['temp_dir'], 'iterations': 1},
                'blast_db': blast_db,
