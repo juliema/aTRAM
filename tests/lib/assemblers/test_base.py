@@ -1,5 +1,7 @@
 """Test object in lib/assemblers/base."""
 
+# pylint: disable=missing-docstring
+
 from os.path import basename
 from hypothesis import given
 import hypothesis.strategies as st
