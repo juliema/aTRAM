@@ -28,9 +28,7 @@ class BaseAssembler:
 
         Do this at the start of each iteration.
         """
-        self.state['blast_db'] = basename(blast_db)
-        self.state['query_file'] = basename(query_file)
-        self.state['iteration'] = iteration
+        self.set_state(blast_db, query_file, iteration)
 
         self.file['long_reads'] = ''  # Set up in atram.py for now
         self.file['output'] = self.iter_file('output.fasta')
@@ -44,6 +42,12 @@ class BaseAssembler:
         self.file['single_1_count'] = 0
         self.file['single_2_count'] = 0
         self.file['single_any_count'] = 0
+
+    def set_state(self, blast_db, query_file, iteration):
+        """Set the iteration state."""
+        self.state['blast_db'] = basename(blast_db)
+        self.state['query_file'] = basename(query_file)
+        self.state['iteration'] = iteration
 
     def iter_dir(self):
         """Get the work directory for the current iteration."""
