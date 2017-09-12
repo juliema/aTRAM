@@ -84,10 +84,12 @@ done
 
 ## Backwards compatibility
 
-For any tools that depend on the output format of aTRAM 1.0, this script will perform the conversion:
+For any tools that depend on the output format of aTRAM 1.0, this script will perform the conversion of fasta headers:
 
 ```
 for i in $(find . -name "*.fasta"); do
 sed 's/.* iteration=/>/g' ${i} | sed 's/ contig_id/.0_contigid/g' | sed 's/contigid.*length_//g' | sed 's/_cov.* score=/_/g' | sed 's/\.[0-9]*$//g' > ${i}.aTRAM1.fasta
 done
 ```
+
+For the [exon stitching pipeline](https://github.com/juliema/exon_stitching), output files from aTRAM 2.0 must additionally be named like so: `libraryname_locusname.best.fasta`. If both this and the fasta header conversion are performed, any previously used tools should work.
