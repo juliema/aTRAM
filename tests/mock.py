@@ -1,5 +1,8 @@
 """Utility to mock function calls."""
 
+# pylint: disable=missing-docstring,global-statement,unused-argument
+# pylint: disable=invalid-name,redefined-builtin
+
 import inspect
 from itertools import cycle
 from contextlib import contextmanager
@@ -43,6 +46,40 @@ def it(container, callee, returns=None):
         history.append(hist)
         if returns:
             return next(returns)
+
+    monkeypatch.setattr(container, callee, mocked)
+
+
+def exception(container, callee, error):
+    """
+    Append the function call to the history.
+
+    Save all of the arguments of each function call in the order they
+    were called. You can pass in a set of return values in the returns
+    argument. Raise the given error when called.
+    """
+    global history
+
+    if inspect.ismodule(container):
+        func = container.__dict__.get(callee)
+    else:  # is class
+        func = getattr(container, callee)
+
+    sig = inspect.signature(func)
+    arg_names = [p for p in sig.parameters]
+
+    def mocked(*args, **kwargs):
+        hist = {arg_names[i]: a for i, a in enumerate(args)}
+        if kwargs:
+            hist.update(kwargs)
+        if inspect.ismodule(container):
+            hist['module'] = container.__name__
+        else:  # is class
+            hist['module'] = container.__class__.__name__
+        hist['func'] = callee
+        history.append(hist)
+
+        raise error
 
     monkeypatch.setattr(container, callee, mocked)
 

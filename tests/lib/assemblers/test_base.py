@@ -2,9 +2,12 @@
 
 # pylint: disable=missing-docstring
 
-from os.path import basename, join
+from os.path import basename, abspath, join
+from subprocess import CalledProcessError
 from hypothesis import given
 import hypothesis.strategies as st
+import lib.db as db
+import lib.log as log
 from lib.assemblers.base import BaseAssembler
 import tests.mock as mock
 
@@ -72,10 +75,203 @@ def test_iter_dir(args, blast_db, query_file, iteration):
     assembler = BaseAssembler(args, 'db_conn')
     assembler.set_state(blast_db, query_file, iteration)
 
-    base_blast_db = blast_db.split('/')[-1]
-    base_query_file = query_file.split('/')[-1]
+    base_blast_db = basename(blast_db)
+    base_query_file = basename(query_file)
 
-    file_name = '{}_{}_iteration_{:02d}'.format(
+    dir_name = '{}_{}_iteration_{:02d}'.format(
         base_blast_db, base_query_file, iteration)
-    expect = join(args['temp_dir'], file_name)
+
+    expect = join(args['temp_dir'], dir_name)
     assert expect == assembler.iter_dir()
+
+
+@given(
+    args=st.fixed_dictionaries({'temp_dir': st.from_regex(PATH_PATTERN)}),
+    blast_db=st.from_regex(PATH_PATTERN),
+    query_file=st.from_regex(PATH_PATTERN),
+    iteration=st.integers(),
+    file_name=st.from_regex(r'\w[\w.-]+'))
+def test_iter_file(args, blast_db, query_file, iteration, file_name):
+    assembler = BaseAssembler(args, 'db_conn')
+    assembler.set_state(blast_db, query_file, iteration)
+
+    base_blast_db = basename(blast_db)
+    base_query_file = basename(query_file)
+
+    dir_name = '{}_{}_iteration_{:02d}'.format(
+        base_blast_db, base_query_file, iteration)
+
+    expect = abspath(join(args['temp_dir'], dir_name, file_name))
+    assert expect == assembler.iter_file(file_name)
+
+
+def test_work_path():
+    iter_dir = 'whatever'
+    assembler = BaseAssembler('args', 'db_conn')
+    mock.it(assembler, 'iter_dir', iter_dir)
+
+    assert iter_dir == assembler.work_path()
+
+
+def test_run_ok():
+    args = {'assembler': 'my_assembler', 'timeout': 10}
+
+    assembler = BaseAssembler(args, 'db_conn')
+    assembler.set_state('blast_db', 'query_file', 99)
+
+    mock.it(assembler, 'assemble')
+    mock.it(log, 'info')
+
+    assembler.run()
+
+    expect = [{'msg': 'Assembling shards with {}: iteration {}'.format(
+        args['assembler'], assembler.state['iteration'])}]
+    assert expect == mock.filter('lib.log', 'info')
+
+
+def test_run_timeout():
+    args = {'assembler': 'my_assembler', 'timeout': 10}
+
+    assembler = BaseAssembler(args, 'db_conn')
+    assembler.set_state('blast_db', 'query_file', 99)
+
+    mock.exception(assembler, 'assemble', TimeoutError())
+    mock.it(log, 'info')
+    mock.it(log, 'fatal')
+
+    assembler.run()
+
+    expect = [{'msg': 'Assembling shards with {}: iteration {}'.format(
+        args['assembler'], assembler.state['iteration'])}]
+    assert expect == mock.filter('lib.log', 'info')
+
+    expect = [{'msg': 'Time ran out for the assembler after 0:00:{} '
+                      '(HH:MM:SS)'.format(args['timeout'])}]
+    assert expect == mock.filter('lib.log', 'fatal')
+
+
+def test_run_called_process_error():
+    args = {'assembler': 'my_assembler', 'timeout': 10}
+    error_code = 88
+    cmd = 'my command'
+    error = CalledProcessError(error_code, cmd)
+
+    assembler = BaseAssembler(args, 'db_conn')
+    assembler.set_state('blast_db', 'query_file', 99)
+
+    mock.exception(assembler, 'assemble', error)
+    mock.it(log, 'info')
+    mock.it(log, 'fatal')
+
+    assembler.run()
+
+    expect = [{'msg': 'Assembling shards with {}: iteration {}'.format(
+        args['assembler'], assembler.state['iteration'])}]
+    assert expect == mock.filter('lib.log', 'info')
+
+    expect = [{'msg': "The assembler failed with error: Command '{}' "
+                      'returned non-zero exit status {}'.format(
+                          cmd, error_code)}]
+    assert expect == mock.filter('lib.log', 'fatal')
+
+
+def test_no_blast_hits_true():
+    assembler = BaseAssembler('args', 'db_conn')
+    assembler.set_state('blast_db', 'query_file', 99)
+
+    mock.it(db, 'sra_blast_hits_count', 0)
+    mock.it(log, 'info')
+
+    assert assembler.no_blast_hits()
+
+    expect = [{'msg': 'No blast hits in iteration {}'.format(
+        assembler.state['iteration'])}]
+    assert expect == mock.filter('lib.log', 'info')
+
+
+def test_no_blast_hits_false():
+    assembler = BaseAssembler('args', 'db_conn')
+    assembler.set_state('blast_db', 'query_file', 99)
+
+    mock.it(db, 'sra_blast_hits_count', 1)
+    mock.it(log, 'info')
+
+    assert not assembler.no_blast_hits()
+
+    assert [] == mock.filter('lib.log', 'info')
+
+
+def test_nothing_assembled_missing():
+    assembler = BaseAssembler('args', 'db_conn')
+    assembler.set_state('blast_db', 'query_file', 99)
+    assembler.file['output'] = 'tests/data/missing_file.txt'
+
+    mock.it(log, 'info')
+
+    assert assembler.nothing_assembled()
+
+    expect = [{'msg': 'No new assemblies in iteration {}'.format(
+        assembler.state['iteration'])}]
+    assert expect == mock.filter('lib.log', 'info')
+
+
+def test_nothing_assembled_empty():
+    assembler = BaseAssembler('args', 'db_conn')
+    assembler.set_state('blast_db', 'query_file', 99)
+    assembler.file['output'] = 'tests/data/empty_file.txt'
+
+    mock.it(log, 'info')
+
+    assert assembler.nothing_assembled()
+
+    expect = [{'msg': 'No new assemblies in iteration {}'.format(
+        assembler.state['iteration'])}]
+    assert expect == mock.filter('lib.log', 'info')
+
+
+def test_nothing_assembled_false():
+    assembler = BaseAssembler('args', 'db_conn')
+    assembler.set_state('blast_db', 'query_file', 99)
+    assembler.file['output'] = 'tests/data/load_seq1.txt'
+
+    mock.it(log, 'info')
+
+    assert not assembler.nothing_assembled()
+
+    assert [] == mock.filter('lib.log', 'info')
+
+
+def test_assembled_contigs_count_0():
+    high_score = 5
+    args = {'bit_score': 44, 'contig_length': 55}
+    assembler = BaseAssembler(args, 'db_conn')
+    assembler.set_state('blast_db', 'query_file', 99)
+
+    mock.it(db, 'assembled_contigs_count', 0)
+    mock.it(log, 'info')
+
+    assert assembler.assembled_contigs_count(high_score) == 0
+
+    expect = [{'msg': 'No contigs had a bit score greater than {} and are at '
+                      'least {} long in iteration {}. The highest score for '
+                      'this iteration is {}'.format(
+                          assembler.args['bit_score'],
+                          assembler.args['contig_length'],
+                          assembler.state['iteration'],
+                          high_score)}]
+    assert expect == mock.filter('lib.log', 'info')
+
+
+def test_assembled_contigs_count_1():
+    high_score = 5
+    count = 1
+    args = {'bit_score': 44, 'contig_length': 55}
+    assembler = BaseAssembler(args, 'db_conn')
+    assembler.set_state('blast_db', 'query_file', 99)
+
+    mock.it(db, 'assembled_contigs_count', count)
+    mock.it(log, 'info')
+
+    assert assembler.assembled_contigs_count(high_score) == count
+
+    assert [] == mock.filter('lib.log', 'info')

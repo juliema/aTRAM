@@ -1,5 +1,7 @@
 """Testing functions in atram_preprocessor."""
 
+# pylint: disable=missing-docstring
+
 from os.path import join
 import tempfile
 import hypothesis.strategies as st

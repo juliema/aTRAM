@@ -1,5 +1,7 @@
 """Testing functions in atram."""
 
+# pylint: disable=missing-docstring
+
 import os
 from os.path import join
 import tempfile
