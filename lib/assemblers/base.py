@@ -1,5 +1,6 @@
 """Base class for the various assembler wrappers."""
 
+import re
 from os.path import abspath, basename, exists, getsize, join, splitext
 import datetime
 import subprocess
@@ -77,7 +78,9 @@ class BaseAssembler:
                 datetime.timedelta(seconds=self.args['timeout']))
             log.fatal(msg)
         except subprocess.CalledProcessError as cpe:
-            msg = 'The assembler failed with error: ' + str(cpe)
+            # python3.6 formats errors differently. It's killing the tests.
+            cpe = re.sub(r'\.$', '', str(cpe))
+            msg = 'The assembler failed with error: ' + cpe
             log.fatal(msg)
 
     def no_blast_hits(self):
