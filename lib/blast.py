@@ -45,7 +45,7 @@ def against_sra(args, state, hits_file, shard):
     log.subcommand(command, args['temp_dir'])
 
 
-def against_contigs(blast_db, query, hits_file, **kwargs):
+def against_contigs(blast_db, query_file, hits_file, **kwargs):
     """
     Blast the query sequence against the contigs.
 
@@ -61,7 +61,7 @@ def against_contigs(blast_db, query, hits_file, **kwargs):
         cmd.append('blastn')
 
     cmd.append('-db {}'.format(blast_db))
-    cmd.append('-query {}'.format(query))
+    cmd.append('-query {}'.format(query_file))
     cmd.append('-out {}'.format(hits_file))
     cmd.append('-outfmt 15')
 

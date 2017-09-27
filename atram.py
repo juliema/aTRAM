@@ -12,9 +12,9 @@ from Bio import SeqIO
 import lib.db as db
 import lib.log as log
 import lib.bio as bio
+import lib.util as util
 import lib.blast as blast
 import lib.assembler as assembly
-from lib.assemblers.base import iter_dir
 
 
 __all__ = ('assemble', )
@@ -75,9 +75,7 @@ def assembly_loop(assembler, blast_db, query):
         if assembler.no_new_contigs(count):
             break
 
-        print(query)
         query = create_query_from_contigs(assembler)
-        print(query)
 
     else:
         log.info('All iterations completed')
@@ -171,10 +169,10 @@ def blast_query_against_one_shard(args, state, shard):
     Then write the results to the database.
     """
 
-    temp_dir = iter_dir(
+    temp_dir = util.iter_dir(
         args['temp_dir'],
         state['blast_db'],
-        state['query_file'],
+        state['query_name'],
         state['iteration'])
 
     output_file = blast.output_file_name(temp_dir, shard)
@@ -207,15 +205,15 @@ def filter_contigs(assembler):
         assembler.state['iteration']))
 
     blast_db = blast.temp_db_name(
-        assembler.args['temp_dir'],
+        assembler.iter_dir(),
         assembler.state['blast_db'])
 
     hits_file = blast.output_file_name(
-        assembler.args['temp_dir'],
+        assembler.iter_dir(),
         assembler.state['blast_db'])
 
     blast.create_db(
-        assembler.args['temp_dir'],
+        assembler.iter_dir(),
         assembler.file['output'],
         blast_db)
 
@@ -226,11 +224,7 @@ def filter_contigs(assembler):
                           db_gencode=assembler.args['db_gencode'],
                           temp_dir=assembler.args['temp_dir'])
 
-    save_blast_against_contigs(
-        assembler.state['db_conn'],
-        assembler,
-        hits_file,
-        assembler.state['iteration'])
+    save_blast_against_contigs(assembler, hits_file)
 
     all_hits = {row['contig_id']: row
                 for row
@@ -238,14 +232,10 @@ def filter_contigs(assembler):
                     assembler.state['db_conn'],
                     assembler.state['iteration'])}
 
-    return save_contigs(
-        assembler.state['db_conn'],
-        all_hits,
-        assembler,
-        assembler.state['iteration'])
+    return save_contigs(assembler, all_hits)
 
 
-def save_blast_against_contigs(db_conn, assembler, hits_file, iteration):
+def save_blast_against_contigs(assembler, hits_file):
     """Save all of the blast hits."""
 
     batch = []
@@ -253,7 +243,7 @@ def save_blast_against_contigs(db_conn, assembler, hits_file, iteration):
     for hit in blast.hits(hits_file):
         contig_id = assembler.parse_contig_id(hit['title'])
         batch.append((
-            iteration,
+            assembler.state['iteration'],
             contig_id,
             hit['title'],
             hit['bit_score'],
@@ -265,10 +255,10 @@ def save_blast_against_contigs(db_conn, assembler, hits_file, iteration):
             hit['hit_to'],
             hit.get('hit_strand', '')))
 
-    db.insert_contig_hit_batch(db_conn, batch)
+    db.insert_contig_hit_batch(assembler.state['db_conn'], batch)
 
 
-def save_contigs(db_conn, all_hits, assembler, iteration):
+def save_contigs(assembler, all_hits):
     """Save the contigs to the database."""
 
     batch = []
@@ -279,7 +269,7 @@ def save_contigs(db_conn, all_hits, assembler, iteration):
             if contig_id in all_hits:
                 hit = all_hits[contig_id]
                 batch.append((
-                    iteration,
+                    assembler.state['iteration'],
                     contig.id,
                     str(contig.seq),
                     contig.description,
@@ -291,7 +281,7 @@ def save_contigs(db_conn, all_hits, assembler, iteration):
                     hit['hit_from'],
                     hit['hit_to'],
                     hit['hit_strand']))
-    db.insert_assembled_contigs_batch(db_conn, batch)
+    db.insert_assembled_contigs_batch(assembler.state['db_conn'], batch)
 
     return high_score
 

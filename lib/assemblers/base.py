@@ -9,20 +9,7 @@ import subprocess
 import lib.db as db
 import lib.log as log
 import lib.bio as bio
-
-
-def iter_dir(temp_dir, blast_db, query_file, iteration):
-    """
-    Get the work directory for the current iteration.
-
-    We need to call this function in child processes so it cannot be in an
-    object.
-    """
-
-    name = '{}_{}_iteration_{:02d}'.format(
-        basename(blast_db), basename(query_file), iteration)
-
-    return join(temp_dir, name)
+import lib.util as util
 
 
 class BaseAssembler:
@@ -37,6 +24,7 @@ class BaseAssembler:
         self.file = {}           # Files and record counts
         self.state = {
             'iteration': 0,      # Current iteration
+            'query_name': '',    # Original name of the query sequence
             'query_file': '',    # Current query file name
             'blast_db': '',      # Current blast DB name
             'db_conn': db_conn}  # Save the DB connection
@@ -68,14 +56,16 @@ class BaseAssembler:
         self.state['blast_db'] = blast_db
         self.state['query_file'] = query_file
         self.state['iteration'] = iteration
+        if iteration == 1:
+            self.state['query_name'] = query_file
 
     def iter_dir(self):
         """Get the work directory for the current iteration."""
 
-        return iter_dir(
+        return util.iter_dir(
             self.args['temp_dir'],
             self.state['blast_db'],
-            self.state['query_file'],
+            self.state['query_name'],
             self.state['iteration'])
 
     def iter_file(self, file_name):
@@ -300,4 +290,5 @@ class BaseAssembler:
         return {
             'blast_db': self.state['blast_db'],
             'iteration': self.state['iteration'],
+            'query_name': self.state['query_name'],
             'query_file': self.state['query_file']}
