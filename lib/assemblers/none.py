@@ -10,12 +10,14 @@ class NoneAssembler(BaseAssembler):
 
     def __init__(self, args, db_conn):
         """Build the assembler."""
+
         super().__init__(args, db_conn)
         self.steps = []
         self.blast_only = True  # Used to short-circuit the assembler
 
     def write_final_output(self, blast_db, query):
         """Output this file if we are not assembling the contigs."""
+
         prefix = self.final_output_prefix(blast_db, query)
 
         file_name = join(prefix, 'blast_only.fasta')

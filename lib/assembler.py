@@ -1,4 +1,5 @@
 """Base class for the various assembler programs."""
+
 import math
 import psutil
 import lib.log as log
@@ -11,6 +12,7 @@ from lib.assemblers.none import NoneAssembler
 
 def factory(args, db_conn):
     """Return the assembler based upon the configuration options."""
+
     name = args['assembler'].lower()
     if name == 'abyss':
         return AbyssAssembler(args, db_conn)
@@ -26,6 +28,7 @@ def factory(args, db_conn):
 
 def command_line_args(parser):
     """Add command-line arguments for the assemblers."""
+
     group = parser.add_argument_group('optional assembler arguments')
 
     group.add_argument('--no-long-reads', action='store_true',
@@ -73,6 +76,7 @@ def command_line_args(parser):
 
 def default_kmer(kmer, assembler):
     """Setup default kmer argument."""
+
     if assembler == 'velvet' and kmer > 31:
         kmer = 31
 
@@ -81,6 +85,7 @@ def default_kmer(kmer, assembler):
 
 def default_cov_cutoff(cov_cutoff):
     """Setup default coverage cutoff argument."""
+
     if cov_cutoff not in ['off', 'auto']:
         err = ('Read coverage cutoff value. Must be a positive '
                'float value, or "auto", or "off"')

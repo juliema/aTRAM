@@ -1,7 +1,7 @@
 """All blast commands used by aTRAM."""
 
 import os
-from os.path import join
+from os.path import basename, join
 import re
 import glob
 import json
@@ -23,11 +23,12 @@ def create_db(temp_dir, fasta_file, shard):
     log.subcommand(cmd, temp_dir)
 
 
-def against_sra(args, blast_db, query, hits_file, iteration):
+def against_sra(args, state, hits_file, shard):
     """Blast the query sequences against an SRA blast database."""
+
     cmd = []
 
-    if args['protein'] and iteration == 1:
+    if args['protein'] and state['iteration'] == 1:
         cmd.append('tblastn')
         cmd.append('-db_gencode {}'.format(args['db_gencode']))
     else:
@@ -37,8 +38,8 @@ def against_sra(args, blast_db, query, hits_file, iteration):
     cmd.append('-outfmt 15')
     cmd.append('-max_target_seqs {}'.format(args['max_target_seqs']))
     cmd.append('-out {}'.format(hits_file))
-    cmd.append('-db {}'.format(blast_db))
-    cmd.append('-query {}'.format(query))
+    cmd.append('-db {}'.format(shard))
+    cmd.append('-query {}'.format(state['query_file']))
 
     command = ' '.join(cmd)
     log.subcommand(command, args['temp_dir'])
@@ -50,6 +51,7 @@ def against_contigs(blast_db, query, hits_file, **kwargs):
 
     The blast output will have the scores for later processing.
     """
+
     cmd = []
 
     if kwargs['protein']:
@@ -69,6 +71,7 @@ def against_contigs(blast_db, query, hits_file, **kwargs):
 
 def all_shard_paths(blast_db):
     """Get all of the BLAST shard names built by the preprocessor."""
+
     pattern = '{}.*.blast.nhr'.format(blast_db)
 
     files = glob.glob(pattern)
@@ -81,28 +84,33 @@ def all_shard_paths(blast_db):
     return sorted([f[:-4] for f in files])
 
 
-def output_file_name(temp_dir, shrd_path, iteration):
+def output_file_name(temp_dir, shrd_path):
     """Create a file name for blast results."""
-    shard_name = os.path.basename(shrd_path)
-    file_name = '{}.{:02d}.results.json'.format(shard_name, iteration)
+
+    shard_name = basename(shrd_path)
+    file_name = '{}.results.json'.format(shard_name)
     return join(temp_dir, file_name)
 
 
-def temp_db_name(temp_dir, blast_db, iteration):
+def temp_db_name(temp_dir, blast_db):
     """Generate a name for the temp DB used to filter the contigs."""
-    file_name = os.path.basename(blast_db)
-    file_name = '{}.{:02d}'.format(file_name, iteration)
+
+    file_name = basename(blast_db)
     return join(temp_dir, file_name)
 
 
 def hits(json_file):
     """Extract the blast hits from the blast json output file."""
+
     with open(json_file) as blast_file:
         raw = blast_file.read()
         obj = json.loads(raw)
 
     hits_list = []
-    for raw in obj['BlastOutput2'][0]['report']['results']['search']['hits']:
+    raw_hits = obj['BlastOutput2'][0]['report']['results']['search'].get(
+        'hits', [])
+
+    for raw in raw_hits:
         for i, desc in enumerate(raw['description']):
             hit = dict(desc)
             hit['len'] = raw['len']
@@ -114,6 +122,7 @@ def hits(json_file):
 
 def command_line_args(parser):
     """Add optional blast arguments to the command-line parser."""
+
     group = parser.add_argument_group('optional blast arguments')
 
     group.add_argument('--db-gencode', type=int, default=1,
@@ -133,6 +142,7 @@ def command_line_args(parser):
 
 def default_max_target_seqs(max_target_seqs, blast_db, max_memory):
     """Calculate the default max_target_seqs per shard."""
+
     if not max_target_seqs:
         all_shards = all_shard_paths(blast_db)
         max_target_seqs = int(2 * max_memory / len(all_shards)) * 1e6
@@ -141,6 +151,7 @@ def default_max_target_seqs(max_target_seqs, blast_db, max_memory):
 
 def default_shard_count(shard_count, sra_files):
     """Calulate the default number of shards."""
+
     if not shard_count:
         total_fasta_size = 0
         for file_name in sra_files:
@@ -156,6 +167,7 @@ def default_shard_count(shard_count, sra_files):
 
 def make_blast_output_dir(blast_db):
     """Make blast DB output directory."""
+
     output_dir = os.path.dirname(blast_db)
     if output_dir and output_dir not in ['.', '..']:
         os.makedirs(output_dir, exist_ok=True)
@@ -163,6 +175,7 @@ def make_blast_output_dir(blast_db):
 
 def touchup_blast_db_names(blast_dbs):
     """Allow users to enter blast DB names with various suffixes."""
+
     pattern = (r'^ (.*?)'
                r'(  \.atram(_preprocessor)?\.log'
                r' | \.blast_\d{3}\.(nhr|nin|nsq)'

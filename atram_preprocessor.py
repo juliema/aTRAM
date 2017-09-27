@@ -22,6 +22,7 @@ __all__ = ('preprocess', )
 
 def preprocess(args):
     """Run the preprocessor."""
+
     log.setup(args['log_file'], args['blast_db'])
 
     with db.connect(args['blast_db']) as db_conn:
@@ -39,6 +40,7 @@ def preprocess(args):
 
 def load_seqs(args, db_conn):
     """Load sequences from a fasta/fastq files into the atram database."""
+
     # We have to clamp the end suffix depending on the file type.
     for (arg, clamp) in [('mixed_ends', None), ('end_1', '1'),
                          ('end_2', '2'), ('single_ends', '')]:
@@ -49,6 +51,7 @@ def load_seqs(args, db_conn):
 
 def load_one_file(db_conn, file_name, seq_end_clamp=None):
     """Load sequences from a fasta/fastq file into the atram database."""
+
     # A hand rolled version of "Bio.SeqIO". It's faster because we can take
     # shortcuts due to its limited functionality.
 
@@ -125,6 +128,7 @@ def assign_seqs_to_shards(db_conn, shard_count):
 
     Note: This will only work for sequence pairs. Which is all we care about.
     """
+
     log.info('Assigning sequences to shards')
 
     total = db.get_sequence_count(db_conn)
@@ -157,6 +161,7 @@ def create_all_blast_shards(args, shard_list):
 
     One process for each blast DB shard.
     """
+
     log.info('Making blast DBs')
 
     with multiprocessing.Pool(processes=args['cpus']) as pool:
@@ -178,6 +183,7 @@ def create_one_blast_shard(args, shard_params, shard_index):
     We fill a fasta file with the appropriate sequences and hand things off
     to the makeblastdb program.
     """
+
     shard = '{}.{:03d}.blast'.format(args['blast_db'], shard_index)
     fasta_name = '{}_{:03d}.fasta'.format(os.path.basename(sys.argv[0][:-3]),
                                           shard_index)
@@ -195,6 +201,7 @@ def fill_blast_fasta(blast_db, fasta_path, shard_params):
     Use sequences from the sqlite3 DB. We use the shard partitions passed in to
     determine which sequences to get for this shard.
     """
+
     with db.connect(blast_db) as db_conn:
         limit, offset = shard_params
 
@@ -207,6 +214,7 @@ def fill_blast_fasta(blast_db, fasta_path, shard_params):
 
 def parse_command_line(temp_dir_default):
     """Process command-line arguments."""
+
     description = """
         This script prepares data for use by the atram.py
         script. It takes fasta or fastq files of paired-end (or

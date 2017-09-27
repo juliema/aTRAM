@@ -15,10 +15,12 @@ class SpadesAssembler(BaseAssembler):
 
     def work_path(self):
         """The output directory name has unique requirements."""
+
         return os.path.join(self.iter_dir, 'spades')
 
     def spades(self):
         """Build the command for assembly."""
+
         cmd = ['spades.py ',
                '--only-assembler',
                '--threads {}'.format(self.args['cpus']),
@@ -41,5 +43,6 @@ class SpadesAssembler(BaseAssembler):
 
     def post_assembly(self):
         """Copy the assembler output."""
+
         src = os.path.join(self.work_path(), 'contigs.fasta')
         shutil.move(src, self.file['output'])

@@ -15,6 +15,20 @@ import tests.mock as mock
 PATH_PATTERN = r'(?:[\w.-]+/)*[\w.-]+'
 
 
+def build_assembler():
+    args = {'bit_score': 44, 'contig_length': 55}
+    state = {'blast_db': 'my_blast_db',
+             'query_file': 'my_query',
+             'iteration': 99}
+    assembler = BaseAssembler(args, 'my_db_conn')
+    assembler.set_state(
+        state['blast_db'],
+        state['query_file'],
+        state['iteration'])
+    return assembler
+
+
+
 @given(args=st.text(), db_conn=st.text())
 def test_init(args, db_conn):
     assembler = BaseAssembler(args, db_conn)
@@ -50,8 +64,8 @@ def test_initialize_iteration(blast_db, query_file, iteration):
 
     assembler.initialize_iteration(blast_db, query_file, iteration)
 
-    assert basename(blast_db) == assembler.state['blast_db']
-    assert basename(query_file) == assembler.state['query_file']
+    assert blast_db == assembler.state['blast_db']
+    assert query_file == assembler.state['query_file']
     assert iteration == assembler.state['iteration']
     assert assembler.file['long_reads'] == ''
     assert output_files[0] == assembler.file['output']
@@ -243,14 +257,20 @@ def test_nothing_assembled_false():
 
 def test_assembled_contigs_count_0():
     high_score = 5
-    args = {'bit_score': 44, 'contig_length': 55}
-    assembler = BaseAssembler(args, 'db_conn')
-    assembler.set_state('blast_db', 'query_file', 99)
+    assembler = build_assembler()
 
     mock.it(db, 'assembled_contigs_count', 0)
     mock.it(log, 'info')
 
     assert assembler.assembled_contigs_count(high_score) == 0
+
+    expect = [{
+        'db_conn': assembler.state['db_conn'],
+        'iteration': assembler.state['iteration'],
+        'bit_score': assembler.args['bit_score'],
+        'length': assembler.args['contig_length'],
+    }]
+    assert expect == mock.filter('lib.db', 'assembled_contigs_count')
 
     expect = [{'msg': 'No contigs had a bit score greater than {} and are at '
                       'least {} long in iteration {}. The highest score for '
@@ -265,13 +285,94 @@ def test_assembled_contigs_count_0():
 def test_assembled_contigs_count_1():
     high_score = 5
     count = 1
-    args = {'bit_score': 44, 'contig_length': 55}
-    assembler = BaseAssembler(args, 'db_conn')
-    assembler.set_state('blast_db', 'query_file', 99)
+    assembler = build_assembler()
 
     mock.it(db, 'assembled_contigs_count', count)
     mock.it(log, 'info')
 
     assert assembler.assembled_contigs_count(high_score) == count
 
+    expect = [{
+        'db_conn': assembler.state['db_conn'],
+        'iteration': assembler.state['iteration'],
+        'bit_score': assembler.args['bit_score'],
+        'length': assembler.args['contig_length'],
+    }]
+    assert expect == mock.filter('lib.db', 'assembled_contigs_count')
+
     assert [] == mock.filter('lib.log', 'info')
+
+
+def test_no_new_contigs_ne():
+    count = 1
+    assembler = build_assembler()
+
+    mock.it(db, 'iteration_overlap_count', count + 1)
+    mock.it(log, 'info')
+
+    assert not assembler.no_new_contigs(count)
+
+    expect = [{
+        'db_conn': assembler.state['db_conn'],
+        'iteration': assembler.state['iteration'],
+        'bit_score': assembler.args['bit_score'],
+        'length': assembler.args['contig_length'],
+    }]
+    assert expect == mock.filter('lib.db', 'iteration_overlap_count')
+
+    assert [] == mock.filter('lib.log', 'info')
+
+
+def test_no_new_contigs_eq():
+    count = 1
+    assembler = build_assembler()
+
+    mock.it(db, 'iteration_overlap_count', count)
+    mock.it(log, 'info')
+
+    assert assembler.no_new_contigs(count)
+
+    expect = [{
+        'db_conn': assembler.state['db_conn'],
+        'iteration': assembler.state['iteration'],
+        'bit_score': assembler.args['bit_score'],
+        'length': assembler.args['contig_length'],
+    }]
+    assert expect == mock.filter('lib.db', 'iteration_overlap_count')
+
+    expect = [{'msg': 'No new contigs were found in iteration {}'.format(
+        assembler.state['iteration'])}]
+    assert expect == mock.filter('lib.log', 'info')
+
+
+def test_assemble():
+    assembler = build_assembler()
+    assembler.args['temp_dir'] = 'my_temp_dir'
+    assembler.args['timeout'] = 333
+
+    mock.it(log, 'subcommand')
+    mock.it(assembler, 'post_assembly')
+
+    def step1():
+        mock.history.append({'module': 'none', 'func': 'step1'})
+        return 'step1'
+    def step2():
+        mock.history.append({'module': 'none', 'func': 'step2'})
+        return 'step2'
+    assembler.steps = [step1, step2]
+
+    assembler.assemble()
+
+    assert mock.filter('none', 'step1') == [{}]
+    assert mock.filter('none', 'step2') == [{}]
+
+    expect = [{
+        'cmd': 'step1',
+        'temp_dir': assembler.args['temp_dir'],
+        'timeout': assembler.args['timeout']
+    }, {
+        'cmd': 'step2',
+        'temp_dir': assembler.args['temp_dir'],
+        'timeout': assembler.args['timeout']
+    }]
+    assert expect == mock.filter('lib.log', 'subcommand')
