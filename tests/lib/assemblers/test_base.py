@@ -115,7 +115,7 @@ def test_iter_file(args, blast_db, query_file, iteration, file_name):
     dir_name = '{}_{}_iteration_{:02d}'.format(
         base_blast_db, base_query_file, iteration)
 
-    expect = abspath(join(args['temp_dir'], dir_name, file_name))
+    expect = join(args['temp_dir'], dir_name, file_name)
     assert expect == assembler.iter_file(file_name)
 
 

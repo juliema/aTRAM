@@ -138,7 +138,7 @@ def test_assembly_loop_one_iter():
     mock.it(assembler, 'no_new_contigs', False)
     mock.it(atram, 'create_query_from_contigs', 'my_query')
 
-    atram.assembly_loop(args, blast_db, query, db_conn, assembler)
+    atram.assembly_loop(assembler, blast_db, query)
 
     expect = [{'msg': 'aTRAM blast DB = "{}", query = "{}", '
                       'iteration {}'.format(blast_db, query, 1)},
@@ -154,10 +154,7 @@ def test_assembly_loop_one_iter():
     expect = [{'name': iter_dir, 'exist_ok': True}]
     assert expect == mock.filter('os', 'makedirs')
 
-    expect = [{'args': {'temp_dir': args['temp_dir'], 'iterations': 1},
-               'blast_db': blast_db,
-               'query': query,
-               'iteration': 1}]
+    expect = [{'assembler': assembler}]
     assert expect == mock.filter('atram', 'blast_query_against_all_shards')
 
     assert [{}] == mock.filter('BaseAssembler', 'no_blast_hits')
@@ -166,10 +163,7 @@ def test_assembly_loop_one_iter():
     assert [{}] == mock.filter('BaseAssembler', 'nothing_assembled')
     assert [{'count': 11}] == mock.filter('BaseAssembler', 'no_new_contigs')
 
-    expect = [{'args': {'temp_dir': args['temp_dir'], 'iterations': 1},
-               'db_conn': db_conn,
-               'assembler': assembler,
-               'iteration': 1}]
+    expect = [{'assembler': assembler}]
     assert expect == mock.filter('atram', 'create_query_from_contigs')
 
 
@@ -194,9 +188,12 @@ def test_assembly_loop_one_iter():
 def test_shard_fraction_one():
     args = {'fraction': 1.0}
     returns = ['1st', '2nd', '3rd', '4th']
+    assembler = BaseAssembler(args, 'db_conn')
+    assembler.state['blast_db'] = 'my_blast_db'
+
     mock.it(blast, 'all_shard_paths', returns=[returns])
 
-    shards = atram.shard_fraction(args, 'my_blast_db')
+    shards = atram.shard_fraction(assembler)
 
     assert returns == shards
 
@@ -206,9 +203,12 @@ def test_shard_fraction_one():
 
 def test_shard_fraction_half():
     args = {'fraction': 0.5}
+    assembler = BaseAssembler(args, 'db_conn')
+    assembler.state['blast_db'] = 'my_blast_db'
+
     mock.it(blast, 'all_shard_paths', returns=[['1st', '2nd', '3rd', '4th']])
 
-    shards = atram.shard_fraction(args, 'my_blast_db')
+    shards = atram.shard_fraction(assembler)
 
     assert ['1st', '2nd'] == shards
 

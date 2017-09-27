@@ -299,5 +299,5 @@ class BaseAssembler:
 
         return {
             'blast_db': self.state['blast_db'],
-            'query_file': self.state['query_file'],
-            'iteration': self.state['iteration']}
+            'iteration': self.state['iteration'],
+            'query_file': self.state['query_file']}
