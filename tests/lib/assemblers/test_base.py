@@ -2,7 +2,7 @@
 
 # pylint: disable=missing-docstring
 
-from os.path import basename, abspath, join
+from os.path import basename, join
 from subprocess import CalledProcessError
 from hypothesis import given
 import hypothesis.strategies as st
