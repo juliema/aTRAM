@@ -192,10 +192,14 @@ def test_run_called_process_error():
         args['assembler'], assembler.state['iteration'])}]
     assert expect == mock.filter('lib.log', 'info')
 
-    expect = [{'msg': "The assembler failed with error: Command '{}' "
-                      'returned non-zero exit status {}'.format(
-                          cmd, error_code)}]
-    assert expect == mock.filter('lib.log', 'fatal')
+    fatal = mock.filter('lib.log', 'fatal')
+    assert len(fatal) == 1
+
+    expect = ("The assembler failed with error: Command '{}' "
+              'returned non-zero exit status {}').format(cmd, error_code)
+    actual = re.sub(r'\.$', '', fatal[0]['msg'])
+
+    assert expect == actual
 
 
 def test_no_blast_hits_true():
