@@ -1,10 +1,11 @@
 """Test object in lib/assemblers/base."""
 
-# pylint: disable=missing-docstring
+# pylint: disable=missing-docstring,too-many-arguments
 
+import re
 from os.path import basename, join
 from subprocess import CalledProcessError
-from hypothesis import given
+from hypothesis import given, assume
 import hypothesis.strategies as st
 import lib.db as db
 import lib.log as log
@@ -12,13 +13,14 @@ from lib.assemblers.base import BaseAssembler
 import tests.mock as mock
 
 
-PATH_PATTERN = r'(?:[\w.-]+/)*[\w.-]+'
+PATH_PATTERN = r'(?:[\w.-]+/)[\w.-]+'
 
 
 def build_assembler():
     args = {'bit_score': 44, 'contig_length': 55}
     state = {'blast_db': 'my_blast_db',
-             'query_file': 'my_query',
+             'query_file': 'my_query_file',
+             'query_name': 'my_query_name',
              'iteration': 99}
     assembler = BaseAssembler(args, 'my_db_conn')
     assembler.set_state(
@@ -40,6 +42,7 @@ def test_init(args, db_conn):
 
     expected = {
         'iteration': 0,
+        'query_name': '',
         'query_file': '',
         'blast_db': '',
         'db_conn': db_conn}
@@ -86,13 +89,14 @@ def test_initialize_iteration(blast_db, query_file, iteration):
     query_file=st.from_regex(PATH_PATTERN),
     iteration=st.integers())
 def test_iter_dir(args, blast_db, query_file, iteration):
+    assume(re.search(r'\w', query_file))
     assembler = BaseAssembler(args, 'db_conn')
     assembler.set_state(blast_db, query_file, iteration)
 
     base_blast_db = basename(blast_db)
-    base_query_file = basename(query_file)
+    base_query_file = basename(query_file) if iteration == 1 else ''
 
-    dir_name = '{}_{}_iteration_{:02d}'.format(
+    dir_name = '{}_{}_{:02d}'.format(
         base_blast_db, base_query_file, iteration)
 
     expect = join(args['temp_dir'], dir_name)
@@ -106,13 +110,14 @@ def test_iter_dir(args, blast_db, query_file, iteration):
     iteration=st.integers(),
     file_name=st.from_regex(r'\w[\w.-]+'))
 def test_iter_file(args, blast_db, query_file, iteration, file_name):
+    assume(re.search(r'\w', query_file))
     assembler = BaseAssembler(args, 'db_conn')
     assembler.set_state(blast_db, query_file, iteration)
 
     base_blast_db = basename(blast_db)
-    base_query_file = basename(query_file)
+    base_query_file = basename(query_file) if iteration == 1 else ''
 
-    dir_name = '{}_{}_iteration_{:02d}'.format(
+    dir_name = '{}_{}_{:02d}'.format(
         base_blast_db, base_query_file, iteration)
 
     expect = join(args['temp_dir'], dir_name, file_name)
