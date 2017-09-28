@@ -205,24 +205,21 @@ def filter_contigs(assembler):
         assembler.state['iteration']))
 
     blast_db = blast.temp_db_name(
-        assembler.iter_dir(),
-        assembler.state['blast_db'])
+        assembler.iter_dir(), assembler.state['blast_db'])
 
     hits_file = blast.output_file_name(
-        assembler.iter_dir(),
-        assembler.state['blast_db'])
+        assembler.iter_dir(), assembler.state['blast_db'])
 
     blast.create_db(
-        assembler.iter_dir(),
-        assembler.file['output'],
-        blast_db)
+        assembler.iter_dir(), assembler.file['output'], blast_db)
 
-    blast.against_contigs(blast_db,
-                          assembler.state['query_file'],
-                          hits_file,
-                          protein=assembler.args['protein'],
-                          db_gencode=assembler.args['db_gencode'],
-                          temp_dir=assembler.args['temp_dir'])
+    blast.against_contigs(
+        blast_db,
+        assembler.state['query_file'],
+        hits_file,
+        protein=assembler.args['protein'],
+        db_gencode=assembler.args['db_gencode'],
+        temp_dir=assembler.args['temp_dir'])
 
     save_blast_against_contigs(assembler, hits_file)
 
