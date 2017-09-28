@@ -172,7 +172,7 @@ def blast_query_against_one_shard(args, state, shard):
     temp_dir = util.iter_dir(
         args['temp_dir'],
         state['blast_db'],
-        state['query_name'],
+        state['query_target'],
         state['iteration'])
 
     output_file = blast.output_file_name(temp_dir, shard)
@@ -215,7 +215,7 @@ def filter_contigs(assembler):
 
     blast.against_contigs(
         blast_db,
-        assembler.state['query_file'],
+        assembler.state['query_target'],
         hits_file,
         protein=assembler.args['protein'],
         db_gencode=assembler.args['db_gencode'],

@@ -2,7 +2,6 @@
 
 # pylint: disable=too-many-public-methods
 
-import re
 from os.path import basename, exists, getsize, join, splitext  # , abspath
 import datetime
 import subprocess
@@ -24,7 +23,7 @@ class BaseAssembler:
         self.file = {}           # Files and record counts
         self.state = {
             'iteration': 0,      # Current iteration
-            'query_name': '',    # Original name of the query sequence
+            'query_target': '',  # Original name of the query sequence
             'query_file': '',    # Current query file name
             'blast_db': '',      # Current blast DB name
             'db_conn': db_conn}  # Save the DB connection
@@ -57,7 +56,7 @@ class BaseAssembler:
         self.state['query_file'] = query_file
         self.state['iteration'] = iteration
         if iteration == 1:
-            self.state['query_name'] = query_file
+            self.state['query_target'] = query_file
 
     def iter_dir(self):
         """Get the work directory for the current iteration."""
@@ -65,7 +64,7 @@ class BaseAssembler:
         return util.iter_dir(
             self.args['temp_dir'],
             self.state['blast_db'],
-            self.state['query_name'],
+            self.state['query_target'],
             self.state['iteration'])
 
     def iter_file(self, file_name):
@@ -90,9 +89,7 @@ class BaseAssembler:
                 datetime.timedelta(seconds=self.args['timeout']))
             log.fatal(msg)
         except subprocess.CalledProcessError as cpe:
-            # python3.6 formats errors differently. It's killing the tests.
-            cpe = re.sub(r'\.$', '', str(cpe))
-            msg = 'The assembler failed with error: ' + cpe
+            msg = 'The assembler failed with error: ' + str(cpe)
             log.fatal(msg)
 
     def no_blast_hits(self):
@@ -290,5 +287,5 @@ class BaseAssembler:
         return {
             'blast_db': self.state['blast_db'],
             'iteration': self.state['iteration'],
-            'query_name': self.state['query_name'],
-            'query_file': self.state['query_file']}
+            'query_file': self.state['query_file'],
+            'query_target': self.state['query_target']}

@@ -20,7 +20,7 @@ def build_assembler():
     args = {'bit_score': 44, 'contig_length': 55}
     state = {'blast_db': 'my_blast_db',
              'query_file': 'my_query_file',
-             'query_name': 'my_query_name',
+             'query_target': 'my_query_name',
              'iteration': 99}
     assembler = BaseAssembler(args, 'my_db_conn')
     assembler.set_state(
@@ -28,7 +28,6 @@ def build_assembler():
         state['query_file'],
         state['iteration'])
     return assembler
-
 
 
 @given(args=st.text(), db_conn=st.text())
@@ -42,7 +41,7 @@ def test_init(args, db_conn):
 
     expected = {
         'iteration': 0,
-        'query_name': '',
+        'query_target': '',
         'query_file': '',
         'blast_db': '',
         'db_conn': db_conn}
@@ -164,9 +163,14 @@ def test_run_timeout():
         args['assembler'], assembler.state['iteration'])}]
     assert expect == mock.filter('lib.log', 'info')
 
-    expect = [{'msg': 'Time ran out for the assembler after 0:00:{} '
-                      '(HH:MM:SS)'.format(args['timeout'])}]
-    assert expect == mock.filter('lib.log', 'fatal')
+    fatal = mock.filter('lib.log', 'fatal')
+    assert len(fatal) == 1
+
+    # Python 3.6 formats exceptions differently
+    expect = 'Time ran out for the assembler after 0:00:{} (HH:MM:SS)'.format(
+        args['timeout'])
+    actual = re.sub(r'\.$', '', fatal[0]['msg'])
+    assert expect == actual
 
 
 def test_run_called_process_error():
@@ -273,8 +277,7 @@ def test_assembled_contigs_count_0():
         'db_conn': assembler.state['db_conn'],
         'iteration': assembler.state['iteration'],
         'bit_score': assembler.args['bit_score'],
-        'length': assembler.args['contig_length'],
-    }]
+        'length': assembler.args['contig_length']}]
     assert expect == mock.filter('lib.db', 'assembled_contigs_count')
 
     expect = [{'msg': 'No contigs had a bit score greater than {} and are at '
@@ -361,6 +364,7 @@ def test_assemble():
     def step1():
         mock.history.append({'module': 'none', 'func': 'step1'})
         return 'step1'
+
     def step2():
         mock.history.append({'module': 'none', 'func': 'step2'})
         return 'step2'
