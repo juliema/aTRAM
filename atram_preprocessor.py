@@ -25,7 +25,7 @@ def preprocess(args):
 
     log.setup(args['log_file'], args['blast_db'])
 
-    with db.connect(args['blast_db']) as db_conn:
+    with db.connect(args['blast_db'], bulk_mode=True) as db_conn:
         db.create_metadata_table(db_conn)
 
         db.create_sequences_table(db_conn)

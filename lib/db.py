@@ -9,17 +9,20 @@ DB_VERSION = '2.0'
 BATCH_SIZE = 1e6  # How many sequence records to insert at a time
 
 
-def connect(blast_db, check_version=False):
+def connect(blast_db, bulk_mode=False, check_version=False):
     """Setup the DB for our processing needs and return a DB connection."""
 
     db_name = '{}.sqlite.db'.format(blast_db)
 
     db_conn = sqlite3.connect(db_name)
 
-    db_conn.execute("PRAGMA busy_timeout = 10000")
     db_conn.execute("PRAGMA page_size = {}".format(2**16))
-    db_conn.execute("PRAGMA journal_mode = 'off'")
-    db_conn.execute("PRAGMA synchronous = 'off'")
+
+    if bulk_mode:
+        db_conn.execute("PRAGMA busy_timeout = 10000")
+        db_conn.execute("PRAGMA journal_mode = OFF")
+        db_conn.execute("PRAGMA synchronous = OFF")
+        db_conn.execute("PRAGMA locking_mode = EXCLUSIVE")
 
     if check_version:
         check_versions(db_conn)  # Make sure the database versions match
@@ -57,8 +60,8 @@ def create_metadata_table(db_conn):
     db_conn.execute(sql)
 
     sql = '''INSERT INTO metadata (label, value) VALUES (?, ?)'''
-    db_conn.execute(sql, ('version', DB_VERSION))
-    db_conn.commit()
+    with db_conn:
+        db_conn.execute(sql, ('version', DB_VERSION))
 
 
 def get_version(db_conn):
@@ -96,12 +99,11 @@ def create_sequences_index(db_conn):
 def insert_sequences_batch(db_conn, batch):
     """Insert a batch of sequence records into the database."""
 
-    if batch:
+    if not batch:
         sql = '''INSERT INTO sequences (seq_name, seq_end, seq)
                       VALUES (?, ?, ?)
             '''
         db_conn.executemany(sql, batch)
-        db_conn.commit()
 
 
 def get_sequence_count(db_conn):
@@ -172,7 +174,6 @@ def insert_blast_hit_batch(db_conn, batch):
                         VALUES (?, ?, ?, ?)
             '''
         db_conn.executemany(sql, batch)
-        db_conn.commit()
 
 
 def sra_blast_hits_count(db_conn, iteration):
@@ -259,7 +260,6 @@ def insert_contig_hit_batch(db_conn, batch):
                  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             '''
         db_conn.executemany(sql, batch)
-        db_conn.commit()
 
 
 def get_contig_blast_hits(db_conn, iteration):
@@ -349,7 +349,6 @@ def insert_assembled_contigs_batch(db_conn, batch):
                  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             '''
         db_conn.executemany(sql, batch)
-        db_conn.commit()
 
 
 def get_assembled_contigs(db_conn, iteration, bit_score, length):
