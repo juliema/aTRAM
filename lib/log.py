@@ -13,7 +13,6 @@ FORMATTER = logging.Formatter('%(asctime)s %(levelname)s: %(message)s',
 
 def setup(log_file, blast_db, query_file=''):
     """Logger setup."""
-
     global LOGGER  # pylint: disable=global-statement
 
     log_file = file_name(log_file, blast_db, query_file)
@@ -38,7 +37,6 @@ def file_name(log_file, blast_db, query_file=''):
 
     Honor user's argument if given.
     """
-
     if log_file:
         return log_file
 
@@ -58,7 +56,6 @@ def subcommand(cmd, temp_dir, timeout=None):
     Note: stdout=PIPE is blocking and large logs cause a hang.
     So we don't use it.
     """
-
     LOGGER.debug(cmd)
 
     with tempfile.NamedTemporaryFile(mode='w', dir=temp_dir) as log_output:
@@ -81,18 +78,15 @@ def subcommand(cmd, temp_dir, timeout=None):
 
 def info(msg):
     """Log an info message."""
-
     LOGGER.info(msg)
 
 
 def error(msg):
     """Log an error message."""
-
     LOGGER.error(msg)
 
 
 def fatal(msg):
     """Log an error message and exit."""
-
     error(msg)
     sys.exit(1)

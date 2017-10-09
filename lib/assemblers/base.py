@@ -16,7 +16,6 @@ class BaseAssembler:
 
     def __init__(self, args, db_conn):
         """Build the assembler."""
-
         self.args = args         # Parsed command line arguments
         self.blast_only = False  # Used to short-circuit the assembler
         self.steps = []          # Assembler steps setup by the assembler
@@ -29,11 +28,10 @@ class BaseAssembler:
             'db_conn': db_conn}  # Save the DB connection
 
     def initialize_iteration(self, blast_db, query_file, iteration):
-        """Setup file names used by the assembler.
+        """Make file names used by the assembler.
 
         Do this at the start of each iteration.
         """
-
         self.set_state(blast_db, query_file, iteration)
 
         self.file['long_reads'] = ''  # Set up in atram.py for now
@@ -51,7 +49,6 @@ class BaseAssembler:
 
     def set_state(self, blast_db, query_file, iteration):
         """Set the iteration state."""
-
         self.state['blast_db'] = blast_db
         self.state['query_file'] = query_file
         self.state['iteration'] = iteration
@@ -60,7 +57,6 @@ class BaseAssembler:
 
     def iter_dir(self):
         """Get the work directory for the current iteration."""
-
         return util.iter_dir(
             self.args['temp_dir'],
             self.state['blast_db'],
@@ -79,7 +75,6 @@ class BaseAssembler:
 
     def run(self):
         """Try to assemble the input."""
-
         try:
             log.info('Assembling shards with {}: iteration {}'.format(
                 self.args['assembler'], self.state['iteration']))
@@ -94,16 +89,15 @@ class BaseAssembler:
 
     def no_blast_hits(self):
         """Make sure we have blast hits."""
-
         if not db.sra_blast_hits_count(
                 self.state['db_conn'], self.state['iteration']):
-            log.info('No blast hits in iteration %i' % self.state['iteration'])
+            log.info('No blast hits in iteration {}'.format(
+                self.state['iteration']))
             return True
         return False
 
     def nothing_assembled(self):
         """Make there is assembler output."""
-
         if not exists(self.file['output']) \
                 or not getsize(self.file['output']):
             log.info('No new assemblies in iteration {}'.format(
@@ -113,7 +107,6 @@ class BaseAssembler:
 
     def assembled_contigs_count(self, high_score):
         """How many contigs were assembled and are above the thresholds."""
-
         count = db.assembled_contigs_count(
             self.state['db_conn'],
             self.state['iteration'],
@@ -132,7 +125,6 @@ class BaseAssembler:
 
     def no_new_contigs(self, count):
         """Make the are new contigs in the assembler output."""
-
         if count == db.iteration_overlap_count(
                 self.state['db_conn'],
                 self.state['iteration'],
@@ -149,24 +141,21 @@ class BaseAssembler:
         We take and array of subprocess steps and execute them in order. We
         bracket this with pre and post assembly steps.
         """
-
         for step in self.steps:
             cmd = step()
             log.subcommand(cmd, self.args['temp_dir'], self.args['timeout'])
         self.post_assembly()
 
     def post_assembly(self):
-        """The assembler may have unique post assembly steps."""
+        """Handle unique post assembly steps."""
 
     @staticmethod
     def parse_contig_id(header):
         """Given a fasta header line from the assembler return contig ID."""
-
         return header.split()[0]
 
     def write_input_files(self):
         """Write blast hits and matching ends to fasta files."""
-
         log.info('Writing assembler input files: iteration {}'.format(
             self.state['iteration']))
 
@@ -208,7 +197,6 @@ class BaseAssembler:
 
     def final_output_prefix(self, blast_db, query):
         """Build the prefix for the name of the final output file."""
-
         blast_db = basename(blast_db)
         query = splitext(basename(query))[0]
         return '{}.{}_{}'.format(self.args['output_prefix'], blast_db, query)
@@ -218,7 +206,6 @@ class BaseAssembler:
 
         In this default case we're writing assembled contigs to fasta files.
         """
-
         prefix = self.final_output_prefix(blast_db, query)
 
         self.write_filtered_contigs(prefix)
@@ -226,7 +213,6 @@ class BaseAssembler:
 
     def write_filtered_contigs(self, prefix):
         """Write to the filtered contigs to a final output file."""
-
         if self.args['no_filter']:
             return
 
@@ -243,7 +229,6 @@ class BaseAssembler:
 
     def write_all_contigs(self, prefix):
         """Write all contigs to a final ouput file."""
-
         file_name = '{}.{}'.format(prefix, 'all_contigs.fasta')
 
         with open(file_name, 'w') as output_file:
@@ -253,7 +238,6 @@ class BaseAssembler:
     @staticmethod
     def output_assembled_contig(output_file, contig):
         """Write one assembled contig to the output fasta file."""
-
         seq = contig['seq']
         suffix = ''
 
@@ -271,7 +255,6 @@ class BaseAssembler:
 
     def get_single_ends(self):
         """Gather single ends files for the assembly command."""
-
         single_ends = []
         if self.file['single_1_count']:
             single_ends.append(self.file['single_1'])
@@ -282,8 +265,7 @@ class BaseAssembler:
         return single_ends
 
     def simple_state(self):
-        """A state that can be passed to a subprocess."""
-
+        """Save the state passed to subprocesses."""
         return {
             'blast_db': self.state['blast_db'],
             'iteration': self.state['iteration'],

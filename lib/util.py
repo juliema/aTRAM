@@ -10,7 +10,6 @@ def iter_dir(temp_dir, blast_db, query_name, iteration):
     We need to call this function in child processes so it cannot be in an
     object.
     """
-
     name = '{}_{}_{:02d}'.format(
         basename(blast_db), basename(query_name), iteration)
 

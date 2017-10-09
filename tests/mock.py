@@ -88,7 +88,7 @@ def context(module, callee, returns):
     """
     Append the function call to the history.
 
-    This version or "mock.it" is used when you're mocking a function call
+    This version of "mock.it" is used when you're mocking a function call
     inside a with statement.
     """
     global history

@@ -15,12 +15,10 @@ class VelvetAssembler(BaseAssembler):
     @staticmethod
     def parse_contig_id(header):
         """Given a fasta header line return the contig ID."""
-
         return header
 
     def velveth(self):
         """Build the velveth for the first assembly step."""
-
         cmd = ['velveth',
                '{}'.format(self.work_path()),
                '{}'.format(self.args['kmer']),
@@ -47,7 +45,6 @@ class VelvetAssembler(BaseAssembler):
 
     def velvetg(self):
         """Build the velvetg for the second assembly step."""
-
         cmd = ['velvetg',
                '{}'.format(self.work_path()),
                '-ins_length {}'.format(self.args['ins_length']),
@@ -58,6 +55,5 @@ class VelvetAssembler(BaseAssembler):
 
     def post_assembly(self):
         """Copy the assembler output."""
-
         src = self.iter_file('contigs.fa')
         shutil.move(src, self.file['output'])

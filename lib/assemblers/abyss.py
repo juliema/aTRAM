@@ -10,13 +10,11 @@ class AbyssAssembler(BaseAssembler):
 
     def __init__(self, args, db_conn):
         """Build the assembler."""
-
         super().__init__(args, db_conn)
         self.steps = [self.abyss]
 
     def abyss(self):
         """Build the command for assembly."""
-
         cmd = ['abyss-pe',
                "-C '{}'".format(self.work_path()),
                'E=0',
@@ -42,7 +40,6 @@ class AbyssAssembler(BaseAssembler):
 
     def post_assembly(self):
         """Copy the assembler output into the temp directory."""
-
         src = os.path.realpath(self.file['output'] + '-unitigs.fa')
 
         shutil.copyfile(src, self.file['output'])

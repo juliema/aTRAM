@@ -22,7 +22,6 @@ __all__ = ('assemble', )
 
 def assemble(args):
     """Loop thru every blast/query pair and run an assembly for each one."""
-
     queries = split_queries(args) if args['split_queries'] else args['query']
 
     for blast_db in args['blast_db']:
@@ -44,7 +43,6 @@ def assemble(args):
 
 def assembly_loop(assembler, blast_db, query):
     """Iterate the assembly processes."""
-
     for iteration in range(1, assembler.args['iterations'] + 1):
         log.info('aTRAM blast DB = "{}", query = "{}", iteration {}'.format(
             blast_db, query, iteration))
@@ -87,7 +85,6 @@ def split_queries(args):
 
     We put each query record into its own file for blast queries.
     """
-
     queries = []
 
     path = join(args['temp_dir'], 'queries')
@@ -115,7 +112,6 @@ def split_queries(args):
 
 def write_query_seq(file_name, seq_id, seq):
     """Write the sequence to a fasta file."""
-
     with open(file_name, 'w') as query_file:
         query_file.write('>{}\n'.format(seq_id))
         query_file.write('{}\n'.format(seq))
@@ -123,7 +119,6 @@ def write_query_seq(file_name, seq_id, seq):
 
 def clean_database(db_conn):
     """Create database tables for an atram run."""
-
     db.create_sra_blast_hits_table(db_conn)
     db.create_contig_blast_hits_table(db_conn)
     db.create_assembled_contigs_table(db_conn)
@@ -136,7 +131,6 @@ def blast_query_against_all_shards(assembler):
     We're using a map-reduce strategy here. We map the blasting of the query
     sequences and reduce the output into one fasta file.
     """
-
     log.info('Blasting query against shards: iteration {}'.format(
         assembler.state['iteration']))
 
@@ -146,7 +140,7 @@ def blast_query_against_all_shards(assembler):
         results = [pool.apply_async(
             blast_query_against_one_shard,
             (assembler.args, assembler.simple_state(), shard))
-                   for shard in all_shards]
+                   for shard in all_shards]  # noqa
         _ = [result.get() for result in results]  # noqa
 
 
@@ -156,7 +150,6 @@ def shard_fraction(assembler):
 
     We may not want the entire DB for highly redundant libraries.
     """
-
     all_shards = blast.all_shard_paths(assembler.state['blast_db'])
     last_index = int(len(all_shards) * assembler.args['fraction'])
     return all_shards[:last_index]
@@ -168,7 +161,6 @@ def blast_query_against_one_shard(args, state, shard):
 
     Then write the results to the database.
     """
-
     temp_dir = util.iter_dir(
         args['temp_dir'],
         state['blast_db'],
@@ -185,7 +177,8 @@ def blast_query_against_one_shard(args, state, shard):
 
     batch = []
 
-    for hit in blast.hits(output_file):
+    hits = blast.hits(output_file)
+    for hit in hits:
         match = blast.PARSE_RESULTS.match(hit['title'])
         if match:
             seq_name = match.group(1)
@@ -200,7 +193,6 @@ def blast_query_against_one_shard(args, state, shard):
 
 def filter_contigs(assembler):
     """Remove junk from the assembled contigs."""
-
     log.info('Saving assembled contigs: iteration {}'.format(
         assembler.state['iteration']))
 
@@ -234,7 +226,6 @@ def filter_contigs(assembler):
 
 def save_blast_against_contigs(assembler, hits_file):
     """Save all of the blast hits."""
-
     batch = []
 
     for hit in blast.hits(hits_file):
@@ -257,7 +248,6 @@ def save_blast_against_contigs(assembler, hits_file):
 
 def save_contigs(assembler, all_hits):
     """Save the contigs to the database."""
-
     batch = []
     high_score = 0
     with open(assembler.file['output']) as in_file:
@@ -285,7 +275,6 @@ def save_contigs(assembler, all_hits):
 
 def create_query_from_contigs(assembler):
     """Crate a new file with the contigs used as the next query."""
-
     log.info('Creating new query files: iteration {}'.format(
         assembler.state['iteration']))
 
@@ -306,7 +295,6 @@ def create_query_from_contigs(assembler):
 
 def parse_command_line(temp_dir_default):
     """Process command-line arguments."""
-
     description = """
         This is the aTRAM script. It takes a query sequence and a blast
         database built with the atram_preprocessor.py script and builds an
@@ -320,7 +308,6 @@ def parse_command_line(temp_dir_default):
         like: @/path/to/args.txt. This is particularly useful when specifying
         multiple blast databases or multiple query sequences.
         """
-
     parser = argparse.ArgumentParser(
         fromfile_prefix_chars='@',
         formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -368,7 +355,6 @@ def parse_command_line(temp_dir_default):
 
 def find_programs(assembler, no_long_reads, bowtie2):
     """Make sure we can find the programs needed by the assembler and blast."""
-
     if not (which('makeblastdb') and which('tblastn') and which('blastn')):
         err = ('We could not find the programs "makeblastdb", "tblastn", or '
                '"blastn". You either need to install them or you need adjust '
@@ -418,7 +404,6 @@ def find_programs(assembler, no_long_reads, bowtie2):
 
 def required_command_line_args(parser):
     """Add required arguments to the parser."""
-
     group = parser.add_argument_group('required arguments')
 
     group.add_argument('-b', '--blast-db', '--sra', '--db', '--database',
@@ -447,7 +432,6 @@ def required_command_line_args(parser):
 
 def optional_command_line_args(parser):
     """Add optional atram arguments to the parser."""
-
     group = parser.add_argument_group('optional aTRAM arguments')
 
     group.add_argument('-a', '--assembler', default='none',
@@ -505,7 +489,6 @@ def optional_command_line_args(parser):
 
 def filter_command_line_args(parser):
     """Add optional values for blast-filtering contigs to the parser."""
-
     group = parser.add_argument_group(
         'optional values for blast-filtering contigs')
 
