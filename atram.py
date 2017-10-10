@@ -22,12 +22,11 @@ __all__ = ('assemble', )
 
 def assemble(args):
     """Loop thru every blast/query pair and run an assembly for each one."""
-    queries = split_queries(args) if args['split_queries'] else args['query']
+    queries = split_queries(args)
 
     for blast_db in args['blast_db']:
 
         with db.connect(blast_db, check_version=True) as db_conn:
-
             for query in queries:
 
                 clean_database(db_conn)
@@ -81,16 +80,16 @@ def assembly_loop(assembler, blast_db, query):
 
 def split_queries(args):
     """
-    Create query target for every record in a query file.
+    Create query target for every query and query-split file.
 
     We put each query record into its own file for blast queries.
     """
-    queries = []
+    queries = args['query']
 
     path = join(args['temp_dir'], 'queries')
     os.makedirs(path, exist_ok=True)
 
-    for query_path in args['query']:
+    for query_path in args['query_split']:
 
         query_name = splitext(basename(query_path))[0]
 
@@ -324,6 +323,11 @@ def parse_command_line(temp_dir_default):
 
     args = vars(parser.parse_args())
 
+    # Check query arguments
+    if not args['query'] and not args['query_split']:
+        err = 'You must have at least one --query or --query-split argument.'
+        log.fatal(err)
+
     # Set defaults and adjust arguments based on other arguments
     args['cov_cutoff'] = assembly.default_cov_cutoff(args['cov_cutoff'])
     args['blast_db'] = blast.touchup_blast_db_names(args['blast_db'])
@@ -414,13 +418,20 @@ def required_command_line_args(parser):
                             against multiple blast databases.''')
 
     group.add_argument('-q', '--query', '--target', '--probe',
-                       required=True, nargs='+',
+                       required=False, nargs='+',
                        help='''The path to the fasta file with sequences of
-                            interest. Required unless you specify a
-                            "--start-iteration". You may have multiple query
-                            sequences in one file or you may repeat this
-                            argument. In either case, each --query sequence
-                            will be run against every --blast-db.''')
+                            interest. You may repeat this argument. If you do
+                            then Each --query sequence  file will be run
+                            against every --blast-db.''')
+
+    group.add_argument('-Q', '--query-split', '--target-split',
+                       required=False, nargs='+',
+                       help='''The path to the fasta file with multiple
+                            sequences of interest. This will take every
+                            sequence in the fasta file and treat it as if it
+                            were its own --query argument. So every sequence in
+                            --query-split will be run against every --blast-db.
+                            ''')
 
     group.add_argument('-o', '--output-prefix', required=True,
                        help='''This is the prefix of all of the output files.
@@ -467,11 +478,6 @@ def optional_command_line_args(parser):
                        help='''If the assembler or blast you want to use is not
                             in your $PATH then use this to prepend
                             directories to your path.''')
-
-    group.add_argument('--split-queries', action='store_true',
-                       help='''Split every record in the --query file into
-                            separate query sequence, as if they were in
-                            separate files.''')
 
     # group.add_argument('--restart', type='store_true',
     #                    help='''Use this to resume from a previous run.''')
