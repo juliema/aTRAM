@@ -1,5 +1,8 @@
 """Testing functions in atram."""
 
+# pylint: disable=too-many-arguments
+# pylint: disable=missing-docstring
+
 import os
 from os.path import join
 import tempfile

@@ -84,7 +84,10 @@ def split_queries(args):
 
     We put each query record into its own file for blast queries.
     """
-    queries = args['query']
+    queries = args['query'][:]
+
+    if not args.get('query_split'):
+        return queries
 
     path = join(args['temp_dir'], 'queries')
     os.makedirs(path, exist_ok=True)
