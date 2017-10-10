@@ -87,10 +87,12 @@ def load_one_file(db_conn, file_name, seq_end_clamp=None):
 
                 # Sequence end either equals its clamp value or we get it
                 # from the header line
+                end = match.group(2)
                 if seq_end_clamp is None:
-                    seq_end = match.group(2) if match.group(2) else ''
+                    seq_end = end if end else ''
                 else:
-                    seq_end = seq_end_clamp
+                    seq_end = end if end else seq_end_clamp
+                    # seq_end = seq_end_clamp
 
             # Handle fastq stuff, so skip these lines
             elif line[0] == '+':

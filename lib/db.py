@@ -56,9 +56,10 @@ def create_metadata_table(db_conn):
     sql = 'CREATE TABLE metadata (label TEXT, value TEXT)'
     db_conn.execute(sql)
 
-    sql = '''INSERT INTO metadata (label, value) VALUES (?, ?)'''
     with db_conn:
+        sql = '''INSERT INTO metadata (label, value) VALUES (?, ?)'''
         db_conn.execute(sql, ('version', DB_VERSION))
+        db_conn.commit()
 
 
 def get_version(db_conn):
@@ -92,7 +93,7 @@ def create_sequences_index(db_conn):
 
 def insert_sequences_batch(db_conn, batch):
     """Insert a batch of sequence records into the database."""
-    if not batch:
+    if batch:
         sql = '''INSERT INTO sequences (seq_name, seq_end, seq)
                       VALUES (?, ?, ?)
             '''
