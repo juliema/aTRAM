@@ -42,7 +42,7 @@ def load_seqs(args, db_conn):
     # We have to clamp the end suffix depending on the file type.
     for (arg, clamp) in [('mixed_ends', None), ('end_1', '1'),
                          ('end_2', '2'), ('single_ends', '')]:
-        if args[arg]:
+        if args.get(arg):
             for file_name in args[arg]:
                 load_one_file(db_conn, file_name, clamp)
 
@@ -245,25 +245,19 @@ def parse_command_line(temp_dir_default):
     parser.add_argument('--end-1', '-1', metavar='FASTA', nargs='+',
                         help='''Sequence read archive files that have only
                              end 1 sequences. The sequence names do not need an
-                             end suffix, we will assume the suffix is always 1.
-                             The files are in fasta or fastq format. You may
-                             enter more than one file or you may use
-                             wildcards.''')
+                             end suffix, we will assume the suffix is 1 if it
+                             is missing. The files are in fasta or fastq
+                             format. You may enter more than one file or you
+                             may use wildcards.''')
 
     parser.add_argument('--end-2', '-2', metavar='FASTA', nargs='+',
                         help='''Sequence read archive files that have only
                              end 2 sequences. The sequence names do not need an
-                             end suffix, we will assume the suffix is always 2.
-                             The files are in fasta or fastq format. You may
-                             enter more than one file or you may use
-                             wildcards.''')
-
-    parser.add_argument('--single-ends', '-S', metavar='FASTA', nargs='+',
-                        help='''Sequence read archive files that have only
-                             unpaired sequences. Any sequence end suffixes will
-                             be ignored. The files are in fasta or fastq
+                             end suffix, we will assume the suffix is 2 if it
+                             is missing. The files are in fasta or fastq
                              format. You may enter more than one file or you
                              may use wildcards.''')
+
 
     parser.add_argument('--version', action='version',
                         version='%(prog)s {}'.format(db.ATRAM_VERSION))
