@@ -258,6 +258,13 @@ def parse_command_line(temp_dir_default):
                              format. You may enter more than one file or you
                              may use wildcards.''')
 
+    # parser.add_argument('--single-ends', '-S', metavar='FASTA', nargs='+',
+    #                     help='''Sequence read archive files that have only
+    #                          unpaired sequences. Any sequence end suffixes
+    #                          will
+    #                          be ignored. The files are in fasta or fastq
+    #                          format. You may enter more than one file or you
+    #                          may use wildcards.''')
 
     parser.add_argument('--version', action='version',
                         version='%(prog)s {}'.format(db.ATRAM_VERSION))
