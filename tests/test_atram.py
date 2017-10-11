@@ -1,12 +1,12 @@
 """Testing functions in atram."""
 
-# pylint: disable=too-many-arguments
-# pylint: disable=missing-docstring
+# pylint: disable=missing-docstring,too-many-arguments,no-self-use
 
+from os.path import join
+import tempfile
 import unittest
 from unittest.mock import patch, MagicMock, call
 from lib.assemblers.base import BaseAssembler
-# import lib.db
 import atram
 
 
@@ -109,3 +109,137 @@ class TestAtram(unittest.TestCase):
 
         expected = self.args['query'] + split_files
         assert expected == queries
+
+    def test_write_query_seq(self):
+        with tempfile.TemporaryDirectory(prefix='test_') as temp_dir:
+            path = join(temp_dir, 'test_query.fasta')
+
+            atram.write_query_seq(path, 'my sequence name', 'aaaacccgggtt')
+
+            with open(path) as test_file:
+                expect = (
+                    '>my sequence name\n'
+                    'aaaacccgggtt\n')
+                assert expect == test_file.read()
+
+    @patch('lib.db.create_sra_blast_hits_table')
+    @patch('lib.db.create_contig_blast_hits_table')
+    @patch('lib.db.create_assembled_contigs_table')
+    def test_clean_database(
+            self,
+            create_assembled_contigs_table,
+            create_contig_blast_hits_table,
+            create_sra_blast_hits_table):
+
+        dbh = 'my_db'
+        atram.clean_database(dbh)
+
+        create_assembled_contigs_table.assert_called_once_with(dbh)
+        create_contig_blast_hits_table.assert_called_once_with(dbh)
+        create_sra_blast_hits_table.assert_called_once_with(dbh)
+
+    # def test_assembly_loop_one_iter(self):
+    #     db_conn = st.text()
+    #     blast_db = st.text()
+    #     query = st.text()
+    #     iter_dir = st.text()
+    #     args = {'temp_dir': st.text(), 'iterations': 1}
+    #
+    #     assembler = BaseAssembler(args, db_conn)
+    #     assembler.blast_only = False
+    #     assembler.state['query_file'] = query
+    #     assembler.state['blast_db'] = blast_db
+    #
+    #     mock.it(log, 'info')
+    #     mock.it(assembler, 'initialize_iteration')
+    #     mock.it(assembler, 'iter_dir', iter_dir)
+    #     mock.it(os, 'makedirs')
+    #     mock.it(atram, 'blast_query_against_all_shards')
+    #     mock.it(assembler, 'no_blast_hits', False)
+    #     mock.it(assembler, 'write_input_files')
+    #     mock.it(assembler, 'run')
+    #     mock.it(assembler, 'nothing_assembled', False)
+    #     mock.it(atram, 'filter_contigs', 99)
+    #     mock.it(assembler, 'assembled_contigs_count', 11)
+    #     mock.it(assembler, 'no_new_contigs', False)
+    #     mock.it(atram, 'create_query_from_contigs', 'my_query')
+    #
+    #     atram.assembly_loop(assembler, blast_db, query)
+    #
+    #     expect = [{'msg': 'aTRAM blast DB = "{}", query = "{}", '
+    #                       'iteration {}'.format(blast_db, query, 1)},
+    #               {'msg': 'All iterations completed'}]
+    #     assert expect == mock.filter('lib.log', 'info')
+    #
+    #     expect = [
+    #         {'blast_db': blast_db, 'iteration': 1, 'query_file': query}]
+    #     assert expect == mock.filter('BaseAssembler', 'initialize_iteration')
+    #
+    #     assert [{}] == mock.filter('BaseAssembler', 'iter_dir')
+    #
+    #     expect = [{'name': iter_dir, 'exist_ok': True}]
+    #     assert expect == mock.filter('os', 'makedirs')
+    #
+    #     expect = [{'assembler': assembler}]
+    #     assert expect == mock.filter('atram', 'blast_query_against_all_shards')
+    #
+    #     assert [{}] == mock.filter('BaseAssembler', 'no_blast_hits')
+    #     assert [{}] == mock.filter('BaseAssembler', 'write_input_files')
+    #     assert [{}] == mock.filter('BaseAssembler', 'run')
+    #     assert [{}] == mock.filter('BaseAssembler', 'nothing_assembled')
+    #     assert [{'count': 11}] == mock.filter('BaseAssembler', 'no_new_contigs')
+    #
+    #     expect = [{'assembler': assembler}]
+    #     assert expect == mock.filter('atram', 'create_query_from_contigs')
+    #
+    # # def test_assembly_loop_multiple_iterations(self):
+    #
+    # # def test_assembly_loop_blast_only(self):
+    #
+    # # def test_assembly_loop_no_blast_hits(self):
+    #
+    # # def test_assembly_loop_nothing_assembled(self):
+    #
+    # # def test_assembly_loop_no_assembled_contigs_count(self):
+    #
+    # # def test_assembly_loop_no_new_contigs(self):
+    #
+    # def test_shard_fraction_one():
+    #     args = {'fraction': 1.0}
+    #     returns = ['1st', '2nd', '3rd', '4th']
+    #     assembler = BaseAssembler(args, 'db_conn')
+    #     assembler.state['blast_db'] = 'my_blast_db'
+    #
+    #     mock.it(blast, 'all_shard_paths', returns=[returns])
+    #
+    #     shards = atram.shard_fraction(assembler)
+    #
+    #     assert returns == shards
+    #
+    #     expect = [{'blast_db': 'my_blast_db'}]
+    #     assert expect == mock.filter('lib.blast', 'all_shard_paths')
+    #
+    # def test_shard_fraction_half(self):
+    #     args = {'fraction': 0.5}
+    #     assembler = BaseAssembler(args, 'db_conn')
+    #     assembler.state['blast_db'] = 'my_blast_db'
+    #
+    #     mock.it(blast, 'all_shard_paths', returns=[['1st', '2nd', '3rd', '4th']])
+    #
+    #     shards = atram.shard_fraction(assembler)
+    #
+    #     assert ['1st', '2nd'] == shards
+    #
+    #     expect = [{'blast_db': 'my_blast_db'}]
+    #     assert expect == mock.filter('lib.blast', 'all_shard_paths')
+    #
+    # # def test_blast_query_against_one_shard(self):
+    #
+    # # def test_filter_contigs(self):
+    #
+    # # def test_save_blast_against_contigs(self):
+    #
+    # # def test_save_contigs(self):
+    #
+    #
+    # # def test_create_query_from_contigs(self):

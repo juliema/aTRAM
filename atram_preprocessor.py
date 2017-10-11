@@ -57,7 +57,7 @@ def load_one_file(db_conn, file_name, seq_end_clamp=None):
     #     2) sequence    (1 or more lines) Starts with a letter
     #     3) fastq stuff (0 or more lines) Starts with a '+' on the 1st line
     #     4) Either go back to 1 or end
-    log.info('Loading "%s" into sqlite database' % file_name)
+    log.info('Loading "{}" into sqlite database'.format(file_name))
 
     with open(file_name) as sra_file:
         batch = []      # The batch of records to insert
