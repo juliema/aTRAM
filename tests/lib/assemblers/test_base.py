@@ -159,7 +159,7 @@ class TestAssemblersBase(unittest.TestCase):
         info.assert_called_once_with(expect)
 
         # Python 3.6 formats exceptions differently so we need to do this
-        fatal.assert_called_once()
+        assert fatal.call_count == 1
         regex = re.compile(
             r'Time ran out for the assembler after 0:00:10 \(HH:MM:SS\)')
         assert regex.match(fatal.call_args[0][0])
@@ -184,7 +184,7 @@ class TestAssemblersBase(unittest.TestCase):
         info.assert_called_once_with(expect)
 
         # Python 3.6 formats exceptions differently so we need to do this
-        fatal.assert_called_once()
+        assert fatal.call_count == 1
         regex = re.compile(("The assembler failed with error: Command '{}' "
                             'returned non-zero exit status {}').format(
                                 cmd, error_code))

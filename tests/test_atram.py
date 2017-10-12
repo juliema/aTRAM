@@ -177,13 +177,13 @@ class TestAtram(unittest.TestCase):
         self.assembler.initialize_iteration.assert_called_once_with(
             self.args['blast_db'][0], self.args['query'][0], 1)
 
-        self.assembler.iter_dir.assert_called_once()
+        assert self.assembler.iter_dir.call_count == 1
 
         b_makedirs.assert_called_once_with(iter_dir, exist_ok=True)
 
         blast_query_against_all_shards.assert_called_once_with(self.assembler)
 
-        self.assembler.no_blast_hits.assert_called_once()
+        assert self.assembler.no_blast_hits.call_count == 1
         self.assembler.no_blast_hits.write_input_files()
         self.assembler.no_blast_hits.run()
         self.assembler.no_blast_hits.nothing_assembled()
