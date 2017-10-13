@@ -1,6 +1,6 @@
-## Manual for using aTRAM 2.0: automated Target Restricted Assembly Method
+# Manual for using aTRAM 2.0: automated Target Restricted Assembly Method
 
-## Background
+# Background
     1. What does it do?
     2. How it works
 
@@ -11,7 +11,7 @@ aTRAM ("automated target restricted assembly method") is an iterative assembler 
 Cite like so:
 ```Allen, JM, DI Huang, QC Cronk, KP Johnson. 2015. aTRAM automated target restricted assembly method a fast method for assembling loci across divergent taxa from next-generation sequencing data. BMC Bioinformatics 16:98 DOI 10.1186/s12859-015-0515-2```
 
-## Installation
+# Installation
      1. Python 3.0 or greater and a number of dependencies
      2. Dependencies given in requirements.txt
 
@@ -36,12 +36,12 @@ URLs for software:
 * MUSCLE: http://www.drive5.com/muscle/
 * Spades: http://bioinf.spbau.ru/spades
 
-### Library Preparation
+# Library Preparation
 Use `atram_preprocessor.py` for this. You can either list the forward and reverse read files, or glob them with wildcards as below. Under the hood, aTRAM 2 is building a SQLite3 database for rapid read retrieval. Note that aTRAM 2 is not backwards compatible with aTRAM 1 libraries; it is also best to rebuild any libraries after major updates. 
 
 ``` python path_to_aTRAM/atram_preprocessor.py -c NUMBER_OF_THREADS -b path_to_atram_library/LIBRARY_PREFIX READ_NAME*.fastq ```
   
-### Assembling Loci
+# Assembling Loci
 ``` 
 python path_to_aTRAM/atram.py -b path_to_atram_library/LIBRARY_PREFIX -q path_to_reference_loci/Locus.fasta -i NUMBER_OF_ITERATIONS --cpus NUMBER_OF_THREADS  --kmer KMER_NUMBER -o path_to_output/LIBRARY_PREFIX.Locus.atram2.fasta --log-file path_to_output/LIBRARY_PREFIX.Locus.log -a ASSEMBLER_CHOICE
 ```
@@ -52,16 +52,17 @@ There are many more options than this, so for reference list them like so:
 
 ```python path_to_atram/atram.py -h```
 
-## Arguments
+# Arguments
 Several arguments have synonyms, given below.
 
+## General:
 * `-h, --help`
     * List arguments
     
 * `--version`        
     * Give version number
 
-# Required arguments:
+## Required arguments:
 * `-b DB, --blast-db DB, --sra DB, --db DB, --database DB`
     * The aTRAM library. match the name you gave for the library prefix in `atram_preprocessor.py`.
 
@@ -71,7 +72,7 @@ Several arguments have synonyms, given below.
 * `-q QUERY, --query QUERY, --target QUERY`
     * Path to the fasta file with sequences of interest. Not required if you specify `--start-iteration` to restart a run.
 
-# Optional aTRAM arguments:
+## Optional aTRAM arguments:
 * `a {abyss,trinity,velvet,spades}, --assembler {abyss,trinity,velvet,spades}`
     * Choose which assembler to use from the list. If you do not use this argument then aTRAM will do a single blast run and stop before assembly.
 
@@ -102,7 +103,7 @@ Several arguments have synonyms, given below.
 * `-T SECONDS, --timeout SECONDS`
     * How many seconds to wait for an assembler before stopping the run. To wait forever set this to 0. The default is "300" (5 minutes). This option was added to account for assembler module errors we observed in Abyss when long reads are used; under certain conditions Abyss can rarely run indefinitely and must be killed.
 
-# Optional values for blast-filtering contigs:
+## Optional values for blast-filtering contigs:
 * `--bit-score SCORE`
     * Remove contigs that have a value less than this. The default is 70.0. This is turned off by the --no-filter argument. Increasing this arguement is useful if you are getting non-target contigs; if small or divergent targets are missed, reducing it can also be tried.
     
@@ -112,7 +113,7 @@ Several arguments have synonyms, given below.
 * `--no-filter`
     * Do not filter the assembled contigs. This will set both the --bit-score and --contig-length to 0
 
-# Optional blast arguments:
+## Optional blast arguments:
 * `--db-gencode CODE`     
     * The genetic code to use during blast runs. The default is "1", the standard eukaryotic code. For chloroplast, mitochondrial, and bacterial protein targets, refer to [NCBI codes](https://www.ncbi.nlm.nih.gov/Taxonomy/Utils/wprintgc.cgi#SG1) for the correct option.
     
@@ -151,7 +152,7 @@ optional assembler arguments:
     * Read coverage cutoff value (Spades). Must be a positive float value, or "auto", or "off". The default value is "off".
 
 
-## Example of running a shell loop
+# Example of running a shell loop
 In many cases it is convenient to run aTRAM 2 as a loop, assembling a set of genes for a set of taxa. These can be set up in two parts like so:
 
 ```
@@ -179,7 +180,7 @@ done
 done
 ```
 
-## Backwards compatibility
+# Backwards compatibility
 
 For any tools that depend on the output format of aTRAM 1.0, this script will perform the conversion of fasta headers:
 
