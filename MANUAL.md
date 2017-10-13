@@ -20,6 +20,7 @@ You should see something like `(venv)` at the beginning of your command prompt a
 
 ### Library Preparation
      ``` python atram_preprocessor.py -b mammal_uce AH7*.fastq ```
+
 ### Assembling Loci
 
 
@@ -37,6 +38,102 @@ URLs for software:
 * Trinity: http://trinityrnaseq.sourceforge.net
 * MAFFT: http://mafft.cbrc.jp/alignment/software/
 * MUSCLE: http://www.drive5.com/muscle/
+
+## Arguments
+Several arguments have synonyms, given below.
+
+* -h, --help
+    * List arguments
+    
+* --version            
+    * Give version number
+
+Required arguments:
+* `-b DB, --blast-db DB, --sra DB, --db DB, --database DB`
+    * The aTRAM library. match the name you gave for the library prefix in `atram_preprocessor.py`.
+
+* `-o OUTPUT, --output OUTPUT`
+    * Give a prefix for output files. You may include a directory path as part of the prefix.
+  
+* `-q QUERY, --query QUERY, --target QUERY`
+    * Path to the fasta file with sequences of interest. Not required if you specify `--start-iteration` to restart a run.
+
+optional aTRAM arguments:
+  -a {abyss,trinity,velvet,spades}, --assembler {abyss,trinity,velvet,spades}
+                        Which assembler to use. If you do not use this
+                        argument then aTRAM will do a single blast run and
+                        stop before assembly.
+  -i N, --iterations N  The number of pipeline iterations. The default is "5".
+  -p, --protein         Are the query sequences protein? aTRAM will guess if
+                        you skip this argument.
+  --fraction FRACTION   Use only the specified fraction of the aTRAM database.
+                        The default is "1.0"
+  --cpus CPUS, --processes CPUS, --max-processes CPUS
+                        Number of cpus to use. This will also be used for the
+                        assemblers when possible. Defaults to: Total CPUs - 4
+                        = "10"
+  --log-file LOG_FILE   Log file (full path). The default is to use the DIR
+                        and DB arguments to come up with a name like so:
+                        "DIR/DB_atram.log"
+  --path PATH           If the assembler or blast you want to use is not in
+                        your $PATH then use this to prepend directories to
+                        your path.
+  --start-iteration N, --restart N
+                        If resuming from a previous run, which iteration
+                        number to start from. The default is "1".
+  -t DIR, --temp-dir DIR
+                        You may save intermediate files for debugging in this
+                        directory. The directory must be empty.
+  -T SECONDS, --timeout SECONDS
+                        How many seconds to wait for an assembler before
+                        stopping the run. To wait forever set this to 0. The
+                        default is "300" (5 minutes).
+
+optional values for blast-filtering contigs:
+  --bit-score SCORE     Remove contigs that have a value less than this. The
+                        default is "70.0". This is turned off by the --no-
+                        filter argument.
+  --contig-length CONTIG_LENGTH, --length CONTIG_LENGTH
+                        Remove blast hits that are shorter than this length.
+                        The default is "100". This is turned off by the --no-
+                        filter argument.
+  --no-filter           Do not filter the assembled contigs. This will: set
+                        both the --bit-score and --contig-length to 0
+
+optional blast arguments:
+  --db-gencode CODE     The genetic code to use during blast runs. The default
+                        is "1".
+  --evalue EVALUE       The default evalue is "1e-10".
+  --max-target-seqs MAX
+                        Maximum hit sequences per shard. Default is calculated
+                        based on the available memory and the number of
+                        shards.
+
+optional assembler arguments:
+  --no-long-reads       Do not use long reads during assembly. (Abyss,
+                        Trinity, Velvet)
+  --kmer KMER           k-mer size. The default is "64" for Abyss and "31" for
+                        Velvet. Note: the maximum kmer length for Velvet is
+                        31. (Abyss, Velvet)
+  --mpi                 Use MPI for this assembler. The assembler must have
+                        been compiled to use MPI. (Abyss)
+  --bowtie2             Use bowtie2 during assembly. (Trinity)
+  --max-memory MEMORY   Maximum amount of memory to use in gigabytes. The
+                        default is "30". (Trinity, Spades)
+  --exp-coverage EXP_COVERAGE, --expected-coverage EXP_COVERAGE
+                        The expected coverage of the region. The default is
+                        "30". (Velvet)
+  --ins-length INS_LENGTH
+                        The size of the fragments used in the short-read
+                        library. The default is "300". (Velvet)
+  --min-contig-length MIN_CONTIG_LENGTH
+                        The minimum contig length used by the assembler
+                        itself. The default is "100". (Velvet)
+  --cov-cutoff COV_CUTOFF
+                        Read coverage cutoff value. Must be a positive float
+                        value, or "auto", or "off". The default is "off".
+                        (Spades)
+
 
 ## Example of running a shell loop
 
