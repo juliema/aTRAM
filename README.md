@@ -1,9 +1,6 @@
 # Manual for using aTRAM 2.0: automated Target Restricted Assembly Method
 
 # Background
-    1. What does it do?
-    2. How it works
-
 aTRAM 2.0 is a major overhaul of the aTRAM approach to assembling loci from NGS data. The new code has been reimplemented in python, and the approach to short read library construction is completely revamped, resulting in major performance and assembly improvements.
 
 aTRAM ("automated target restricted assembly method") is an iterative assembler that performs reference-guided local de novo assemblies using a variety of available methods. It is well-suited to various tasks where NGS data needs to be queried for gene sequences, such as phylogenomics. The design philosophy is modular and expandable, with support for four de-novo assemblers to date: Velvet, Abyss, Trinity, and Spades.
@@ -12,9 +9,6 @@ Cite like so:
 ```Allen, JM, DI Huang, QC Cronk, KP Johnson. 2015. aTRAM automated target restricted assembly method a fast method for assembling loci across divergent taxa from next-generation sequencing data. BMC Bioinformatics 16:98 DOI 10.1186/s12859-015-0515-2```
 
 # Installation
-     1. Python 3.0 or greater and a number of dependencies
-     2. Dependencies given in requirements.txt
-
 You will need to have Python3 installed, as well as pip, a package manager for python. Beyond these, it is easiest to handle aTRAM 2 dependencies by setting up a virtual environment, which is a contained workspace with internally installed python libraries. Run the following code in what you intend to be your working directory:
 
 ```
@@ -27,14 +21,13 @@ You should see something like `(venv)` at the beginning of your command prompt a
 
 If you choose not to use virtual environments, you will likely have to specify python3.
 
-URLs for software:
+You will need to install BLAST externally and have it in the path. You will also need one of the supported assembly modules. URLs are given below:
 
-* BLAST: http://blast.ncbi.nlm.nih.gov/Blast.cgi?PAGE_TYPE=BlastDocs&DOC_TYPE=Download
-* Velvet: https://www.ebi.ac.uk/~zerbino/velvet/
-* Trinity: http://trinityrnaseq.sourceforge.net
-* MAFFT: http://mafft.cbrc.jp/alignment/software/
-* MUSCLE: http://www.drive5.com/muscle/
-* Spades: http://bioinf.spbau.ru/spades
+* [BLAST](http://blast.ncbi.nlm.nih.gov/Blast.cgi?PAGE_TYPE=BlastDocs&DOC_TYPE=Download)
+* [Velvet](https://www.ebi.ac.uk/~zerbino/velvet/)
+* [Trinity](http://trinityrnaseq.sourceforge.net)
+* [Abyss](http://www.bcgsc.ca/platform/bioinfo/software/abyss)
+* [SPAdes](http://bioinf.spbau.ru/spades)
 
 # Library Preparation
 Use `atram_preprocessor.py` for this. You can either list the forward and reverse read files, or glob them with wildcards as below. Under the hood, aTRAM 2 is building a SQLite3 database for rapid read retrieval. Note that aTRAM 2 is not backwards compatible with aTRAM 1 libraries; it is also best to rebuild any libraries after major updates. 
