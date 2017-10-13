@@ -37,7 +37,7 @@ URLs for software:
 * Spades: http://bioinf.spbau.ru/spades
 
 ### Library Preparation
-Use atram_preprocessor.py for this. You can either list the forward and reverse read files, or glob them with wildcards as below. Under the hood, aTRAM 2 is building a SQLite3 database for rapid read retrieval. Note that aTRAM 2 is not backwards compatible with aTRAM 1 libraries; it is also best to rebuild any libraries after major updates. 
+Use `atram_preprocessor.py` for this. You can either list the forward and reverse read files, or glob them with wildcards as below. Under the hood, aTRAM 2 is building a SQLite3 database for rapid read retrieval. Note that aTRAM 2 is not backwards compatible with aTRAM 1 libraries; it is also best to rebuild any libraries after major updates. 
 
 ``` python path_to_aTRAM/atram_preprocessor.py -c NUMBER_OF_THREADS -b path_to_atram_library/LIBRARY_PREFIX READ_NAME*.fastq ```
   
@@ -61,7 +61,7 @@ Several arguments have synonyms, given below.
 * `--version`        
     * Give version number
 
-Required arguments:
+# Required arguments:
 * `-b DB, --blast-db DB, --sra DB, --db DB, --database DB`
     * The aTRAM library. match the name you gave for the library prefix in `atram_preprocessor.py`.
 
@@ -71,81 +71,84 @@ Required arguments:
 * `-q QUERY, --query QUERY, --target QUERY`
     * Path to the fasta file with sequences of interest. Not required if you specify `--start-iteration` to restart a run.
 
-optional aTRAM arguments:
-  -a {abyss,trinity,velvet,spades}, --assembler {abyss,trinity,velvet,spades}
-                        Which assembler to use. If you do not use this
-                        argument then aTRAM will do a single blast run and
-                        stop before assembly.
-  -i N, --iterations N  The number of pipeline iterations. The default is "5".
-  -p, --protein         Are the query sequences protein? aTRAM will guess if
-                        you skip this argument.
-  --fraction FRACTION   Use only the specified fraction of the aTRAM database.
-                        The default is "1.0"
-  --cpus CPUS, --processes CPUS, --max-processes CPUS
-                        Number of cpus to use. This will also be used for the
-                        assemblers when possible. Defaults to: Total CPUs - 4
-                        = "10"
-  --log-file LOG_FILE   Log file (full path). The default is to use the DIR
-                        and DB arguments to come up with a name like so:
-                        "DIR/DB_atram.log"
-  --path PATH           If the assembler or blast you want to use is not in
-                        your $PATH then use this to prepend directories to
-                        your path.
-  --start-iteration N, --restart N
-                        If resuming from a previous run, which iteration
-                        number to start from. The default is "1".
-  -t DIR, --temp-dir DIR
-                        You may save intermediate files for debugging in this
-                        directory. The directory must be empty.
-  -T SECONDS, --timeout SECONDS
-                        How many seconds to wait for an assembler before
-                        stopping the run. To wait forever set this to 0. The
-                        default is "300" (5 minutes).
+# Optional aTRAM arguments:
+* `a {abyss,trinity,velvet,spades}, --assembler {abyss,trinity,velvet,spades}`
+    * Choose which assembler to use from the list. If you do not use this argument then aTRAM will do a single blast run and stop before assembly.
 
-optional values for blast-filtering contigs:
-  --bit-score SCORE     Remove contigs that have a value less than this. The
-                        default is "70.0". This is turned off by the --no-
-                        filter argument.
-  --contig-length CONTIG_LENGTH, --length CONTIG_LENGTH
-                        Remove blast hits that are shorter than this length.
-                        The default is "100". This is turned off by the --no-
-                        filter argument.
-  --no-filter           Do not filter the assembled contigs. This will: set
-                        both the --bit-score and --contig-length to 0
+* `-i N, --iterations N`  
+    * The number of pipeline iterations. The default is "5".
 
-optional blast arguments:
-  --db-gencode CODE     The genetic code to use during blast runs. The default
-                        is "1".
-  --evalue EVALUE       The default evalue is "1e-10".
-  --max-target-seqs MAX
-                        Maximum hit sequences per shard. Default is calculated
-                        based on the available memory and the number of
-                        shards.
+* `-p, --protein`
+    * Are the query sequences protein? aTRAM will guess if you skip this argument.
+
+* `--fraction FRACTION`
+    * Use only the specified fraction of the aTRAM database. The default is to use all data (=1.0). This option is useful for very large datasets and for high-copy targets such as mitochondria.
+
+* `--cpus CPUS, --processes CPUS, --max-processes CPUS`
+    * Number of CPU threads to use. This will also be used for the assemblers when possible. Defaults to: Total system CPUs - 4
+
+* `--log-file LOG_FILE`   
+    * Specifies the full path of the log file (full path). The default is to use the DIR and DB arguments to come up with a name like so: `DIR/DB_atram.log`
+
+* `--path PATH
+    * If the assembler or BLAST dependencies you want to use are not in your $PATH then use this to prepend directories to your path.
+
+* `--start-iteration N, --restart N
+    * If resuming from a previous run, which iteration number to start from. The default is 1.
+
+* `-t DIR, --temp-dir DIR`
+    * You may save intermediate files for debugging in this directory. The directory must be empty. This option is useful for understanding exactly what aTRAM is coming up with at each step -- BLAST results, etc. These files are always made but by default not kept and handled as OS temporary files.
+
+* `-T SECONDS, --timeout SECONDS`
+    * How many seconds to wait for an assembler before stopping the run. To wait forever set this to 0. The default is "300" (5 minutes). This option was added to account for assembler module errors we observed in Abyss when long reads are used; under certain conditions Abyss can rarely run indefinitely and must be killed.
+
+# Optional values for blast-filtering contigs:
+* `--bit-score SCORE`
+    * Remove contigs that have a value less than this. The default is 70.0. This is turned off by the --no-filter argument. Increasing this arguement is useful if you are getting non-target contigs; if small or divergent targets are missed, reducing it can also be tried.
+    
+* `--contig-length CONTIG_LENGTH, --length CONTIG_LENGTH`
+    * Remove blast hits that are shorter than this length. The default is 100. This is turned off by the --no-filter argument.
+    
+* `--no-filter`
+    * Do not filter the assembled contigs. This will set both the --bit-score and --contig-length to 0
+
+# Optional blast arguments:
+* `--db-gencode CODE`     
+    * The genetic code to use during blast runs. The default is "1", the standard eukaryotic code. For chloroplast, mitochondrial, and bacterial protein targets, refer to [NCBI codes](https://www.ncbi.nlm.nih.gov/Taxonomy/Utils/wprintgc.cgi#SG1) for the correct option.
+    
+* `--evalue EVALUE`
+    * The default evalue for BLAST is 1e-10.
+
+* `--max-target-seqs MAX`
+    * Maximum hit sequences per shard. The default is calculated automatically based on the available memory and the number of shards. this could be useful for very high-copy targets.
 
 optional assembler arguments:
-  --no-long-reads       Do not use long reads during assembly. (Abyss,
-                        Trinity, Velvet)
-  --kmer KMER           k-mer size. The default is "64" for Abyss and "31" for
-                        Velvet. Note: the maximum kmer length for Velvet is
-                        31. (Abyss, Velvet)
-  --mpi                 Use MPI for this assembler. The assembler must have
-                        been compiled to use MPI. (Abyss)
-  --bowtie2             Use bowtie2 during assembly. (Trinity)
-  --max-memory MEMORY   Maximum amount of memory to use in gigabytes. The
-                        default is "30". (Trinity, Spades)
-  --exp-coverage EXP_COVERAGE, --expected-coverage EXP_COVERAGE
-                        The expected coverage of the region. The default is
-                        "30". (Velvet)
-  --ins-length INS_LENGTH
-                        The size of the fragments used in the short-read
-                        library. The default is "300". (Velvet)
-  --min-contig-length MIN_CONTIG_LENGTH
-                        The minimum contig length used by the assembler
-                        itself. The default is "100". (Velvet)
-  --cov-cutoff COV_CUTOFF
-                        Read coverage cutoff value. Must be a positive float
-                        value, or "auto", or "off". The default is "off".
-                        (Spades)
+* `--no-long-reads`
+    * Do not use long reads during assembly (Abyss, Trinity, Velvet). This controls behavior of a new option, where previously recovered contigs are used in assemblies as "long read data." If jobs do not finish due to assembly module problems, refer above to time limits on aTRAM runs.
+
+* `--kmer KMER`
+    * k-mer size. The default is 64 for Abyss and 31 for Velvet. Note: the maximum kmer length for Velvet is 31 (Abyss, Velvet).
+
+* `--mpi`
+    * Use MPI for this assembler. The assembler must have been compiled to use MPI (Abyss) and mpirun must be available in the path.
+    
+* `--bowtie2`
+    * Use bowtie2 during assembly (Trinity).
+    
+* `--max-memory MEMORY`
+    * Maximum amount of memory to use in gigabytes. The default is 30 (Trinity, Spades).
+    
+* `--exp-coverage EXP_COVERAGE, --expected-coverage EXP_COVERAGE`
+    * The expected coverage of the region. The default is 30 (Velvet). Refer to the Velvet manual for this option.
+
+* `--ins-length INS_LENGTH`
+    * The mean size of the fragments used in the short-read library. The default is 300 (Velvet). This can be calculated from short read data given a reference, or refer to your library construction solution.
+    
+* `--min-contig-length MIN_CONTIG_LENGTH`
+    * The minimum contig length used by the assembler itself. The default is 100 (Velvet).
+    
+* `--cov-cutoff COV_CUTOFF`
+    * Read coverage cutoff value (Spades). Must be a positive float value, or "auto", or "off". The default value is "off".
 
 
 ## Example of running a shell loop
