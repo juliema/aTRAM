@@ -90,10 +90,10 @@ Several arguments have synonyms, given below.
 * `--log-file LOG_FILE`   
     * Specifies the full path of the log file (full path). The default is to use the DIR and DB arguments to come up with a name like so: `DIR/DB_atram.log`
 
-* `--path PATH
+* `--path PATH`
     * If the assembler or BLAST dependencies you want to use are not in your $PATH then use this to prepend directories to your path.
 
-* `--start-iteration N, --restart N
+* `--start-iteration N, --restart N`
     * If resuming from a previous run, which iteration number to start from. The default is 1.
 
 * `-t DIR, --temp-dir DIR`
