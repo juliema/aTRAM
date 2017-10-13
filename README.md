@@ -40,7 +40,30 @@ URLs for software:
 Use `atram_preprocessor.py` for this. You can either list the forward and reverse read files, or glob them with wildcards as below. Under the hood, aTRAM 2 is building a SQLite3 database for rapid read retrieval. Note that aTRAM 2 is not backwards compatible with aTRAM 1 libraries; it is also best to rebuild any libraries after major updates. 
 
 ``` python path_to_aTRAM/atram_preprocessor.py -c NUMBER_OF_THREADS -b path_to_atram_library/LIBRARY_PREFIX READ_NAME*.fastq ```
-  
+## Preprocessor arguments:
+* `-h, --help`
+    * List arguments
+    
+* `--version`        
+    * Give version number
+
+* `-b DB, --blast-db DB, --output DB, --db DB`
+    * This is the prefix of all of the blast database files so you can identify different blast database sets and so they can be stored together without resorting to subdirectories. You may include a directory as part of the prefix. The default is `./atram_2017-10-13`
+
+* `-c CPUS, --cpus CPUS, --processes CPUS, --max-processes CPUS`
+                        Number of cpus to use. Defaults to: Total CPUS - 4 =
+                        "36"
+
+* `-t DIR, --temp-dir DIR`
+    * You may save intermediate files for debugging in this directory. The directory must be empty. The default behavior is not to keep intermediate files and to handle them as OS temporary files.
+
+* `-l LOG_FILE, --log-file LOG_FILE`
+    * Log file (full path). The default is to use the DB and program name to come up with a name like so: `<DB>_atram_preprocessor.log`
+
+* `-s SHARDS, --shards SHARDS, --number SHARDS`
+    * Number of blast DB shards to create. The default is to have each shard contain roughly 250MB of sequence data. Since this parameter affects parallelization and I/O load, it may be worth experimenting with.
+
+ 
 # Assembling Loci
 ``` 
 python path_to_aTRAM/atram.py -b path_to_atram_library/LIBRARY_PREFIX -q path_to_reference_loci/Locus.fasta -i NUMBER_OF_ITERATIONS --cpus NUMBER_OF_THREADS  --kmer KMER_NUMBER -o path_to_output/LIBRARY_PREFIX.Locus.atram2.fasta --log-file path_to_output/LIBRARY_PREFIX.Locus.log -a ASSEMBLER_CHOICE
@@ -52,7 +75,7 @@ There are many more options than this, so for reference list them like so:
 
 ```python path_to_atram/atram.py -h```
 
-# Arguments
+# aTRAM main script arguments
 Several arguments have synonyms, given below.
 
 ## General:
