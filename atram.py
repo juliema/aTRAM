@@ -1,190 +1,186 @@
 """The aTRAM assembly program."""
 
-import os
 import re
-import sys
+import os
+from os.path import basename, splitext, join
+from shutil import which
 import argparse
 import textwrap
 import tempfile
-import datetime
-import subprocess
 import multiprocessing
 from Bio import SeqIO
 import lib.db as db
-import lib.bio as bio
 import lib.log as log
+import lib.bio as bio
+import lib.util as util
 import lib.blast as blast
-import lib.file_util as file_util
 import lib.assembler as assembly
 
 
-def main(args):
-    """Setup and run atram."""
-
-    log.setup(args)
-
-    all_shards = fraction_of_shards(args)
-
-    db_conn = db.connect(args.blast_db)
-
-    # Make sure the database version matches what we built it with
-    version = db.get_version(db_conn)
-    if version != db.VERSION:
-        log.fatal('The database was built with version {} but you are running '
-                  'version {}. You need to rebuild the atram database by '
-                  'running atram_preprocessor.py again.'.format(
-                      version, db.VERSION))
-
-    assembler = assembly.factory(args) if args.assembler else None
-    query = initialize_query(args, db_conn, assembler)
-
-    atram_loop(args, db_conn, assembler, query, all_shards)
-
-    if assembler:
-        output_assembly_results(args, db_conn)
-    else:
-        output_blast_only_results(args, db_conn)
-
-    db_conn.close()
+__all__ = ('assemble', )
 
 
-def atram_loop(args, db_conn, assembler, query, all_shards):
-    """The main program loop."""
+def assemble(args):
+    """Loop thru every blast/query pair and run an assembly for each one."""
+    queries = split_queries(args)
 
-    for iteration in range(args.start_iteration, args.iterations + 1):
-        log.info('aTRAM iteration %i' % iteration, line_break='')
+    for blast_db in args['blast_db']:
 
-        blast_query_against_all_sras(args, query, all_shards, iteration)
+        with db.connect(blast_db, check_version=True) as db_conn:
+            for query in queries:
 
-        # If we don't have an assembler then we just want the blast hits
-        if not args.assembler:
+                clean_database(db_conn)
+
+                log.setup(args['log_file'], blast_db, query)
+
+                assembler = assembly.factory(args, db_conn)
+
+                assembly_loop(assembler, blast_db, query)
+
+                assembler.write_final_output(blast_db, query)
+
+
+def assembly_loop(assembler, blast_db, query):
+    """Iterate the assembly processes."""
+    for iteration in range(1, assembler.args['iterations'] + 1):
+        log.info('aTRAM blast DB = "{}", query = "{}", iteration {}'.format(
+            blast_db, query, iteration))
+
+        assembler.initialize_iteration(blast_db, query, iteration)
+
+        os.makedirs(assembler.iter_dir(), exist_ok=True)
+
+        blast_query_against_all_shards(assembler)
+
+        if assembler.blast_only or assembler.no_blast_hits():
             break
 
-        # Exit if there are no blast hits
-        if not db.sra_blast_hits_count(db_conn, iteration):
-            log.info('No blast hits in iteration %i' % iteration)
+        assembler.write_input_files()
+
+        assembler.run()
+
+        if assembler.nothing_assembled():
             break
 
-        assembler.initialize_iteration(iteration)
+        high_score = filter_contigs(assembler)
 
-        assembler.write_input_files(db_conn)
+        count = assembler.assembled_contigs_count(high_score)
 
-        try:
-            log.info('Assembling shards with {}: iteration {}'.format(
-                args.assembler, iteration))
-            assembler.assemble()
-        except TimeoutError:
-            msg = 'Time ran out for the assembler after {} (HH:MM:SS)'.format(
-                datetime.timedelta(seconds=args.timeout))
-            log.fatal(msg)
-        except subprocess.CalledProcessError as cpe:
-            msg = 'The assembler failed with error: ' + str(cpe)
-            log.fatal(msg)
-
-        # Exit if nothing was assembled
-        if not os.path.exists(assembler.file['output']) \
-                or not os.path.getsize(assembler.file['output']):
-            log.info('No new assemblies in iteration %i' % iteration)
-            break
-
-        high_score = filter_contigs(args, db_conn, assembler, iteration)
-
-        count = db.assembled_contigs_count(
-            db_conn, iteration, args.bit_score, args.contig_length)
         if not count:
-            log.info(('No contigs had a bit score greater than {} and are at '
-                      'least {} long in iteration {}. The highest score for '
-                      'this iteration is {}').format(args.bit_score,
-                                                     args.contig_length,
-                                                     iteration,
-                                                     high_score))
             break
 
-        if count == db.iteration_overlap_count(
-                db_conn, iteration, args.bit_score, args.contig_length):
-            log.info('No new contigs were found in iteration %i' % iteration)
+        if assembler.no_new_contigs(count):
             break
 
-        query = create_queries_from_contigs(
-            db_conn, assembler, iteration, args.bit_score, args.contig_length)
+        query = create_query_from_contigs(assembler)
+
     else:
-        log.info('All iterations completed', line_break='')
+        log.info('All iterations completed')
 
 
-def initialize_query(args, db_conn, assembler):
-    """Get the first set of query sequences. Handle a restart of atram by
-    getting the data from the given iteration and setting up an input file.
+def split_queries(args):
     """
+    Create query target for every query and query-split file.
 
-    if args.start_iteration < 2:
-        db.create_sra_blast_hits_table(db_conn)
-        db.create_contig_blast_hits_table(db_conn)
-        db.create_assembled_contigs_table(db_conn)
-        query = args.query
-    else:
-        query = create_queries_from_contigs(db_conn,
-                                            assembler,
-                                            args.start_iteration - 1,
-                                            args.bit_score,
-                                            args.contig_length)
-
-    if os.path.getsize(query) < 10:
-        err = 'There are no sequences '
-        if args.start_iteration < 2:
-            err += 'in {}'.format(args.query)
-        else:
-            err += 'for starting iteration {}'.format(args.start_iteration)
-        log.fatal(err)
-
-    return query
-
-
-def fraction_of_shards(args):
-    """Get the fraction of shards to use. This is so that we can blast against
-    a portion of the blast DBs we build.
+    We put each query record into its own file for blast queries.
     """
+    queries = args['query'][:]
 
-    all_shards = blast.all_shard_paths(args.blast_db)
-    last_index = int(len(all_shards) * args.fraction)
+    if not args.get('query_split'):
+        return queries
 
+    path = join(args['temp_dir'], 'queries')
+    os.makedirs(path, exist_ok=True)
+
+    for query_path in args['query_split']:
+
+        query_name = splitext(basename(query_path))[0]
+
+        with open(query_path) as query_file:
+            for i, rec in enumerate(SeqIO.parse(query_file, 'fasta'), 1):
+
+                query_id = re.sub(r'\W+', '_', rec.id)
+
+                query_file = join(
+                    path,
+                    '{}_{}_{}.fasta'.format(query_name, query_id, i))
+
+                write_query_seq(query_file, rec.id, str(rec.seq))
+
+                queries.append(query_file)
+
+    return queries
+
+
+def write_query_seq(file_name, seq_id, seq):
+    """Write the sequence to a fasta file."""
+    with open(file_name, 'w') as query_file:
+        query_file.write('>{}\n'.format(seq_id))
+        query_file.write('{}\n'.format(seq))
+
+
+def clean_database(db_conn):
+    """Create database tables for an atram run."""
+    db.create_sra_blast_hits_table(db_conn)
+    db.create_contig_blast_hits_table(db_conn)
+    db.create_assembled_contigs_table(db_conn)
+
+
+def blast_query_against_all_shards(assembler):
+    """
+    Blast the query against the SRA databases.
+
+    We're using a map-reduce strategy here. We map the blasting of the query
+    sequences and reduce the output into one fasta file.
+    """
+    log.info('Blasting query against shards: iteration {}'.format(
+        assembler.state['iteration']))
+
+    all_shards = shard_fraction(assembler)
+
+    with multiprocessing.Pool(processes=assembler.args['cpus']) as pool:
+        results = [pool.apply_async(
+            blast_query_against_one_shard,
+            (assembler.args, assembler.simple_state(), shard))
+                   for shard in all_shards]  # noqa
+        _ = [result.get() for result in results]  # noqa
+
+
+def shard_fraction(assembler):
+    """
+    Get the shards we are using.
+
+    We may not want the entire DB for highly redundant libraries.
+    """
+    all_shards = blast.all_shard_paths(assembler.state['blast_db'])
+    last_index = int(len(all_shards) * assembler.args['fraction'])
     return all_shards[:last_index]
 
 
-def blast_query_against_all_sras(args, query, all_shards, iteration):
-    """Blast the queries against the SRA databases. We're using a
-    map-reduce strategy here. We map the blasting of the query sequences
-    and reduce the output into one fasta file.
+def blast_query_against_one_shard(args, state, shard):
     """
+    Blast the query against one blast DB shard.
 
-    log.info('Blasting query against shards: iteration %i' % iteration)
-
-    with multiprocessing.Pool(processes=args.cpus) as pool:
-        results = [pool.apply_async(
-            blast_query_against_sra,
-            (dict(vars(args)), shard_path, query, iteration))
-                   for shard_path in all_shards]
-        _ = [result.get() for result in results]
-
-
-def blast_query_against_sra(args, shard_path, query, iteration):
-    """Blast the query against one blast DB shard. Then write the results to
-    the database.
+    Then write the results to the database.
     """
-    # NOTE: Because this is called in a child process, the address space is not
-    # shared with the parent (caller) hence we cannot share object variables.
+    temp_dir = util.iter_dir(
+        args['temp_dir'],
+        state['blast_db'],
+        state['query_target'],
+        state['iteration'])
 
-    output_file = blast.output_file_name(
-        args['temp_dir'], shard_path, iteration)
+    output_file = blast.output_file_name(temp_dir, shard)
 
-    blast.against_sra(args, shard_path, query, output_file, iteration)
+    blast.against_sra(args, state, output_file, shard)
 
-    db_conn = db.connect(args['blast_db'])
+    db_conn = db.connect(state['blast_db'])
 
-    shard = os.path.basename(shard_path)
+    shard = basename(shard)
 
     batch = []
 
-    for hit in blast.hits(output_file):
+    hits = blast.hits(output_file)
+    for hit in hits:
         match = blast.PARSE_RESULTS.match(hit['title'])
         if match:
             seq_name = match.group(1)
@@ -192,64 +188,68 @@ def blast_query_against_sra(args, shard_path, query, iteration):
         else:
             seq_name = hit['title']
             seq_end = ''
-        batch.append((iteration, seq_end, seq_name, shard))
+        batch.append((state['iteration'], seq_end, seq_name, shard))
     db.insert_blast_hit_batch(db_conn, batch)
     db_conn.close()
 
 
-def output_blast_only_results(args, db_conn):
-    """Output this file if we are not assembling the contigs."""
-
-    log.info('Output blast only results')
-
-    file_name = file_util.output_file(args, 'blast_only.fasta')
-    with open(file_name, 'w') as out_file:
-        for row in db.get_sra_blast_hits(db_conn, 1):
-            out_file.write('>{}{}\n'.format(row['seq_name'], row['seq_end']))
-            out_file.write('{}\n'.format(row['seq']))
-
-
-def filter_contigs(args, db_conn, assembler, iteration):
+def filter_contigs(assembler):
     """Remove junk from the assembled contigs."""
+    log.info('Saving assembled contigs: iteration {}'.format(
+        assembler.state['iteration']))
 
-    log.info('Saving assembled contigs: iteration %i' % iteration)
+    blast_db = blast.temp_db_name(
+        assembler.iter_dir(), assembler.state['blast_db'])
 
-    blast_db = blast.temp_db_name(args.temp_dir, args.blast_db, iteration)
-    hits_file = blast.output_file_name(args.temp_dir, args.blast_db, iteration)
+    hits_file = blast.output_file_name(
+        assembler.iter_dir(), assembler.state['blast_db'])
 
-    blast.create_db(args.temp_dir, assembler.file['output'], blast_db)
+    blast.create_db(
+        assembler.iter_dir(), assembler.file['output'], blast_db)
 
-    blast.against_contigs(args, blast_db, args.query, hits_file)
+    blast.against_contigs(
+        blast_db,
+        assembler.state['query_target'],
+        hits_file,
+        protein=assembler.args['protein'],
+        db_gencode=assembler.args['db_gencode'],
+        temp_dir=assembler.args['temp_dir'])
 
-    save_blast_against_contigs(db_conn, assembler, hits_file, iteration)
+    save_blast_against_contigs(assembler, hits_file)
 
     all_hits = {row['contig_id']: row
                 for row
-                in db.get_contig_blast_hits(db_conn, iteration)}
+                in db.get_contig_blast_hits(
+                    assembler.state['db_conn'],
+                    assembler.state['iteration'])}
 
-    return save_contigs(db_conn, all_hits, assembler, iteration)
+    return save_contigs(assembler, all_hits)
 
 
-def save_blast_against_contigs(db_conn, assembler, hits_file, iteration):
+def save_blast_against_contigs(assembler, hits_file):
     """Save all of the blast hits."""
-
     batch = []
 
     for hit in blast.hits(hits_file):
         contig_id = assembler.parse_contig_id(hit['title'])
-        batch.append((iteration, contig_id, hit['title'],
-                      hit['bit_score'], hit['len'],
-                      hit['query_from'], hit['query_to'],
-                      hit.get('query_strand', ''),
-                      hit['hit_from'], hit['hit_to'],
-                      hit.get('hit_strand', '')))
+        batch.append((
+            assembler.state['iteration'],
+            contig_id,
+            hit['title'],
+            hit['bit_score'],
+            hit['len'],
+            hit['query_from'],
+            hit['query_to'],
+            hit.get('query_strand', ''),
+            hit['hit_from'],
+            hit['hit_to'],
+            hit.get('hit_strand', '')))
 
-    db.insert_contig_hit_batch(db_conn, batch)
+    db.insert_contig_hit_batch(assembler.state['db_conn'], batch)
 
 
-def save_contigs(db_conn, all_hits, assembler, iteration):
+def save_contigs(assembler, all_hits):
     """Save the contigs to the database."""
-
     batch = []
     high_score = 0
     with open(assembler.file['output']) as in_file:
@@ -258,151 +258,202 @@ def save_contigs(db_conn, all_hits, assembler, iteration):
             if contig_id in all_hits:
                 hit = all_hits[contig_id]
                 batch.append((
-                    iteration, contig.id, str(contig.seq), contig.description,
-                    hit['bit_score'], hit['len'],
-                    hit['query_from'], hit['query_to'], hit['query_strand'],
-                    hit['hit_from'], hit['hit_to'], hit['hit_strand']))
-    db.insert_assembled_contigs_batch(db_conn, batch)
+                    assembler.state['iteration'],
+                    contig.id,
+                    str(contig.seq),
+                    contig.description,
+                    hit['bit_score'],
+                    hit['len'],
+                    hit['query_from'],
+                    hit['query_to'],
+                    hit['query_strand'],
+                    hit['hit_from'],
+                    hit['hit_to'],
+                    hit['hit_strand']))
+    db.insert_assembled_contigs_batch(assembler.state['db_conn'], batch)
 
     return high_score
 
 
-def create_queries_from_contigs(
-        db_conn, assembler, iteration, bit_score, length):
-    """Crate a new file with the contigs that will be used as the
-    next query query.
-    """
+def create_query_from_contigs(assembler):
+    """Crate a new file with the contigs used as the next query."""
+    log.info('Creating new query files: iteration {}'.format(
+        assembler.state['iteration']))
 
-    log.info('Creating new query files: iteration %i' % iteration)
-
-    query = assembler.path('long_reads.fasta')
+    query = assembler.iter_file('long_reads.fasta')
     assembler.file['long_reads'] = query
 
     with open(query, 'w') as query_file:
         for row in db.get_assembled_contigs(
-                db_conn, iteration, bit_score, length):
+                assembler.state['db_conn'],
+                assembler.state['iteration'],
+                assembler.args['bit_score'],
+                assembler.args['contig_length']):
             query_file.write('>{}\n'.format(row[0]))
             query_file.write('{}\n'.format(row[1]))
 
     return query
 
 
-def output_assembly_results(args, db_conn):
-    """Write the assembled contigs to a fasta file."""
-
-    if not args.no_filter:
-        file_name = file_util.output_file(args, 'filtered_contigs.fasta')
-        with open(file_name, 'w') as out_file:
-            for row in db.get_all_assembled_contigs(
-                    db_conn, args.bit_score, args.contig_length):
-                output_one_assembly(out_file, row)
-
-    file_name = file_util.output_file(args, 'all_contigs.fasta')
-    with open(file_name, 'w') as out_file:
-        for row in db.get_all_assembled_contigs(db_conn):
-            output_one_assembly(out_file, row)
-
-
-def output_one_assembly(out_file, row):
-    """Write an assembly to the output fasta file."""
-
-    seq = row['seq']
-    suffix = ''
-    if row['query_strand'] and row['hit_strand'] and \
-            row['query_strand'] != row['hit_strand']:
-        seq = bio.reverse_complement(seq)
-        suffix = '_REV'
-
-    header = ('>{}_{}{} iteration={} contig_id={} '
-              'score={}\n').format(
-                  row['iteration'], row['contig_id'], suffix,
-                  row['iteration'], row['contig_id'], row['bit_score'])
-    out_file.write(header)
-    out_file.write('{}\n'.format(seq))
-
-
-def parse_command_line(temp_dir):
+def parse_command_line(temp_dir_default):
     """Process command-line arguments."""
-
     description = """
-        This is the aTRAM script. It takes a query sequence and
-        a set of blast databases built with the atram_preprocessor.py script
-        and builds an assembly.
-        """
+        This is the aTRAM script. It takes a query sequence and a blast
+        database built with the atram_preprocessor.py script and builds an
+        assembly.
 
+        If you specify more than one query sequence and/or more than one blast
+        database then aTRAM will build one assembly for each query/blast
+        DB pair.
+
+        NOTE: You may use a text file to hold the command-line arguments
+        like: @/path/to/args.txt. This is particularly useful when specifying
+        multiple blast databases or multiple query sequences.
+        """
     parser = argparse.ArgumentParser(
+        fromfile_prefix_chars='@',
         formatter_class=argparse.RawDescriptionHelpFormatter,
         description=textwrap.dedent(description))
 
     parser.add_argument('--version', action='version',
-                        version='%(prog)s {}'.format(db.VERSION))
+                        version='%(prog)s {}'.format(db.ATRAM_VERSION))
 
-    required_args(parser)
-    optional_args(parser)
-    filter_args(parser)
+    required_command_line_args(parser)
+    optional_command_line_args(parser)
+    filter_command_line_args(parser)
     blast.command_line_args(parser)
     assembly.command_line_args(parser)
 
-    args = parser.parse_args()
+    args = vars(parser.parse_args())
 
-    check_required_args(args)
-    check_optional_args(args)
-    check_filter_args(args)
-    blast.check_command_line_args(args, temp_dir)
-    assembly.check_command_line_args(args)
+    # Check query arguments
+    if not args['query'] and not args['query_split']:
+        err = 'You must have at least one --query or --query-split argument.'
+        log.fatal(err)
 
-    file_util.find_programs(args)
+    # Set defaults and adjust arguments based on other arguments
+    args['cov_cutoff'] = assembly.default_cov_cutoff(args['cov_cutoff'])
+    args['blast_db'] = blast.touchup_blast_db_names(args['blast_db'])
+    args['kmer'] = assembly.default_kmer(args['kmer'], args['assembler'])
+    args['max_target_seqs'] = blast.default_max_target_seqs(
+        args['max_target_seqs'], args['blast_db'], args['max_memory'])
+
+    # Setup temp dir
+    if not args['temp_dir']:
+        args['temp_dir'] = temp_dir_default
+    else:
+        os.makedirs(args['temp_dir'], exist_ok=True)
+
+    if args['no_filter']:
+        args['bit_score'] = 0
+        args['contig_length'] = 0
+
+    if not args['protein']:
+        args['protein'] = bio.fasta_file_has_protein(args['query'])
+
+    # Prepend to PATH environment variable if requested
+    if args['path']:
+        os.environ['PATH'] = '{}:{}'.format(args['path'], os.environ['PATH'])
+
+    find_programs(args['assembler'], args['no_long_reads'], args['bowtie2'])
 
     return args
 
 
-def required_args(parser):
-    """Add required arguments to the parser."""
+def find_programs(assembler, no_long_reads, bowtie2):
+    """Make sure we can find the programs needed by the assembler and blast."""
+    if not (which('makeblastdb') and which('tblastn') and which('blastn')):
+        err = ('We could not find the programs "makeblastdb", "tblastn", or '
+               '"blastn". You either need to install them or you need adjust '
+               'the PATH environment variable with the "--path" option so '
+               'that aTRAM can find it.')
+        log.fatal(err)
 
+    if assembler == 'abyss' and not which('abyss-pe'):
+        err = ('We could not find the "abyss-pe" program. You either need to '
+               'install it or you need to adjust the PATH environment '
+               'variable with the "--path" option so that aTRAM can find it.')
+        log.fatal(err)
+
+    if assembler == 'abyss' and not no_long_reads and not which('bwa'):
+        err = ('We could not find the "bwa-mem" program. You either need to '
+               'install it, adjust the PATH environment variable '
+               'with the "--path" option, or you may use the '
+               '"--no-long-reads" option to not use this program.')
+        log.fatal(err)
+
+    if assembler == 'trinity' and not which('Trinity'):
+        err = ('We could not find the "Trinity" program. You either need to '
+               'install it or you need to adjust the PATH environment '
+               'variable with the "--path" option so that aTRAM can find it.')
+        log.fatal(err)
+
+    if assembler == 'trinity' and bowtie2 and not which('bowtie2'):
+        err = ('We could not find the "bowtie2" program. You either need to '
+               'install it, adjust the PATH environment variable '
+               'with the "--path" option, or you may skip using this program '
+               'by not using the "--bowtie2" option.')
+        log.fatal(err)
+
+    if assembler == 'velvet' and not (which('velveth') and which('velvetg')):
+        err = ('We could not find either the "velveth" or "velvetg" program. '
+               'You either need to install it or you need to adjust the PATH '
+               'environment variable with the "--path" option so that aTRAM '
+               'can find it.')
+        log.fatal(err)
+
+    if assembler == 'spades' and not which('spades.py'):
+        err = ('We could not find the "Spades" program. You either need to '
+               'install it or you need to adjust the PATH environment '
+               'variable with the "--path" option so that aTRAM can find it.')
+        log.fatal(err)
+
+
+def required_command_line_args(parser):
+    """Add required arguments to the parser."""
     group = parser.add_argument_group('required arguments')
 
     group.add_argument('-b', '--blast-db', '--sra', '--db', '--database',
-                       required=True, metavar='DB',
+                       required=True, metavar='DB', nargs='+',
                        help='''This needs to match the DB prefix you
-                            entered for atram_preprocessor.py.''')
+                            entered for atram_preprocessor.py. You may repeat
+                            this argument to run the --query sequence(s)
+                            against multiple blast databases.''')
 
-    group.add_argument('-o', '--output', required=True,
+    group.add_argument('-q', '--query', '--target', '--probe',
+                       required=False, nargs='+',
+                       help='''The path to the fasta file with sequences of
+                            interest. You may repeat this argument. If you do
+                            then Each --query sequence  file will be run
+                            against every --blast-db.''')
+
+    group.add_argument('-Q', '--query-split', '--target-split',
+                       required=False, nargs='+',
+                       help='''The path to the fasta file with multiple
+                            sequences of interest. This will take every
+                            sequence in the fasta file and treat it as if it
+                            were its own --query argument. So every sequence in
+                            --query-split will be run against every --blast-db.
+                            ''')
+
+    group.add_argument('-o', '--output-prefix', required=True,
                        help='''This is the prefix of all of the output files.
                             So you can identify different blast output file
                             sets. You may include a directory as part of the
-                            prefix.''')
-
-    group.add_argument('-q', '--query', '--target',
-                       help='''The path to the fasta file with sequences of
-                            interest. Required unless you specify a
-                            "--start-iteration".''')
+                            prefix. aTRAM will add suffixes to differentiate
+                            ouput files.''')
 
 
-def check_required_args(args):
-    """Make sure required arguments are reasonable."""
-
-    # Touch up blast DB name
-    pattern = (r'^ (.*?)'
-               r'(  \.atram(_preprocessor)?\.log'
-               r' | \.blast_\d{3}\.(nhr|nin|nsq)'
-               r' | \.sqlite\.db  )?$')
-    args.blast_db = re.sub(pattern, r'\1', args.blast_db, re.I | re.X)
-
-    # Check query
-    if not args.query and not args.start_iteration:
-        log.fatal('We need a "--query" sequence.')
-
-
-def optional_args(parser):
+def optional_command_line_args(parser):
     """Add optional atram arguments to the parser."""
-
     group = parser.add_argument_group('optional aTRAM arguments')
 
-    group.add_argument('-a', '--assembler',
-                       choices=['abyss', 'trinity', 'velvet', 'spades'],
-                       help='''Which assembler to use. If you do not use this
-                            argument then aTRAM will do a single blast run
-                            and stop before assembly.''')
+    group.add_argument('-a', '--assembler', default='none',
+                       choices=['abyss', 'trinity', 'velvet', 'spades',
+                                'none'],
+                       help='''Which assembler to use. Choosing "none" (the
+                            default) will do a single blast run and stop before
+                            any assembly.''')
 
     group.add_argument('-i', '--iterations', type=int, default=5, metavar='N',
                        help='''The number of pipeline iterations.
@@ -424,19 +475,15 @@ def optional_args(parser):
                             Total CPUs - 4 = "{}"'''.format(cpus))
 
     group.add_argument('--log-file',
-                       help='''Log file (full path). The default is to use the
-                            DIR and DB arguments to come up with a name like
-                            so: "DIR/DB_atram.log"''')
+                       help='''Log file (full path)."''')
 
     group.add_argument('--path',
                        help='''If the assembler or blast you want to use is not
                             in your $PATH then use this to prepend
                             directories to your path.''')
 
-    group.add_argument('--start-iteration', '--restart',
-                       type=int, default=1, metavar='N',
-                       help='''If resuming from a previous run, which iteration
-                            number to start from. The default is "1".''')
+    # group.add_argument('--restart', type='store_true',
+    #                    help='''Use this to resume from a previous run.''')
 
     group.add_argument('-t', '--temp-dir', metavar='DIR',
                        help='''You may save intermediate files for debugging
@@ -449,31 +496,15 @@ def optional_args(parser):
                             The default is "300" (5 minutes).''')
 
 
-def check_optional_args(args):
-    """Make sure optional atram arguments are reasonable."""
-
-    # Set default log file name
-    if not args.log_file:
-        args.log_file = '{}.{}.log'.format(
-            args.blast_db, os.path.basename(sys.argv[0][:-3]))
-
-    # If not --protein then probe to see if it's a protein seq
-    if not args.protein:
-        with open(args.query) as in_file:
-            for query in SeqIO.parse(in_file, 'fasta'):
-                if bio.is_protein(str(query.seq)):
-                    args.protein = True
-
-    # Prepend to PATH environment variable if requested
-    if args.path:
-        os.environ['PATH'] = '{}:{}'.format(args.path, os.environ['PATH'])
-
-
-def filter_args(parser):
+def filter_command_line_args(parser):
     """Add optional values for blast-filtering contigs to the parser."""
-
     group = parser.add_argument_group(
         'optional values for blast-filtering contigs')
+
+    group.add_argument('--no-filter', action='store_true',
+                       help='''Do not filter the assembled contigs. This will:
+                            set both the --bit-score and --contig-length
+                            to 0''')
 
     group.add_argument('--bit-score', type=float, default=70.0,
                        metavar='SCORE',
@@ -486,22 +517,9 @@ def filter_args(parser):
                             length. The default is "100". This is turned
                             off by the --no-filter argument.''')
 
-    group.add_argument('--no-filter', action='store_true',
-                       help='''Do not filter the assembled contigs. This will:
-                            set both the --bit-score and --contig-length
-                            to 0''')
-
-
-def check_filter_args(args):
-    """Make sure the optional blast filter arguments are reasonable."""
-
-    if args.no_filter:
-        args.bit_score = 0
-        args.contig_length = 0
-
 
 if __name__ == '__main__':
 
-    with tempfile.TemporaryDirectory(prefix='atram_') as TEMP_DIR:
-        ARGS = parse_command_line(TEMP_DIR)
-        main(ARGS)
+    with tempfile.TemporaryDirectory(prefix='atram_') as TEMP_DIR_DEFAULT:
+        ARGS = parse_command_line(TEMP_DIR_DEFAULT)
+        assemble(ARGS)

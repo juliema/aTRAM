@@ -1,15 +1,25 @@
+*.DS_Store
+*.pyc
+*.swp
 __pycache__
-requirements_dev.txt
-config.txt
-venv
-data*
+
+venv*
 temp*
 junk*
-input*
-output*
-target*
-probe*
-query*
-db*
+input/
+output/
+query/
+db/
+perl/
+log/
+old/
+admin/
+
+# test-related
+.coverage
+.cache
+.hypothesis
+
+# developer environments
 .idea
-!db.py
+.vscode
