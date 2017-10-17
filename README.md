@@ -12,9 +12,10 @@ Cite like so:
 You will need to have Python3 installed, as well as pip, a package manager for python. Beyond these, it is easiest to handle aTRAM 2 dependencies by setting up a virtual environment, which is a contained workspace with internally installed python libraries. Run the following code in what you intend to be your working directory:
 
 ```
+cd path/to/atram
 virtualenv venv -p python3
 source venv/bin/activate
-pip install -r path_to_atram/requirements.txt 
+pip install -r requirements.txt 
 ```
 
 You should see something like `(venv)` at the beginning of your command prompt after running the second line, indicating the environment is active. Once you have verified that the requirements installed with no errors, only the second line needs to be run before each aTRAM 2 session.
