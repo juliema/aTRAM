@@ -21,7 +21,6 @@ def connect(blast_db, bulk_mode=False, check_version=False):
         db_conn.execute("PRAGMA busy_timeout = 10000")
         db_conn.execute("PRAGMA journal_mode = OFF")
         db_conn.execute("PRAGMA synchronous = OFF")
-        db_conn.execute("PRAGMA locking_mode = EXCLUSIVE")
 
     if check_version:
         check_versions(db_conn)  # Make sure the database versions match
