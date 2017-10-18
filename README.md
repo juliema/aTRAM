@@ -45,8 +45,7 @@ Use `atram_preprocessor.py` for this. You can either list the forward and revers
     * This is the prefix of all of the blast database files so you can identify different blast database sets and so they can be stored together without resorting to subdirectories. You may include a directory as part of the prefix. The default is `./atram_2017-10-13`
 
 * `-c CPUS, --cpus CPUS, --processes CPUS, --max-processes CPUS`
-                        Number of cpus to use. Defaults to: Total CPUS - 4 =
-                        "36"
+                        Number of cpus to use. Defaults to: Total CPUS - 4
 
 * `-t DIR, --temp-dir DIR`
     * You may save intermediate files for debugging in this directory. The directory must be empty. The default behavior is not to keep intermediate files and to handle them as OS temporary files.
