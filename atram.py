@@ -470,9 +470,10 @@ def optional_command_line_args(parser):
     cpus = min(10, os.cpu_count() - 4 if os.cpu_count() > 4 else 1)
     group.add_argument('--cpus', '--processes', '--max-processes',
                        type=int, default=cpus,
-                       help='''Number of cpus to use. This will also be used
-                            for the assemblers when possible. Defaults to:
-                            Total CPUs - 4 = "{}"'''.format(cpus))
+                       help='''Number of CPU threads to use. This will also be
+                            used for the assemblers when possible. Defaults to:
+                            Total system CPUs - 4.
+                            On this machine ("{}")'''.format(cpus))
 
     group.add_argument('--log-file',
                        help='''Log file (full path)."''')
