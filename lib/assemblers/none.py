@@ -1,6 +1,5 @@
 """Null object for the assemblers."""
 
-from os.path import join
 import lib.db as db
 from lib.assemblers.base import BaseAssembler
 
