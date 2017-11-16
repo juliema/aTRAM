@@ -309,6 +309,10 @@ def parse_command_line(temp_dir_default):
 
     args = vars(parser.parse_args())
 
+    # Prepend to PATH environment variable if requested
+    if args['path']:
+        os.environ['PATH'] = '{}:{}'.format(args['path'], os.environ['PATH'])
+
     # Setup temp dir
     if not args['temp_dir']:
         args['temp_dir'] = temp_dir_default
