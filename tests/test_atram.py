@@ -25,12 +25,13 @@ class TestAtram(unittest.TestCase):
 
     @patch('lib.assembler.factory')
     @patch('lib.db.connect')
+    @patch('lib.db.aux_db')
     @patch('lib.log.setup')
     @patch('atram.split_queries')
     @patch('atram.clean_database')
     @patch('atram.assembly_loop')
     def test_assemble(self, assembly_loop, clean_database, split_queries,
-                      setup, connect, factory):
+                      setup, aux_db, connect, factory):
         connect.return_value.__enter__ = lambda x: 'my_db'
         self.assembler.write_final_output = MagicMock()
         split_queries.return_value = self.args['query']
@@ -53,6 +54,13 @@ class TestAtram(unittest.TestCase):
         log_file = self.args['log_file']
         blast_db = self.args['blast_db']
         query = self.args['query']
+
+        calls = [
+            call('my_db', self.args['temp_dir'], blast_db[0], query[0]),
+            call('my_db', self.args['temp_dir'], blast_db[0], query[1]),
+            call('my_db', self.args['temp_dir'], blast_db[1], query[0]),
+            call('my_db', self.args['temp_dir'], blast_db[1], query[1])]
+        aux_db.assert_has_calls(calls)
 
         calls = [
             call(log_file, blast_db[0], query[0]),
