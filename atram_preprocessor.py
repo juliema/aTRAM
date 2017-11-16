@@ -302,6 +302,11 @@ def parse_command_line(temp_dir_default):
                             The default is to have each shard contain
                             roughly 250MB of sequence data.''')
 
+    group.add_argument('--path',
+                       help='''If blast or makeblastdb is not in your $PATH
+                            then use this to prepend directories to your
+                            path.''')
+
     args = vars(parser.parse_args())
 
     # Setup temp dir

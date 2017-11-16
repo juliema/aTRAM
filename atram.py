@@ -28,7 +28,7 @@ def assemble(args):
 
         with db.connect(blast_db, check_version=True) as db_conn:
             for query in queries:
-
+                db.aux_db(db_conn, args['temp_dir'], blast_db, query)
                 clean_database(db_conn)
 
                 log.setup(args['log_file'], blast_db, query)
@@ -173,24 +173,28 @@ def blast_query_against_one_shard(args, state, shard):
 
     blast.against_sra(args, state, output_file, shard)
 
-    db_conn = db.connect(state['blast_db'])
+    with db.connect(state['blast_db']) as db_conn:
+        db.aux_db(
+            db_conn,
+            args['temp_dir'],
+            state['blast_db'],
+            state['query_target'])
 
-    shard = basename(shard)
+        shard = basename(shard)
 
-    batch = []
+        batch = []
 
-    hits = blast.hits(output_file)
-    for hit in hits:
-        match = blast.PARSE_RESULTS.match(hit['title'])
-        if match:
-            seq_name = match.group(1)
-            seq_end = match.group(2)
-        else:
-            seq_name = hit['title']
-            seq_end = ''
-        batch.append((state['iteration'], seq_end, seq_name, shard))
-    db.insert_blast_hit_batch(db_conn, batch)
-    db_conn.close()
+        hits = blast.hits(output_file)
+        for hit in hits:
+            match = blast.PARSE_RESULTS.match(hit['title'])
+            if match:
+                seq_name = match.group(1)
+                seq_end = match.group(2)
+            else:
+                seq_name = hit['title']
+                seq_end = ''
+            batch.append((state['iteration'], seq_end, seq_name, shard))
+        db.insert_blast_hit_batch(db_conn, batch)
 
 
 def filter_contigs(assembler):
@@ -482,9 +486,6 @@ def optional_command_line_args(parser):
                        help='''If the assembler or blast you want to use is not
                             in your $PATH then use this to prepend
                             directories to your path.''')
-
-    # group.add_argument('--restart', type='store_true',
-    #                    help='''Use this to resume from a previous run.''')
 
     group.add_argument('-t', '--temp-dir', metavar='DIR',
                        help='''You may save intermediate files for debugging
