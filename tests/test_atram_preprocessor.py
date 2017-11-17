@@ -46,7 +46,7 @@ class TestAtramPreprocessor(unittest.TestCase):
             self.args['log_file'], self.args['blast_db'])
 
         calls = [
-            call(self.args['blast_db'], bulk_mode=True),
+            call(self.args['blast_db'], bulk_mode=True, clean=True),
             call().__exit__(None, None, None)]
         connect.assert_has_calls(calls)
 
@@ -77,7 +77,7 @@ class TestAtramPreprocessor(unittest.TestCase):
                 ('seq2', '1', 'AAAAAAAAAAGGGGGGGGGG'),
                 ('seq3', '1', 'AAAAAAAAAA'),
                 ('seq4', '1', 'AAAAAAAAAA'),
-                ('seq5', '', 'AAAAAAAAAAGGGGGGGGGG')]),
+                ('seq5/3', '', 'AAAAAAAAAAGGGGGGGGGG')]),
             call(self.db_conn, [
                 ('seq1', '2', 'AAAAAAAAAA'),
                 ('seq2', '2', 'AAAAAAAAAAGGGGGGGGGG'),
@@ -100,7 +100,7 @@ class TestAtramPreprocessor(unittest.TestCase):
             call(self.db_conn, [
                 ('seq6', '1', 'TTTTTTTTTT'),
                 ('seq7', '1', 'TTTTTTTTTTCCCCCCCCCC'),
-                ('seq8', '', 'TTTTTTTTTT'),
+                ('seq8/a.1 suffix', '', 'TTTTTTTTTT'),
                 ('seq8', '2', 'TTTTTTTTTTCCCCCCCCCC')])]
         insert_sequences_batch.assert_has_calls(calls)
 
@@ -113,16 +113,17 @@ class TestAtramPreprocessor(unittest.TestCase):
         get_sequence_count.return_value = 100
         get_shard_cut_pair.side_effect = [('seq1', 'seq2'), ('seq3', 'seq3')]
 
-        # We are breaking the database into three shards. The endpoints and lengths
-        # of the shards will be adjusted based upon where pairs of sequences call.
+        # We are breaking the database into three shards. The endpoints and
+        # lengths of the shards will be adjusted based upon where pairs of
+        # sequences call.
         shard_list = atram_preprocessor.assign_seqs_to_shards(True, 3)
 
         # A list of pairs of (LIMIT, OFFSET) for queries that build shards
         # The LIMIT/lengths are calculated from current & previous offsets
         # The OFFSET will depend on what is returned from get_shard_cut_pair
         #   1) The first pair always has offset 0
-        #   2) Because the sequences for the first pair are different the offset
-        #      will be pushed forward one from 33 to 34
+        #   2) Because the sequences for the first pair are different the
+        #      offset will be pushed forward one from 33 to 34
         #   3) Because the sequences are the same the offset will stay at 66.
 
         assert [(34, 0), (32, 34), (34, 66)] == shard_list

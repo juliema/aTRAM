@@ -61,11 +61,11 @@ def load_one_file(db_conn, file_name, seq_end_clamp=''):
         batch = []
 
         for rec in parser(sra_file):
-            title = rec[0]
+            title = rec[0].strip()
             seq = rec[1]
 
             match = blast.PARSE_HEADER.match(title)
-            if match:
+            if match.group(2):
                 seq_name = match.group(1)
                 seq_end = match.group(2)
             else:

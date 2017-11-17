@@ -2,7 +2,7 @@
 
 import sqlite3
 import os
-from os.path import basename, join
+from os.path import basename, join, exists
 import lib.log as log
 
 
@@ -16,7 +16,7 @@ def connect(blast_db, bulk_mode=False, check_version=False, clean=False):
     """Create DB connection."""
     db_name = '{}.sqlite.db'.format(blast_db)
 
-    if clean:
+    if clean and exists(db_name):
         os.remove(db_name)
 
     db_conn = sqlite3.connect(db_name)
@@ -43,7 +43,8 @@ def aux_db(db_conn, temp_dir, blast_db, query_name):
         basename(blast_db), basename(query_name))
     db_name = join(db_dir, db_name)
 
-    os.remove(db_name)
+    if exists(db_name):
+        os.remove(db_name)
 
     sql = """ATTACH DATABASE '{}' AS aux""".format(db_name)
     db_conn.execute(sql)
