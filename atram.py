@@ -370,7 +370,7 @@ def find_programs(assembler, no_long_reads, bowtie2):
         err = ('We could not find the programs "makeblastdb", "tblastn", or '
                '"blastn". You either need to install them or you need adjust '
                'the PATH environment variable with the "--path" option so '
-               'that aTRAM can find it.')
+               'that aTRAM can find them.')
         log.fatal(err)
 
     if assembler == 'abyss' and not which('abyss-pe'):

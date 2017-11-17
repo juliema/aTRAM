@@ -12,9 +12,12 @@ DB_VERSION = '2.0'
 BATCH_SIZE = 1e6  # How many sequence records to insert at a time
 
 
-def connect(blast_db, bulk_mode=False, check_version=False):
+def connect(blast_db, bulk_mode=False, check_version=False, clean=False):
     """Create DB connection."""
     db_name = '{}.sqlite.db'.format(blast_db)
+
+    if clean:
+        os.remove(db_name)
 
     db_conn = sqlite3.connect(db_name)
 
@@ -39,6 +42,8 @@ def aux_db(db_conn, temp_dir, blast_db, query_name):
     db_name = '{}_{}_temp.sqlite.db'.format(
         basename(blast_db), basename(query_name))
     db_name = join(db_dir, db_name)
+
+    os.remove(db_name)
 
     sql = """ATTACH DATABASE '{}' AS aux""".format(db_name)
     db_conn.execute(sql)
