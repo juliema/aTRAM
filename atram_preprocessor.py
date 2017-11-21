@@ -11,8 +11,11 @@ import argparse
 import textwrap
 import tempfile
 import multiprocessing
+from shutil import which
 from datetime import date
 import numpy as np
+from Bio.SeqIO.QualityIO import FastqGeneralIterator
+from Bio.SeqIO.FastaIO import SimpleFastaParser
 import lib.db as db
 import lib.log as log
 import lib.blast as blast
@@ -24,7 +27,7 @@ def preprocess(args):
     """Run the preprocessor."""
     log.setup(args['log_file'], args['blast_db'])
 
-    with db.connect(args['blast_db'], bulk_mode=True) as db_conn:
+    with db.connect(args['blast_db'], bulk_mode=True, clean=True) as db_conn:
         db.create_metadata_table(db_conn)
 
         db.create_sequences_table(db_conn)
@@ -48,67 +51,33 @@ def load_seqs(args, db_conn):
                 load_one_file(db_conn, file_name, clamp)
 
 
-def load_one_file(db_conn, file_name, seq_end_clamp=None):
+def load_one_file(db_conn, file_name, seq_end_clamp=''):
     """Load sequences from a fasta/fastq file into the atram database."""
-    # A hand rolled version of "Bio.SeqIO". It's faster because we can take
-    # shortcuts due to its limited functionality.
-
-    # We're using a very simple state machine on lines to do the parsing.
-    #     1) header      (exactly 1 line)  Starts with a '>' or an '@'
-    #     2) sequence    (1 or more lines) Starts with a letter
-    #     3) fastq stuff (0 or more lines) Starts with a '+' on the 1st line
-    #     4) Either go back to 1 or end
     log.info('Loading "{}" into sqlite database'.format(file_name))
 
+    is_fastq = file_name.lower().endswith('q')
+    parser = FastqGeneralIterator if is_fastq else SimpleFastaParser
+
     with open(file_name) as sra_file:
-        batch = []      # The batch of records to insert
+        batch = []
 
-        seq = []        # It will become the sequence string. A DB field
-        seq_end = ''    # Which end? 1 or 2. A DB field
-        seq_name = ''   # Name from the fasta file. A DB field
-        is_seq = True   # The state machine's only flag for state
+        for rec in parser(sra_file):
+            title = rec[0].strip()
+            seq = rec[1]
 
-        for line in sra_file:
+            match = blast.PARSE_HEADER.match(title)
+            if match.group(2):
+                seq_name = match.group(1)
+                seq_end = match.group(2)
+            else:
+                seq_name = title
+                seq_end = seq_end_clamp
 
-            # Skip blank lines
-            if not line:
-                pass
-
-            # Handle a header line
-            elif line[0] in ['>', '@']:
-                if seq:  # Append last record to the batch?
-                    batch.append((seq_name, seq_end, ''.join(seq)))
-
-                seq = []        # Reset the sequence
-                is_seq = True   # Reset the state flag
-
-                # Get data from the header
-                match = blast.PARSE_HEADER.match(line)
-                seq_name = match.group(1) if match else line[1:].strip()
-
-                # Sequence end either equals its clamp value or we get it
-                # from the header line
-                end = match.group(2)
-                if seq_end_clamp is None:
-                    seq_end = end if end else ''
-                else:
-                    seq_end = end if end else seq_end_clamp
-                    # seq_end = seq_end_clamp
-
-            # Handle fastq stuff, so skip these lines
-            elif line[0] == '+':
-                is_seq = False
-
-            # Handle sequence lines
-            elif line[0].isalpha() and is_seq:
-                seq.append(line.rstrip())
+            batch.append((seq_name, seq_end, seq))
 
             if len(batch) >= db.BATCH_SIZE:
                 db.insert_sequences_batch(db_conn, batch)
                 batch = []
-
-        if seq:
-            batch.append((seq_name, seq_end, ''.join(seq)))
 
         db.insert_sequences_batch(db_conn, batch)
 
@@ -122,7 +91,7 @@ def assign_seqs_to_shards(db_conn, shard_count):
     both ends (1 & 2) wind up in the same shard.
 
     What we do is look at two sequence names at the shard boundary. If they are
-    the same then the chard boundary is fine where it is. But if they are
+    the same then the shard boundary is fine where it is. But if they are
     different then the second sequence is either the start of a sequence pair
     or a singleton so we can safely start the shard at the second sequence.
 
@@ -259,14 +228,6 @@ def parse_command_line(temp_dir_default):
                              format. You may enter more than one file or you
                              may use wildcards.''')
 
-    # parser.add_argument('--single-ends', '-S', metavar='FASTA', nargs='+',
-    #                     help='''Sequence read archive files that have only
-    #                          unpaired sequences. Any sequence end suffixes
-    #                          will
-    #                          be ignored. The files are in fasta or fastq
-    #                          format. You may enter more than one file or you
-    #                          may use wildcards.''')
-
     parser.add_argument('--version', action='version',
                         version='%(prog)s {}'.format(db.ATRAM_VERSION))
 
@@ -303,7 +264,16 @@ def parse_command_line(temp_dir_default):
                             The default is to have each shard contain
                             roughly 250MB of sequence data.''')
 
+    group.add_argument('--path',
+                       help='''If blast or makeblastdb is not in your $PATH
+                            then use this to prepend directories to your
+                            path.''')
+
     args = vars(parser.parse_args())
+
+    # Prepend to PATH environment variable if requested
+    if args['path']:
+        os.environ['PATH'] = '{}:{}'.format(args['path'], os.environ['PATH'])
 
     # Setup temp dir
     if not args['temp_dir']:
@@ -321,7 +291,18 @@ def parse_command_line(temp_dir_default):
 
     blast.make_blast_output_dir(args['blast_db'])
 
+    find_programs()
+
     return args
+
+
+def find_programs():
+    """Make sure we can find the programs needed by the assembler and blast."""
+    if not which('makeblastdb'):
+        err = ('We could not find the programs "makeblastdb". You either need '
+               'to install it or you need adjust the PATH environment '
+               'variable with the "--path" option so that aTRAM can find it.')
+        log.fatal(err)
 
 
 if __name__ == '__main__':

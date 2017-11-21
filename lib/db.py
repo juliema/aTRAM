@@ -1,7 +1,10 @@
 """Handle database functions."""
 
 import sqlite3
+import os
+from os.path import basename, join, exists
 import lib.log as log
+
 
 ATRAM_VERSION = '2.0'
 DB_VERSION = '2.0'
@@ -9,9 +12,12 @@ DB_VERSION = '2.0'
 BATCH_SIZE = 1e6  # How many sequence records to insert at a time
 
 
-def connect(blast_db, bulk_mode=False, check_version=False):
+def connect(blast_db, bulk_mode=False, check_version=False, clean=False):
     """Create DB connection."""
     db_name = '{}.sqlite.db'.format(blast_db)
+
+    if clean and exists(db_name):
+        os.remove(db_name)
 
     db_conn = sqlite3.connect(db_name)
 
@@ -28,8 +34,23 @@ def connect(blast_db, bulk_mode=False, check_version=False):
     return db_conn
 
 
-# ########################### misc functions #################################
+def aux_db(db_conn, temp_dir, blast_db, query_name):
+    """Create & attach an temporary database to the current DB connection."""
+    db_dir = join(temp_dir, 'db')
+    os.makedirs(db_dir, exist_ok=True)
 
+    db_name = '{}_{}_temp.sqlite.db'.format(
+        basename(blast_db), basename(query_name))
+    db_name = join(db_dir, db_name)
+
+    if exists(db_name):
+        os.remove(db_name)
+
+    sql = """ATTACH DATABASE '{}' AS aux""".format(db_name)
+    db_conn.execute(sql)
+
+
+# ########################### misc functions #################################
 # DB_VERSION != version in DB. Don't force DB changes until required. So
 # this version will tend to lag ATRAM_VERSION.
 
@@ -75,7 +96,6 @@ def get_version(db_conn):
 
 def create_sequences_table(db_conn):
     """Create the sequence table."""
-    db_conn.execute('''DROP INDEX IF EXISTS seq_names''')
     db_conn.execute('''DROP TABLE IF EXISTS sequences''')
     sql = 'CREATE TABLE sequences (seq_name TEXT, seq_end TEXT, seq TEXT)'
     db_conn.execute(sql)
@@ -139,16 +159,15 @@ def create_sra_blast_hits_table(db_conn):
 
     Delete the tables and recreate them.
     """
-    db_conn.execute('''DROP INDEX IF EXISTS sra_blast_hits_index''')
-    db_conn.execute('''DROP TABLE IF EXISTS sra_blast_hits''')
+    db_conn.execute('''DROP TABLE IF EXISTS aux.sra_blast_hits''')
     sql = '''
-        CREATE TABLE sra_blast_hits
+        CREATE TABLE aux.sra_blast_hits
                    (iteration INTEGER, seq_name TEXT, seq_end TEXT, shard TEXT)
         '''
     db_conn.execute(sql)
 
     sql = '''
-        CREATE INDEX sra_blast_hits_index
+        CREATE INDEX aux.sra_blast_hits_index
                   ON sra_blast_hits (iteration, seq_name, seq_end)
         '''
     db_conn.execute(sql)
@@ -158,7 +177,7 @@ def insert_blast_hit_batch(db_conn, batch):
     """Insert a batch of blast hit records into the database."""
     if batch:
         sql = '''
-            INSERT INTO sra_blast_hits
+            INSERT INTO aux.sra_blast_hits
                         (iteration, seq_end, seq_name, shard)
                         VALUES (?, ?, ?, ?)
             '''
@@ -170,7 +189,7 @@ def sra_blast_hits_count(db_conn, iteration):
     """Count the blast hist for select the iteration."""
     sql = '''
         SELECT COUNT(*) AS count
-          FROM sra_blast_hits
+          FROM aux.sra_blast_hits
          WHERE iteration = ?
         '''
 
@@ -184,7 +203,7 @@ def get_sra_blast_hits(db_conn, iteration):
         SELECT seq_name, seq_end, seq
           FROM sequences
          WHERE seq_name IN (SELECT DISTINCT seq_name
-                              FROM sra_blast_hits
+                              FROM aux.sra_blast_hits
                              WHERE iteration = ?)
       ORDER BY seq_name, seq_end
         '''
@@ -201,7 +220,7 @@ def get_blast_hits_by_end_count(db_conn, iteration, end_count):
          WHERE seq_name IN (SELECT seq_name
                               FROM sequences
                              WHERE seq_name IN (SELECT DISTINCT seq_name
-                                                  FROM sra_blast_hits
+                                                  FROM aux.sra_blast_hits
                                                  WHERE iteration = ?)
                           GROUP BY seq_name
                             HAVING COUNT(*) = ?)
@@ -216,10 +235,9 @@ def get_blast_hits_by_end_count(db_conn, iteration, end_count):
 
 def create_contig_blast_hits_table(db_conn):
     """Reset the database. Delete the tables and recreate them."""
-    db_conn.execute('''DROP INDEX IF EXISTS contig_blast_hits_index''')
-    db_conn.execute('''DROP TABLE IF EXISTS contig_blast_hits''')
+    db_conn.execute('''DROP TABLE IF EXISTS aux.contig_blast_hits''')
     sql = '''
-        CREATE TABLE contig_blast_hits
+        CREATE TABLE aux.contig_blast_hits
                      (iteration INTEGER, contig_id TEXT, description TEXT,
                       bit_score NUMERIC, len INTEGER,
                       query_from INTEGER, query_to INTEGER, query_strand TEXT,
@@ -228,7 +246,7 @@ def create_contig_blast_hits_table(db_conn):
     db_conn.execute(sql)
 
     sql = '''
-        CREATE INDEX contig_blast_hits_index
+        CREATE INDEX aux.contig_blast_hits_index
                   ON contig_blast_hits (iteration, bit_score, len)
         '''
     db_conn.execute(sql)
@@ -238,7 +256,7 @@ def insert_contig_hit_batch(db_conn, batch):
     """Insert a batch of blast hit records into the database."""
     if batch:
         sql = '''
-            INSERT INTO contig_blast_hits
+            INSERT INTO aux.contig_blast_hits
                         (iteration, contig_id, description, bit_score, len,
                          query_from, query_to, query_strand,
                          hit_from, hit_to, hit_strand)
@@ -254,7 +272,7 @@ def get_contig_blast_hits(db_conn, iteration):
         SELECT iteration, contig_id, description, bit_score, len,
                query_from, query_to, query_strand,
                hit_from, hit_to, hit_strand
-          FROM contig_blast_hits
+          FROM aux.contig_blast_hits
          WHERE iteration = ?
         '''
 
@@ -266,10 +284,9 @@ def get_contig_blast_hits(db_conn, iteration):
 
 def create_assembled_contigs_table(db_conn):
     """Reset the database. Delete the tables and recreate them."""
-    db_conn.execute('''DROP INDEX IF EXISTS assembled_contigs_index''')
-    db_conn.execute('''DROP TABLE IF EXISTS assembled_contigs''')
+    db_conn.execute('''DROP TABLE IF EXISTS aux.assembled_contigs''')
     sql = '''
-        CREATE TABLE assembled_contigs
+        CREATE TABLE aux.assembled_contigs
                      (iteration INTEGER, contig_id TEXT, seq TEXT,
                       description TEXT, bit_score NUMERIC, len INTEGER,
                       query_from INTEGER, query_to INTEGER, query_strand TEXT,
@@ -278,7 +295,7 @@ def create_assembled_contigs_table(db_conn):
     db_conn.execute(sql)
 
     sql = '''
-        CREATE INDEX assembled_contigs_index
+        CREATE INDEX aux.assembled_contigs_index
                   ON assembled_contigs (iteration, contig_id)
         '''
     db_conn.execute(sql)
@@ -288,7 +305,7 @@ def assembled_contigs_count(db_conn, iteration, bit_score, length):
     """Count the blast hist for the iteration."""
     sql = '''
         SELECT COUNT(*) AS count
-          FROM assembled_contigs
+          FROM aux.assembled_contigs
          WHERE iteration = ?
            AND bit_score >= ?
            AND len >= ?
@@ -302,8 +319,8 @@ def iteration_overlap_count(db_conn, iteration, bit_score, length):
     """Count how many assembled contigs match what's in the last iteration."""
     sql = '''
         SELECT COUNT(*) AS overlap
-          FROM assembled_contigs AS curr_iter
-          JOIN assembled_contigs AS prev_iter
+          FROM aux.assembled_contigs AS curr_iter
+          JOIN aux.assembled_contigs AS prev_iter
             ON (     curr_iter.contig_id = prev_iter.contig_id
                  AND curr_iter.iteration = prev_iter.iteration + 1)
          WHERE curr_iter.iteration = ?
@@ -321,7 +338,7 @@ def insert_assembled_contigs_batch(db_conn, batch):
     """Insert a batch of blast hit records into the database."""
     if batch:
         sql = '''
-            INSERT INTO assembled_contigs
+            INSERT INTO aux.assembled_contigs
                         (iteration, contig_id, seq, description,
                          bit_score, len,
                          query_from, query_to, query_strand,
@@ -339,7 +356,7 @@ def get_assembled_contigs(db_conn, iteration, bit_score, length):
     """
     sql = '''
         SELECT contig_id, seq
-          FROM assembled_contigs
+          FROM aux.assembled_contigs
          WHERE iteration = ?
            AND bit_score >= ?
            AND len >= ?
@@ -353,7 +370,7 @@ def get_all_assembled_contigs(db_conn, bit_score=0, length=0):
         SELECT iteration, contig_id, seq, description, bit_score, len,
                query_from, query_to, query_strand,
                hit_from, hit_to, hit_strand
-          FROM assembled_contigs
+          FROM aux.assembled_contigs
          WHERE bit_score >= ?
            AND len >= ?
       ORDER BY bit_score DESC, iteration

@@ -1,6 +1,5 @@
 """Null object for the assemblers."""
 
-from os.path import join
 import lib.db as db
 from lib.assemblers.base import BaseAssembler
 
@@ -18,7 +17,7 @@ class NoneAssembler(BaseAssembler):
         """Output this file if we are not assembling the contigs."""
         prefix = self.final_output_prefix(blast_db, query)
 
-        file_name = join(prefix, 'blast_only.fasta')
+        file_name = '{}.fasta'.format(prefix)
 
         with open(file_name, 'w') as output_file:
             for row in db.get_sra_blast_hits(self.state['db_conn'], 1):

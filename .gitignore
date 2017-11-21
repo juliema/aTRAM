@@ -3,9 +3,9 @@
 *.swp
 __pycache__
 
-venv*
+venv/*
 temp*
-junk*
+junk.*
 input/
 output/
 query/
@@ -14,13 +14,11 @@ perl/
 log/
 old/
 admin/
-data/
 
-# test-related
 .coverage
 .cache
 .hypothesis
 
-# developer environments
 .idea
 .vscode
+.ropeproject/

@@ -4,7 +4,7 @@ TTTTTTTTTT
 TTTTTTTTTT
 CCCCCCCCCC
 
-@seq8/a.1 suffix
+>seq8/a.1 suffix
 
 TTTTTTTTTT
 
