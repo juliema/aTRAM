@@ -34,7 +34,8 @@ def preprocess(args):
         db.create_sequences_index(db_conn)
 
         shard_list = assign_seqs_to_shards(db_conn, args['shard_count'])
-        create_all_blast_shards(args, shard_list)
+
+    create_all_blast_shards(args, shard_list)
 
 
 def load_seqs(args, db_conn):
