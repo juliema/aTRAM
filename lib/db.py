@@ -12,7 +12,7 @@ DB_VERSION = '2.0'
 BATCH_SIZE = 1e6  # How many sequence records to insert at a time
 
 
-def connect(blast_db, bulk_mode=False, check_version=False, clean=False):
+def connect(blast_db, check_version=False, clean=False):
     """Create DB connection."""
     db_name = '{}.sqlite.db'.format(blast_db)
 
@@ -22,14 +22,12 @@ def connect(blast_db, bulk_mode=False, check_version=False, clean=False):
     db_conn = sqlite3.connect(db_name)
 
     db_conn.execute("PRAGMA page_size = {}".format(2**16))
-
-    if bulk_mode:
-        db_conn.execute("PRAGMA busy_timeout = 10000")
-        db_conn.execute("PRAGMA journal_mode = OFF")
-        db_conn.execute("PRAGMA synchronous = OFF")
+    db_conn.execute("PRAGMA busy_timeout = 10000")
+    db_conn.execute("PRAGMA journal_mode = OFF")
+    db_conn.execute("PRAGMA synchronous = OFF")
 
     if check_version:
-        check_versions(db_conn)  # Make sure the database versions match
+        check_versions(db_conn)
 
     return db_conn
 
@@ -126,30 +124,23 @@ def get_sequence_count(db_conn):
     return result.fetchone()[0]
 
 
-def get_shard_cut_pair(db_conn, offset):
-    """Get the first two sequences at the given offset.
-
-    This is used for calculating where to cut-off a shard in the table. We want
-    the shard to contain both paired ends of a sequence.
-    """
-    sql = 'SELECT seq_name FROM sequences ORDER BY seq_name LIMIT 2 OFFSET {}'
+def get_shard_cut(db_conn, offset):
+    """Get the sequence name at the given offset."""
+    sql = 'SELECT seq_name FROM sequences ORDER BY seq_name LIMIT 1 OFFSET {}'
     result = db_conn.execute(sql.format(offset))
-    first = result.fetchone()[0]
-    second = result.fetchone()[0]
-    return first, second
+    cut = result.fetchone()[0]
+    return cut
 
 
-def get_sequences_in_shard(db_conn, limit, offset):
+def get_sequences_in_shard(db_conn, start, end):
     """Get all sequences in a shard."""
     sql = '''
         SELECT seq_name, seq_end, seq
           FROM sequences
-         ORDER BY seq_name
-         LIMIT {} OFFSET {}
+         WHERE seq_name >= ?
+           AND seq_name < ?
         '''
-    sql = sql.format(limit, offset)
-
-    return db_conn.execute(sql)
+    return db_conn.execute(sql, (start, end))
 
 
 # ######################## sra_blast_hits table ###############################

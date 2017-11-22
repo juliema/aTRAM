@@ -46,7 +46,7 @@ class TestAtramPreprocessor(unittest.TestCase):
             self.args['log_file'], self.args['blast_db'])
 
         calls = [
-            call(self.args['blast_db'], bulk_mode=True, clean=True),
+            call(self.args['blast_db'], clean=True),
             call().__exit__(None, None, None)]
         connect.assert_has_calls(calls)
 
@@ -106,27 +106,19 @@ class TestAtramPreprocessor(unittest.TestCase):
 
     @patch('lib.log.info')
     @patch('lib.db.get_sequence_count')
-    @patch('lib.db.get_shard_cut_pair')
+    @patch('lib.db.get_shard_cut')
     def test_assign_seqs_to_shards(
-            self, get_shard_cut_pair, get_sequence_count, info):
+            self, get_shard_cut, get_sequence_count, info):
 
         get_sequence_count.return_value = 100
-        get_shard_cut_pair.side_effect = [('seq1', 'seq2'), ('seq3', 'seq3')]
+        get_shard_cut.side_effect = ['seq1', 'seq2', 'seq3', 'seq4']
 
-        # We are breaking the database into three shards. The endpoints and
-        # lengths of the shards will be adjusted based upon where pairs of
-        # sequences call.
         shard_list = atram_preprocessor.assign_seqs_to_shards(True, 3)
 
-        # A list of pairs of (LIMIT, OFFSET) for queries that build shards
-        # The LIMIT/lengths are calculated from current & previous offsets
-        # The OFFSET will depend on what is returned from get_shard_cut_pair
-        #   1) The first pair always has offset 0
-        #   2) Because the sequences for the first pair are different the
-        #      offset will be pushed forward one from 33 to 34
-        #   3) Because the sequences are the same the offset will stay at 66.
-
-        assert [(34, 0), (32, 34), (34, 66)] == shard_list
+        assert [
+            ('seq1', 'seq2'),
+            ('seq2', 'seq3'),
+            ('seq3', 'seq4z')] == shard_list
 
         msg = 'Assigning sequences to shards'
         info.assert_called_once_with(msg)

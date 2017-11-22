@@ -27,7 +27,7 @@ def preprocess(args):
     """Run the preprocessor."""
     log.setup(args['log_file'], args['blast_db'])
 
-    with db.connect(args['blast_db'], bulk_mode=True, clean=True) as db_conn:
+    with db.connect(args['blast_db'], clean=True) as db_conn:
         db.create_metadata_table(db_conn)
 
         db.create_sequences_table(db_conn)
@@ -83,44 +83,20 @@ def load_one_file(db_conn, file_name, seq_end_clamp=''):
 
 
 def assign_seqs_to_shards(db_conn, shard_count):
-    """
-    Assign sequences to blast DB shards.
-
-    We are dividing all of the input sequences into shard_count buckets of
-    sequences. If there are two ends of a sequence we have to make sure that
-    both ends (1 & 2) wind up in the same shard.
-
-    What we do is look at two sequence names at the shard boundary. If they are
-    the same then the shard boundary is fine where it is. But if they are
-    different then the second sequence is either the start of a sequence pair
-    or a singleton so we can safely start the shard at the second sequence.
-
-    Note: This will only work for sequence pairs. Which is all we care about.
-    """
+    """Assign sequences to blast DB shards."""
     log.info('Assigning sequences to shards')
 
     total = db.get_sequence_count(db_conn)
+    offsets = np.linspace(0, total - 1, dtype=int, num=shard_count + 1)
+    cuts = [db.get_shard_cut(db_conn, offset) for offset in offsets]
 
-    # This creates a list of roughly equal partition indexes
-    offsets = np.linspace(0, total, dtype=int, num=shard_count + 1)
+    # Make sure the last sequence gets included
+    cuts[-1] = cuts[-1] + 'z'
 
-    # Checking to make sure we don't split up the ends of a sequence
-    for i in range(1, len(offsets) - 1):
+    # Now organize the list into pairs of sequence names
+    pairs = [(cuts[i - 1], cuts[i]) for i in range(1, len(cuts))]
 
-        # Get the first two sequences of a possible partition
-        first, second = db.get_shard_cut_pair(db_conn, offsets[i])
-
-        # If both have the same name then both sequences will be in the
-        # same partition and we're done. If they have different names then
-        # we know that second sequence either starts a new pair or is a
-        # singleton, so we can safely start the partition at the second one
-        if first != second:
-            offsets[i] += 1
-
-    # Get the length of each partition
-    limits = [offsets[i + 1] - offsets[i] for i in range(len(offsets) - 1)]
-
-    return list(zip(limits, offsets[:-1]))
+    return pairs
 
 
 def create_all_blast_shards(args, shard_list):
