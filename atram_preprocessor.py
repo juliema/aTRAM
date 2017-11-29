@@ -278,7 +278,7 @@ def find_programs():
         err = ('We could not find the programs "makeblastdb". You either need '
                'to install it or you need adjust the PATH environment '
                'variable with the "--path" option so that aTRAM can find it.')
-        log.fatal(err)
+        sys.exit(err)
 
 
 if __name__ == '__main__':

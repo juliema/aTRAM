@@ -2,6 +2,7 @@
 
 import re
 import os
+import sys
 from os.path import basename, splitext, join
 from shutil import which
 import argparse
@@ -371,46 +372,46 @@ def find_programs(assembler, no_long_reads, bowtie2):
                '"blastn". You either need to install them or you need adjust '
                'the PATH environment variable with the "--path" option so '
                'that aTRAM can find them.')
-        log.fatal(err)
+        sys.exit(err)
 
     if assembler == 'abyss' and not which('abyss-pe'):
         err = ('We could not find the "abyss-pe" program. You either need to '
                'install it or you need to adjust the PATH environment '
                'variable with the "--path" option so that aTRAM can find it.')
-        log.fatal(err)
+        sys.exit(err)
 
     if assembler == 'abyss' and not no_long_reads and not which('bwa'):
         err = ('We could not find the "bwa-mem" program. You either need to '
                'install it, adjust the PATH environment variable '
                'with the "--path" option, or you may use the '
                '"--no-long-reads" option to not use this program.')
-        log.fatal(err)
+        sys.exit(err)
 
     if assembler == 'trinity' and not which('Trinity'):
         err = ('We could not find the "Trinity" program. You either need to '
                'install it or you need to adjust the PATH environment '
                'variable with the "--path" option so that aTRAM can find it.')
-        log.fatal(err)
+        sys.exit(err)
 
     if assembler == 'trinity' and bowtie2 and not which('bowtie2'):
         err = ('We could not find the "bowtie2" program. You either need to '
                'install it, adjust the PATH environment variable '
                'with the "--path" option, or you may skip using this program '
                'by not using the "--bowtie2" option.')
-        log.fatal(err)
+        sys.exit(err)
 
     if assembler == 'velvet' and not (which('velveth') and which('velvetg')):
         err = ('We could not find either the "velveth" or "velvetg" program. '
                'You either need to install it or you need to adjust the PATH '
                'environment variable with the "--path" option so that aTRAM '
                'can find it.')
-        log.fatal(err)
+        sys.exit(err)
 
     if assembler == 'spades' and not which('spades.py'):
         err = ('We could not find the "Spades" program. You either need to '
                'install it or you need to adjust the PATH environment '
                'variable with the "--path" option so that aTRAM can find it.')
-        log.fatal(err)
+        sys.exit(err)
 
 
 def required_command_line_args(parser):
