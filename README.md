@@ -207,3 +207,9 @@ done
 ```
 
 For the [exon stitching pipeline](https://github.com/juliema/exon_stitching), output files from aTRAM 2.0 must additionally be named like so: `libraryname_locusname.best.fasta`. If both this and the fasta header conversion are performed, any previously used tools should work.
+
+# Testing suite
+
+For a new aTRAM install, it may be desirable to make sure the install resulted in a fully functional aTRAM. End users can activate our testing suite by running this command in the aTRAM directory:
+
+```pytest tests```
