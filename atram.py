@@ -2,8 +2,8 @@
 
 import re
 import os
-import sys
 from os.path import basename, splitext, join
+import sys
 from shutil import which
 import argparse
 import textwrap
@@ -476,9 +476,8 @@ def optional_command_line_args(parser):
     group.add_argument('--cpus', '--processes', '--max-processes',
                        type=int, default=cpus,
                        help='''Number of CPU threads to use. This will also be
-                            used for the assemblers when possible. Defaults to:
-                            Total system CPUs - 4.
-                            On this machine ("{}")'''.format(cpus))
+                            used for the assemblers when possible. On this
+                            machine the default is ("{}")'''.format(cpus))
 
     group.add_argument('--log-file',
                        help='''Log file (full path)."''')
