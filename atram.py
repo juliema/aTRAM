@@ -1,8 +1,8 @@
 """The aTRAM assembly program."""
 
 import re
-import os
 import sys
+import os
 from os.path import basename, splitext, join
 from shutil import which
 import argparse
