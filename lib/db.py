@@ -62,7 +62,8 @@ def check_versions(db_conn):
 # ########################## metadata table ##################################
 
 def create_metadata_table(db_conn):
-    """Create the metadata table.
+    """
+    Create the metadata table.
 
     A single record used to tell if we are running atram.py against the
     schema version we built with atram_preprocessor.py.
@@ -97,7 +98,8 @@ def create_sequences_table(db_conn):
 
 
 def create_sequences_index(db_conn):
-    """Create the sequences index after we build the table.
+    """
+    Create the sequences index after we build the table.
 
     This speeds up the program significantly.
     """
@@ -143,7 +145,8 @@ def get_sequences_in_shard(db_conn, start, end):
 # ######################## sra_blast_hits table ###############################
 
 def create_sra_blast_hits_table(db_conn):
-    """Reset the DB.
+    """
+    Reset the DB.
 
     Delete the tables and recreate them.
     """
@@ -338,7 +341,8 @@ def insert_assembled_contigs_batch(db_conn, batch):
 
 
 def get_assembled_contigs(db_conn, iteration, bit_score, length):
-    """Get all assembled contigs for the iteration.
+    """
+    Get all assembled contigs for the iteration.
 
     We will use them as the queries in the next atram iteration.
     """

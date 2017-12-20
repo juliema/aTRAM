@@ -95,11 +95,23 @@ def temp_db_name(temp_dir, blast_db):
 
 def hits(json_file):
     """Extract the blast hits from the blast json output file."""
+    hits_list = []
+
     with open(json_file) as blast_file:
         raw = blast_file.read()
-        obj = json.loads(raw)
 
-    hits_list = []
+        # Allow empty results
+        if not raw:
+            return []
+
+        # Do not allow bad json
+        try:
+            obj = json.loads(raw)
+        except json.decoder.JSONDecodeError:
+            err = ('Blast output is not in JSON format. '
+                   'You may need to upgrade blast.')
+            log.fatal(err)
+
     raw_hits = obj['BlastOutput2'][0]['report']['results']['search'].get(
         'hits', [])
 

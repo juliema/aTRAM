@@ -14,7 +14,8 @@ class TrinityAssembler(BaseAssembler):
         self.steps = [self.trinity]
 
     def work_path(self):
-        """Create output directory name.
+        """
+        Create output directory name.
 
         It has has unique requirements.
         """

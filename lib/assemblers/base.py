@@ -28,7 +28,8 @@ class BaseAssembler:
             'db_conn': db_conn}  # Save the DB connection
 
     def initialize_iteration(self, blast_db, query_file, iteration):
-        """Make file names used by the assembler.
+        """
+        Make file names used by the assembler.
 
         Do this at the start of each iteration.
         """
@@ -136,7 +137,8 @@ class BaseAssembler:
         return False
 
     def assemble(self):
-        """Use the assembler to build up the contigs.
+        """
+        Use the assembler to build up the contigs.
 
         We take and array of subprocess steps and execute them in order. We
         bracket this with pre and post assembly steps.
