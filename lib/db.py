@@ -41,9 +41,6 @@ def aux_db(db_conn, temp_dir, blast_db, query_name):
         basename(blast_db), basename(query_name))
     db_name = join(db_dir, db_name)
 
-    if exists(db_name):
-        os.remove(db_name)
-
     sql = """ATTACH DATABASE '{}' AS aux""".format(db_name)
     db_conn.execute(sql)
 

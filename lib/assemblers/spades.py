@@ -14,11 +14,12 @@ class SpadesAssembler(BaseAssembler):
         self.steps = [self.spades]
 
     def work_path(self):
-        """Create output directory name.
+        """
+        Create output directory name.
 
         It has has unique requirements.
         """
-        return os.path.join(self.iter_dir, 'spades')
+        return os.path.join(self.iter_dir(), 'spades')
 
     def spades(self):
         """Build the command for assembly."""
