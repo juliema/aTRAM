@@ -1,9 +1,9 @@
 """Handle database functions."""
 
 import sqlite3
+import sys
 import os
 from os.path import basename, join, exists
-import lib.log as log
 
 
 ATRAM_VERSION = '2.0'
@@ -53,10 +53,11 @@ def check_versions(db_conn):
     """Make sure the database version matches what we built it with."""
     version = get_version(db_conn)
     if version != DB_VERSION:
-        log.fatal('The database was built with version {} but you are running '
-                  'version {}. You need to rebuild the atram database by '
-                  'running atram_preprocessor.py again.'.format(
-                      version, DB_VERSION))
+        err = ('The database was built with version {} but you are running '
+               'version {}. You need to rebuild the atram database by '
+               'running atram_preprocessor.py again.').format(
+                   version, DB_VERSION)
+        sys.exit(err)
 
 
 # ########################## metadata table ##################################
