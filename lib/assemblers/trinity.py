@@ -39,7 +39,7 @@ class TrinityAssembler(BaseAssembler):
         else:
             single_ends = self.get_single_ends()
             if single_ends:
-                cmd.append("-single '{}'".format(','.join(single_ends)))
+                cmd.append("--single '{}'".format(','.join(single_ends)))
 
         if self.file['long_reads'] and not self.args['no_long_reads']:
             cmd.append("--long_reads '{}'".format(self.file['long_reads']))
