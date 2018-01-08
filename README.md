@@ -19,6 +19,7 @@ You will need to have Python3 installed, as well as pip, a package manager for p
 
 ```
 cd path/to/atram
+git clone https://github.com/juliema/aTRAM.git
 virtualenv venv -p python3
 source venv/bin/activate
 pip install -r requirements.txt
