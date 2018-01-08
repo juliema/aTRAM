@@ -45,6 +45,11 @@ def aux_db(db_conn, temp_dir, blast_db, query_name):
     db_conn.execute(sql)
 
 
+def aux_detach(db_conn):
+    """Detach the temporary database."""
+    db_conn.execute('DETACH DATABASE aux')
+
+
 # ########################### misc functions #################################
 # DB_VERSION != version in DB. Don't force DB changes until required. So
 # this version will tend to lag ATRAM_VERSION.

@@ -9,26 +9,28 @@ import subprocess
 LOGGER = None  # Global logger so we can switch between queries & blast DBs
 FORMATTER = logging.Formatter('%(asctime)s %(levelname)s: %(message)s',
                               datefmt='%Y-%m-%d %H:%M:%S')
+NAME = 'atram_logger'
 
 
 def setup(log_file, blast_db, query_file=''):
     """Logger setup."""
     global LOGGER  # pylint: disable=global-statement
 
-    log_file = file_name(log_file, blast_db, query_file)
+    if not LOGGER:
+        log_file = file_name(log_file, blast_db, query_file)
 
-    handler = logging.FileHandler(log_file)
-    handler.setFormatter(FORMATTER)
-    handler.setLevel(logging.DEBUG)
+        handler = logging.FileHandler(log_file)
+        handler.setFormatter(FORMATTER)
+        handler.setLevel(logging.DEBUG)
 
-    stream = logging.StreamHandler()
-    stream.setFormatter(FORMATTER)
-    stream.setLevel(logging.INFO)
+        stream = logging.StreamHandler()
+        stream.setFormatter(FORMATTER)
+        stream.setLevel(logging.INFO)
 
-    LOGGER = logging.getLogger(log_file)
-    LOGGER.setLevel(logging.DEBUG)
-    LOGGER.addHandler(handler)
-    LOGGER.addHandler(stream)
+        LOGGER = logging.getLogger(log_file)
+        LOGGER.setLevel(logging.DEBUG)
+        LOGGER.addHandler(handler)
+        LOGGER.addHandler(stream)
 
 
 def file_name(log_file, blast_db, query_file=''):

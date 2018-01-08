@@ -40,6 +40,8 @@ def assemble(args):
 
                 assembler.write_final_output(blast_db, query)
 
+                db.aux_detach(db_conn)
+
 
 def assembly_loop(assembler, blast_db, query):
     """Iterate the assembly processes."""
@@ -85,10 +87,10 @@ def split_queries(args):
 
     We put each query record into its own file for blast queries.
     """
-    queries = args['query'][:]
-
     if not args.get('query_split'):
-        return queries
+        return args['query'][:]
+
+    queries = []
 
     path = join(args['temp_dir'], 'queries')
     os.makedirs(path, exist_ok=True)
@@ -353,7 +355,7 @@ def parse_command_line(temp_dir_default):
         args['bit_score'] = 0
         args['contig_length'] = 0
 
-    if not args['protein']:
+    if not args['protein'] and args['query']:
         args['protein'] = bio.fasta_file_has_protein(args['query'])
 
     # Prepend to PATH environment variable if requested
