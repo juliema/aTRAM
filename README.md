@@ -109,7 +109,9 @@ Several arguments have synonyms, given below.
 
   - Give a prefix for output files. You may include a directory path as part of the prefix.
 
-- `-q QUERY, --query QUERY, --target QUERY` for one target or  `-Q QUERY_SPLIT, --query QUERY_SPLIT, --target QUERY_SPLIT` for a file with many targets
+- `-q QUERY, --query QUERY, --target QUERY` or  `-Q QUERY_SPLIT, --query QUERY_SPLIT, --target QUERY_SPLIT` 
+
+ - This specifies the query sequence or sequences.  If one sequence use the "-q" option.  For many query sequences, "-Q".
 
 ## Optional aTRAM arguments:
 
