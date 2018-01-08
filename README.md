@@ -108,7 +108,7 @@ Several arguments have synonyms, given below.
 
   - Give a prefix for output files. You may include a directory path as part of the prefix.
 
-- `-q QUERY, --query QUERY, --target QUERY`
+- `-q QUERY, --query QUERY, --target QUERY` for one target or  `-Q QUERY_SPLIT, --query QUERY_SPLIT, --target QUERY_SPLIT` for a file with many targets
 
 ## Optional aTRAM arguments:
 
@@ -210,9 +210,14 @@ optional assembler arguments:
 
   - Read coverage cutoff value (Spades). Must be a positive float value, or "auto", or "off". The default value is "off".
 
+# Assembling multiple genes against a libraty
+
+ aTRAM2.0 can assemble a set of genes against a single library.  Create a single file with multiple fasta-formatted sequences and then simply use `-Q QUERY_SPLIT` where QUERY_SPLIT is the name of the file you created above. 
+ 
+
 # Example of running a shell loop
 
-In many cases it is convenient to run aTRAM 2 as a loop, assembling a set of genes for a set of taxa. These can be set up in two parts like so:
+In many cases it is convenient to run aTRAM 2.0 as a loop, assembling a set of genes for a set of taxa. These can be set up in two parts, as shown below.  Note that aTRAM2.0 has built in functions supporting assembly of many genes against a library, as described just above.  
 
 ```
 # Make aTRAM libraries
@@ -224,7 +229,9 @@ python path_to_aTRAM/atram_preprocessor.py -c 4 -b path_to_atram_library/lib_${a
 done
 ```
 
-The part `${a}_P*.fq` will have to be modified to match the name pattern of your input fastq files. Then, supposing we have 300 genes labeled consecutively and wish to use Abyss:
+The part `${a}_P*.fq` will have to be modified to match the name pattern of your input fastq files. 
+
+Then, supposing we have 300 genes stored in a single file and wish to use Abyss:
 
 ```
 # Assemble genes
@@ -232,9 +239,7 @@ array=(sample1 sample2 sample3)
 
 for a in "${array[@]}"; # Iterate through samples
 do
-for (( i=1 ; i<=300; i++ )); # Iterate through locus numbers
-do
-python ./aTRAM/atram.py -b path_to_atram_library/lib_${a} -q path_to_reference_loci/Locus_${i}.fasta -i 5 --cpus 4  --kmer 64 -o path_to_output/lib_${a}.Locus_${i}.atram2.fasta --log-file path_to_output/lib_${a}.Locus_${i}.log -a abyss
+\python ./aTRAM/atram.py -b path_to_atram_library/lib_${a} -Q file_name -i 5 --cpus 4  --kmer 64 -o path_to_output/lib_${a}.atram2.fasta --log-file path_to_output/lib_${a}.log -a abyss
 done
 done
 ```
