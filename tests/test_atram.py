@@ -26,12 +26,13 @@ class TestAtram(unittest.TestCase):
     @patch('lib.assembler.factory')
     @patch('lib.db.connect')
     @patch('lib.db.aux_db')
+    @patch('lib.db.aux_detach')
     @patch('lib.log.setup')
     @patch('atram.split_queries')
     @patch('atram.clean_database')
     @patch('atram.assembly_loop')
     def test_assemble(self, assembly_loop, clean_database, split_queries,
-                      setup, aux_db, connect, factory):
+                      setup, aux_detach, aux_db, connect, factory):
         connect.return_value.__enter__ = lambda x: 'my_db'
         self.assembler.write_final_output = MagicMock()
         split_queries.return_value = self.args['query']
@@ -62,6 +63,9 @@ class TestAtram(unittest.TestCase):
             call('my_db', self.args['temp_dir'], blast_db[1], query[1])]
         aux_db.assert_has_calls(calls)
 
+        calls = [call('my_db'), call('my_db'), call('my_db'), call('my_db')]
+        aux_detach.assert_has_calls(calls)
+
         calls = [
             call(log_file, blast_db[0], query[0]),
             call(log_file, blast_db[0], query[1]),
@@ -86,7 +90,6 @@ class TestAtram(unittest.TestCase):
     @patch('atram.write_query_seq')
     def test_split_queries_none(self, write_query_seq):
         """Test split queries where there are no fasta files to split."""
-
         self.args['query_split'] = []
 
         queries = atram.split_queries(self.args)
@@ -98,7 +101,6 @@ class TestAtram(unittest.TestCase):
     @patch('atram.write_query_seq')
     def test_split_queries_some(self, write_query_seq):
         """Test split queries where there are fasta files to split."""
-
         self.args['query_split'] = ['tests/data/split_queries1.txt']
 
         queries = atram.split_queries(self.args)
@@ -116,8 +118,7 @@ class TestAtram(unittest.TestCase):
             call(split_files[3], 'seq1+1', 'T' * 10)]
         write_query_seq.assert_has_calls(calls)
 
-        expected = self.args['query'] + split_files
-        assert expected == queries
+        assert split_files == queries
 
     def test_write_query_seq(self):
         with tempfile.TemporaryDirectory(prefix='test_') as temp_dir:
@@ -139,7 +140,6 @@ class TestAtram(unittest.TestCase):
             create_assembled_contigs_table,
             create_contig_blast_hits_table,
             create_sra_blast_hits_table):
-
         dbh = 'my_db'
         atram.clean_database(dbh)
 
