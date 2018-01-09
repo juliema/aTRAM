@@ -214,7 +214,7 @@ optional assembler arguments:
 
   - Read coverage cutoff value (Spades). Must be a positive float value, or "auto", or "off". The default value is "off".
 
-# Assembling multiple genes against a libraty
+# Assembling multiple genes against a library
 
  aTRAM2.0 can assemble a set of genes against a single library.  Create a single file with multiple fasta-formatted sequences and then simply use `-Q QUERY_SPLIT` where QUERY_SPLIT is the name of the file you created above. 
  
