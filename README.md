@@ -235,7 +235,7 @@ done
 
 The part `${a}_P*.fq` will have to be modified to match the name pattern of your input fastq files. 
 
-Then, supposing we have 300 genes stored in a single file and wish to use Abyss:
+Then, supposing we have a set of genes stored in a single file and wish to use Abyss:
 
 ```
 # Assemble genes
@@ -244,7 +244,6 @@ array=(sample1 sample2 sample3)
 for a in "${array[@]}"; # Iterate through samples
 do
 \python ./aTRAM/atram.py -b path_to_atram_library/lib_${a} -Q file_name -i 5 --cpus 4  --kmer 64 -o path_to_output/lib_${a}.atram2.fasta --log-file path_to_output/lib_${a}.log -a abyss
-done
 done
 ```
 
