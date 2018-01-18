@@ -44,14 +44,14 @@ def preprocess(args):
 def load_seqs(args, db_conn):
     """Load sequences from a fasta/fastq files into the atram database."""
     # We have to clamp the end suffix depending on the file type.
-    for (arg, clamp) in [('mixed_ends', None), ('end_1', '1'),
+    for (arg, clamp) in [('mixed_ends', ''), ('end_1', '1'),
                          ('end_2', '2'), ('single_ends', '')]:
         if args.get(arg):
             for file_name in args[arg]:
-                load_one_file(db_conn, file_name, clamp)
+                load_one_file(db_conn, file_name, arg, clamp)
 
 
-def load_one_file(db_conn, file_name, seq_end_clamp=''):
+def load_one_file(db_conn, file_name, arg, seq_end_clamp=''):
     """Load sequences from a fasta/fastq file into the atram database."""
     log.info('Loading "{}" into sqlite database'.format(file_name))
 
@@ -68,7 +68,10 @@ def load_one_file(db_conn, file_name, seq_end_clamp=''):
             match = blast.PARSE_HEADER.match(title)
             if match.group(2):
                 seq_name = match.group(1)
-                seq_end = match.group(2)
+                if arg == 'mixed_ends':
+                    seq_end = match.group(2)
+                else:
+                    seq_end = seq_end_clamp
             else:
                 seq_name = title
                 seq_end = seq_end_clamp
@@ -183,26 +186,33 @@ def parse_command_line(temp_dir_default):
 
     parser.add_argument('--mixed-ends', '-m', metavar='FASTA', nargs='+',
                         help='''Sequence read archive files that have a mix of
-                             both end 1 and end 2 sequences. The sequence names
-                             MUST have an end suffix like "/1" or "_2". The
-                             files are in fasta or fastq format. You may enter
-                             more than one file or you may use wildcards.''')
+                             both end 1 and end 2 sequences (or single ends).
+                             The files are in fasta or fastq format. You may
+                             enter more than one file or you may use wildcards.
+                             ''')
 
     parser.add_argument('--end-1', '-1', metavar='FASTA', nargs='+',
                         help='''Sequence read archive files that have only
                              end 1 sequences. The sequence names do not need an
-                             end suffix, we will assume the suffix is 1 if it
-                             is missing. The files are in fasta or fastq
-                             format. You may enter more than one file or you
-                             may use wildcards.''')
+                             end suffix, we will assume the suffix is always 1.
+                             The files are in fasta or fastq format. You may
+                             enter more than one file or you may use wildcards.
+                             ''')
 
     parser.add_argument('--end-2', '-2', metavar='FASTA', nargs='+',
                         help='''Sequence read archive files that have only
                              end 2 sequences. The sequence names do not need an
-                             end suffix, we will assume the suffix is 2 if it
-                             is missing. The files are in fasta or fastq
-                             format. You may enter more than one file or you
-                             may use wildcards.''')
+                             end suffix, we will assume the suffix is always 2.
+                             The files are in fasta or fastq format. You may
+                             enter more than one file or you may use wildcards.
+                             ''')
+
+    parser.add_argument('--single-ends', '-S', metavar='FASTA', nargs='+',
+                        help='''Sequence read archive files that have only
+                             unpaired sequences. Any sequence suffix will be
+                             ignored. The files are in fasta or fastq format.
+                             You may enter more than one file or you may use
+                             wildcards.''')
 
     parser.add_argument('--version', action='version',
                         version='%(prog)s {}'.format(db.ATRAM_VERSION))
@@ -221,8 +231,7 @@ def parse_command_line(temp_dir_default):
     cpus = min(10, os.cpu_count() - 4 if os.cpu_count() > 4 else 1)
     group.add_argument('--cpus', '--processes', '--max-processes',
                        type=int, default=cpus,
-                       help='''Number of CPU threads to use. This will also be
-                            used for the assemblers when possible. On this
+                       help='''Number of CPU threads to use. On this
                             machine the default is ("{}")'''.format(cpus))
 
     group.add_argument('-t', '--temp-dir', metavar='DIR',

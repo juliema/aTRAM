@@ -62,11 +62,11 @@ class TestAtramPreprocessor(unittest.TestCase):
 
     @patch('lib.log.info')
     @patch('lib.db.insert_sequences_batch')
-    def test_load_one_file_1(self, insert_sequences_batch, info):
+    def test_load_one_file_mixed(self, insert_sequences_batch, info):
         db.BATCH_SIZE = 5
 
         file_1 = join('tests', 'data', 'load_seq1.txt')
-        atram_preprocessor.load_one_file(self.db_conn, file_1)
+        atram_preprocessor.load_one_file(self.db_conn, file_1, 'mixed_ends')
 
         msg = 'Loading "{}" into sqlite database'.format(file_1)
         info.assert_called_once_with(msg)
@@ -87,11 +87,87 @@ class TestAtramPreprocessor(unittest.TestCase):
 
     @patch('lib.log.info')
     @patch('lib.db.insert_sequences_batch')
+    def test_load_one_file_end1(self, insert_sequences_batch, info):
+        db.BATCH_SIZE = 5
+
+        file_1 = join('tests', 'data', 'load_seq1.txt')
+        atram_preprocessor.load_one_file(self.db_conn, file_1, 'end_1', '1')
+
+        msg = 'Loading "{}" into sqlite database'.format(file_1)
+        info.assert_called_once_with(msg)
+
+        calls = [
+            call(self.db_conn, [
+                ('seq1', '1', 'AAAAAAAAAA'),
+                ('seq2', '1', 'AAAAAAAAAAGGGGGGGGGG'),
+                ('seq3', '1', 'AAAAAAAAAA'),
+                ('seq4', '1', 'AAAAAAAAAA'),
+                ('seq5/3', '1', 'AAAAAAAAAAGGGGGGGGGG')]),
+            call(self.db_conn, [
+                ('seq1', '1', 'AAAAAAAAAA'),
+                ('seq2', '1', 'AAAAAAAAAAGGGGGGGGGG'),
+                ('seq3', '1', 'AAAAAAAAAA'),
+                ('seq4', '1', 'AAAAAAAAAAGGGGGGGGGG')])]
+        insert_sequences_batch.assert_has_calls(calls)
+
+    @patch('lib.log.info')
+    @patch('lib.db.insert_sequences_batch')
+    def test_load_one_file_end2(self, insert_sequences_batch, info):
+        db.BATCH_SIZE = 5
+
+        file_1 = join('tests', 'data', 'load_seq1.txt')
+        atram_preprocessor.load_one_file(self.db_conn, file_1, 'end_2', '2')
+
+        msg = 'Loading "{}" into sqlite database'.format(file_1)
+        info.assert_called_once_with(msg)
+
+        calls = [
+            call(self.db_conn, [
+                ('seq1', '2', 'AAAAAAAAAA'),
+                ('seq2', '2', 'AAAAAAAAAAGGGGGGGGGG'),
+                ('seq3', '2', 'AAAAAAAAAA'),
+                ('seq4', '2', 'AAAAAAAAAA'),
+                ('seq5/3', '2', 'AAAAAAAAAAGGGGGGGGGG')]),
+            call(self.db_conn, [
+                ('seq1', '2', 'AAAAAAAAAA'),
+                ('seq2', '2', 'AAAAAAAAAAGGGGGGGGGG'),
+                ('seq3', '2', 'AAAAAAAAAA'),
+                ('seq4', '2', 'AAAAAAAAAAGGGGGGGGGG')])]
+        insert_sequences_batch.assert_has_calls(calls)
+
+    @patch('lib.log.info')
+    @patch('lib.db.insert_sequences_batch')
+    def test_load_one_file_single(self, insert_sequences_batch, info):
+        db.BATCH_SIZE = 5
+
+        file_1 = join('tests', 'data', 'load_seq1.txt')
+        atram_preprocessor.load_one_file(
+            self.db_conn, file_1, 'single_ends', '')
+
+        msg = 'Loading "{}" into sqlite database'.format(file_1)
+        info.assert_called_once_with(msg)
+
+        calls = [
+            call(self.db_conn, [
+                ('seq1', '', 'AAAAAAAAAA'),
+                ('seq2', '', 'AAAAAAAAAAGGGGGGGGGG'),
+                ('seq3', '', 'AAAAAAAAAA'),
+                ('seq4', '', 'AAAAAAAAAA'),
+                ('seq5/3', '', 'AAAAAAAAAAGGGGGGGGGG')]),
+            call(self.db_conn, [
+                ('seq1', '', 'AAAAAAAAAA'),
+                ('seq2', '', 'AAAAAAAAAAGGGGGGGGGG'),
+                ('seq3', '', 'AAAAAAAAAA'),
+                ('seq4', '', 'AAAAAAAAAAGGGGGGGGGG')])]
+        insert_sequences_batch.assert_has_calls(calls)
+
+    @patch('lib.log.info')
+    @patch('lib.db.insert_sequences_batch')
     def test_load_one_file_2(self, insert_sequences_batch, info):
         db.BATCH_SIZE = 5
 
         file_1 = join('tests', 'data', 'load_seq2.txt')
-        atram_preprocessor.load_one_file(self.db_conn, file_1)
+        atram_preprocessor.load_one_file(self.db_conn, file_1, 'mixed_ends')
 
         msg = 'Loading "{}" into sqlite database'.format(file_1)
         info.assert_called_once_with(msg)
