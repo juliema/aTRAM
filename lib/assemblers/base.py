@@ -4,7 +4,7 @@
 
 from os.path import basename, exists, getsize, join, splitext  # , abspath
 import datetime
-import subprocess
+from subprocess import CalledProcessError
 import lib.db as db
 import lib.log as log
 import lib.bio as bio
@@ -83,10 +83,12 @@ class BaseAssembler:
         except TimeoutError:
             msg = 'Time ran out for the assembler after {} (HH:MM:SS)'.format(
                 datetime.timedelta(seconds=self.args['timeout']))
-            log.fatal(msg)
-        except subprocess.CalledProcessError as cpe:
+            log.error(msg)
+            raise TimeoutError(msg)
+        except CalledProcessError as cpe:
             msg = 'The assembler failed with error: ' + str(cpe)
-            log.fatal(msg)
+            log.error(msg)
+            raise CalledProcessError(msg)
 
     def no_blast_hits(self):
         """Make sure we have blast hits."""
