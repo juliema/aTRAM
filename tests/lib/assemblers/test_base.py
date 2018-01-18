@@ -156,8 +156,11 @@ class TestAssemblersBase(unittest.TestCase):
         with pytest.raises(TimeoutError) as timeout_error:
             assembler.run()
 
-        assert str(timeout_error.value) == (
-            'Time ran out for the assembler after 0:00:10 (HH:MM:SS)')
+        error_msg = str(timeout_error.value)
+        if error_msg[-1] != '.':
+            error_msg += '.'
+        assert error_msg == (
+            'Time ran out for the assembler after 0:00:10 (HH:MM:SS).')
 
         expect = 'Assembling shards with {}: iteration {}'.format(
             args['assembler'], assembler.state['iteration'])
@@ -185,9 +188,10 @@ class TestAssemblersBase(unittest.TestCase):
         with pytest.raises(RuntimeError) as runtime_error:
             assembler.run()
 
-        print(runtime_error.value)
-        print(dir(runtime_error.value))
-        assert str(runtime_error.value) == (
+        error_msg = str(runtime_error.value)
+        if error_msg[-1] != '.':
+            error_msg += '.'
+        assert error_msg == (
             "The assembler failed with error: Command 'my command' "
             "returned non-zero exit status 88.")
 
