@@ -41,6 +41,8 @@ def assemble(args):
                     assembler.write_final_output(blast_db, query)
                 except (TimeoutError, RuntimeError):
                     pass
+                except Exception as err:
+                    log.error('Exception: ' + err)
 
                 db.aux_detach(db_conn)
 
