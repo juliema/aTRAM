@@ -218,11 +218,12 @@ def parse_command_line(temp_dir_default):
                             a directory as part of the prefix. The default
                             is "{}".'''.format(blast_db))
 
-    cpus = os.cpu_count() - 4 if os.cpu_count() > 4 else 1
-    group.add_argument('-c', '--cpus', '--processes', '--max-processes',
+    cpus = min(10, os.cpu_count() - 4 if os.cpu_count() > 4 else 1)
+    group.add_argument('--cpus', '--processes', '--max-processes',
                        type=int, default=cpus,
-                       help='''Number of cpus to use. Defaults to: Total CPUS
-                            - 4 = "{}"'''.format(cpus))
+                       help='''Number of CPU threads to use. This will also be
+                            used for the assemblers when possible. On this
+                            machine the default is ("{}")'''.format(cpus))
 
     group.add_argument('-t', '--temp-dir', metavar='DIR',
                        help='''You may save intermediate files for debugging
