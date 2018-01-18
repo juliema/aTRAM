@@ -32,6 +32,8 @@ def setup(log_file, blast_db, query_file=''):
         LOGGER.addHandler(handler)
         LOGGER.addHandler(stream)
 
+        info(" ".join(sys.argv[:]))
+
 
 def file_name(log_file, blast_db, query_file=''):
     """
