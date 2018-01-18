@@ -88,7 +88,7 @@ class BaseAssembler:
         except CalledProcessError as cpe:
             msg = 'The assembler failed with error: ' + str(cpe)
             log.error(msg)
-            raise CalledProcessError(msg)
+            raise RuntimeError(msg)
 
     def no_blast_hits(self):
         """Make sure we have blast hits."""

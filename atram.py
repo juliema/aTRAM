@@ -9,7 +9,6 @@ import argparse
 import textwrap
 import tempfile
 import multiprocessing
-from subprocess import CalledProcessError
 from Bio import SeqIO
 import lib.db as db
 import lib.log as log
@@ -40,7 +39,7 @@ def assemble(args):
                 try:
                     assembly_loop(assembler, blast_db, query)
                     assembler.write_final_output(blast_db, query)
-                except (TimeoutError, CalledProcessError):
+                except (TimeoutError, RuntimeError):
                     pass
 
                 db.aux_detach(db_conn)

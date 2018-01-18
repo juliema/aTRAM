@@ -5,6 +5,7 @@
 import re
 from os.path import basename, join
 import subprocess
+import pytest
 import unittest
 from unittest.mock import patch, MagicMock, call
 from hypothesis import given, assume
@@ -13,6 +14,7 @@ from lib.assemblers.base import BaseAssembler
 
 
 PATH_PATTERN = r'(?:[\w.-]+/)[\w.-]+'
+
 
 class TestAssemblersBase(unittest.TestCase):
 
@@ -45,7 +47,6 @@ class TestAssemblersBase(unittest.TestCase):
             'blast_db': '',
             'db_conn': db_conn}
         assert expected == assembler.state
-
 
     @given(
         blast_db=st.from_regex(PATH_PATTERN),
@@ -143,8 +144,8 @@ class TestAssemblersBase(unittest.TestCase):
                                          assembler.state['iteration']))
 
     @patch('lib.log.info')
-    @patch('lib.log.fatal')
-    def test_run_timeout(self, fatal, info):
+    @patch('lib.log.error')
+    def test_run_timeout(self, error, info):
         args = {'assembler': 'my_assembler', 'timeout': 10}
 
         assembler = BaseAssembler(args, 'db_conn')
@@ -152,21 +153,25 @@ class TestAssemblersBase(unittest.TestCase):
 
         assembler.assemble = MagicMock(side_effect=TimeoutError())
 
-        assembler.run()
+        with pytest.raises(TimeoutError) as timeout_error:
+            assembler.run()
+
+        assert str(timeout_error.value) == (
+            'Time ran out for the assembler after 0:00:10 (HH:MM:SS)')
 
         expect = 'Assembling shards with {}: iteration {}'.format(
             args['assembler'], assembler.state['iteration'])
         info.assert_called_once_with(expect)
 
         # Python 3.6 formats exceptions differently so we need to do this
-        assert fatal.call_count == 1
+        assert error.call_count == 1
         regex = re.compile(
             r'Time ran out for the assembler after 0:00:10 \(HH:MM:SS\)')
-        assert regex.match(fatal.call_args[0][0])
+        assert regex.match(error.call_args[0][0])
 
     @patch('lib.log.info')
-    @patch('lib.log.fatal')
-    def test_run_called_process_error(self, fatal, info):
+    @patch('lib.log.error')
+    def test_run_called_process_error(self, error, info):
         args = {'assembler': 'my_assembler', 'timeout': 10}
         error_code = 88
         cmd = 'my command'
@@ -177,18 +182,18 @@ class TestAssemblersBase(unittest.TestCase):
 
         assembler.assemble = MagicMock(side_effect=error)
 
-        assembler.run()
+        with pytest.raises(RuntimeError) as runtime_error:
+            assembler.run()
+
+        print(runtime_error.value)
+        print(dir(runtime_error.value))
+        assert str(runtime_error.value) == (
+            "The assembler failed with error: Command 'my command' "
+            "returned non-zero exit status 88.")
 
         expect = 'Assembling shards with {}: iteration {}'.format(
             args['assembler'], assembler.state['iteration'])
         info.assert_called_once_with(expect)
-
-        # Python 3.6 formats exceptions differently so we need to do this
-        assert fatal.call_count == 1
-        regex = re.compile(("The assembler failed with error: Command '{}' "
-                            'returned non-zero exit status {}').format(
-                                cmd, error_code))
-        assert regex.match(fatal.call_args[0][0])
 
     @patch('lib.log.info')
     @patch('lib.db.sra_blast_hits_count')
@@ -223,8 +228,9 @@ class TestAssemblersBase(unittest.TestCase):
 
         assert assembler.nothing_assembled()
 
-        info.assert_called_once_with('No new assemblies in iteration {}'.format(
-            assembler.state['iteration']))
+        info.assert_called_once_with(
+            'No new assemblies in iteration {}'.format(
+                assembler.state['iteration']))
 
     @patch('lib.log.info')
     def test_nothing_assembled_empty(self, info):
