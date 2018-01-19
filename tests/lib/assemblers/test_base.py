@@ -275,7 +275,7 @@ class TestAssemblersBase(unittest.TestCase):
             assembler.args['contig_length'])
 
         expect = ('No contigs had a bit score greater than {} and are at '
-                  'least {} long in iteration {}. The highest score for '
+                  'least {} bp long in iteration {}. The highest score for '
                   'this iteration is {}').format(
                       assembler.args['bit_score'],
                       assembler.args['contig_length'],

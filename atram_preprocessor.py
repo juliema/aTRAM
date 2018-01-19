@@ -184,12 +184,8 @@ def parse_command_line(temp_dir_default):
         formatter_class=argparse.RawDescriptionHelpFormatter,
         description=textwrap.dedent(description))
 
-    parser.add_argument('--mixed-ends', '-m', metavar='FASTA_or_FASTQ', nargs='+',
-                        help='''Sequence read archive files that have a mix of
-                             both end 1 and end 2 sequences (or single ends).
-                             The files are in fasta or fastq format. You may
-                             enter more than one file or you may use wildcards.
-                             ''')
+    parser.add_argument('--version', action='version',
+                        version='%(prog)s {}'.format(db.ATRAM_VERSION))
 
     parser.add_argument('--end-1', '-1', metavar='FASTA_or_FASTQ', nargs='+',
                         help='''Sequence read archive files that have only
@@ -207,15 +203,21 @@ def parse_command_line(temp_dir_default):
                              enter more than one file or you may use wildcards.
                              ''')
 
-    parser.add_argument('--single-ends', '-0', metavar='FASTA_or_FASTQ', nargs='+',
+    parser.add_argument('--mixed-ends', '-m', metavar='FASTA_or_FASTQ',
+                        nargs='+',
+                        help='''Sequence read archive files that have a mix of
+                             both end 1 and end 2 sequences (or single ends).
+                             The files are in fasta or fastq format. You may
+                             enter more than one file or you may use wildcards.
+                             ''')
+
+    parser.add_argument('--single-ends', '-0', metavar='FASTA_or_FASTQ',
+                        nargs='+',
                         help='''Sequence read archive files that have only
                              unpaired sequences. Any sequence suffix will be
                              ignored. The files are in fasta or fastq format.
                              You may enter more than one file or you may use
                              wildcards.''')
-
-    parser.add_argument('--version', action='version',
-                        version='%(prog)s {}'.format(db.ATRAM_VERSION))
 
     group = parser.add_argument_group('preprocessor arguments')
 

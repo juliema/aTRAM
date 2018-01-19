@@ -5,6 +5,7 @@ import sys
 import logging
 import tempfile
 import subprocess
+import lib.db as db
 
 LOGGER = None  # Global logger so we can switch between queries & blast DBs
 FORMATTER = logging.Formatter('%(asctime)s %(levelname)s: %(message)s',
@@ -32,7 +33,8 @@ def setup(log_file, blast_db, query_file=''):
         LOGGER.addHandler(handler)
         LOGGER.addHandler(stream)
 
-        info(" ".join(sys.argv[:]))
+        info('aTRAM version: {}'.format(db.ATRAM_VERSION))
+        info(' '.join(sys.argv[:]))
 
 
 def file_name(log_file, blast_db, query_file=''):

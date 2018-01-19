@@ -118,7 +118,7 @@ class BaseAssembler:
 
         if not count:
             log.info('No contigs had a bit score greater than {} and are at '
-                     'least {} long in iteration {}. The highest score for '
+                     'least {} bp long in iteration {}. The highest score for '
                      'this iteration is {}'.format(
                          self.args['bit_score'],
                          self.args['contig_length'],

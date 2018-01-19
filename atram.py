@@ -41,7 +41,7 @@ def assemble(args):
                     assembler.write_final_output(blast_db, query)
                 except (TimeoutError, RuntimeError):
                     pass
-                except Exception as err:
+                except Exception as err:  # pylint: disable=broad-except
                     log.error('Exception: ' + err)
 
                 db.aux_detach(db_conn)
