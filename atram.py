@@ -42,7 +42,7 @@ def assemble(args):
                 except (TimeoutError, RuntimeError):
                     pass
                 except Exception as err:  # pylint: disable=broad-except
-                    log.error('Exception: ' + err)
+                    log.error('Exception: {}'.format(err))
 
                 db.aux_detach(db_conn)
 
