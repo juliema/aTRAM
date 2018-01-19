@@ -207,7 +207,7 @@ def parse_command_line(temp_dir_default):
                              enter more than one file or you may use wildcards.
                              ''')
 
-    parser.add_argument('--single-ends', '-S', metavar='FASTA', nargs='+',
+    parser.add_argument('--single-ends', '-0', metavar='FASTA', nargs='+',
                         help='''Sequence read archive files that have only
                              unpaired sequences. Any sequence suffix will be
                              ignored. The files are in fasta or fastq format.
