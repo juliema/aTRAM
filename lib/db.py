@@ -19,6 +19,10 @@ def connect(blast_db, check_version=False, clean=False):
     if clean and exists(db_name):
         os.remove(db_name)
 
+    if check_version and not exists(db_name):
+        err = 'Could not find the database file "{}".'.format(db_name)
+        sys.exit(err)
+
     db_conn = sqlite3.connect(db_name)
 
     db_conn.execute("PRAGMA page_size = {}".format(2**16))
