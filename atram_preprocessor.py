@@ -184,14 +184,14 @@ def parse_command_line(temp_dir_default):
         formatter_class=argparse.RawDescriptionHelpFormatter,
         description=textwrap.dedent(description))
 
-    parser.add_argument('--mixed-ends', '-m', metavar='FASTA', nargs='+',
+    parser.add_argument('--mixed-ends', '-m', metavar='FASTA or FASTQ', nargs='+',
                         help='''Sequence read archive files that have a mix of
                              both end 1 and end 2 sequences (or single ends).
                              The files are in fasta or fastq format. You may
                              enter more than one file or you may use wildcards.
                              ''')
 
-    parser.add_argument('--end-1', '-1', metavar='FASTA', nargs='+',
+    parser.add_argument('--end-1', '-1', metavar='FASTA or FASTQ', nargs='+',
                         help='''Sequence read archive files that have only
                              end 1 sequences. The sequence names do not need an
                              end suffix, we will assume the suffix is always 1.
@@ -199,7 +199,7 @@ def parse_command_line(temp_dir_default):
                              enter more than one file or you may use wildcards.
                              ''')
 
-    parser.add_argument('--end-2', '-2', metavar='FASTA', nargs='+',
+    parser.add_argument('--end-2', '-2', metavar='FASTA or FASTQ', nargs='+',
                         help='''Sequence read archive files that have only
                              end 2 sequences. The sequence names do not need an
                              end suffix, we will assume the suffix is always 2.
@@ -207,7 +207,7 @@ def parse_command_line(temp_dir_default):
                              enter more than one file or you may use wildcards.
                              ''')
 
-    parser.add_argument('--single-ends', '-0', metavar='FASTA', nargs='+',
+    parser.add_argument('--single-ends', '-0', metavar='FASTA or FASTQ', nargs='+',
                         help='''Sequence read archive files that have only
                              unpaired sequences. Any sequence suffix will be
                              ignored. The files are in fasta or fastq format.
