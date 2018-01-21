@@ -10,8 +10,7 @@ Please consult the reference below for more information about aTRAM1.0:
 `Allen, JM, DI Huang, QC Cronk, KP Johnson. 2015\. aTRAM automated target restricted assembly method a fast method for assembling loci across divergent taxa from next-generation sequencing data. BMC Bioinformatics 16:98 DOI 10.1186/s12859-015-0515-2`
 
 A paper on aTRAM 2.0 has been submitted:
-`Allen J.M., R. LaFrance, R. A. Folk, K. P. Johnson, and R. P. Guralnick.  [Submitted].  aTRAM 2.0: An improved, flexible locus assembler for NGS data.  Genomics, Proteomics and Bioinformatics.`
-
+`Allen J.M., R. LaFrance, R. A. Folk, K. P. Johnson, and R. P. Guralnick.  [Submitted].  aTRAM 2.0: An improved, flexible locus assembler for NGS data.  Evolutionary Informatics`
 
 # Installation
 
