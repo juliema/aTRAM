@@ -31,8 +31,8 @@ def against_sra(args, state, hits_file, shard):
         cmd.append('-db_gencode {}'.format(args['db_gencode']))
     else:
         cmd.append('blastn')
-        cmd.append('-evalue {}'.format(args['evalue']))
 
+    cmd.append('-evalue {}'.format(args['evalue']))
     cmd.append('-outfmt 15')
     cmd.append('-max_target_seqs {}'.format(args['max_target_seqs']))
     cmd.append('-out {}'.format(hits_file))
