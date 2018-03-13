@@ -41,7 +41,7 @@ You will need to install BLAST externally and have it in the path. You will also
 Use `atram_preprocessor.py` for this. Define your new library name with -b (something simple). Then give it your fastq files. You can either list the forward and reverse read files, or put them into one file and use the --mixed-ends option. Under the hood, aTRAM 2 is building a SQLite3 database for rapid read retrieval. Note that aTRAM 2 is not backwards compatible with aTRAM 1 libraries; it is also best to rebuild any libraries after major updates.
 
 ```
-python path_to_aTRAM/atram_preprocessor.py -c NUMBER_OF_THREADS -b path_to_atram_library/LIBRARY_PREFIX --end-1 read_1.fastq --end-2 read_2.fastq
+python path_to_aTRAM/atram_preprocessor.py -c NUMBER_OF_THREADS -b path_to_atram_library/LIBRARY_PREFIX --end-1 path_to_read_1/read_1.fastq --end-2 --end-1 path_to_read_2/read_2.fastq
 ```
 
 ## Preprocessor arguments:
@@ -58,7 +58,7 @@ python path_to_aTRAM/atram_preprocessor.py -c NUMBER_OF_THREADS -b path_to_atram
 
   - This is the prefix of all of the blast database files so you can identify different blast database sets and so they can be stored together without resorting to subdirectories. You may include a directory as part of the prefix. The default is `./atram_2017-10-13`
 
-- `-c CPUS, --cpus CPUS, --processes CPUS, --max-processes CPUS`
+- `--cpus CPUS, --processes CPUS, --max-processes CPUS`
 
   - We default to a number that will not use up all of your cores. You may set this number to use more preocessors, but be aware that aTRAM uses a lot of temporary disk space (usually in /tmp), so you should balance the increased parallelization with the increase in temporary disk space. We should also note that you can use the `--temp-dir` option (below) to use a higher capacity disk, however, this will save temporary files.
 
@@ -140,10 +140,6 @@ Several arguments have synonyms, given below.
 - `--log-file LOG_FILE`
 
   - Specifies the full path of the log file (full path). The default is to use the DIR and DB arguments to come up with a name like so: `DIR/DB_atram.log`
-
-- `-t DIR, --temp-dir DIR`
-
-  - You may save intermediate files for debugging in this directory. The directory must be empty. This option is useful for understanding exactly what aTRAM is coming up with at each step -- BLAST results, etc. These files are always made but by default not kept and handled as OS temporary files.
 
 - `-T SECONDS, --timeout SECONDS`
 
