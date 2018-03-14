@@ -15,6 +15,7 @@ perl/
 log/
 old/
 admin/
+data/
 
 .coverage
 .cache

@@ -10,19 +10,20 @@ from lib.assemblers.velvet import VelvetAssembler
 from lib.assemblers.none import NoneAssembler
 
 
+ASSEMBLERS = {
+    'abyss': AbyssAssembler,
+    'trinity': TrinityAssembler,
+    'velvet': VelvetAssembler,
+    'spades': SpadesAssembler,
+    'none': NoneAssembler,
+}
+
+
 def factory(args, db_conn):
     """Return the assembler based upon the configuration options."""
     name = args['assembler'].lower()
-    if name == 'abyss':
-        return AbyssAssembler(args, db_conn)
-    elif name == 'trinity':
-        return TrinityAssembler(args, db_conn)
-    elif name == 'velvet':
-        return VelvetAssembler(args, db_conn)
-    elif name == 'spades':
-        return SpadesAssembler(args, db_conn)
-    elif name == 'none':
-        return NoneAssembler(args, db_conn)
+    assembler = ASSEMBLERS[name]
+    return assembler(args, db_conn)
 
 
 def command_line_args(parser):

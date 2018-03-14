@@ -21,7 +21,7 @@ import lib.assembler as assembly
 __all__ = ('assemble', )
 
 
-def assemble(args):
+def assemble(args):  # noqa
     """Loop thru every blast/query pair and run an assembly for each one."""
     queries = split_queries(args)
 
@@ -47,7 +47,7 @@ def assemble(args):
                 db.aux_detach(db_conn)
 
 
-def assembly_loop(assembler, blast_db, query):
+def assembly_loop(assembler, blast_db, query):  # noqa
     """Iterate the assembly processes."""
     for iteration in range(1, assembler.args['iterations'] + 1):
         log.info('aTRAM blast DB = "{}", query = "{}", iteration {}'.format(
@@ -306,7 +306,7 @@ def create_query_from_contigs(assembler):
     return query
 
 
-def parse_command_line(temp_dir_default):
+def parse_command_line(temp_dir_default):  # noqa
     """Process command-line arguments."""
     description = """
         This is the aTRAM script. It takes a query sequence and a blast
@@ -371,7 +371,7 @@ def parse_command_line(temp_dir_default):
     return args
 
 
-def find_programs(assembler, no_long_reads, bowtie2):
+def find_programs(assembler, no_long_reads, bowtie2):  # noqa
     """Make sure we can find the programs needed by the assembler and blast."""
     if not (which('makeblastdb') and which('tblastn') and which('blastn')):
         err = ('We could not find the programs "makeblastdb", "tblastn", or '

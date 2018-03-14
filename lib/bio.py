@@ -15,7 +15,7 @@ def reverse_complement(seq):
 
 
 def is_protein(seq):
-    """Is the sequence a protein."""
+    """Check if the sequence a protein."""
     return IS_PROTEIN.search(seq)
 
 

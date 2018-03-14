@@ -93,10 +93,8 @@ def temp_db_name(temp_dir, blast_db):
     return join(temp_dir, file_name)
 
 
-def hits(json_file):
-    """Extract the blast hits from the blast json output file."""
-    hits_list = []
-
+def get_raw_hits(json_file):
+    """Extract the raw blast hits from the blast json output file."""
     with open(json_file) as blast_file:
         raw = blast_file.read()
 
@@ -112,8 +110,14 @@ def hits(json_file):
                    'You may need to upgrade blast.')
             log.fatal(err)
 
-    raw_hits = obj['BlastOutput2'][0]['report']['results']['search'].get(
+    return obj['BlastOutput2'][0]['report']['results']['search'].get(
         'hits', [])
+
+
+def hits(json_file):
+    """Extract the blast hits from the blast json output file."""
+    hits_list = []
+    raw_hits = get_raw_hits(json_file)
 
     for raw in raw_hits:
         for i, desc in enumerate(raw['description']):

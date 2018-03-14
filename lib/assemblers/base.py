@@ -1,7 +1,5 @@
 """Base class for the various assembler wrappers."""
 
-# pylint: disable=too-many-public-methods
-
 from os.path import basename, exists, getsize, join, splitext  # , abspath
 import datetime
 from subprocess import CalledProcessError
@@ -11,7 +9,7 @@ import lib.bio as bio
 import lib.util as util
 
 
-class BaseAssembler:
+class BaseAssembler:  # pylint: disable=too-many-public-methods
     """A base class for the assemblers."""
 
     def __init__(self, args, db_conn):

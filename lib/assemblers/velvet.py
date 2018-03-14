@@ -17,7 +17,7 @@ class VelvetAssembler(BaseAssembler):
         """Given a fasta header line return the contig ID."""
         return header
 
-    def velveth(self):
+    def velveth(self):  # noqa
         """Build the velveth for the first assembly step."""
         cmd = ['velveth',
                '{}'.format(self.work_path()),
