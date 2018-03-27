@@ -11,7 +11,6 @@ import argparse
 import textwrap
 import tempfile
 import multiprocessing
-from shutil import which
 from datetime import date
 import numpy as np
 from Bio.SeqIO.QualityIO import FastqGeneralIterator
@@ -117,9 +116,8 @@ def create_all_blast_shards(args, shard_list):
                 create_one_blast_shard,
                 (args, shard_params, idx)))
 
-        _ = [result.get() for result in results]  # noqa
-
-    log.info('Finished making blast DBs')
+            all_results = [result.get() for result in results]
+    log.info('Finished making blast all {} DBs'.format(len(all_results)))
 
 
 def create_one_blast_shard(args, shard_params, shard_index):
@@ -279,18 +277,9 @@ def parse_command_line(temp_dir_default):
 
     blast.make_blast_output_dir(args['blast_db'])
 
-    find_programs()
+    blast.find_program('makeblastdb')
 
     return args
-
-
-def find_programs():
-    """Make sure we can find the programs needed by the assembler and blast."""
-    if not which('makeblastdb'):
-        err = ('We could not find the programs "makeblastdb". You either need '
-               'to install it or you need adjust the PATH environment '
-               'variable with the "--path" option so that aTRAM can find it.')
-        sys.exit(err)
 
 
 if __name__ == '__main__':

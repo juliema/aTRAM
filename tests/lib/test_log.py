@@ -1,7 +1,5 @@
 """Testing functions in lib/log."""
 
-# pylint: disable=missing-docstring
-
 from os.path import basename, splitext
 from hypothesis import given
 import hypothesis.strategies as st

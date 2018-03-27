@@ -1,7 +1,9 @@
 """Base class for the various assembler programs."""
 
+import sys
 import math
 import psutil
+from shutil import which
 import lib.log as log
 from lib.assemblers.abyss import AbyssAssembler
 from lib.assemblers.spades import SpadesAssembler
@@ -15,8 +17,7 @@ ASSEMBLERS = {
     'trinity': TrinityAssembler,
     'velvet': VelvetAssembler,
     'spades': SpadesAssembler,
-    'none': NoneAssembler,
-}
+    'none': NoneAssembler}
 
 
 def factory(args, db_conn):
@@ -83,14 +84,27 @@ def default_kmer(kmer, assembler):
 
 def default_cov_cutoff(cov_cutoff):
     """Calculate default coverage cutoff argument."""
-    if cov_cutoff not in ['off', 'auto']:
-        err = ('Read coverage cutoff value. Must be a positive '
-               'float value, or "auto", or "off"')
-        try:
-            value = float(cov_cutoff)
-        except ValueError:
-            log.fatal(err)
-        if value < 0:
-            log.fatal(err)
+    if cov_cutoff in ['off', 'auto']:
+        return cov_cutoff
+
+    err = ('Read coverage cutoff value. Must be a positive '
+           'float value, or "auto", or "off"')
+    try:
+        value = float(cov_cutoff)
+    except ValueError:
+        log.fatal(err)
+
+    if value < 0:
+        log.fatal(err)
 
     return cov_cutoff
+
+
+def find_program(assembler_name, program, assembler_arg, option=True):
+    """Make sure we can find the programs needed by the assembler."""
+    if assembler_arg == assembler_name and option and not which(program):
+        err = ('We could not find the "{}" program. You either need to '
+               'install it or you need to adjust the PATH environment '
+               'variable with the "--path" option so that aTRAM can '
+               'find it.').format(program)
+        sys.exit(err)

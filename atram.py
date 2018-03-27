@@ -1,10 +1,8 @@
 """The aTRAM assembly program."""
 
-import sys
 import re
 import os
 from os.path import basename, splitext, join
-from shutil import which
 import argparse
 import textwrap
 import tempfile
@@ -21,7 +19,7 @@ import lib.assembler as assembly
 __all__ = ('assemble', )
 
 
-def assemble(args):  # noqa
+def assemble(args):
     """Loop thru every blast/query pair and run an assembly for each one."""
     queries = split_queries(args)
 
@@ -41,13 +39,13 @@ def assemble(args):  # noqa
                     assembler.write_final_output(blast_db, query)
                 except (TimeoutError, RuntimeError):
                     pass
-                except Exception as err:  # pylint: disable=broad-except
+                except Exception as err:
                     log.error('Exception: {}'.format(err))
 
                 db.aux_detach(db_conn)
 
 
-def assembly_loop(assembler, blast_db, query):  # noqa
+def assembly_loop(assembler, blast_db, query):
     """Iterate the assembly processes."""
     for iteration in range(1, assembler.args['iterations'] + 1):
         log.info('aTRAM blast DB = "{}", query = "{}", iteration {}'.format(
@@ -149,8 +147,9 @@ def blast_query_against_all_shards(assembler):
         results = [pool.apply_async(
             blast_query_against_one_shard,
             (assembler.args, assembler.simple_state(), shard))
-                   for shard in all_shards]  # noqa
-        _ = [result.get() for result in results]  # noqa
+                   for shard in all_shards]
+        all_results = [result.get() for result in results]
+    log.info('All {} blast results completed'.format(len(all_results)))
 
 
 def shard_fraction(assembler):
@@ -337,10 +336,7 @@ def parse_command_line(temp_dir_default):  # noqa
 
     args = vars(parser.parse_args())
 
-    # Check query arguments
-    if not args['query'] and not args['query_split']:
-        err = 'You must have at least one --query or --query-split argument.'
-        log.fatal(err)
+    check_query_args(args)
 
     # Set defaults and adjust arguments based on other arguments
     args['cov_cutoff'] = assembly.default_cov_cutoff(args['cov_cutoff'])
@@ -349,75 +345,66 @@ def parse_command_line(temp_dir_default):  # noqa
     args['max_target_seqs'] = blast.default_max_target_seqs(
         args['max_target_seqs'], args['blast_db'], args['max_memory'])
 
-    # Setup temp dir
+    set_temp_dir(args, temp_dir_default)
+    setup_blast_args(args)
+    set_protein_arg(args)
+    setup_path_arg(args)
+    find_programs(args)
+
+    return args
+
+
+def setup_path_arg(args):
+    """Prepend to PATH environment variable if requested."""
+    if args['path']:
+        os.environ['PATH'] = '{}:{}'.format(args['path'], os.environ['PATH'])
+
+
+def setup_blast_args(args):
+    """Set up the blast args."""
+    if args['no_filter']:
+        args['bit_score'] = 0
+        args['contig_length'] = 0
+
+
+def check_query_args(args):
+    """Validate the query arguments."""
+    if not args['query'] and not args['query_split']:
+        err = 'You must have at least one --query or --query-split argument.'
+        log.fatal(err)
+
+
+def set_protein_arg(args):
+    """Set up the protein argument."""
+    if not args['protein'] and args['query']:
+        args['protein'] = bio.fasta_file_has_protein(args['query'])
+
+
+def set_temp_dir(args, temp_dir_default):
+    """Set up the temporary directory."""
     if not args['temp_dir']:
         args['temp_dir'] = temp_dir_default
     else:
         os.makedirs(args['temp_dir'], exist_ok=True)
 
-    if args['no_filter']:
-        args['bit_score'] = 0
-        args['contig_length'] = 0
 
-    if not args['protein'] and args['query']:
-        args['protein'] = bio.fasta_file_has_protein(args['query'])
-
-    # Prepend to PATH environment variable if requested
-    if args['path']:
-        os.environ['PATH'] = '{}:{}'.format(args['path'], os.environ['PATH'])
-
-    find_programs(args['assembler'], args['no_long_reads'], args['bowtie2'])
-
-    return args
-
-
-def find_programs(assembler, no_long_reads, bowtie2):  # noqa
+def find_programs(args):
     """Make sure we can find the programs needed by the assembler and blast."""
-    if not (which('makeblastdb') and which('tblastn') and which('blastn')):
-        err = ('We could not find the programs "makeblastdb", "tblastn", or '
-               '"blastn". You either need to install them or you need adjust '
-               'the PATH environment variable with the "--path" option so '
-               'that aTRAM can find them.')
-        sys.exit(err)
+    blast.find_program('makeblastdb')
+    blast.find_program('tblastn')
+    blast.find_program('blastn')
 
-    if assembler == 'abyss' and not which('abyss-pe'):
-        err = ('We could not find the "abyss-pe" program. You either need to '
-               'install it or you need to adjust the PATH environment '
-               'variable with the "--path" option so that aTRAM can find it.')
-        sys.exit(err)
+    assembly.find_program(
+        'abyss', 'bwa', args['assembler'], not args['no_long_reads'])
 
-    if assembler == 'abyss' and not no_long_reads and not which('bwa'):
-        err = ('We could not find the "bwa-mem" program. You either need to '
-               'install it, adjust the PATH environment variable '
-               'with the "--path" option, or you may use the '
-               '"--no-long-reads" option to not use this program.')
-        sys.exit(err)
+    assembly.find_program('trinity', 'Trinity', args['assembler'])
+    assembly.find_program(
+        'trinity', 'Trinity', args['assembler'], args['bowtie2'])
 
-    if assembler == 'trinity' and not which('Trinity'):
-        err = ('We could not find the "Trinity" program. You either need to '
-               'install it or you need to adjust the PATH environment '
-               'variable with the "--path" option so that aTRAM can find it.')
-        sys.exit(err)
+    assembly.find_program('velvet', 'velveth', args['assembler'])
+    assembly.find_program('velvet', 'velvetg', args['assembler'])
 
-    if assembler == 'trinity' and bowtie2 and not which('bowtie2'):
-        err = ('We could not find the "bowtie2" program. You either need to '
-               'install it, adjust the PATH environment variable '
-               'with the "--path" option, or you may skip using this program '
-               'by not using the "--bowtie2" option.')
-        sys.exit(err)
-
-    if assembler == 'velvet' and not (which('velveth') and which('velvetg')):
-        err = ('We could not find either the "velveth" or "velvetg" program. '
-               'You either need to install it or you need to adjust the PATH '
-               'environment variable with the "--path" option so that aTRAM '
-               'can find it.')
-        sys.exit(err)
-
-    if assembler == 'spades' and not which('spades.py'):
-        err = ('We could not find the "Spades" program. You either need to '
-               'install it or you need to adjust the PATH environment '
-               'variable with the "--path" option so that aTRAM can find it.')
-        sys.exit(err)
+    assembly.find_program('spades', 'spades.py', args['assembler'])
 
 
 def required_command_line_args(parser):

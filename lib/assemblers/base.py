@@ -9,7 +9,7 @@ import lib.bio as bio
 import lib.util as util
 
 
-class BaseAssembler:  # pylint: disable=too-many-public-methods
+class BaseAssembler:
     """A base class for the assemblers."""
 
     def __init__(self, args, db_conn):
@@ -160,7 +160,11 @@ class BaseAssembler:  # pylint: disable=too-many-public-methods
         """Write blast hits and matching ends to fasta files."""
         log.info('Writing assembler input files: iteration {}'.format(
             self.state['iteration']))
+        self.write_paired_input_files()
+        self.write_single_input_files()
 
+    def write_paired_input_files(self):
+        """Write blast hits and matching ends to fasta files."""
         with open(self.file['paired_1'], 'w') as end_1, \
                 open(self.file['paired_2'], 'w') as end_2:
 
@@ -174,6 +178,8 @@ class BaseAssembler:  # pylint: disable=too-many-public-methods
                     row['seq_name'], row['seq_end']))
                 out_file.write('{}\n'.format(row['seq']))
 
+    def write_single_input_files(self):
+        """Write blast hits and matching ends to fasta files."""
         with open(self.file['single_1'], 'w') as end_1, \
                 open(self.file['single_2'], 'w') as end_2, \
                 open(self.file['single_any'], 'w') as end_any:

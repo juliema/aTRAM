@@ -1,10 +1,12 @@
 """All blast commands used by aTRAM."""
 
+import sys
 import os
 from os.path import basename, join
 import re
 import glob
 import json
+from shutil import which
 import lib.log as log
 
 
@@ -191,3 +193,13 @@ def touchup_blast_db_names(blast_dbs):
         db_names.append(re.sub(pattern, r'\1', blast_db, re.I | re.X))
 
     return db_names
+
+
+def find_program(program):
+    """Make sure we can find the needed blast program."""
+    if not (which('makeblastdb') and which('tblastn') and which('blastn')):
+        err = ('We could not find the programs "{}". You either need to '
+               'install it or you need adjust the PATH environment variable '
+               'with the "--path" option so that aTRAM can '
+               'find it.').format(program)
+        sys.exit(err)

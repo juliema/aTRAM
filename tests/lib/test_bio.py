@@ -1,7 +1,5 @@
 """Testing functions in lib/bio."""
 
-# pylint: disable=missing-docstring
-
 from hypothesis import given
 import hypothesis.strategies as st
 import lib.bio as bio

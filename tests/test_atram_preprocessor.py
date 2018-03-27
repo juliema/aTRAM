@@ -1,7 +1,5 @@
 """Testing functions in atram_preprocessor."""
 
-# pylint: disable=missing-docstring,too-many-arguments,no-self-use
-
 from os.path import join
 import tempfile
 import unittest

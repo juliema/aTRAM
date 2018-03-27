@@ -25,3 +25,4 @@ data/
 .vscode
 .ropeproject/
 .spyproject/
+.mypy_cache/
