@@ -116,7 +116,7 @@ def create_all_blast_shards(args, shard_list):
                 create_one_blast_shard,
                 (args, shard_params, idx)))
 
-            all_results = [result.get() for result in results]
+        all_results = [result.get() for result in results]
     log.info('Finished making blast all {} DBs'.format(len(all_results)))
 
 
