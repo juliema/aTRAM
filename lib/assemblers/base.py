@@ -231,6 +231,9 @@ class BaseAssembler:
             self.args['bit_score'],
             self.args['contig_length'])
 
+        if not contigs:
+            return
+
         with open(file_name, 'w') as output_file:
             for contig in contigs:
                 self.output_assembled_contig(output_file, contig)
@@ -239,8 +242,13 @@ class BaseAssembler:
         """Write all contigs to a final ouput file."""
         file_name = '{}.{}'.format(prefix, 'all_contigs.fasta')
 
+        contigs = db.get_all_assembled_contigs(self.state['db_conn'])
+
+        if not contigs:
+            return
+
         with open(file_name, 'w') as output_file:
-            for contig in db.get_all_assembled_contigs(self.state['db_conn']):
+            for contig in contigs:
                 self.output_assembled_contig(output_file, contig)
 
     @staticmethod
