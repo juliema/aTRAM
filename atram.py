@@ -359,7 +359,8 @@ def sqlite_temp_dir(args):
     """Prepend to PATH environment variable if requested."""
     if args['sqlite_temp_dir']:
         os.environ['SQLITE_TMPDIR'] = args['sqlite_temp_dir']
-
+    elif args['temp_dir']:
+        os.environ['SQLITE_TMPDIR'] = args['temp_dir']
 
 def setup_path_arg(args):
     """Prepend to PATH environment variable if requested."""

@@ -269,6 +269,8 @@ def parse_command_line(temp_dir_default):
     # Add an sqlite3 temporary directory if requested
     if args['sqlite_temp_dir']:
         os.environ['SQLITE_TMPDIR'] = args['sqlite_temp_dir']
+    elif args['temp_dir']:
+        os.environ['SQLITE_TMPDIR'] = args['temp_dir']
 
     # Setup temp dir
     if not args['temp_dir']:
