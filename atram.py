@@ -349,14 +349,21 @@ def parse_command_line(temp_dir_default):  # noqa
     setup_blast_args(args)
     set_protein_arg(args)
     setup_path_arg(args)
+    sqlite_temp_dir(args)
     find_programs(args)
 
     return args
 
 
+def sqlite_temp_dir(args):
+    """Prepend to PATH environment variable if requested."""
+    if args['sqlite_temp_dir']:
+        os.environ['SQLITE_TMPDIR'] = args['sqlite_temp_dir']
+
+
 def setup_path_arg(args):
     """Prepend to PATH environment variable if requested."""
-    if args['path']:
+    if args['sqlite_temp_dir']:
         os.environ['PATH'] = '{}:{}'.format(args['path'], os.environ['PATH'])
 
 
@@ -483,6 +490,11 @@ def optional_command_line_args(parser):
     group.add_argument('-t', '--temp-dir', metavar='DIR',
                        help='''You may save intermediate files for debugging
                             in this directory. The directory must be empty.''')
+
+    group.add_argument('--sqlite-temp-dir', metavar='DIR',
+                       help='''Use this directory to save temporary SQLITE3
+                            files. This is a possible fix for "database or
+                            disk is full" errors.''')
 
     group.add_argument('-T', '--timeout', metavar='SECONDS', default=300,
                        type=int,

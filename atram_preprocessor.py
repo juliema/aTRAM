@@ -255,11 +255,20 @@ def parse_command_line(temp_dir_default):
                             then use this to prepend directories to your
                             path.''')
 
+    group.add_argument('--sqlite-temp-dir', metavar='DIR',
+                       help='''Use this directory to save temporary SQLITE3
+                            files. This is a possible fix for "database or
+                            disk is full" errors.''')
+
     args = vars(parser.parse_args())
 
     # Prepend to PATH environment variable if requested
     if args['path']:
         os.environ['PATH'] = '{}:{}'.format(args['path'], os.environ['PATH'])
+
+    # Add an sqlite3 temporary directory if requested
+    if args['sqlite_temp_dir']:
+        os.environ['SQLITE_TMPDIR'] = args['sqlite_temp_dir']
 
     # Setup temp dir
     if not args['temp_dir']:
