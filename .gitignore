@@ -20,6 +20,7 @@ data/
 .coverage
 .cache
 .hypothesis
+.pytest_cache
 
 .idea
 .vscode
