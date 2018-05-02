@@ -224,6 +224,13 @@ class BaseAssembler:
         if self.args['no_filter']:
             return
 
+        count = db.all_assembled_contigs_count(
+            self.state['db_conn'],
+            self.args['bit_score'],
+            self.args['contig_length'])
+        if not count:
+            return
+
         file_name = '{}.{}'.format(prefix, 'filtered_contigs.fasta')
 
         contigs = db.get_all_assembled_contigs(
@@ -231,21 +238,19 @@ class BaseAssembler:
             self.args['bit_score'],
             self.args['contig_length'])
 
-        if not contigs:
-            return
-
         with open(file_name, 'w') as output_file:
             for contig in contigs:
                 self.output_assembled_contig(output_file, contig)
 
     def write_all_contigs(self, prefix):
         """Write all contigs to a final ouput file."""
+        count = db.all_assembled_contigs_count(self.state['db_conn'])
+        if not count:
+            return
+
         file_name = '{}.{}'.format(prefix, 'all_contigs.fasta')
 
         contigs = db.get_all_assembled_contigs(self.state['db_conn'])
-
-        if not contigs:
-            return
 
         with open(file_name, 'w') as output_file:
             for contig in contigs:

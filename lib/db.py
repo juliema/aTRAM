@@ -380,3 +380,16 @@ def get_all_assembled_contigs(db_conn, bit_score=0, length=0):
 
     db_conn.row_factory = sqlite3.Row
     return db_conn.execute(sql, (bit_score, length))
+
+
+def all_assembled_contigs_count(db_conn, bit_score=0, length=0):
+    """Count all assembed contigs."""
+    sql = '''
+        SELECT COUNT(*) AS count
+          FROM aux.assembled_contigs
+         WHERE bit_score >= ?
+           AND len >= ?
+        '''
+
+    result = db_conn.execute(sql, (bit_score, length))
+    return result.fetchone()[0]
