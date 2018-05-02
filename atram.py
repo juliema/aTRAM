@@ -38,7 +38,7 @@ def assemble(args):
                     assembly_loop(assembler, blast_db, query)
                     assembler.write_final_output(blast_db, query)
                 except (TimeoutError, RuntimeError):
-                    pass
+                    assembler.write_final_output(blast_db, query)
                 except Exception as err:
                     log.error('Exception: {}'.format(err))
 
