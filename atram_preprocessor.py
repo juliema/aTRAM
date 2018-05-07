@@ -151,11 +151,7 @@ def fill_blast_fasta(blast_db, fasta_path, shard_params):
             for row in db.get_sequences_in_shard(db_conn, limit, offset):
                 seq_end = '/{}'.format(row[1]) if row[1] else ''
                 fasta_file.write('>{}{}\n'.format(row[0], seq_end))
-                try:
-                    fasta_file.write('{}\n'.format(row[2]))
-                except:
-                    print('>{}{}\n'.format(row[0], seq_end))
-                    print(len(row[2]))
+                fasta_file.write('{}\n'.format(row[2]))
 
 
 def parse_command_line(temp_dir_default):
