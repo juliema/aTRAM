@@ -154,6 +154,7 @@ def fill_blast_fasta(blast_db, fasta_path, shard_params):
                 try:
                     fasta_file.write('{}\n'.format(row[2]))
                 except:
+                    print('>{}{}\n'.format(row[0], seq_end))
                     print(len(row[2]))
 
 
