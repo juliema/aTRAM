@@ -29,9 +29,9 @@ class TestAssemblersBase(unittest.TestCase):
             state['iteration'])
         return assembler
 
-    @given(args=st.text(), db_conn=st.text())
-    def test_init(self, args, db_conn):
-        assembler = BaseAssembler(args, db_conn)
+    @given(args=st.text(), cxn=st.text())
+    def test_init(self, args, cxn):
+        assembler = BaseAssembler(args, cxn)
 
         assert args == assembler.args
         assert assembler.blast_only is False
@@ -43,7 +43,7 @@ class TestAssemblersBase(unittest.TestCase):
             'query_target': '',
             'query_file': '',
             'blast_db': '',
-            'db_conn': db_conn}
+            'cxn': cxn}
         assert expected == assembler.state
 
     @given(
@@ -58,7 +58,7 @@ class TestAssemblersBase(unittest.TestCase):
                             'single_1.fasta',
                             'single_2.fasta',
                             'single_any.fasta']]
-        assembler = BaseAssembler('args', 'db_conn')
+        assembler = BaseAssembler('args', 'cxn')
         assembler.iter_file = MagicMock(side_effect=output_files)
 
         assembler.initialize_iteration(blast_db, query_file, iteration)
@@ -85,7 +85,7 @@ class TestAssemblersBase(unittest.TestCase):
         iteration=st.integers())
     def test_iter_dir(self, args, blast_db, query_file, iteration):
         assume(re.search(r'\w', query_file))
-        assembler = BaseAssembler(args, 'db_conn')
+        assembler = BaseAssembler(args, 'cxn')
         assembler.set_state(blast_db, query_file, iteration)
 
         base_blast_db = basename(blast_db)
@@ -106,7 +106,7 @@ class TestAssemblersBase(unittest.TestCase):
     def test_iter_file(
             self, args, blast_db, query_file, iteration, file_name):
         assume(re.search(r'\w', query_file))
-        assembler = BaseAssembler(args, 'db_conn')
+        assembler = BaseAssembler(args, 'cxn')
         assembler.set_state(blast_db, query_file, iteration)
 
         base_blast_db = basename(blast_db)
@@ -120,7 +120,7 @@ class TestAssemblersBase(unittest.TestCase):
 
     def test_work_path(self):
         iter_dir = 'whatever'
-        assembler = BaseAssembler('args', 'db_conn')
+        assembler = BaseAssembler('args', 'cxn')
         assembler.iter_dir = MagicMock(return_value=iter_dir)
 
         assert iter_dir == assembler.work_path()
@@ -129,7 +129,7 @@ class TestAssemblersBase(unittest.TestCase):
     def test_run_ok(self, info):
         args = {'assembler': 'my_assembler', 'timeout': 10}
 
-        assembler = BaseAssembler(args, 'db_conn')
+        assembler = BaseAssembler(args, 'cxn')
         assembler.set_state('blast_db', 'query_file', 99)
 
         assembler.assemble = MagicMock()
@@ -146,7 +146,7 @@ class TestAssemblersBase(unittest.TestCase):
     def test_run_timeout(self, error, info):
         args = {'assembler': 'my_assembler', 'timeout': 10}
 
-        assembler = BaseAssembler(args, 'db_conn')
+        assembler = BaseAssembler(args, 'cxn')
         assembler.set_state('blast_db', 'query_file', 99)
 
         assembler.assemble = MagicMock(side_effect=TimeoutError())
@@ -178,7 +178,7 @@ class TestAssemblersBase(unittest.TestCase):
         cmd = 'my command'
         error = subprocess.CalledProcessError(error_code, cmd)
 
-        assembler = BaseAssembler(args, 'db_conn')
+        assembler = BaseAssembler(args, 'cxn')
         assembler.set_state('blast_db', 'query_file', 99)
 
         assembler.assemble = MagicMock(side_effect=error)
@@ -200,7 +200,7 @@ class TestAssemblersBase(unittest.TestCase):
     @patch('lib.log.info')
     @patch('lib.db.sra_blast_hits_count')
     def test_no_blast_hits_true(self, sra_blast_hits_count, info):
-        assembler = BaseAssembler('args', 'db_conn')
+        assembler = BaseAssembler('args', 'cxn')
         assembler.set_state('blast_db', 'query_file', 99)
 
         sra_blast_hits_count.return_value = 0
@@ -213,7 +213,7 @@ class TestAssemblersBase(unittest.TestCase):
     @patch('lib.log.info')
     @patch('lib.db.sra_blast_hits_count')
     def test_no_blast_hits_false(self, sra_blast_hits_count, info):
-        assembler = BaseAssembler('args', 'db_conn')
+        assembler = BaseAssembler('args', 'cxn')
         assembler.set_state('blast_db', 'query_file', 99)
 
         sra_blast_hits_count.return_value = 1
@@ -224,7 +224,7 @@ class TestAssemblersBase(unittest.TestCase):
 
     @patch('lib.log.info')
     def test_nothing_assembled_missing(self, info):
-        assembler = BaseAssembler('args', 'db_conn')
+        assembler = BaseAssembler('args', 'cxn')
         assembler.set_state('blast_db', 'query_file', 99)
         assembler.file['output'] = 'tests/data/missing_file.txt'
 
@@ -236,7 +236,7 @@ class TestAssemblersBase(unittest.TestCase):
 
     @patch('lib.log.info')
     def test_nothing_assembled_empty(self, info):
-        assembler = BaseAssembler('args', 'db_conn')
+        assembler = BaseAssembler('args', 'cxn')
         assembler.set_state('blast_db', 'query_file', 99)
         assembler.file['output'] = 'tests/data/empty_file.txt'
 
@@ -248,7 +248,7 @@ class TestAssemblersBase(unittest.TestCase):
 
     @patch('lib.log.info')
     def test_nothing_assembled_false(self, info):
-        assembler = BaseAssembler('args', 'db_conn')
+        assembler = BaseAssembler('args', 'cxn')
         assembler.set_state('blast_db', 'query_file', 99)
         assembler.file['output'] = 'tests/data/load_seq1.txt'
 
@@ -267,7 +267,7 @@ class TestAssemblersBase(unittest.TestCase):
         assert assembler.assembled_contigs_count(high_score) == 0
 
         assembled_contigs_count.assert_called_once_with(
-            assembler.state['db_conn'],
+            assembler.state['cxn'],
             assembler.state['iteration'],
             assembler.args['bit_score'],
             assembler.args['contig_length'])
@@ -293,7 +293,7 @@ class TestAssemblersBase(unittest.TestCase):
         assert assembler.assembled_contigs_count(high_score) == count
 
         assembled_contigs_count.assert_called_once_with(
-            assembler.state['db_conn'],
+            assembler.state['cxn'],
             assembler.state['iteration'],
             assembler.args['bit_score'],
             assembler.args['contig_length'])
@@ -311,7 +311,7 @@ class TestAssemblersBase(unittest.TestCase):
         assert not assembler.no_new_contigs(count)
 
         iteration_overlap_count.assert_called_once_with(
-            assembler.state['db_conn'],
+            assembler.state['cxn'],
             assembler.state['iteration'],
             assembler.args['bit_score'],
             assembler.args['contig_length'])
@@ -329,7 +329,7 @@ class TestAssemblersBase(unittest.TestCase):
         assert assembler.no_new_contigs(count)
 
         iteration_overlap_count.assert_called_once_with(
-            assembler.state['db_conn'],
+            assembler.state['cxn'],
             assembler.state['iteration'],
             assembler.args['bit_score'],
             assembler.args['contig_length'])

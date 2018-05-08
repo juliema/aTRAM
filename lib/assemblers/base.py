@@ -12,7 +12,7 @@ import lib.util as util
 class BaseAssembler:
     """A base class for the assemblers."""
 
-    def __init__(self, args, db_conn):
+    def __init__(self, args, cxn):
         """Build the assembler."""
         self.args = args         # Parsed command line arguments
         self.blast_only = False  # Used to short-circuit the assembler
@@ -23,7 +23,7 @@ class BaseAssembler:
             'query_target': '',  # Original name of the query sequence
             'query_file': '',    # Current query file name
             'blast_db': '',      # Current blast DB name
-            'db_conn': db_conn}  # Save the DB connection
+            'cxn': cxn}          # Save the DB connection
 
     def initialize_iteration(self, blast_db, query_file, iteration):
         """
@@ -91,7 +91,7 @@ class BaseAssembler:
     def no_blast_hits(self):
         """Make sure we have blast hits."""
         if not db.sra_blast_hits_count(
-                self.state['db_conn'], self.state['iteration']):
+                self.state['cxn'], self.state['iteration']):
             log.info('No blast hits in iteration {}'.format(
                 self.state['iteration']))
             return True
@@ -109,7 +109,7 @@ class BaseAssembler:
     def assembled_contigs_count(self, high_score):
         """How many contigs were assembled and are above the thresholds."""
         count = db.assembled_contigs_count(
-            self.state['db_conn'],
+            self.state['cxn'],
             self.state['iteration'],
             self.args['bit_score'],
             self.args['contig_length'])
@@ -127,7 +127,7 @@ class BaseAssembler:
     def no_new_contigs(self, count):
         """Make the are new contigs in the assembler output."""
         if count == db.iteration_overlap_count(
-                self.state['db_conn'],
+                self.state['cxn'],
                 self.state['iteration'],
                 self.args['bit_score'],
                 self.args['contig_length']):
@@ -169,7 +169,7 @@ class BaseAssembler:
                 open(self.file['paired_2'], 'w') as end_2:
 
             for row in db.get_blast_hits_by_end_count(
-                    self.state['db_conn'], self.state['iteration'], 2):
+                    self.state['cxn'], self.state['iteration'], 2):
 
                 self.file['paired_count'] += 1
                 out_file = end_1 if row['seq_end'] == '1' else end_2
@@ -185,7 +185,7 @@ class BaseAssembler:
                 open(self.file['single_any'], 'w') as end_any:
 
             for row in db.get_blast_hits_by_end_count(
-                    self.state['db_conn'], self.state['iteration'], 1):
+                    self.state['cxn'], self.state['iteration'], 1):
 
                 if row['seq_end'] == '1':
                     out_file = end_1
@@ -225,7 +225,7 @@ class BaseAssembler:
             return
 
         count = db.all_assembled_contigs_count(
-            self.state['db_conn'],
+            self.state['cxn'],
             self.args['bit_score'],
             self.args['contig_length'])
         if not count:
@@ -234,7 +234,7 @@ class BaseAssembler:
         file_name = '{}.{}'.format(prefix, 'filtered_contigs.fasta')
 
         contigs = db.get_all_assembled_contigs(
-            self.state['db_conn'],
+            self.state['cxn'],
             self.args['bit_score'],
             self.args['contig_length'])
 
@@ -244,13 +244,13 @@ class BaseAssembler:
 
     def write_all_contigs(self, prefix):
         """Write all contigs to a final ouput file."""
-        count = db.all_assembled_contigs_count(self.state['db_conn'])
+        count = db.all_assembled_contigs_count(self.state['cxn'])
         if not count:
             return
 
         file_name = '{}.{}'.format(prefix, 'all_contigs.fasta')
 
-        contigs = db.get_all_assembled_contigs(self.state['db_conn'])
+        contigs = db.get_all_assembled_contigs(self.state['cxn'])
 
         with open(file_name, 'w') as output_file:
             for contig in contigs:

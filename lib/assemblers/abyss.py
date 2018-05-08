@@ -8,9 +8,9 @@ from lib.assemblers.base import BaseAssembler
 class AbyssAssembler(BaseAssembler):
     """Wrapper for the Abyss assembler."""
 
-    def __init__(self, args, db_conn):
+    def __init__(self, args, cxn):
         """Build the assembler."""
-        super().__init__(args, db_conn)
+        super().__init__(args, cxn)
         self.steps = [self.abyss]
 
     def abyss(self):

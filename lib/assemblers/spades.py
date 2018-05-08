@@ -8,9 +8,9 @@ from lib.assemblers.base import BaseAssembler
 class SpadesAssembler(BaseAssembler):
     """Wrapper for the Spades assembler."""
 
-    def __init__(self, args, db_conn):
+    def __init__(self, args, cxn):
         """Build the assembler."""
-        super().__init__(args, db_conn)
+        super().__init__(args, cxn)
         self.steps = [self.spades]
 
     def work_path(self):

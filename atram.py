@@ -25,14 +25,14 @@ def assemble(args):
 
     for blast_db in args['blast_db']:
 
-        with db.connect(blast_db, check_version=True) as db_conn:
+        with db.connect(blast_db, check_version=True) as cxn:
             for query in queries:
-                db.aux_db(db_conn, args['temp_dir'], blast_db, query)
-                clean_database(db_conn)
+                db.aux_db(cxn, args['temp_dir'], blast_db, query)
+                clean_database(cxn)
 
                 log.setup(args['log_file'], blast_db, query)
 
-                assembler = assembly.factory(args, db_conn)
+                assembler = assembly.factory(args, cxn)
 
                 try:
                     assembly_loop(assembler, blast_db, query)
@@ -43,7 +43,7 @@ def assemble(args):
                 finally:
                     assembler.write_final_output(blast_db, query)
 
-                db.aux_detach(db_conn)
+                db.aux_detach(cxn)
 
 
 def assembly_loop(assembler, blast_db, query):
@@ -125,11 +125,11 @@ def write_query_seq(file_name, seq_id, seq):
         query_file.write('{}\n'.format(seq))
 
 
-def clean_database(db_conn):
+def clean_database(cxn):
     """Create database tables for an atram run."""
-    db.create_sra_blast_hits_table(db_conn)
-    db.create_contig_blast_hits_table(db_conn)
-    db.create_assembled_contigs_table(db_conn)
+    db.create_sra_blast_hits_table(cxn)
+    db.create_contig_blast_hits_table(cxn)
+    db.create_assembled_contigs_table(cxn)
 
 
 def blast_query_against_all_shards(assembler):
@@ -148,7 +148,7 @@ def blast_query_against_all_shards(assembler):
         results = [pool.apply_async(
             blast_query_against_one_shard,
             (assembler.args, assembler.simple_state(), shard))
-                   for shard in all_shards]
+            for shard in all_shards]
         all_results = [result.get() for result in results]
     log.info('All {} blast results completed'.format(len(all_results)))
 
@@ -180,9 +180,9 @@ def blast_query_against_one_shard(args, state, shard):
 
     blast.against_sra(args, state, output_file, shard)
 
-    with db.connect(state['blast_db']) as db_conn:
+    with db.connect(state['blast_db']) as cxn:
         db.aux_db(
-            db_conn,
+            cxn,
             args['temp_dir'],
             state['blast_db'],
             state['query_target'])
@@ -201,7 +201,7 @@ def blast_query_against_one_shard(args, state, shard):
                 seq_name = hit['title']
                 seq_end = ''
             batch.append((state['iteration'], seq_end, seq_name, shard))
-        db.insert_blast_hit_batch(db_conn, batch)
+        db.insert_blast_hit_batch(cxn, batch)
 
 
 def filter_contigs(assembler):
@@ -231,7 +231,7 @@ def filter_contigs(assembler):
     all_hits = {row['contig_id']: row
                 for row
                 in db.get_contig_blast_hits(
-                    assembler.state['db_conn'],
+                    assembler.state['cxn'],
                     assembler.state['iteration'])}
 
     return save_contigs(assembler, all_hits)
@@ -256,7 +256,7 @@ def save_blast_against_contigs(assembler, hits_file):
             hit['hit_to'],
             hit.get('hit_strand', '')))
 
-    db.insert_contig_hit_batch(assembler.state['db_conn'], batch)
+    db.insert_contig_hit_batch(assembler.state['cxn'], batch)
 
 
 def save_contigs(assembler, all_hits):
@@ -281,7 +281,7 @@ def save_contigs(assembler, all_hits):
                     hit['hit_from'],
                     hit['hit_to'],
                     hit['hit_strand']))
-    db.insert_assembled_contigs_batch(assembler.state['db_conn'], batch)
+    db.insert_assembled_contigs_batch(assembler.state['cxn'], batch)
 
     return high_score
 
@@ -296,7 +296,7 @@ def create_query_from_contigs(assembler):
 
     with open(query, 'w') as query_file:
         for row in db.get_assembled_contigs(
-                assembler.state['db_conn'],
+                assembler.state['cxn'],
                 assembler.state['iteration'],
                 assembler.args['bit_score'],
                 assembler.args['contig_length']):
@@ -362,6 +362,7 @@ def sqlite_temp_dir(args):
         os.environ['SQLITE_TMPDIR'] = args['sqlite_temp_dir']
     elif args['temp_dir']:
         os.environ['SQLITE_TMPDIR'] = args['temp_dir']
+
 
 def setup_path_arg(args):
     """Prepend to PATH environment variable if requested."""

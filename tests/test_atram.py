@@ -12,14 +12,14 @@ class TestAtram(unittest.TestCase):
     """Testing functions in atram."""
 
     def setUp(self):
-        self.db_conn = 'db_conn'
+        self.cxn = 'cxn'
         self.args = {
             'query': ['query_file_1', 'query_file_2'],
             'blast_db': ['blast_db_1', 'blast_db_2'],
             'iterations': 1,
             'log_file': 'log_file_1',
             'temp_dir': 'temp_dir_1'}
-        self.assembler = BaseAssembler(self.args, self.db_conn)
+        self.assembler = BaseAssembler(self.args, self.cxn)
 
     @patch('lib.assembler.factory')
     @patch('lib.db.connect')

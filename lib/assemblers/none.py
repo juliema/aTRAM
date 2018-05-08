@@ -7,9 +7,9 @@ from lib.assemblers.base import BaseAssembler
 class NoneAssembler(BaseAssembler):
     """Null object for the assemblers."""
 
-    def __init__(self, args, db_conn):
+    def __init__(self, args, cxn):
         """Build the assembler."""
-        super().__init__(args, db_conn)
+        super().__init__(args, cxn)
         self.steps = []
         self.blast_only = True  # Used to short-circuit the assembler
 
@@ -20,7 +20,7 @@ class NoneAssembler(BaseAssembler):
         file_name = '{}.fasta'.format(prefix)
 
         with open(file_name, 'w') as output_file:
-            for row in db.get_sra_blast_hits(self.state['db_conn'], 1):
+            for row in db.get_sra_blast_hits(self.state['cxn'], 1):
                 output_file.write('>{}{}\n'.format(
                     row['seq_name'], row['seq_end']))
                 output_file.write('{}\n'.format(row['seq']))

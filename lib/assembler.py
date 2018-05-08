@@ -20,11 +20,11 @@ ASSEMBLERS = {
     'none': NoneAssembler}
 
 
-def factory(args, db_conn):
+def factory(args, cxn):
     """Return the assembler based upon the configuration options."""
     name = args['assembler'].lower()
     assembler = ASSEMBLERS[name]
-    return assembler(args, db_conn)
+    return assembler(args, cxn)
 
 
 def command_line_args(parser):

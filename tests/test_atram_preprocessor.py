@@ -12,7 +12,7 @@ import atram_preprocessor
 class TestAtramPreprocessor(unittest.TestCase):
 
     def setUp(self):
-        self.db_conn = 'db_conn'
+        self.cxn = 'cxn'
         self.args = {
             'blast_db': 'blast_db_1',
             'log_file': 'log_file_1',
@@ -64,19 +64,19 @@ class TestAtramPreprocessor(unittest.TestCase):
         db.BATCH_SIZE = 5
 
         file_1 = join('tests', 'data', 'load_seq1.txt')
-        atram_preprocessor.load_one_file(self.db_conn, file_1, 'mixed_ends')
+        atram_preprocessor.load_one_file(self.cxn, file_1, 'mixed_ends')
 
         msg = 'Loading "{}" into sqlite database'.format(file_1)
         info.assert_called_once_with(msg)
 
         calls = [
-            call(self.db_conn, [
+            call(self.cxn, [
                 ('seq1', '1', 'AAAAAAAAAA'),
                 ('seq2', '1', 'AAAAAAAAAAGGGGGGGGGG'),
                 ('seq3', '1', 'AAAAAAAAAA'),
                 ('seq4', '1', 'AAAAAAAAAA'),
                 ('seq5/3', '', 'AAAAAAAAAAGGGGGGGGGG')]),
-            call(self.db_conn, [
+            call(self.cxn, [
                 ('seq1', '2', 'AAAAAAAAAA'),
                 ('seq2', '2', 'AAAAAAAAAAGGGGGGGGGG'),
                 ('seq3', '2', 'AAAAAAAAAA'),
@@ -89,19 +89,19 @@ class TestAtramPreprocessor(unittest.TestCase):
         db.BATCH_SIZE = 5
 
         file_1 = join('tests', 'data', 'load_seq1.txt')
-        atram_preprocessor.load_one_file(self.db_conn, file_1, 'end_1', '1')
+        atram_preprocessor.load_one_file(self.cxn, file_1, 'end_1', '1')
 
         msg = 'Loading "{}" into sqlite database'.format(file_1)
         info.assert_called_once_with(msg)
 
         calls = [
-            call(self.db_conn, [
+            call(self.cxn, [
                 ('seq1', '1', 'AAAAAAAAAA'),
                 ('seq2', '1', 'AAAAAAAAAAGGGGGGGGGG'),
                 ('seq3', '1', 'AAAAAAAAAA'),
                 ('seq4', '1', 'AAAAAAAAAA'),
                 ('seq5/3', '1', 'AAAAAAAAAAGGGGGGGGGG')]),
-            call(self.db_conn, [
+            call(self.cxn, [
                 ('seq1', '1', 'AAAAAAAAAA'),
                 ('seq2', '1', 'AAAAAAAAAAGGGGGGGGGG'),
                 ('seq3', '1', 'AAAAAAAAAA'),
@@ -114,19 +114,19 @@ class TestAtramPreprocessor(unittest.TestCase):
         db.BATCH_SIZE = 5
 
         file_1 = join('tests', 'data', 'load_seq1.txt')
-        atram_preprocessor.load_one_file(self.db_conn, file_1, 'end_2', '2')
+        atram_preprocessor.load_one_file(self.cxn, file_1, 'end_2', '2')
 
         msg = 'Loading "{}" into sqlite database'.format(file_1)
         info.assert_called_once_with(msg)
 
         calls = [
-            call(self.db_conn, [
+            call(self.cxn, [
                 ('seq1', '2', 'AAAAAAAAAA'),
                 ('seq2', '2', 'AAAAAAAAAAGGGGGGGGGG'),
                 ('seq3', '2', 'AAAAAAAAAA'),
                 ('seq4', '2', 'AAAAAAAAAA'),
                 ('seq5/3', '2', 'AAAAAAAAAAGGGGGGGGGG')]),
-            call(self.db_conn, [
+            call(self.cxn, [
                 ('seq1', '2', 'AAAAAAAAAA'),
                 ('seq2', '2', 'AAAAAAAAAAGGGGGGGGGG'),
                 ('seq3', '2', 'AAAAAAAAAA'),
@@ -140,19 +140,19 @@ class TestAtramPreprocessor(unittest.TestCase):
 
         file_1 = join('tests', 'data', 'load_seq1.txt')
         atram_preprocessor.load_one_file(
-            self.db_conn, file_1, 'single_ends', '')
+            self.cxn, file_1, 'single_ends', '')
 
         msg = 'Loading "{}" into sqlite database'.format(file_1)
         info.assert_called_once_with(msg)
 
         calls = [
-            call(self.db_conn, [
+            call(self.cxn, [
                 ('seq1', '', 'AAAAAAAAAA'),
                 ('seq2', '', 'AAAAAAAAAAGGGGGGGGGG'),
                 ('seq3', '', 'AAAAAAAAAA'),
                 ('seq4', '', 'AAAAAAAAAA'),
                 ('seq5/3', '', 'AAAAAAAAAAGGGGGGGGGG')]),
-            call(self.db_conn, [
+            call(self.cxn, [
                 ('seq1', '', 'AAAAAAAAAA'),
                 ('seq2', '', 'AAAAAAAAAAGGGGGGGGGG'),
                 ('seq3', '', 'AAAAAAAAAA'),
@@ -165,13 +165,13 @@ class TestAtramPreprocessor(unittest.TestCase):
         db.BATCH_SIZE = 5
 
         file_1 = join('tests', 'data', 'load_seq2.txt')
-        atram_preprocessor.load_one_file(self.db_conn, file_1, 'mixed_ends')
+        atram_preprocessor.load_one_file(self.cxn, file_1, 'mixed_ends')
 
         msg = 'Loading "{}" into sqlite database'.format(file_1)
         info.assert_called_once_with(msg)
 
         calls = [
-            call(self.db_conn, [
+            call(self.cxn, [
                 ('seq6', '1', 'TTTTTTTTTT'),
                 ('seq7', '1', 'TTTTTTTTTTCCCCCCCCCC'),
                 ('seq8/a.1 suffix', '', 'TTTTTTTTTT'),
