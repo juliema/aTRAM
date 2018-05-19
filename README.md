@@ -36,6 +36,12 @@ You will need to install BLAST externally and have it in the path. You will also
 - [Abyss](http://www.bcgsc.ca/platform/bioinfo/software/abyss) - version 2.0.2
 - [SPAdes](http://cab.spbu.ru/software/spades/) - version 3.11.1
 
+One final thing that may be necessary will be to change the default temporary directory for sqlite. The default directory can fill up if it does not have the capacity for the temproary files or is not emptied often enough and will then cause errors when running the program. To change the temp directory type:
+
+```
+export SQLITE_TMPDIR=<path/to/new/temp/file>
+```
+
 # Library Preparation
 
 Use `atram_preprocessor.py` for this. Define your new library name with -b (something simple). Then give it your fastq files. You can either list the forward and reverse read files, or put them into one file and use the --mixed-ends option. Under the hood, aTRAM 2 is building a SQLite3 database for rapid read retrieval. Note that aTRAM 2 is not backwards compatible with aTRAM 1 libraries; it is also best to rebuild any libraries after major updates.
