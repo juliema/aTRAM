@@ -30,11 +30,11 @@ If you choose not to use virtual environments, you will likely have to specify p
 
 You will need to install BLAST externally and have it in the path. You will also need one of the supported assembly modules. URLs are given below:
 
-- [BLAST](http://blast.ncbi.nlm.nih.gov/Blast.cgi?PAGE_TYPE=BlastDocs&DOC_TYPE=Download)
+- [BLAST](http://blast.ncbi.nlm.nih.gov/Blast.cgi?PAGE_TYPE=BlastDocs&DOC_TYPE=Download) - version 2.7.1
 - [Velvet](https://www.ebi.ac.uk/~zerbino/velvet/)
-- [Trinity](http://trinityrnaseq.sourceforge.net)
-- [Abyss](http://www.bcgsc.ca/platform/bioinfo/software/abyss)
-- [SPAdes](http://bioinf.spbau.ru/spades)
+- [Trinity](http://trinityrnaseq.sourceforge.net) - version 2.5.1
+- [Abyss](http://www.bcgsc.ca/platform/bioinfo/software/abyss) - version 2.0.2
+- [SPAdes](http://cab.spbu.ru/software/spades/) - version 3.11.1
 
 # Library Preparation
 
