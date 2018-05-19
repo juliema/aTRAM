@@ -32,7 +32,7 @@ You will need to install BLAST externally and have it in the path. You will also
 
 - [BLAST](http://blast.ncbi.nlm.nih.gov/Blast.cgi?PAGE_TYPE=BlastDocs&DOC_TYPE=Download) - version 2.7.1
 - [Velvet](https://www.ebi.ac.uk/~zerbino/velvet/)
-- [Trinity](http://trinityrnaseq.sourceforge.net) - version 2.5.1
+- [Trinity](http://trinityrnaseq.github.io/) - version 2.5.1
 - [Abyss](http://www.bcgsc.ca/platform/bioinfo/software/abyss) - version 2.0.2
 - [SPAdes](http://cab.spbu.ru/software/spades/) - version 3.11.1
 
