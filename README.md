@@ -6,7 +6,7 @@ aTRAM 2.0 is a major overhaul of the aTRAM approach to assembling loci from NGS 
 
 aTRAM ("automated target restricted assembly method") is an iterative assembler that performs reference-guided local de novo assemblies using a variety of available methods. It is well-suited to various tasks where NGS data needs to be queried for gene sequences, such as phylogenomics. The design philosophy is modular and expandable, with support for four de-novo assemblers to date: Velvet, Abyss, Trinity, and Spades.
 
-Please consult the reference below for more information about aTRAM1.0: 
+Please consult the reference below for more information about aTRAM1.0:
 `Allen, JM, DI Huang, QC Cronk, KP Johnson. 2015\. aTRAM automated target restricted assembly method a fast method for assembling loci across divergent taxa from next-generation sequencing data. BMC Bioinformatics 16:98 DOI 10.1186/s12859-015-0515-2`
 
 A paper on aTRAM 2.0 is now in press:
@@ -36,10 +36,10 @@ You will need to install BLAST externally and have it in the path. You will also
 - [Abyss](http://www.bcgsc.ca/platform/bioinfo/software/abyss) - version 2.0.2
 - [SPAdes](http://cab.spbu.ru/software/spades/) - version 3.11.1
 
-One final thing that may be necessary will be to change the default temporary directory for sqlite. The default directory can fill up if it does not have the capacity for the temproary files or is not emptied often enough and will then cause errors when running the program. To change the temp directory type:
+One final thing that may be necessary will be to change the default temporary directory for SQLite3. The default directory can fill up if it does not have the capacity for the temporary files or is not emptied often enough and will then cause errors when running the program. To change the SQLite3 temp directory use the following argument:
 
 ```
-export SQLITE_TMPDIR=<path/to/new/temp/file>
+--sqlite-temp-dir "<path/to/temp/directory/>"
 ```
 
 # Library Preparation
@@ -117,7 +117,7 @@ Several arguments have synonyms, given below.
   - Give a prefix for output files. You may include a directory path as part of the prefix.
 
 - `-q QUERY, --query QUERY, --target QUERY` or
-  `-Q QUERY_SPLIT, --query QUERY_SPLIT, --target QUERY_SPLIT` 
+  `-Q QUERY_SPLIT, --query QUERY_SPLIT, --target QUERY_SPLIT`
 
   - This specifies the query sequence or sequences.  If one sequence use the "-q" option.  For many query sequences, "-Q".
 
@@ -219,8 +219,8 @@ optional assembler arguments:
 
 # Assembling multiple genes against a library
 
- aTRAM2.0 can assemble a set of genes against a single library.  Create a single file with multiple fasta-formatted sequences and then simply use `-Q QUERY_SPLIT` where QUERY_SPLIT is the name of the file you created above. 
- 
+ aTRAM2.0 can assemble a set of genes against a single library.  Create a single file with multiple fasta-formatted sequences and then simply use `-Q QUERY_SPLIT` where QUERY_SPLIT is the name of the file you created above.
+
 
 # Example of running a shell loop
 
@@ -236,7 +236,7 @@ python path_to_aTRAM/atram_preprocessor.py -c 4 -b path_to_atram_library/lib_${a
 done
 ```
 
-The part `${a}_P*.fq` will have to be modified to match the name pattern of your input fastq files. 
+The part `${a}_P*.fq` will have to be modified to match the name pattern of your input fastq files.
 
 Then, supposing we have a set of genes stored in a single file and wish to use Abyss:
 
