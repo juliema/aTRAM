@@ -30,11 +30,17 @@ If you choose not to use virtual environments, you will likely have to specify p
 
 You will need to install BLAST externally and have it in the path. You will also need one of the supported assembly modules. URLs are given below:
 
-- [BLAST](http://blast.ncbi.nlm.nih.gov/Blast.cgi?PAGE_TYPE=BlastDocs&DOC_TYPE=Download)
+- [BLAST](http://blast.ncbi.nlm.nih.gov/Blast.cgi?PAGE_TYPE=BlastDocs&DOC_TYPE=Download) - version 2.7.1
 - [Velvet](https://www.ebi.ac.uk/~zerbino/velvet/)
-- [Trinity](http://trinityrnaseq.sourceforge.net)
-- [Abyss](http://www.bcgsc.ca/platform/bioinfo/software/abyss)
-- [SPAdes](http://bioinf.spbau.ru/spades)
+- [Trinity](http://trinityrnaseq.github.io/) - version 2.5.1
+- [Abyss](http://www.bcgsc.ca/platform/bioinfo/software/abyss) - version 2.0.2
+- [SPAdes](http://cab.spbu.ru/software/spades/) - version 3.11.1
+
+One final thing that may be necessary will be to change the default temporary directory for sqlite. The default directory can fill up if it does not have the capacity for the temproary files or is not emptied often enough and will then cause errors when running the program. To change the temp directory type:
+
+```
+export SQLITE_TMPDIR=<path/to/new/temp/file>
+```
 
 # Library Preparation
 
