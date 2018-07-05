@@ -148,7 +148,7 @@ def blast_query_against_all_shards(assembler):
         results = [pool.apply_async(
             blast_query_against_one_shard,
             (assembler.args, assembler.simple_state(), shard))
-            for shard in all_shards]
+                   for shard in all_shards]
         all_results = [result.get() for result in results]
     log.info('All {} blast results completed'.format(len(all_results)))
 
