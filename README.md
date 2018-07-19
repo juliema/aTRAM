@@ -47,7 +47,7 @@ One final thing that may be necessary will be to change the default temporary di
 Use `atram_preprocessor.py` for this. Define your new library name with -b (something simple). Then give it your fastq files. You can either list the forward and reverse read files, or put them into one file and use the --mixed-ends option. Under the hood, aTRAM 2 is building a SQLite3 database for rapid read retrieval. Note that aTRAM 2 is not backwards compatible with aTRAM 1 libraries; it is also best to rebuild any libraries after major updates.
 
 ```
-python path_to_aTRAM/atram_preprocessor.py -c NUMBER_OF_THREADS -b path_to_atram_library/LIBRARY_PREFIX --end-1 path_to_read_1/read_1.fastq --end-2 --end-1 path_to_read_2/read_2.fastq
+python path_to_aTRAM/atram_preprocessor.py -c NUMBER_OF_THREADS -b path_to_atram_library/LIBRARY_PREFIX --end-1 path_to_read_1/read_1.fastq --end-2 path_to_read_2/read_2.fastq
 ```
 
 ## Preprocessor arguments:
