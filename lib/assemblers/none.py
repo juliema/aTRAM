@@ -21,6 +21,6 @@ class NoneAssembler(BaseAssembler):
 
         with open(file_name, 'w') as output_file:
             for row in db.get_sra_blast_hits(self.state['cxn'], 1):
-                output_file.write('>{}{}\n'.format(
+                output_file.write('>{}_{}\n'.format(
                     row['seq_name'], row['seq_end']))
                 output_file.write('{}\n'.format(row['seq']))

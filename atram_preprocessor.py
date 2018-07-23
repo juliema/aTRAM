@@ -43,14 +43,14 @@ def preprocess(args):
 def load_seqs(args, cxn):
     """Load sequences from a fasta/fastq files into the atram database."""
     # We have to clamp the end suffix depending on the file type.
-    for (arg, clamp) in [('mixed_ends', ''), ('end_1', '1'),
-                         ('end_2', '2'), ('single_ends', '')]:
-        if args.get(arg):
-            for file_name in args[arg]:
-                load_one_file(cxn, file_name, arg, clamp)
+    for (ends, clamp) in [('mixed_ends', ''), ('end_1', '1'),
+                          ('end_2', '2'), ('single_ends', '')]:
+        if args.get(ends):
+            for file_name in args[ends]:
+                load_one_file(cxn, file_name, ends, clamp)
 
 
-def load_one_file(cxn, file_name, arg, seq_end_clamp=''):
+def load_one_file(cxn, file_name, ends, seq_end_clamp=''):
     """Load sequences from a fasta/fastq file into the atram database."""
     log.info('Loading "{}" into sqlite database'.format(file_name))
 
@@ -63,17 +63,8 @@ def load_one_file(cxn, file_name, arg, seq_end_clamp=''):
         for rec in parser(sra_file):
             title = rec[0].strip()
             seq = rec[1]
-
-            match = blast.PARSE_HEADER.match(title)
-            if match.group(2):
-                seq_name = match.group(1)
-                if arg == 'mixed_ends':
-                    seq_end = match.group(2)
-                else:
-                    seq_end = seq_end_clamp
-            else:
-                seq_name = title
-                seq_end = seq_end_clamp
+            seq_name, seq_end = blast.parse_fasta_title(
+                title, ends, seq_end_clamp)
 
             batch.append((seq_name, seq_end, seq))
 
@@ -279,9 +270,9 @@ def parse_command_line(temp_dir_default):
         os.makedirs(args['temp_dir'], exist_ok=True)
 
     all_files = []
-    for arg in ['mixed_ends', 'end_1', 'end_2', 'single_ends']:
-        if args.get(arg):
-            all_files.extend([i for i in args[arg]])
+    for ends in ['mixed_ends', 'end_1', 'end_2', 'single_ends']:
+        if args.get(ends):
+            all_files.extend([i for i in args[ends]])
 
     args['shard_count'] = blast.default_shard_count(
         args['shard_count'], all_files)

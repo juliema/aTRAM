@@ -267,7 +267,7 @@ class BaseAssembler:
             seq = bio.reverse_complement(seq)
             suffix = '_REV'
 
-        header = '>{}_{}{} iteration={} contig_id={} score={}\n'.format(
+        header = '>{}_{}_{} iteration={} contig_id={} score={}\n'.format(
             contig['iteration'], contig['contig_id'], suffix,
             contig['iteration'], contig['contig_id'], contig['bit_score'])
 
