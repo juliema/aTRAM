@@ -6,7 +6,7 @@ import os
 from os.path import basename, join, exists
 
 
-ATRAM_VERSION = '2.0.alpha.6'
+ATRAM_VERSION = 'v2.0.alpha.6'
 DB_VERSION = '2.0'
 
 BATCH_SIZE = 1e6  # How many sequence records to insert at a time
