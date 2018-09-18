@@ -332,6 +332,7 @@ def parse_command_line(temp_dir_default):  # noqa
     args = vars(parser.parse_args())
 
     check_query_args(args)
+    blast.check_args(args)
 
     # Set defaults and adjust arguments based on other arguments
     args['cov_cutoff'] = assembly.default_cov_cutoff(args['cov_cutoff'])

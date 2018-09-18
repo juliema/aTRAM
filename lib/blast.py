@@ -41,6 +41,9 @@ def against_sra(args, state, hits_file, shard):
     cmd.append('-db {}'.format(shard))
     cmd.append('-query {}'.format(state['query_file']))
 
+    if args['word_size']:
+        cmd.append('-word_size {}'.format(args['word_size']))
+
     command = ' '.join(cmd)
     log.subcommand(command, args['temp_dir'])
 
@@ -79,7 +82,7 @@ def all_shard_paths(blast_db):
                    pattern[:-4])
         log.fatal(err)
 
-    return sorted([f[:-4] for f in files])
+    return sorted(f[:-4] for f in files)
 
 
 def output_file_name(temp_dir, shrd_path):
@@ -143,11 +146,21 @@ def command_line_args(parser):
     group.add_argument('--evalue', type=float, default=1e-10,
                        help='The default evalue is "1e-10".')
 
+    group.add_argument('--word-size', type=int,
+                       help='Word size for wordfinder algorithm. '
+                            'Must be >= 2.')
+
     group.add_argument('--max-target-seqs', type=int, default=100000000,
                        metavar='MAX',
                        help='Maximum hit sequences per shard. '
                             'Default is calculated based on the available '
                             'memory and the number of shards.')
+
+
+def check_args(args):
+    """Validate blast arguments."""
+    if args['word_size'] and args['word_size'] < 2:
+        sys.exit('--word-size must be >= 2.')
 
 
 def default_max_target_seqs(max_target_seqs, blast_db, max_memory):
