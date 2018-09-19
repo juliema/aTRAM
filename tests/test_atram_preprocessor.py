@@ -204,7 +204,7 @@ class TestAtramPreprocessor(unittest.TestCase):
 
         atram_preprocessor.create_one_blast_shard(self.args, shard_params, 11)
 
-        path = join(self.args['temp_dir'], 'pyt_011.fasta')
+        path = join(self.args['temp_dir'], 'pytest_011.fasta')
 
         fill_blast_fasta.assert_called_once_with(
             self.args['blast_db'], path, shard_params)
