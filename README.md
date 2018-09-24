@@ -16,15 +16,23 @@ A paper on aTRAM 2.0 is now in press:
 
 You will need to have Python3 installed, as well as pip, a package manager for python. Beyond these, it is easiest to handle aTRAM 2 dependencies by setting up a virtual environment, which is a contained workspace with internally installed python libraries. Run the following code in what you intend to be your working directory:
 
+Install the lastest development from source:
 ```
-git clone https://github.com/juliema/aTRAM.git
-cd path/to/cloned/atram
-virtualenv venv -p python3
-source venv/bin/activate
-pip install -r requirements.txt
+$ python -m venv .venv
+$ source .venv/bin/activate
+(.venv) $ pip install git+https://github.com/juliema/aTRAM.git
 ```
 
-You should see something like `(venv)` at the beginning of your command prompt after running the second line, indicating the environment is active. Once you have verified that the requirements installed with no errors, only the second line needs to be run before each aTRAM 2 session.
+or to get a specific release (say `v2.0`):
+```
+$ python -m venv .venv
+$ source .venv/bin/activate
+(.venv) $ git clone https://github.com/juliema/aTRAM.git -b v2.0
+(.venv) $ cd aTRAM
+(.venv) $ pip install .
+```
+
+You should see something like `(.venv)` at the beginning of your command prompt after running the second line, indicating the environment is active. Once you have verified that the requirements installed with no errors, only the second line needs to be run before each aTRAM 2 session.
 
 If you choose not to use virtual environments, you will likely have to specify python3.
 
@@ -224,7 +232,7 @@ optional assembler arguments:
 
 # Example of running a shell loop
 
-In many cases it is convenient to run aTRAM 2.0 as a loop, assembling a set of genes for a set of taxa. These can be set up in two parts, as shown below.  Note that aTRAM2.0 has built in functions supporting assembly of many genes against a library, as described just above.  
+In many cases it is convenient to run aTRAM 2.0 as a loop, assembling a set of genes for a set of taxa. These can be set up in two parts, as shown below.  Note that aTRAM2.0 has built in functions supporting assembly of many genes against a library, as described just above.
 
 ```
 # Make aTRAM libraries
