@@ -49,5 +49,5 @@ setup(
     long_description=readme(),
     license=license(),
     url="https://github.com/juliema/aTRAM",
-    python_requires='>=3.0.*'
+    python_requires='>=3.5'
 )
