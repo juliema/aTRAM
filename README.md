@@ -16,7 +16,7 @@ A paper on aTRAM 2.0 is now in press:
 
 You will need to have Python3 installed, as well as pip, a package manager for python. Beyond these, it is easiest to handle aTRAM 2 dependencies by setting up a virtual environment, which is a contained workspace with internally installed python libraries. Run the following code in what you intend to be your working directory:
 
-Install the lastest development from source:
+Install the latest development from source:
 ```
 $ python -m venv .venv
 $ source .venv/bin/activate
