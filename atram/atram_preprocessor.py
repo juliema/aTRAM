@@ -1,3 +1,4 @@
+#!/bin/env python
 """
 Format the data so that atram can use it later in atram itself.
 
