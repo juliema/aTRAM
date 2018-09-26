@@ -6,7 +6,7 @@ import unittest
 from unittest.mock import patch, call
 import lib.db as db
 
-import atram_preprocessor
+from atram import atram_preprocessor
 
 
 class TestAtramPreprocessor(unittest.TestCase):
@@ -26,9 +26,9 @@ class TestAtramPreprocessor(unittest.TestCase):
     @patch('lib.db.create_metadata_table')
     @patch('lib.db.create_sequences_table')
     @patch('lib.db.create_sequences_index')
-    @patch('atram_preprocessor.load_seqs')
-    @patch('atram_preprocessor.assign_seqs_to_shards')
-    @patch('atram_preprocessor.create_all_blast_shards')
+    @patch('atram.atram_preprocessor.load_seqs')
+    @patch('atram.atram_preprocessor.assign_seqs_to_shards')
+    @patch('atram.atram_preprocessor.create_all_blast_shards')
     def test_preprocess(
             self, create_all_blast_shards, assign_seqs_to_shards, load_seqs,
             create_sequences_index, create_sequences_table,
@@ -198,7 +198,7 @@ class TestAtramPreprocessor(unittest.TestCase):
         info.assert_called_once_with(msg)
 
     @patch('lib.blast.create_db')
-    @patch('atram_preprocessor.fill_blast_fasta')
+    @patch('atram.atram_preprocessor.fill_blast_fasta')
     def test_create_one_blast_shard(self, fill_blast_fasta, create_db):
         shard_params = ['limit', 'offset']
 
