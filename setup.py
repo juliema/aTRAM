@@ -5,21 +5,21 @@ from setuptools import setup, find_packages
 
 
 def readme():
-    """ Get README.md content. """
+    """Get README.md content."""
     with open("README.md", 'r') as f:
         return f.read()
     return None
 
 
 def license():
-    """ Get LICENSE.txt content. """
+    """Get LICENSE.txt content."""
     with open("LICENSE.txt", 'r') as f:
         return f.read()
     return None
 
 
 def find_version():
-    """ Read version from db.py """
+    """Read version from db.py."""
     rex = r"^ATRAM_VERSION = ['\"]([^'\"]*)['\"]"
     with open("./lib/db.py", 'r') as f:
         match = re.search(rex, f.read(), re.M)
@@ -30,7 +30,7 @@ def find_version():
 
 
 def find_requirements():
-    """ Read requirements.txt file and returns list of requirements. """
+    """Read requirements.txt file and returns list of requirements."""
     with open("requirements.txt", 'r') as f:
         return f.read().splitlines()
 
@@ -50,5 +50,4 @@ setup(
     license=license(),
     url="https://github.com/juliema/aTRAM",
     python_requires='>=3.5',
-    scripts=['atram/atram.py', 'atram/atram_preprocessor.py']
-)
+    scripts=['atram/atram.py', 'atram/atram_preprocessor.py'])

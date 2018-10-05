@@ -3,8 +3,8 @@
 *.swp
 __pycache__
 
-venv/*
-venv35/*
+venv/
+.venv/
 temp*
 junk.*
 input/
