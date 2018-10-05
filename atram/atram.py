@@ -1,3 +1,4 @@
+#!/bin/env python
 """The aTRAM assembly program."""
 
 import re

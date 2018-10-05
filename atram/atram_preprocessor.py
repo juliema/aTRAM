@@ -1,3 +1,4 @@
+#!/bin/env python
 """
 Format the data so that atram can use it later in atram itself.
 
@@ -119,7 +120,7 @@ def create_one_blast_shard(args, shard_params, shard_index):
     to the makeblastdb program.
     """
     shard = '{}.{:03d}.blast'.format(args['blast_db'], shard_index)
-    fasta_name = '{}_{:03d}.fasta'.format(os.path.basename(sys.argv[0][:-3]),
+    fasta_name = '{}_{:03d}.fasta'.format(os.path.basename(sys.argv[0]),
                                           shard_index)
     fasta_path = os.path.join(args['temp_dir'], fasta_name)
 
