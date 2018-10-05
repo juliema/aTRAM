@@ -38,11 +38,11 @@ def find_requirements():
 
 
 setup(
-    name="aTRAM",
+    name="atram",
     version=find_version(),
     packages=find_packages(),
     install_requires=find_requirements(),
-    description="""aTRAM ("automated target restricted assembly method") is
+    description="""atram ("automated target restricted assembly method") is
                    an iterative assembler that performs reference-guided
                    local de novo assemblies using a variety of available
                    methods""",
