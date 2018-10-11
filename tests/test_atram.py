@@ -5,7 +5,7 @@ import tempfile
 import unittest
 from unittest.mock import patch, MagicMock, call
 from lib.assemblers.base import BaseAssembler
-from atram import atram
+import atram
 
 
 class TestAtram(unittest.TestCase):
@@ -26,9 +26,9 @@ class TestAtram(unittest.TestCase):
     @patch('lib.db.aux_db')
     @patch('lib.db.aux_detach')
     @patch('lib.log.setup')
-    @patch('atram.atram.split_queries')
-    @patch('atram.atram.clean_database')
-    @patch('atram.atram.assembly_loop')
+    @patch('atram.split_queries')
+    @patch('atram.clean_database')
+    @patch('atram.assembly_loop')
     def test_assemble(self, assembly_loop, clean_database, split_queries,
                       setup, aux_detach, aux_db, connect, factory):
         connect.return_value.__enter__ = lambda x: 'my_db'
@@ -85,7 +85,7 @@ class TestAtram(unittest.TestCase):
             call(blast_db[1], query[1])]
         self.assembler.write_final_output.assert_has_calls(calls)
 
-    @patch('atram.atram.write_query_seq')
+    @patch('atram.write_query_seq')
     def test_split_queries_none(self, write_query_seq):
         """Test split queries where there are no fasta files to split."""
         self.args['query_split'] = []
@@ -96,7 +96,7 @@ class TestAtram(unittest.TestCase):
 
         assert self.args['query'] == queries
 
-    @patch('atram.atram.write_query_seq')
+    @patch('atram.write_query_seq')
     def test_split_queries_some(self, write_query_seq):
         """Test split queries where there are fasta files to split."""
         self.args['query_split'] = ['tests/data/split_queries1.txt']
@@ -147,9 +147,9 @@ class TestAtram(unittest.TestCase):
 
     @patch('lib.log.info')
     @patch('os.makedirs')
-    @patch('atram.atram.blast_query_against_all_shards')
-    @patch('atram.atram.create_query_from_contigs')
-    @patch('atram.atram.filter_contigs')
+    @patch('atram.blast_query_against_all_shards')
+    @patch('atram.create_query_from_contigs')
+    @patch('atram.filter_contigs')
     def test_assembly_loop_one_iter(
             self,
             filter_contigs,
