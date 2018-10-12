@@ -1,4 +1,4 @@
-# Manual for using aTRAM 2.0: automated Target Restricted Assembly Method
+# Manual for using aTRAM 2.1: automated Target Restricted Assembly Method
 
 # Background
 
@@ -20,16 +20,7 @@ Install the latest development from source:
 ```
 $ python3 -m venv venv
 $ source venv/bin/activate
-(venv) $ pip install git+https://github.com/juliema/aTRAM.git
-```
-
-or to get a specific release (say `v2.0`):
-```
-$ python3 -m venv venv
-$ source venv/bin/activate
-(venv) $ git clone https://github.com/juliema/aTRAM.git -b v2.0
-(venv) $ cd aTRAM
-(venv) $ pip install .
+(venv) $ pip install atram
 ```
 
 You should see something like `(venv)` at the beginning of your command prompt after running the second line, indicating the environment is active. Once you have verified that the requirements installed with no errors, only the second line needs to be run before each aTRAM 2 session.
@@ -232,7 +223,7 @@ optional assembler arguments:
 
 # Example of running a shell loop
 
-In many cases it is convenient to run aTRAM 2.0 as a loop, assembling a set of genes for a set of taxa. These can be set up in two parts, as shown below.  Note that aTRAM2.0 has built in functions supporting assembly of many genes against a library, as described just above.
+In many cases it is convenient to run aTRAM 2.1 as a loop, assembling a set of genes for a set of taxa. These can be set up in two parts, as shown below.  Note that aTRAM2.0 has built in functions supporting assembly of many genes against a library, as described just above.
 
 ```
 # Make aTRAM libraries
@@ -268,7 +259,7 @@ sed 's/.* iteration=/>/g' ${i} | sed 's/ contig_id/.0_contigid/g' | sed 's/conti
 done
 ```
 
-For the [exon stitching pipeline](https://github.com/juliema/exon_stitching), output files from aTRAM 2.0 must additionally be named like so: `libraryname_locusname.best.fasta`. If both this and the fasta header conversion are performed, any previously used tools should work.
+For the [exon stitching pipeline](https://github.com/juliema/exon_stitching), output files from aTRAM 2.1 must additionally be named like so: `libraryname_locusname.best.fasta`. If both this and the fasta header conversion are performed, any previously used tools should work.
 
 # Testing suite
 

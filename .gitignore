@@ -27,3 +27,6 @@ data/
 .ropeproject/
 .spyproject/
 .mypy_cache/
+
+build/
+dist/
