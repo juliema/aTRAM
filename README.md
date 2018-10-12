@@ -7,7 +7,7 @@ aTRAM 2.0 is a major overhaul of the aTRAM approach to assembling loci from NGS 
 aTRAM ("automated target restricted assembly method") is an iterative assembler that performs reference-guided local de novo assemblies using a variety of available methods. It is well-suited to various tasks where NGS data needs to be queried for gene sequences, such as phylogenomics. The design philosophy is modular and expandable, with support for four de-novo assemblers to date: Velvet, Abyss, Trinity, and Spades.
 
 Please consult the reference below for more information about aTRAM1.0:
-`Allen, JM, DI Huang, QC Cronk, KP Johnson. 2015\. aTRAM automated target restricted assembly method a fast method for assembling loci across divergent taxa from next-generation sequencing data. BMC Bioinformatics 16:98 DOI 10.1186/s12859-015-0515-2`
+`Allen, JM, DI Huang, QC Cronk, KP Johnson. 2015. aTRAM automated target restricted assembly method a fast method for assembling loci across divergent taxa from next-generation sequencing data. BMC Bioinformatics 16:98 DOI 10.1186/s12859-015-0515-2`
 
 A paper on aTRAM 2.0 is now in press:
 `Allen J.M., R. LaFrance, R. A. Folk, K. P. Johnson, and R. P. Guralnick.  In Press.  aTRAM 2.0: An improved, flexible locus assembler for NGS data.  Evolutionary Informatics`
@@ -18,21 +18,21 @@ You will need to have Python3 installed, as well as pip, a package manager for p
 
 Install the latest development from source:
 ```
-$ python -m venv .venv
-$ source .venv/bin/activate
-(.venv) $ pip install git+https://github.com/juliema/aTRAM.git
+$ python3 -m venv venv
+$ source venv/bin/activate
+(venv) $ pip install git+https://github.com/juliema/aTRAM.git
 ```
 
 or to get a specific release (say `v2.0`):
 ```
-$ python -m venv .venv
-$ source .venv/bin/activate
-(.venv) $ git clone https://github.com/juliema/aTRAM.git -b v2.0
-(.venv) $ cd aTRAM
-(.venv) $ pip install .
+$ python3 -m venv venv
+$ source venv/bin/activate
+(venv) $ git clone https://github.com/juliema/aTRAM.git -b v2.0
+(venv) $ cd aTRAM
+(venv) $ pip install .
 ```
 
-You should see something like `(.venv)` at the beginning of your command prompt after running the second line, indicating the environment is active. Once you have verified that the requirements installed with no errors, only the second line needs to be run before each aTRAM 2 session.
+You should see something like `(venv)` at the beginning of your command prompt after running the second line, indicating the environment is active. Once you have verified that the requirements installed with no errors, only the second line needs to be run before each aTRAM 2 session.
 
 If you choose not to use virtual environments, you will likely have to specify python3.
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-
+"""Setup the aTRAM environment."""
 import re
 from setuptools import setup, find_packages
 
@@ -49,5 +49,5 @@ setup(
     long_description=readme(),
     license=license(),
     url="https://github.com/juliema/aTRAM",
-    python_requires='>=3.5',
+    python_requires='>=3.4',
     scripts=['atram/atram.py', 'atram/atram_preprocessor.py'])

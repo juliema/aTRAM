@@ -1,12 +1,15 @@
-"""Testing functions in atram_preprocessor."""
+"""Testing functions in core_preprocessor."""
+
+# pylint: disable=missing-docstring, too-many-arguments, no-self-use
+# flake8: noqa
+
 
 from os.path import join
 import tempfile
 import unittest
 from unittest.mock import patch, call
 import lib.db as db
-
-from atram import atram_preprocessor
+import lib.core_preprocessor as core_preprocessor
 
 
 class TestAtramPreprocessor(unittest.TestCase):
@@ -26,9 +29,9 @@ class TestAtramPreprocessor(unittest.TestCase):
     @patch('lib.db.create_metadata_table')
     @patch('lib.db.create_sequences_table')
     @patch('lib.db.create_sequences_index')
-    @patch('atram.atram_preprocessor.load_seqs')
-    @patch('atram.atram_preprocessor.assign_seqs_to_shards')
-    @patch('atram.atram_preprocessor.create_all_blast_shards')
+    @patch('lib.core_preprocessor.load_seqs')
+    @patch('lib.core_preprocessor.assign_seqs_to_shards')
+    @patch('lib.core_preprocessor.create_all_blast_shards')
     def test_preprocess(
             self, create_all_blast_shards, assign_seqs_to_shards, load_seqs,
             create_sequences_index, create_sequences_table,
@@ -38,7 +41,7 @@ class TestAtramPreprocessor(unittest.TestCase):
         assign_seqs_to_shards.return_value = shard_list
         connect.return_value.__enter__ = lambda x: dbh
 
-        atram_preprocessor.preprocess(self.args)
+        core_preprocessor.preprocess(self.args)
 
         setup.assert_called_once_with(
             self.args['log_file'], self.args['blast_db'])
@@ -64,7 +67,7 @@ class TestAtramPreprocessor(unittest.TestCase):
         db.BATCH_SIZE = 5
 
         file_1 = join('tests', 'data', 'load_seq1.txt')
-        atram_preprocessor.load_one_file(self.cxn, file_1, 'mixed_ends')
+        core_preprocessor.load_one_file(self.cxn, file_1, 'mixed_ends')
 
         msg = 'Loading "{}" into sqlite database'.format(file_1)
         info.assert_called_once_with(msg)
@@ -89,7 +92,7 @@ class TestAtramPreprocessor(unittest.TestCase):
         db.BATCH_SIZE = 5
 
         file_1 = join('tests', 'data', 'load_seq1.txt')
-        atram_preprocessor.load_one_file(self.cxn, file_1, 'end_1', '1')
+        core_preprocessor.load_one_file(self.cxn, file_1, 'end_1', '1')
 
         msg = 'Loading "{}" into sqlite database'.format(file_1)
         info.assert_called_once_with(msg)
@@ -114,7 +117,7 @@ class TestAtramPreprocessor(unittest.TestCase):
         db.BATCH_SIZE = 5
 
         file_1 = join('tests', 'data', 'load_seq1.txt')
-        atram_preprocessor.load_one_file(self.cxn, file_1, 'end_2', '2')
+        core_preprocessor.load_one_file(self.cxn, file_1, 'end_2', '2')
 
         msg = 'Loading "{}" into sqlite database'.format(file_1)
         info.assert_called_once_with(msg)
@@ -139,7 +142,7 @@ class TestAtramPreprocessor(unittest.TestCase):
         db.BATCH_SIZE = 5
 
         file_1 = join('tests', 'data', 'load_seq1.txt')
-        atram_preprocessor.load_one_file(
+        core_preprocessor.load_one_file(
             self.cxn, file_1, 'single_ends', '')
 
         msg = 'Loading "{}" into sqlite database'.format(file_1)
@@ -165,7 +168,7 @@ class TestAtramPreprocessor(unittest.TestCase):
         db.BATCH_SIZE = 5
 
         file_1 = join('tests', 'data', 'load_seq2.txt')
-        atram_preprocessor.load_one_file(self.cxn, file_1, 'mixed_ends')
+        core_preprocessor.load_one_file(self.cxn, file_1, 'mixed_ends')
 
         msg = 'Loading "{}" into sqlite database'.format(file_1)
         info.assert_called_once_with(msg)
@@ -187,7 +190,7 @@ class TestAtramPreprocessor(unittest.TestCase):
         get_sequence_count.return_value = 100
         get_shard_cut.side_effect = ['seq1', 'seq2', 'seq3', 'seq4']
 
-        shard_list = atram_preprocessor.assign_seqs_to_shards(True, 3)
+        shard_list = core_preprocessor.assign_seqs_to_shards(True, 3)
 
         assert [
             ('seq1', 'seq2'),
@@ -198,11 +201,11 @@ class TestAtramPreprocessor(unittest.TestCase):
         info.assert_called_once_with(msg)
 
     @patch('lib.blast.create_db')
-    @patch('atram.atram_preprocessor.fill_blast_fasta')
+    @patch('lib.core_preprocessor.fill_blast_fasta')
     def test_create_one_blast_shard(self, fill_blast_fasta, create_db):
         shard_params = ['limit', 'offset']
 
-        atram_preprocessor.create_one_blast_shard(self.args, shard_params, 11)
+        core_preprocessor.create_one_blast_shard(self.args, shard_params, 11)
 
         path = join(self.args['temp_dir'], 'pytest_011.fasta')
 
@@ -229,7 +232,7 @@ class TestAtramPreprocessor(unittest.TestCase):
             fasta_path = join(temp_dir, 'test_output.fasta')
             shard_params = (100, 200)  # limit and offset
 
-            atram_preprocessor.fill_blast_fasta(
+            core_preprocessor.fill_blast_fasta(
                 blast_db, fasta_path, shard_params)
 
             with open(fasta_path) as test_file:
