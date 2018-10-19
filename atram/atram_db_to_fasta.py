@@ -48,7 +48,7 @@ def parse_command_line():
     """Process command-line arguments."""
     description = """
         This will read through the aTRAM SQLite database and create fasta
-        files. One for each end. So end 1 will be named <file-name>-1.fasta
+        files. One for each end. So end 1 will be named <file-name>1.fasta
         etc. If there is no end in the DB (i.e. the DB was built with the
         --single-ends option) then the file name will be <file-name>.fasta.
         """
@@ -66,7 +66,8 @@ def parse_command_line():
                              entered for atram_preprocessor.py.''')
 
     parser.add_argument('-f', '--fasta', required=True,
-                        help='''What to name the output fasta files.''')
+                        help='''What to name the output fasta files without
+                            then end indicator.''')
 
     args = vars(parser.parse_args())
 
