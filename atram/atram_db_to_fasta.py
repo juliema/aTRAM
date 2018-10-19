@@ -32,16 +32,9 @@ def create_fasta_files(args):
 def open_fasta_files(args, cxn):
     """Open one fasta file for each sequence end."""
     files = {}
-    ends = [end[0] for end in db.get_sequence_ends(cxn)]
-    for end in ends:
-        if end:
-            name = '{}-{}.{}'.format(
-                args['fasta_root'], end, args['fasta_ext'])
-        else:
-            name = '{}.{}'.format(args['fasta_root'], args['fasta_ext'])
-
+    for end in [e[0] for e in db.get_sequence_ends(cxn)]:
+        name = '{}{}.{}'.format(args['fasta_root'], end, args['fasta_ext'])
         files[end] = open(name, 'w')
-
     return files
 
 
