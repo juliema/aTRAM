@@ -16,6 +16,8 @@ log/
 old/
 admin/
 data/
+build/
+junk*
 
 .coverage
 .cache
