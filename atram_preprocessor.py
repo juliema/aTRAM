@@ -6,6 +6,7 @@ blast and sqlite3 databases.
 """
 
 import os
+from os.path import join, basename, splitext
 import sys
 import argparse
 import textwrap
@@ -119,9 +120,9 @@ def create_one_blast_shard(args, shard_params, shard_index):
     to the makeblastdb program.
     """
     shard = '{}.{:03d}.blast'.format(args['blast_db'], shard_index)
-    fasta_name = '{}_{:03d}.fasta'.format(os.path.basename(sys.argv[0][:-3]),
-                                          shard_index)
-    fasta_path = os.path.join(args['temp_dir'], fasta_name)
+    exe_name, _ = splitext(basename(sys.argv[0]))
+    fasta_name = '{}_{:03d}.fasta'.format(exe_name, shard_index)
+    fasta_path = join(args['temp_dir'], fasta_name)
 
     fill_blast_fasta(args['blast_db'], fasta_path, shard_params)
 
@@ -210,7 +211,7 @@ def parse_command_line(temp_dir_default):
 
     group = parser.add_argument_group('preprocessor arguments')
 
-    blast_db = os.path.join('.', 'atram_' + date.today().isoformat())
+    blast_db = join('.', 'atram_' + date.today().isoformat())
     group.add_argument('-b', '--blast-db', '--output', '--db',
                        default=blast_db, metavar='DB',
                        help='''This is the prefix of all of the blast
