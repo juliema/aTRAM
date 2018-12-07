@@ -14,18 +14,12 @@ A paper on aTRAM 2.0 is now in press:
 
 # Installation
 
-You will need to have Python3 installed, as well as pip, a package manager for Python. Beyond these, it is easiest to handle aTRAM 2 dependencies by setting up a virtual environment, which is a contained workspace with internally installed Python libraries. Run the following code in what you intend to be your working directory:
+You will need to have Python3 installed, as well as pip, a package manager for Python.
 
 Install the latest version from pypi:
 ```
-$ python3 -m venv venv
-$ source venv/bin/activate
-(venv) $ pip install atram
+$ pip3 install --user --upgrade atram
 ```
-
-You should see something like `(venv)` at the beginning of your command prompt after running the second line, indicating the environment is active. Once you have verified that the requirements installed with no errors, only the second line needs to be run before each aTRAM 2 session.
-
-If you choose not to use virtual environments, you will likely have to specify python3.
 
 You will need to install BLAST externally and have it in the path. You will also need one of the supported assembly modules. URLs are given below:
 
