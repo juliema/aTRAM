@@ -36,12 +36,6 @@ You will need to install BLAST externally and have it in the path. You will also
 - [Abyss](http://www.bcgsc.ca/platform/bioinfo/software/abyss) - version 2.0.2
 - [SPAdes](http://cab.spbu.ru/software/spades/) - version 3.11.1
 
-One final thing that may be necessary will be to change the default temporary directory for SQLite3. The default directory can fill up if it does not have the capacity for the temporary files or is not emptied often enough and will then cause errors when running the program. To change the SQLite3 temp directory use the following argument:
-
-```
---sqlite-temp-dir "<path/to/temp/directory/>"
-```
-
 # Library Preparation
 
 Use `atram_preprocessor.py` for this. Define your new library name with -b (something simple). Then give it your fastq files. You can either list the forward and reverse read files, or put them into one file and use the --mixed-ends option. Under the hood, aTRAM 2 is building a SQLite3 database for rapid read retrieval. Note that aTRAM 2 is not backwards compatible with aTRAM 1 libraries; it is also best to rebuild any libraries after major updates.
@@ -62,15 +56,15 @@ python path_to_aTRAM/atram_preprocessor.py -c NUMBER_OF_THREADS -b path_to_atram
 
 - `-b DB, --blast-db DB, --output DB, --db DB`
 
-  - This is the prefix of all of the blast database files so you can identify different blast database sets and so they can be stored together without resorting to subdirectories. You may include a directory as part of the prefix. The default is `./atram_2017-10-13`
+  - This is the prefix of all of the blast database files so you can identify different blast database sets and so they can be stored together without resorting to subdirectories. You may include a directory as part of the prefix. The default is `atram_<today's date>`.
 
 - `--cpus CPUS, --processes CPUS, --max-processes CPUS`
 
-  - We default to a number that will not use up all of your cores. You may set this number to use more preocessors, but be aware that aTRAM uses a lot of temporary disk space (usually in /tmp), so you should balance the increased parallelization with the increase in temporary disk space. We should also note that you can use the `--temp-dir` option (below) to use a higher capacity disk, however, this will save temporary files.
+  - We default to a number that will not use up all of your cores. You may set this number to use more preocessors, but be aware that aTRAM uses a lot of temporary disk space (usually in /tmp), so you should balance the increased parallelization with the increase in temporary disk space. We should also note that you can use the `--temp-dir` option (below) to use a higher capacity disk.
 
 - `-t DIR, --temp-dir DIR`
 
-  - You may save intermediate files for debugging in this directory. The directory must be empty. The default behavior is not to keep intermediate files and to handle them as OS temporary files.
+  - Place temporary files in this directory. All files will be deleted after aTRAM completes. The directory must exist.
 
 - `-l LOG_FILE, --log-file LOG_FILE`
 
@@ -141,7 +135,7 @@ Several arguments have synonyms, given below.
 
 - `--cpus CPUS, --processes CPUS, --max-processes CPUS`
 
-  - We default to a number that will not use up all of your cores. You may set this number to use more preocessors, but be aware that aTRAM uses a lot of temporary disk space (usually in /tmp), so you should balance the increased parallelization with the increase in temporary disk space. We should also note that you can use the `--temp-dir` option (below) to use a higher capacity disk, however, this will save temporary files.
+  - We default to a number that will not use up all of your cores. You may set this number to use more preocessors, but be aware that aTRAM uses a lot of temporary disk space (usually in /tmp), so you should balance the increased parallelization with the increase in temporary disk space. We should also note that you can use the `--temp-dir` option (below) to use a higher capacity disk.
 
 - `--log-file LOG_FILE`
 

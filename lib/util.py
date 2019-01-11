@@ -1,6 +1,7 @@
 """Misc. utilities."""
 
-from os.path import basename, join
+import os
+import sys
 
 
 def iter_dir(temp_dir, blast_db, query_name, iteration):
@@ -11,6 +12,18 @@ def iter_dir(temp_dir, blast_db, query_name, iteration):
     object.
     """
     name = '{}_{}_{:02d}'.format(
-        basename(blast_db), basename(query_name), iteration)
+        os.path.basename(blast_db), os.path.basename(query_name), iteration)
 
-    return join(temp_dir, name)
+    return os.path.join(temp_dir, name)
+
+
+def update_temp_dir(temp_dir, args):
+    """Handle the new temporary directory name."""
+    args['temp_dir'] = temp_dir
+    os.environ['SQLITE_TMPDIR'] = temp_dir
+
+
+def temp_dir_exists(temp_dir):
+    """Make sure the temporary directory exits."""
+    if temp_dir and not os.path.exists(temp_dir):
+        sys.exit('The temporary directory must exist.')

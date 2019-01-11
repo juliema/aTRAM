@@ -10,7 +10,7 @@ from os.path import join, basename, splitext
 import sys
 import argparse
 import textwrap
-import tempfile
+from tempfile import TemporaryDirectory
 import multiprocessing
 from datetime import date
 import numpy as np
@@ -18,6 +18,7 @@ from Bio.SeqIO.QualityIO import FastqGeneralIterator
 from Bio.SeqIO.FastaIO import SimpleFastaParser
 import lib.db as db
 import lib.log as log
+import lib.util as util
 import lib.blast as blast
 
 __all__ = ('preprocess', )
@@ -27,18 +28,21 @@ def preprocess(args):
     """Run the preprocessor."""
     log.setup(args['log_file'], args['blast_db'])
 
-    with db.connect(args['blast_db'], clean=True) as cxn:
-        db.create_metadata_table(cxn)
+    with TemporaryDirectory(prefix='atram_', dir=args['temp_dir']) as temp_dir:
+        util.update_temp_dir(temp_dir, args)
 
-        db.create_sequences_table(cxn)
-        load_seqs(args, cxn)
+        with db.connect(args['blast_db'], clean=True) as cxn:
+            db.create_metadata_table(cxn)
 
-        log.info('Creating an index for the sequence table')
-        db.create_sequences_index(cxn)
+            db.create_sequences_table(cxn)
+            load_seqs(args, cxn)
 
-        shard_list = assign_seqs_to_shards(cxn, args['shard_count'])
+            log.info('Creating an index for the sequence table')
+            db.create_sequences_index(cxn)
 
-    create_all_blast_shards(args, shard_list)
+            shard_list = assign_seqs_to_shards(cxn, args['shard_count'])
+
+        create_all_blast_shards(args, shard_list)
 
 
 def load_seqs(args, cxn):
@@ -146,7 +150,7 @@ def fill_blast_fasta(blast_db, fasta_path, shard_params):
                 fasta_file.write('{}\n'.format(row[2]))
 
 
-def parse_command_line(temp_dir_default):
+def parse_command_line():
     """Process command-line arguments."""
     description = """
         This script prepares data for use by the atram.py
@@ -227,8 +231,9 @@ def parse_command_line(temp_dir_default):
                             machine the default is ("{}")'''.format(cpus))
 
     group.add_argument('-t', '--temp-dir', metavar='DIR',
-                       help='''You may save intermediate files for debugging
-                            in this directory. The directory must be empty.''')
+                       help='''Place temporary files in this directory. All
+                            files will be deleted after aTRAM completes. The
+                            directory must exist.''')
 
     group.add_argument('-l', '--log-file',
                        help='''Log file (full path). The default is to use the
@@ -247,28 +252,11 @@ def parse_command_line(temp_dir_default):
                             then use this to prepend directories to your
                             path.''')
 
-    group.add_argument('--sqlite-temp-dir', metavar='DIR',
-                       help='''Use this directory to save temporary SQLITE3
-                            files. This is a possible fix for "database or
-                            disk is full" errors.''')
-
     args = vars(parser.parse_args())
 
     # Prepend to PATH environment variable if requested
     if args['path']:
         os.environ['PATH'] = '{}:{}'.format(args['path'], os.environ['PATH'])
-
-    # Add an sqlite3 temporary directory if requested
-    if args['sqlite_temp_dir']:
-        os.environ['SQLITE_TMPDIR'] = args['sqlite_temp_dir']
-    elif args['temp_dir']:
-        os.environ['SQLITE_TMPDIR'] = args['temp_dir']
-
-    # Setup temp dir
-    if not args['temp_dir']:
-        args['temp_dir'] = temp_dir_default
-    else:
-        os.makedirs(args['temp_dir'], exist_ok=True)
 
     all_files = []
     for ends in ['mixed_ends', 'end_1', 'end_2', 'single_ends']:
@@ -282,11 +270,11 @@ def parse_command_line(temp_dir_default):
 
     blast.find_program('makeblastdb')
 
+    util.temp_dir_exists(args['temp_dir'])
+
     return args
 
 
 if __name__ == '__main__':
-
-    with tempfile.TemporaryDirectory(prefix='atram_') as TEMP_DIR_DEFAULT:
-        ARGS = parse_command_line(TEMP_DIR_DEFAULT)
-        preprocess(ARGS)
+    ARGS = parse_command_line()
+    preprocess(ARGS)

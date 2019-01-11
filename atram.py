@@ -5,7 +5,7 @@ import os
 from os.path import basename, splitext, join
 import argparse
 import textwrap
-import tempfile
+from tempfile import TemporaryDirectory
 import multiprocessing
 from Bio import SeqIO
 import lib.db as db
@@ -23,27 +23,30 @@ def assemble(args):
     """Loop thru every blast/query pair and run an assembly for each one."""
     queries = split_queries(args)
 
-    for blast_db in args['blast_db']:
+    with TemporaryDirectory(prefix='atram_', dir=args['temp_dir']) as temp_dir:
+        util.update_temp_dir(temp_dir, args)
 
-        with db.connect(blast_db, check_version=True) as cxn:
-            for query in queries:
-                db.aux_db(cxn, args['temp_dir'], blast_db, query)
-                clean_database(cxn)
+        for blast_db in args['blast_db']:
 
-                log.setup(args['log_file'], blast_db, query)
+            with db.connect(blast_db, check_version=True) as cxn:
+                for query in queries:
+                    db.aux_db(cxn, args['temp_dir'], blast_db, query)
+                    clean_database(cxn)
 
-                assembler = assembly.factory(args, cxn)
+                    log.setup(args['log_file'], blast_db, query)
 
-                try:
-                    assembly_loop(assembler, blast_db, query)
-                except (TimeoutError, RuntimeError):
-                    pass
-                except Exception as err:
-                    log.error('Exception: {}'.format(err))
-                finally:
-                    assembler.write_final_output(blast_db, query)
+                    assembler = assembly.factory(args, cxn)
 
-                db.aux_detach(cxn)
+                    try:
+                        assembly_loop(assembler, blast_db, query)
+                    except (TimeoutError, RuntimeError):
+                        pass
+                    except Exception as err:
+                        log.error('Exception: {}'.format(err))
+                    finally:
+                        assembler.write_final_output(blast_db, query)
+
+                    db.aux_detach(cxn)
 
 
 def assembly_loop(assembler, blast_db, query):
@@ -300,7 +303,7 @@ def create_query_from_contigs(assembler):
     return query
 
 
-def parse_command_line(temp_dir_default):  # noqa
+def parse_command_line():
     """Process command-line arguments."""
     description = """
         This is the aTRAM script. It takes a query sequence and a blast
@@ -341,27 +344,18 @@ def parse_command_line(temp_dir_default):  # noqa
     args['max_target_seqs'] = blast.default_max_target_seqs(
         args['max_target_seqs'], args['blast_db'], args['max_memory'])
 
-    set_temp_dir(args, temp_dir_default)
     setup_blast_args(args)
     set_protein_arg(args)
     setup_path_arg(args)
-    sqlite_temp_dir(args)
     find_programs(args)
+    util.temp_dir_exists(args['temp_dir'])
 
     return args
 
 
-def sqlite_temp_dir(args):
-    """Prepend to PATH environment variable if requested."""
-    if args['sqlite_temp_dir']:
-        os.environ['SQLITE_TMPDIR'] = args['sqlite_temp_dir']
-    elif args['temp_dir']:
-        os.environ['SQLITE_TMPDIR'] = args['temp_dir']
-
-
 def setup_path_arg(args):
     """Prepend to PATH environment variable if requested."""
-    if args['sqlite_temp_dir']:
+    if args['path']:
         os.environ['PATH'] = '{}:{}'.format(args['path'], os.environ['PATH'])
 
 
@@ -383,14 +377,6 @@ def set_protein_arg(args):
     """Set up the protein argument."""
     if not args['protein'] and args['query']:
         args['protein'] = bio.fasta_file_has_protein(args['query'])
-
-
-def set_temp_dir(args, temp_dir_default):
-    """Set up the temporary directory."""
-    if not args['temp_dir']:
-        args['temp_dir'] = temp_dir_default
-    else:
-        os.makedirs(args['temp_dir'], exist_ok=True)
 
 
 def find_programs(args):
@@ -486,13 +472,9 @@ def optional_command_line_args(parser):
                             directories to your path.''')
 
     group.add_argument('-t', '--temp-dir', metavar='DIR',
-                       help='''You may save intermediate files for debugging
-                            in this directory. The directory must be empty.''')
-
-    group.add_argument('--sqlite-temp-dir', metavar='DIR',
-                       help='''Use this directory to save temporary SQLITE3
-                            files. This is a possible fix for "database or
-                            disk is full" errors.''')
+                       help='''YPlace temporary files in this directory. All
+                            files will be deleted after aTRAM completes. The
+                            directory must exist.''')
 
     group.add_argument('-T', '--timeout', metavar='SECONDS', default=300,
                        type=int,
@@ -524,7 +506,5 @@ def filter_command_line_args(parser):
 
 
 if __name__ == '__main__':
-
-    with tempfile.TemporaryDirectory(prefix='atram_') as TEMP_DIR_DEFAULT:
-        ARGS = parse_command_line(TEMP_DIR_DEFAULT)
-        assemble(ARGS)
+    ARGS = parse_command_line()
+    assemble(ARGS)
