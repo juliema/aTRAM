@@ -6,9 +6,9 @@
 import re
 from os.path import basename, join
 import subprocess
-import pytest
 import unittest
 from unittest.mock import patch, MagicMock, call
+import pytest
 from hypothesis import given, assume
 import hypothesis.strategies as st
 from lib.assemblers.base import BaseAssembler

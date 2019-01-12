@@ -1,5 +1,7 @@
 """Common logging functions."""
 
+ # pylint: disable=try-except-raise
+
 from os.path import basename, splitext
 import sys
 import logging

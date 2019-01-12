@@ -19,7 +19,7 @@ def assemble(args):
 
     with TemporaryDirectory(prefix='atram_', dir=args['temp_dir']) as temp_dir:
         util.update_temp_dir(temp_dir, args)
-        
+
         for blast_db in args['blast_db']:
 
             with db.connect(blast_db, check_version=True) as cxn:

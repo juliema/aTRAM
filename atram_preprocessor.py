@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 """
 Start the atram preprocessor.
 
@@ -8,11 +9,11 @@ that does the actual preprocessing (core_preprocessor.py).
 import os
 import argparse
 import textwrap
-import tempfile
 from datetime import date
-import lib.core_preprocessor as core_preprocessor
 import lib.db as db
+import lib.util as util
 import lib.blast as blast
+from lib.core_preprocessor import preprocess
 
 
 def parse_command_line():
@@ -80,7 +81,7 @@ def parse_command_line():
 
     group = parser.add_argument_group('preprocessor arguments')
 
-    blast_db = join('.', 'atram_' + date.today().isoformat())
+    blast_db = os.path.join('.', 'atram_' + date.today().isoformat())
     group.add_argument('-b', '--blast-db', '--output', '--db',
                        default=blast_db, metavar='DB',
                        help='''This is the prefix of all of the blast

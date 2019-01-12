@@ -14,6 +14,7 @@ from Bio.SeqIO.QualityIO import FastqGeneralIterator
 from Bio.SeqIO.FastaIO import SimpleFastaParser
 import lib.db as db
 import lib.log as log
+import lib.util as util
 import lib.blast as blast
 
 
