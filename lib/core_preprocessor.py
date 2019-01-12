@@ -8,6 +8,7 @@ blast and sqlite3 databases.
 from os.path import join, basename, splitext
 import sys
 import multiprocessing
+from tempfile import TemporaryDirectory
 import numpy as np
 from Bio.SeqIO.QualityIO import FastqGeneralIterator
 from Bio.SeqIO.FastaIO import SimpleFastaParser
@@ -20,18 +21,21 @@ def preprocess(args):
     """Build the databases required by atram."""
     log.setup(args['log_file'], args['blast_db'])
 
-    with db.connect(args['blast_db'], clean=True) as cxn:
-        db.create_metadata_table(cxn)
+    with TemporaryDirectory(prefix='atram_', dir=args['temp_dir']) as temp_dir:
+        util.update_temp_dir(temp_dir, args)
 
-        db.create_sequences_table(cxn)
-        load_seqs(args, cxn)
+        with db.connect(args['blast_db'], clean=True) as cxn:
+            db.create_metadata_table(cxn)
 
-        log.info('Creating an index for the sequence table')
-        db.create_sequences_index(cxn)
+            db.create_sequences_table(cxn)
+            load_seqs(args, cxn)
 
-        shard_list = assign_seqs_to_shards(cxn, args['shard_count'])
+            log.info('Creating an index for the sequence table')
+            db.create_sequences_index(cxn)
 
-    create_all_blast_shards(args, shard_list)
+            shard_list = assign_seqs_to_shards(cxn, args['shard_count'])
+
+        create_all_blast_shards(args, shard_list)
 
 
 def load_seqs(args, cxn):

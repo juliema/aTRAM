@@ -18,7 +18,11 @@ You will need to have Python3 installed, as well as pip, a package manager for P
 
 Install the latest version from pypi:
 ```
-$ pip3 install --user --upgrade atram
+git clone https://github.com/juliema/aTRAM.git
+cd path/to/cloned/atram
+virtualenv venv -p python3
+source venv/bin/activate
+pip install -r requirements.txt
 ```
 
 You will need to install BLAST externally and have it in the path. You will also need one of the supported assembly modules. URLs are given below:

@@ -9,17 +9,16 @@ that does the actual processing (core_atram.py).
 import os
 import argparse
 import textwrap
-from tempfile import TemporaryDirectory
-import multiprocessing
-from Bio import SeqIO
 import lib.db as db
 import lib.log as log
 import lib.bio as bio
+import lib.util as util
 import lib.blast as blast
 import lib.assembler as assembly
+from lib.core_atram import assemble
 
 
-def parse_command_line(temp_dir_default):
+def parse_command_line():
     """Process command-line arguments."""
     description = """
         This is the aTRAM script. It takes a query sequence and a blast
@@ -42,9 +41,101 @@ def parse_command_line(temp_dir_default):
     parser.add_argument('--version', action='version',
                         version='%(prog)s {}'.format(db.ATRAM_VERSION))
 
-    required_command_line_args(parser)
-    optional_command_line_args(parser)
-    filter_command_line_args(parser)
+    group = parser.add_argument_group('required arguments')
+
+    group.add_argument('-b', '--blast-db', '--sra', '--db', '--database',
+                       required=True, metavar='DB', nargs='+',
+                       help='''This needs to match the DB prefix you
+                            entered for atram_preprocessor.py. You may repeat
+                            this argument to run the --query sequence(s)
+                            against multiple blast databases.''')
+
+    group.add_argument('-q', '--query', '--target', '--probe',
+                       required=False, nargs='+',
+                       help='''The path to the fasta file with sequences of
+                            interest. You may repeat this argument. If you do
+                            then Each --query sequence  file will be run
+                            against every --blast-db.''')
+
+    group.add_argument('-Q', '--query-split', '--target-split',
+                       required=False, nargs='+',
+                       help='''The path to the fasta file with multiple
+                            sequences of interest. This will take every
+                            sequence in the fasta file and treat it as if it
+                            were its own --query argument. So every sequence in
+                            --query-split will be run against every --blast-db.
+                            ''')
+
+    group.add_argument('-o', '--output-prefix', required=True,
+                       help='''This is the prefix of all of the output files.
+                            So you can identify different blast output file
+                            sets. You may include a directory as part of the
+                            prefix. aTRAM will add suffixes to differentiate
+                            ouput files.''')
+
+    group.add_argument('-a', '--assembler', default='none',
+                       choices=['abyss', 'trinity', 'velvet', 'spades',
+                                'none'],
+                       help='''Which assembler to use. Choosing "none" (the
+                            default) will do a single blast run and stop before
+                            any assembly.''')
+
+    group.add_argument('-i', '--iterations', type=int, default=5, metavar='N',
+                       help='''The number of pipeline iterations.
+                            The default is "5".''')
+
+    group.add_argument('-p', '--protein', action='store_true',
+                       help='''Are the query sequences protein?
+                            aTRAM will guess if you skip this argument.''')
+
+    group.add_argument('--fraction', type=float, default=1.0,
+                       help='''Use only the specified fraction of the aTRAM
+                            database. The default is "1.0"''')
+
+    cpus = min(10, os.cpu_count() - 4 if os.cpu_count() > 4 else 1)
+    group.add_argument('--cpus', '--processes', '--max-processes',
+                       type=int, default=cpus,
+                       help='''Number of CPU threads to use. This will also be
+                            used for the assemblers when possible. On this
+                            machine the default is ("{}")'''.format(cpus))
+
+    group.add_argument('--log-file', help='''Log file (full path)."''')
+
+    group.add_argument('--path',
+                       help='''If the assembler or blast you want to use is not
+                            in your $PATH then use this to prepend
+                            directories to your path.''')
+
+    group.add_argument('-t', '--temp-dir', metavar='DIR',
+                       help='''YPlace temporary files in this directory. All
+                            files will be deleted after aTRAM completes. The
+                            directory must exist.''')
+
+    group.add_argument('-T', '--timeout', metavar='SECONDS', default=300,
+                       type=int,
+                       help='''How many seconds to wait for an assembler before
+                            stopping the run. To wait forever set this to 0.
+                            The default is "300" (5 minutes).''')
+
+    group = parser.add_argument_group(
+        'optional values for blast-filtering contigs')
+
+    group.add_argument('--no-filter', action='store_true',
+                       help='''Do not filter the assembled contigs. This will:
+                            set both the --bit-score and --contig-length
+                            to 0''')
+
+    group.add_argument('--bit-score', type=float, default=70.0,
+                       metavar='SCORE',
+                       help='''Remove contigs that have a value less than this.
+                            The default is "70.0". This is turned off by the
+                            --no-filter argument.''')
+
+    group.add_argument('--contig-length', '--length', type=int, default=100,
+                       help='''Remove blast hits that are shorter than this
+                            length. The default is "100". This is turned
+                            off by the --no-filter argument.''')
+
     blast.command_line_args(parser)
     assembly.command_line_args(parser)
 
@@ -112,113 +203,6 @@ def find_programs(args):
     assembly.find_program('velvet', 'velvetg', args['assembler'])
 
     assembly.find_program('spades', 'spades.py', args['assembler'])
-
-
-def required_command_line_args(parser):
-    """Add required arguments to the parser."""
-    group = parser.add_argument_group('required arguments')
-
-    group.add_argument('-b', '--blast-db', '--sra', '--db', '--database',
-                       required=True, metavar='DB', nargs='+',
-                       help='''This needs to match the DB prefix you
-                            entered for atram_preprocessor.py. You may repeat
-                            this argument to run the --query sequence(s)
-                            against multiple blast databases.''')
-
-    group.add_argument('-q', '--query', '--target', '--probe',
-                       required=False, nargs='+',
-                       help='''The path to the fasta file with sequences of
-                            interest. You may repeat this argument. If you do
-                            then Each --query sequence  file will be run
-                            against every --blast-db.''')
-
-    group.add_argument('-Q', '--query-split', '--target-split',
-                       required=False, nargs='+',
-                       help='''The path to the fasta file with multiple
-                            sequences of interest. This will take every
-                            sequence in the fasta file and treat it as if it
-                            were its own --query argument. So every sequence in
-                            --query-split will be run against every --blast-db.
-                            ''')
-
-    group.add_argument('-o', '--output-prefix', required=True,
-                       help='''This is the prefix of all of the output files.
-                            So you can identify different blast output file
-                            sets. You may include a directory as part of the
-                            prefix. aTRAM will add suffixes to differentiate
-                            ouput files.''')
-
-
-def optional_command_line_args(parser):
-    """Add optional atram arguments to the parser."""
-    group = parser.add_argument_group('optional aTRAM arguments')
-
-    group.add_argument('-a', '--assembler', default='none',
-                       choices=['abyss', 'trinity', 'velvet', 'spades',
-                                'none'],
-                       help='''Which assembler to use. Choosing "none" (the
-                            default) will do a single blast run and stop before
-                            any assembly.''')
-
-    group.add_argument('-i', '--iterations', type=int, default=5, metavar='N',
-                       help='''The number of pipeline iterations.
-                            The default is "5".''')
-
-    group.add_argument('-p', '--protein', action='store_true',
-                       help='''Are the query sequences protein?
-                            aTRAM will guess if you skip this argument.''')
-
-    group.add_argument('--fraction', type=float, default=1.0,
-                       help='''Use only the specified fraction of the aTRAM
-                            database. The default is "1.0"''')
-
-    cpus = min(10, os.cpu_count() - 4 if os.cpu_count() > 4 else 1)
-    group.add_argument('--cpus', '--processes', '--max-processes',
-                       type=int, default=cpus,
-                       help='''Number of CPU threads to use. This will also be
-                            used for the assemblers when possible. On this
-                            machine the default is ("{}")'''.format(cpus))
-
-    group.add_argument('--log-file',
-                       help='''Log file (full path)."''')
-
-    group.add_argument('--path',
-                       help='''If the assembler or blast you want to use is not
-                            in your $PATH then use this to prepend
-                            directories to your path.''')
-
-    group.add_argument('-t', '--temp-dir', metavar='DIR',
-                       help='''YPlace temporary files in this directory. All
-                            files will be deleted after aTRAM completes. The
-                            directory must exist.''')
-
-    group.add_argument('-T', '--timeout', metavar='SECONDS', default=300,
-                       type=int,
-                       help='''How many seconds to wait for an assembler before
-                            stopping the run. To wait forever set this to 0.
-                            The default is "300" (5 minutes).''')
-
-
-def filter_command_line_args(parser):
-    """Add optional values for blast-filtering contigs to the parser."""
-    group = parser.add_argument_group(
-        'optional values for blast-filtering contigs')
-
-    group.add_argument('--no-filter', action='store_true',
-                       help='''Do not filter the assembled contigs. This will:
-                            set both the --bit-score and --contig-length
-                            to 0''')
-
-    group.add_argument('--bit-score', type=float, default=70.0,
-                       metavar='SCORE',
-                       help='''Remove contigs that have a value less than this.
-                            The default is "70.0". This is turned off by the
-                            --no-filter argument.''')
-
-    group.add_argument('--contig-length', '--length', type=int, default=100,
-                       help='''Remove blast hits that are shorter than this
-                            length. The default is "100". This is turned
-                            off by the --no-filter argument.''')
 
 
 if __name__ == '__main__':

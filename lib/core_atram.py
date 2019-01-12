@@ -4,6 +4,7 @@ import re
 import os
 from os.path import basename, splitext, join
 import multiprocessing
+from tempfile import TemporaryDirectory
 from Bio import SeqIO
 import lib.db as db
 import lib.log as log
@@ -16,27 +17,30 @@ def assemble(args):
     """Loop thru every blast/query pair and run an assembly for each one."""
     queries = split_queries(args)
 
-    for blast_db in args['blast_db']:
+    with TemporaryDirectory(prefix='atram_', dir=args['temp_dir']) as temp_dir:
+        util.update_temp_dir(temp_dir, args)
+        
+        for blast_db in args['blast_db']:
 
-        with db.connect(blast_db, check_version=True) as cxn:
-            for query in queries:
-                db.aux_db(cxn, args['temp_dir'], blast_db, query)
-                clean_database(cxn)
+            with db.connect(blast_db, check_version=True) as cxn:
+                for query in queries:
+                    db.aux_db(cxn, args['temp_dir'], blast_db, query)
+                    clean_database(cxn)
 
-                log.setup(args['log_file'], blast_db, query)
+                    log.setup(args['log_file'], blast_db, query)
 
-                assembler = assembly.factory(args, cxn)
+                    assembler = assembly.factory(args, cxn)
 
-                try:
-                    assembly_loop(assembler, blast_db, query)
-                except (TimeoutError, RuntimeError):
-                    pass
-                except Exception as err:  # pylint: disable=broad-except
-                    log.error('Exception: {}'.format(err))
-                finally:
-                    assembler.write_final_output(blast_db, query)
+                    try:
+                        assembly_loop(assembler, blast_db, query)
+                    except (TimeoutError, RuntimeError):
+                        pass
+                    except Exception as err:  # pylint: disable=broad-except
+                        log.error('Exception: {}'.format(err))
+                    finally:
+                        assembler.write_final_output(blast_db, query)
 
-                db.aux_detach(cxn)
+                    db.aux_detach(cxn)
 
 
 def assembly_loop(assembler, blast_db, query):
