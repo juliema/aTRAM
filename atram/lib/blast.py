@@ -195,15 +195,17 @@ def make_blast_output_dir(blast_db):
 
 def touchup_blast_db_names(blast_dbs):
     """Allow users to enter blast DB names with various suffixes."""
-    pattern = (r'^ (.*?)'
-               r'(  \.atram(_preprocessor)?\.log'
-               r' | \.blast_\d{3}\.(nhr|nin|nsq)'
-               r' | \.sqlite\.db  )?$')
+    pattern = re.compile(
+        r'^ (.*?)'
+        r'(  \.atram(_preprocessor)?\.log'
+        r' | \.blast_\d{3}\.(nhr|nin|nsq)'
+        r' | \.sqlite\.db  )?$',
+        re.I | re.X)
 
     db_names = []
 
     for blast_db in blast_dbs:
-        db_names.append(re.sub(pattern, r'\1', blast_db, re.I | re.X))
+        db_names.append(re.sub(pattern, r'\1', blast_db))
 
     return db_names
 

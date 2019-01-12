@@ -15,7 +15,7 @@ NAME = 'atram_logger'
 
 def setup(log_file, blast_db, query_file=''):
     """Logger setup."""
-    global LOGGER
+    global LOGGER  # pylint: disable=global-statement
 
     if not LOGGER:
         log_file = file_name(log_file, blast_db, query_file)

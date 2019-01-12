@@ -1,0 +1,13 @@
+atram>=2.1.0
+biopython>=1.72
+numpy>=1.15.2
+psutil>=5.4.7
+atomicwrites>=1.1.5
+attrs>=18.1.0
+coverage>=4.5.1
+hypothesis>=3.58.0
+more-itertools>=4.2.0
+pluggy>=0.6.0
+py>=1.5.3
+pytest>=3.6.1
+six>=1.11.0

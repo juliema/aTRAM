@@ -1,5 +1,8 @@
 """Test object in lib/assemblers/base."""
 
+# pylint: disable=missing-docstring, too-many-arguments, no-self-use
+# flake8: noqa
+
 import re
 from os.path import basename, join
 import subprocess

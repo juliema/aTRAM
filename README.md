@@ -1,32 +1,25 @@
-# Manual for using aTRAM 2.0: automated Target Restricted Assembly Method
+# Manual for using aTRAM 2.1: automated Target Restricted Assembly Method
 
 # Background
 
-aTRAM 2.0 is a major overhaul of the aTRAM approach to assembling loci from NGS data. The new code has been reimplemented in python, and the approach to short read library construction is completely revamped, resulting in major performance and assembly improvements.
+aTRAM 2 is a major overhaul of the aTRAM approach to assembling loci from NGS data. The new code has been reimplemented in Python, and the approach to short read library construction is completely revamped, resulting in major performance and assembly improvements.
 
 aTRAM ("automated target restricted assembly method") is an iterative assembler that performs reference-guided local de novo assemblies using a variety of available methods. It is well-suited to various tasks where NGS data needs to be queried for gene sequences, such as phylogenomics. The design philosophy is modular and expandable, with support for four de-novo assemblers to date: Velvet, Abyss, Trinity, and Spades.
 
 Please consult the reference below for more information about aTRAM1.0:
-`Allen, JM, DI Huang, QC Cronk, KP Johnson. 2015\. aTRAM automated target restricted assembly method a fast method for assembling loci across divergent taxa from next-generation sequencing data. BMC Bioinformatics 16:98 DOI 10.1186/s12859-015-0515-2`
+`Allen, JM, DI Huang, QC Cronk, KP Johnson. 2015. aTRAM automated target restricted assembly method a fast method for assembling loci across divergent taxa from next-generation sequencing data. BMC Bioinformatics 16:98 DOI 10.1186/s12859-015-0515-2`
 
 A paper on aTRAM 2.0 is now in press:
 `Allen J.M., R. LaFrance, R. A. Folk, K. P. Johnson, and R. P. Guralnick.  In Press.  aTRAM 2.0: An improved, flexible locus assembler for NGS data.  Evolutionary Informatics`
 
 # Installation
 
-You will need to have Python3 installed, as well as pip, a package manager for python. Beyond these, it is easiest to handle aTRAM 2 dependencies by setting up a virtual environment, which is a contained workspace with internally installed python libraries. Run the following code in what you intend to be your working directory:
+You will need to have Python3 installed, as well as pip, a package manager for Python.
 
+Install the latest version from pypi:
 ```
-git clone https://github.com/juliema/aTRAM.git
-cd path/to/cloned/atram
-virtualenv venv -p python3
-source venv/bin/activate
-pip install -r requirements.txt
+$ pip3 install --user --upgrade atram
 ```
-
-You should see something like `(venv)` at the beginning of your command prompt after running the second line, indicating the environment is active. Once you have verified that the requirements installed with no errors, only the second line needs to be run before each aTRAM 2 session.
-
-If you choose not to use virtual environments, you will likely have to specify python3.
 
 You will need to install BLAST externally and have it in the path. You will also need one of the supported assembly modules. URLs are given below:
 
@@ -41,7 +34,7 @@ You will need to install BLAST externally and have it in the path. You will also
 Use `atram_preprocessor.py` for this. Define your new library name with -b (something simple). Then give it your fastq files. You can either list the forward and reverse read files, or put them into one file and use the --mixed-ends option. Under the hood, aTRAM 2 is building a SQLite3 database for rapid read retrieval. Note that aTRAM 2 is not backwards compatible with aTRAM 1 libraries; it is also best to rebuild any libraries after major updates.
 
 ```
-python path_to_aTRAM/atram_preprocessor.py -c NUMBER_OF_THREADS -b path_to_atram_library/LIBRARY_PREFIX --end-1 path_to_read_1/read_1.fastq --end-2 path_to_read_2/read_2.fastq
+atram_preprocessor.py -c NUMBER_OF_THREADS -b path_to_atram_library/LIBRARY_PREFIX --end-1 path_to_read_1/read_1.fastq --end-2 path_to_read_2/read_2.fastq
 ```
 
 ## Preprocessor arguments:
@@ -77,14 +70,14 @@ python path_to_aTRAM/atram_preprocessor.py -c NUMBER_OF_THREADS -b path_to_atram
 # Assembling Loci
 
 ```
-python path_to_aTRAM/atram.py -b path_to_atram_library/LIBRARY_PREFIX -q path_to_reference_loci/Locus.fasta -i NUMBER_OF_ITERATIONS --cpus NUMBER_OF_THREADS  --kmer KMER_NUMBER -o path_to_output/LIBRARY_PREFIX.Locus.atram2.fasta --log-file path_to_output/LIBRARY_PREFIX.Locus.log -a ASSEMBLER_CHOICE
+atram.py -b path_to_atram_library/LIBRARY_PREFIX -q path_to_reference_loci/Locus.fasta -i NUMBER_OF_ITERATIONS --cpus NUMBER_OF_THREADS  --kmer KMER_NUMBER -o path_to_output/LIBRARY_PREFIX.Locus.atram2.fasta --log-file path_to_output/LIBRARY_PREFIX.Locus.log -a ASSEMBLER_CHOICE
 ```
 
 Fill in the capitalized portions with your options, and fill in the paths.
 
 There are many more options than this, so for reference list them like so:
 
-`python path_to_atram/atram.py -h`
+atram.py -h`
 
 # aTRAM main script arguments
 
@@ -218,7 +211,7 @@ optional assembler arguments:
 
 # Example of running a shell loop
 
-In many cases it is convenient to run aTRAM 2.0 as a loop, assembling a set of genes for a set of taxa. These can be set up in two parts, as shown below.  Note that aTRAM2.0 has built in functions supporting assembly of many genes against a library, as described just above.  
+In many cases it is convenient to run aTRAM 2 as a loop, assembling a set of genes for a set of taxa. These can be set up in two parts, as shown below.  Note that aTRAM2 has built in functions supporting assembly of many genes against a library, as described just above.
 
 ```
 # Make aTRAM libraries
@@ -226,7 +219,7 @@ array=(sample1 sample2 sample3)
 
 for a in "${array[@]}"; # Iterate through samples
 do
-python path_to_aTRAM/atram_preprocessor.py -c 4 -b path_to_atram_library/lib_${a} path_to_input/${a}_P*.fq
+  atram_preprocessor.py -c 4 -b path_to_atram_library/lib_${a} path_to_input/${a}_P*.fq
 done
 ```
 
@@ -240,7 +233,7 @@ array=(sample1 sample2 sample3)
 
 for a in "${array[@]}"; # Iterate through samples
 do
-\python ./aTRAM/atram.py -b path_to_atram_library/lib_${a} -Q file_name -i 5 --cpus 4  --kmer 64 -o path_to_output/lib_${a}.atram2.fasta --log-file path_to_output/lib_${a}.log -a abyss
+  atram.py -b path_to_atram_library/lib_${a} -Q file_name -i 5 --cpus 4  --kmer 64 -o path_to_output/lib_${a}.atram2.fasta --log-file path_to_output/lib_${a}.log -a abyss
 done
 ```
 
@@ -250,14 +243,8 @@ For any tools that depend on the output format of aTRAM 1.0, this script will pe
 
 ```
 for i in $(find . -name "*.fasta"); do
-sed 's/.* iteration=/>/g' ${i} | sed 's/ contig_id/.0_contigid/g' | sed 's/contigid.*length_//g' | sed 's/_cov.* score=/_/g' | sed 's/\.[0-9]*$//g' > ${i}.aTRAM1.fasta
+  sed 's/.* iteration=/>/g' ${i} | sed 's/ contig_id/.0_contigid/g' | sed 's/contigid.*length_//g' | sed 's/_cov.* score=/_/g' | sed 's/\.[0-9]*$//g' > ${i}.aTRAM1.fasta
 done
 ```
 
-For the [exon stitching pipeline](https://github.com/juliema/exon_stitching), output files from aTRAM 2.0 must additionally be named like so: `libraryname_locusname.best.fasta`. If both this and the fasta header conversion are performed, any previously used tools should work.
-
-# Testing suite
-
-For a new aTRAM install, it may be desirable to make sure the install resulted in a fully functional aTRAM. End users can activate our testing suite by running this command in the aTRAM directory:
-
-```pytest tests```
+For the [exon stitching pipeline](https://github.com/juliema/exon_stitching), output files from aTRAM 2.1 must additionally be named like so: `libraryname_locusname.best.fasta`. If both this and the fasta header conversion are performed, any previously used tools should work.

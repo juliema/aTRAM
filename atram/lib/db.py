@@ -6,7 +6,7 @@ import os
 from os.path import basename, join, exists
 
 
-ATRAM_VERSION = 'v2.0'
+ATRAM_VERSION = 'v2.1.0'
 DB_VERSION = '2.0'
 
 BATCH_SIZE = 1e6  # How many sequence records to insert at a time
@@ -14,7 +14,7 @@ BATCH_SIZE = 1e6  # How many sequence records to insert at a time
 
 def connect(blast_db, check_version=False, clean=False):
     """Create DB connection."""
-    db_name = '{}.sqlite.db'.format(blast_db)
+    db_name = get_db_name(blast_db)
 
     if clean and exists(db_name):
         os.remove(db_name)
@@ -34,6 +34,11 @@ def connect(blast_db, check_version=False, clean=False):
         check_versions(cxn)
 
     return cxn
+
+
+def get_db_name(blast_db):
+    """Build the SQLite DB name from the blast DB argument."""
+    return '{}.sqlite.db'.format(blast_db)
 
 
 def aux_db(cxn, temp_dir, blast_db, query_name):
@@ -150,6 +155,16 @@ def get_sequences_in_shard(cxn, start, end):
            AND seq_name < ?
         '''
     return cxn.execute(sql, (start, end))
+
+
+def get_sequence_ends(cxn):
+    """Get a list of all seq_ends in the database."""
+    return cxn.execute('SELECT DISTINCT seq_end FROM sequences')
+
+
+def get_all_sequences(cxn):
+    """Get a list of all seq_ends in the database."""
+    return cxn.execute('SELECT * FROM sequences')
 
 
 # ######################## sra_blast_hits table ###############################

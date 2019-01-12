@@ -9,7 +9,7 @@ import lib.bio as bio
 import lib.util as util
 
 
-class BaseAssembler:
+class BaseAssembler:  # pylint: disable=too-many-public-methods
     """A base class for the assemblers."""
 
     def __init__(self, args, cxn):

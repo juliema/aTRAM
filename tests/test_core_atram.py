@@ -1,15 +1,19 @@
-"""Testing functions in atram."""
+"""Testing functions in core_atram."""
+
+# pylint: disable=missing-docstring, too-many-arguments, no-self-use
+# flake8: noqa
+
 
 from os.path import join
 import tempfile
 import unittest
 from unittest.mock import patch, MagicMock, call
 from lib.assemblers.base import BaseAssembler
-import atram
+import lib.core_atram as core_atram
 
 
 class TestAtram(unittest.TestCase):
-    """Testing functions in atram."""
+    """Testing functions in core_atram."""
 
     def setUp(self):
         self.cxn = 'cxn'
@@ -26,9 +30,9 @@ class TestAtram(unittest.TestCase):
     @patch('lib.db.aux_db')
     @patch('lib.db.aux_detach')
     @patch('lib.log.setup')
-    @patch('atram.split_queries')
-    @patch('atram.clean_database')
-    @patch('atram.assembly_loop')
+    @patch('lib.core_atram.split_queries')
+    @patch('lib.core_atram.clean_database')
+    @patch('lib.core_atram.assembly_loop')
     def test_assemble(self, assembly_loop, clean_database, split_queries,
                       setup, aux_detach, aux_db, connect, factory):
         connect.return_value.__enter__ = lambda x: 'my_db'
@@ -36,7 +40,7 @@ class TestAtram(unittest.TestCase):
         split_queries.return_value = self.args['query']
         factory.return_value = self.assembler
 
-        atram.assemble(self.args)
+        core_atram.assemble(self.args)
 
         split_queries.assert_called_once_with(self.args)
 
@@ -85,23 +89,23 @@ class TestAtram(unittest.TestCase):
             call(blast_db[1], query[1])]
         self.assembler.write_final_output.assert_has_calls(calls)
 
-    @patch('atram.write_query_seq')
+    @patch('lib.core_atram.write_query_seq')
     def test_split_queries_none(self, write_query_seq):
         """Test split queries where there are no fasta files to split."""
         self.args['query_split'] = []
 
-        queries = atram.split_queries(self.args)
+        queries = core_atram.split_queries(self.args)
 
         write_query_seq.assert_not_called()
 
         assert self.args['query'] == queries
 
-    @patch('atram.write_query_seq')
+    @patch('lib.core_atram.write_query_seq')
     def test_split_queries_some(self, write_query_seq):
         """Test split queries where there are fasta files to split."""
         self.args['query_split'] = ['tests/data/split_queries1.txt']
 
-        queries = atram.split_queries(self.args)
+        queries = core_atram.split_queries(self.args)
 
         split_files = [
             'temp_dir_1/queries/split_queries1_seq1_1_1.fasta',
@@ -122,7 +126,10 @@ class TestAtram(unittest.TestCase):
         with tempfile.TemporaryDirectory(prefix='test_') as temp_dir:
             path = join(temp_dir, 'test_query.fasta')
 
-            atram.write_query_seq(path, 'my sequence name', 'aaaacccgggtt')
+            core_atram.write_query_seq(
+                path,
+                'my sequence name',
+                'aaaacccgggtt')
 
             with open(path) as test_file:
                 expect = (
@@ -139,7 +146,7 @@ class TestAtram(unittest.TestCase):
             create_contig_blast_hits_table,
             create_sra_blast_hits_table):
         dbh = 'my_db'
-        atram.clean_database(dbh)
+        core_atram.clean_database(dbh)
 
         create_assembled_contigs_table.assert_called_once_with(dbh)
         create_contig_blast_hits_table.assert_called_once_with(dbh)
@@ -147,9 +154,9 @@ class TestAtram(unittest.TestCase):
 
     @patch('lib.log.info')
     @patch('os.makedirs')
-    @patch('atram.blast_query_against_all_shards')
-    @patch('atram.create_query_from_contigs')
-    @patch('atram.filter_contigs')
+    @patch('lib.core_atram.blast_query_against_all_shards')
+    @patch('lib.core_atram.create_query_from_contigs')
+    @patch('lib.core_atram.filter_contigs')
     def test_assembly_loop_one_iter(
             self,
             filter_contigs,
@@ -171,7 +178,7 @@ class TestAtram(unittest.TestCase):
         self.assembler.nothing_assembled = MagicMock(return_value=False)
         self.assembler.assembled_contigs_count = MagicMock(return_value=11)
 
-        atram.assembly_loop(
+        core_atram.assembly_loop(
             self.assembler, self.args['blast_db'][0], self.args['query'][0])
 
         calls = [
@@ -219,7 +226,7 @@ class TestAtram(unittest.TestCase):
 
         all_shard_paths.return_value = returns
 
-        shards = atram.shard_fraction(self.assembler)
+        shards = core_atram.shard_fraction(self.assembler)
 
         assert returns == shards
 
@@ -233,7 +240,7 @@ class TestAtram(unittest.TestCase):
 
         all_shard_paths.return_value = returns
 
-        shards = atram.shard_fraction(self.assembler)
+        shards = core_atram.shard_fraction(self.assembler)
 
         assert ['1st', '2nd'] == shards
 

@@ -1,4 +1,12 @@
 #!/usr/bin/env python
+"""Setup the aTRAM environment."""
+
+# Test pip
+# 1) Clean the /dist directory
+# 2) python3 setup.py sdist bdist_wheel
+# 3) pip install --index-url https://test.pypi.org/simple/
+#    --extra-index-url https://pypi.org/simple atram
+# 4) twine upload --repository-url https://test.pypi.org/legacy/ dist/*
 
 import re
 from setuptools import setup, find_packages
@@ -20,9 +28,9 @@ def license():
 
 def find_version():
     """Read version from db.py."""
-    rex = r"^ATRAM_VERSION = ['\"]([^'\"]*)['\"]"
+    regex = r"^ATRAM_VERSION = ['\"]v?([^'\"]*)['\"]"
     with open("./lib/db.py", 'r') as f:
-        match = re.search(rex, f.read(), re.M)
+        match = re.search(regex, f.read(), re.M)
         if match:
             return match.group(1)
 
@@ -49,5 +57,5 @@ setup(
     long_description=readme(),
     license=license(),
     url="https://github.com/juliema/aTRAM",
-    python_requires='>=3.5',
+    python_requires='>=3.4',
     scripts=['atram/atram.py', 'atram/atram_preprocessor.py'])

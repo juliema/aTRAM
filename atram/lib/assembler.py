@@ -2,8 +2,8 @@
 
 import sys
 import math
-import psutil
 from shutil import which
+import psutil
 import lib.log as log
 from lib.assemblers.abyss import AbyssAssembler
 from lib.assemblers.spades import SpadesAssembler

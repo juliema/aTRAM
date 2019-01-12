@@ -29,3 +29,6 @@ junk*
 .ropeproject/
 .spyproject/
 .mypy_cache/
+
+build/
+dist/
