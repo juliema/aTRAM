@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 """Convert data in an atram sqlite database into fasta files."""
 
 import sys
