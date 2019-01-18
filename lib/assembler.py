@@ -2,6 +2,7 @@
 
 import sys
 from shutil import which
+import textwrap
 import psutil
 import lib.log as log
 from lib.assemblers.abyss import AbyssAssembler
@@ -31,20 +32,20 @@ def command_line_args(parser):
     group = parser.add_argument_group('optional assembler arguments')
 
     group.add_argument('--no-long-reads', action='store_true',
-                       help='Do not use long reads during assembly. '
-                            '(Abyss, Trinity, Velvet)')
+                       help="""Do not use long reads during assembly.
+                            (Abyss, Trinity, Velvet)""")
 
     group.add_argument('--kmer', type=int, default=64,
-                       help='k-mer size. The default is "64" for Abyss and '
-                            '"31" for Velvet. Note: the maximum kmer length '
-                            'for Velvet is 31. (Abyss, Velvet)')
+                       help="""k-mer size. The default is 64 for Abyss and
+                            31 for Velvet. Note: the maximum kmer length
+                            for Velvet is 31. (Abyss, Velvet)""")
 
     group.add_argument('--mpi', action='store_true',
-                       help='Use MPI for this assembler. The assembler '
-                            'must have been compiled to use MPI. (Abyss)')
+                       help="""Use MPI for this assembler. The assembler
+                            'must have been compiled to use MPI. (Abyss)""")
 
     group.add_argument('--bowtie2', action='store_true',
-                       help='Use bowtie2 during assembly. (Trinity)')
+                       help="""Use bowtie2 during assembly. (Trinity)""")
 
     total_mem = psutil.virtual_memory().available >> 30
     max_mem = max(1.0, total_mem >> 1)
@@ -56,21 +57,21 @@ def command_line_args(parser):
 
     group.add_argument('--exp-coverage', '--expected-coverage',
                        type=int, default=30,
-                       help='The expected coverage of the region. '
-                            'The default is "30". (Velvet)')
+                       help="""The expected coverage of the region.
+                            The default is "30". (Velvet)""")
 
     group.add_argument('--ins-length', type=int, default=300,
-                       help='The size of the fragments used in the short-read '
-                            'library. The default is "300". (Velvet)')
+                       help="""The size of the fragments used in the short-read
+                            library. The default is "300". (Velvet)""")
 
     group.add_argument('--min-contig-length', type=int, default=100,
-                       help='The minimum contig length used by the assembler '
-                            'itself. The default is "100". (Velvet)')
+                       help="""The minimum contig length used by the assembler
+                            itself. The default is "100". (Velvet)""")
 
     group.add_argument('--cov-cutoff', default='off',
-                       help='Read coverage cutoff value. Must be a positive '
-                            'float value, or "auto", or "off". '
-                            'The default is "off". (Spades)')
+                       help="""Read coverage cutoff value. Must be a positive
+                            float value, or "auto", or "off".
+                            The default is "off". (Spades)""")
 
 
 def default_kmer(kmer, assembler):
@@ -102,8 +103,9 @@ def default_cov_cutoff(cov_cutoff):
 def find_program(assembler_name, program, assembler_arg, option=True):
     """Make sure we can find the programs needed by the assembler."""
     if assembler_arg == assembler_name and option and not which(program):
-        err = ('We could not find the "{}" program. You either need to '
-               'install it or you need to adjust the PATH environment '
-               'variable with the "--path" option so that aTRAM can '
-               'find it.').format(program)
+        err = (textwrap.dedent("""
+            We could not find the "{}" program. You either need to
+            install it or you need to adjust the PATH environment
+            variable with the "--path" option so that aTRAM can
+            find it.""")).format(program)
         sys.exit(err)

@@ -83,19 +83,19 @@ def create_metadata_table(cxn):
     A single record used to tell if we are running atram.py against the
     schema version we built with atram_preprocessor.py.
     """
-    cxn.execute('''DROP TABLE IF EXISTS metadata''')
+    cxn.execute("""DROP TABLE IF EXISTS metadata""")
     sql = 'CREATE TABLE metadata (label TEXT, value TEXT)'
     cxn.execute(sql)
 
     with cxn:
-        sql = '''INSERT INTO metadata (label, value) VALUES (?, ?)'''
+        sql = """INSERT INTO metadata (label, value) VALUES (?, ?)"""
         cxn.execute(sql, ('version', DB_VERSION))
         cxn.commit()
 
 
 def get_version(cxn):
     """Get the current database version."""
-    sql = '''SELECT value FROM metadata WHERE label = ?'''
+    sql = """SELECT value FROM metadata WHERE label = ?"""
     try:
         result = cxn.execute(sql, ('version', ))
         return result.fetchone()[0]
@@ -107,7 +107,7 @@ def get_version(cxn):
 
 def create_sequences_table(cxn):
     """Create the sequence table."""
-    cxn.execute('''DROP TABLE IF EXISTS sequences''')
+    cxn.execute("""DROP TABLE IF EXISTS sequences""")
     sql = 'CREATE TABLE sequences (seq_name TEXT, seq_end TEXT, seq TEXT)'
     cxn.execute(sql)
 
@@ -125,9 +125,9 @@ def create_sequences_index(cxn):
 def insert_sequences_batch(cxn, batch):
     """Insert a batch of sequence records into the database."""
     if batch:
-        sql = '''INSERT INTO sequences (seq_name, seq_end, seq)
+        sql = """INSERT INTO sequences (seq_name, seq_end, seq)
                       VALUES (?, ?, ?)
-            '''
+            """
         cxn.executemany(sql, batch)
         cxn.commit()
 
@@ -148,12 +148,12 @@ def get_shard_cut(cxn, offset):
 
 def get_sequences_in_shard(cxn, start, end):
     """Get all sequences in a shard."""
-    sql = '''
+    sql = """
         SELECT seq_name, seq_end, seq
           FROM sequences
          WHERE seq_name >= ?
            AND seq_name < ?
-        '''
+        """
     return cxn.execute(sql, (start, end))
 
 
@@ -175,39 +175,39 @@ def create_sra_blast_hits_table(cxn):
 
     Delete the tables and recreate them.
     """
-    cxn.execute('''DROP TABLE IF EXISTS aux.sra_blast_hits''')
-    sql = '''
+    cxn.execute("""DROP TABLE IF EXISTS aux.sra_blast_hits""")
+    sql = """
         CREATE TABLE aux.sra_blast_hits
                    (iteration INTEGER, seq_name TEXT, seq_end TEXT, shard TEXT)
-        '''
+        """
     cxn.execute(sql)
 
-    sql = '''
+    sql = """
         CREATE INDEX aux.sra_blast_hits_index
                   ON sra_blast_hits (iteration, seq_name, seq_end)
-        '''
+        """
     cxn.execute(sql)
 
 
 def insert_blast_hit_batch(cxn, batch):
     """Insert a batch of blast hit records into the database."""
     if batch:
-        sql = '''
+        sql = """
             INSERT INTO aux.sra_blast_hits
                         (iteration, seq_end, seq_name, shard)
                         VALUES (?, ?, ?, ?)
-            '''
+            """
         cxn.executemany(sql, batch)
         cxn.commit()
 
 
 def sra_blast_hits_count(cxn, iteration):
     """Count the blast hist for select the iteration."""
-    sql = '''
+    sql = """
         SELECT COUNT(*) AS count
           FROM aux.sra_blast_hits
          WHERE iteration = ?
-        '''
+        """
 
     result = cxn.execute(sql, (iteration, ))
     return result.fetchone()[0]
@@ -215,14 +215,14 @@ def sra_blast_hits_count(cxn, iteration):
 
 def get_sra_blast_hits(cxn, iteration):
     """Get all blast hits for the iteration."""
-    sql = '''
+    sql = """
         SELECT seq_name, seq_end, seq
           FROM sequences
          WHERE seq_name IN (SELECT DISTINCT seq_name
                               FROM aux.sra_blast_hits
                              WHERE iteration = ?)
       ORDER BY seq_name, seq_end
-        '''
+        """
 
     cxn.row_factory = sqlite3.Row
     return cxn.execute(sql, (iteration, ))
@@ -230,7 +230,7 @@ def get_sra_blast_hits(cxn, iteration):
 
 def get_blast_hits_by_end_count(cxn, iteration, end_count):
     """Get all blast hits for the iteration."""
-    sql = '''
+    sql = """
         SELECT seq_name, seq_end, seq
           FROM sequences
          WHERE seq_name IN (SELECT seq_name
@@ -241,7 +241,7 @@ def get_blast_hits_by_end_count(cxn, iteration, end_count):
                           GROUP BY seq_name
                             HAVING COUNT(*) = ?)
       ORDER BY seq_name, seq_end
-        '''
+        """
 
     cxn.row_factory = sqlite3.Row
     return cxn.execute(sql, (iteration, end_count))
@@ -251,46 +251,46 @@ def get_blast_hits_by_end_count(cxn, iteration, end_count):
 
 def create_contig_blast_hits_table(cxn):
     """Reset the database. Delete the tables and recreate them."""
-    cxn.execute('''DROP TABLE IF EXISTS aux.contig_blast_hits''')
-    sql = '''
+    cxn.execute("""DROP TABLE IF EXISTS aux.contig_blast_hits""")
+    sql = """
         CREATE TABLE aux.contig_blast_hits
                      (iteration INTEGER, contig_id TEXT, description TEXT,
                       bit_score NUMERIC, len INTEGER,
                       query_from INTEGER, query_to INTEGER, query_strand TEXT,
                       hit_from INTEGER, hit_to INTEGER, hit_strand TEXT)
-        '''
+        """
     cxn.execute(sql)
 
-    sql = '''
+    sql = """
         CREATE INDEX aux.contig_blast_hits_index
                   ON contig_blast_hits (iteration, bit_score, len)
-        '''
+        """
     cxn.execute(sql)
 
 
 def insert_contig_hit_batch(cxn, batch):
     """Insert a batch of blast hit records into the database."""
     if batch:
-        sql = '''
+        sql = """
             INSERT INTO aux.contig_blast_hits
                         (iteration, contig_id, description, bit_score, len,
                          query_from, query_to, query_strand,
                          hit_from, hit_to, hit_strand)
                  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            '''
+            """
         cxn.executemany(sql, batch)
         cxn.commit()
 
 
 def get_contig_blast_hits(cxn, iteration):
     """Get all blast hits for the iteration."""
-    sql = '''
+    sql = """
         SELECT iteration, contig_id, description, bit_score, len,
                query_from, query_to, query_strand,
                hit_from, hit_to, hit_strand
           FROM aux.contig_blast_hits
          WHERE iteration = ?
-        '''
+        """
 
     cxn.row_factory = sqlite3.Row
     return cxn.execute(sql, (iteration, ))
@@ -300,32 +300,32 @@ def get_contig_blast_hits(cxn, iteration):
 
 def create_assembled_contigs_table(cxn):
     """Reset the database. Delete the tables and recreate them."""
-    cxn.execute('''DROP TABLE IF EXISTS aux.assembled_contigs''')
-    sql = '''
+    cxn.execute("""DROP TABLE IF EXISTS aux.assembled_contigs""")
+    sql = """
         CREATE TABLE aux.assembled_contigs
                      (iteration INTEGER, contig_id TEXT, seq TEXT,
                       description TEXT, bit_score NUMERIC, len INTEGER,
                       query_from INTEGER, query_to INTEGER, query_strand TEXT,
                       hit_from INTEGER, hit_to INTEGER, hit_strand TEXT)
-        '''
+        """
     cxn.execute(sql)
 
-    sql = '''
+    sql = """
         CREATE INDEX aux.assembled_contigs_index
                   ON assembled_contigs (iteration, contig_id)
-        '''
+        """
     cxn.execute(sql)
 
 
 def assembled_contigs_count(cxn, iteration, bit_score, length):
     """Count the blast hist for the iteration."""
-    sql = '''
+    sql = """
         SELECT COUNT(*) AS count
           FROM aux.assembled_contigs
          WHERE iteration = ?
            AND bit_score >= ?
            AND len >= ?
-        '''
+        """
 
     result = cxn.execute(sql, (iteration, bit_score, length))
     return result.fetchone()[0]
@@ -333,7 +333,7 @@ def assembled_contigs_count(cxn, iteration, bit_score, length):
 
 def iteration_overlap_count(cxn, iteration, bit_score, length):
     """Count how many assembled contigs match what's in the last iteration."""
-    sql = '''
+    sql = """
         SELECT COUNT(*) AS overlap
           FROM aux.assembled_contigs AS curr_iter
           JOIN aux.assembled_contigs AS prev_iter
@@ -344,7 +344,7 @@ def iteration_overlap_count(cxn, iteration, bit_score, length):
            AND curr_iter.bit_score >= ?
            AND prev_iter.bit_score >= ?
            AND curr_iter.len >= ?
-        '''
+        """
     result = cxn.execute(
         sql, (iteration, bit_score, bit_score, length))
     return result.fetchone()[0]
@@ -353,14 +353,14 @@ def iteration_overlap_count(cxn, iteration, bit_score, length):
 def insert_assembled_contigs_batch(cxn, batch):
     """Insert a batch of blast hit records into the database."""
     if batch:
-        sql = '''
+        sql = """
             INSERT INTO aux.assembled_contigs
                         (iteration, contig_id, seq, description,
                          bit_score, len,
                          query_from, query_to, query_strand,
                          hit_from, hit_to, hit_strand)
                  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            '''
+            """
         cxn.executemany(sql, batch)
         cxn.commit()
 
@@ -371,19 +371,19 @@ def get_assembled_contigs(cxn, iteration, bit_score, length):
 
     We will use them as the queries in the next atram iteration.
     """
-    sql = '''
+    sql = """
         SELECT contig_id, seq
           FROM aux.assembled_contigs
          WHERE iteration = ?
            AND bit_score >= ?
            AND len >= ?
-         '''
+         """
     return cxn.execute(sql, (iteration, bit_score, length))
 
 
 def get_all_assembled_contigs(cxn, bit_score=0, length=0):
     """Get all assembled contigs."""
-    sql = '''
+    sql = """
         SELECT iteration, contig_id, seq, description, bit_score, len,
                query_from, query_to, query_strand,
                hit_from, hit_to, hit_strand
@@ -391,7 +391,7 @@ def get_all_assembled_contigs(cxn, bit_score=0, length=0):
          WHERE bit_score >= ?
            AND len >= ?
       ORDER BY bit_score DESC, iteration
-        '''
+        """
 
     cxn.row_factory = sqlite3.Row
     return cxn.execute(sql, (bit_score, length))
@@ -399,12 +399,12 @@ def get_all_assembled_contigs(cxn, bit_score=0, length=0):
 
 def all_assembled_contigs_count(cxn, bit_score=0, length=0):
     """Count all assembed contigs."""
-    sql = '''
+    sql = """
         SELECT COUNT(*) AS count
           FROM aux.assembled_contigs
          WHERE bit_score >= ?
            AND len >= ?
-        '''
+        """
 
     result = cxn.execute(sql, (bit_score, length))
     return result.fetchone()[0]

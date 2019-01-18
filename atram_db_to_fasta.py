@@ -62,12 +62,12 @@ def parse_command_line():
 
     parser.add_argument('-b', '--blast-db', '--sra', '--db', '--database',
                         required=True, metavar='DB',
-                        help='''This needs to match the DB prefix you
-                             entered for atram_preprocessor.py.''')
+                        help="""This needs to match the DB prefix you
+                             entered for atram_preprocessor.py.""")
 
     parser.add_argument('-f', '--fasta', required=True,
-                        help='''What to name the output fasta files without
-                            then end indicator.''')
+                        help="""What to name the output fasta files without
+                            then end indicator.""")
 
     args = vars(parser.parse_args())
 

@@ -140,21 +140,26 @@ def command_line_args(parser):
 
     group.add_argument('--db-gencode', type=int, default=1,
                        metavar='CODE',
-                       help='The genetic code to use during blast runs. '
-                            'The default is "1".')
+                       help="""The genetic code to use during blast runs.
+                            The default is "1".""")
 
     group.add_argument('--evalue', type=float, default=1e-10,
-                       help='The default evalue is "1e-10".')
+                       help="""The default evalue is "1e-10".""")
 
     group.add_argument('--word-size', type=int,
-                       help='Word size for wordfinder algorithm. '
-                            'Must be >= 2.')
+                       help="""Word size for wordfinder algorithm.
+                            'Must be >= 2.""")
 
     group.add_argument('--max-target-seqs', type=int, default=100000000,
                        metavar='MAX',
-                       help='Maximum hit sequences per shard. '
-                            'Default is calculated based on the available '
-                            'memory and the number of shards.')
+                       help="""Maximum hit sequences per shard.
+                            Default is calculated based on the available
+                            memory and the number of shards.""")
+
+    group.add_argument('--batch-size', type=int,
+                       help="""Use this option to control blast memory usage
+                            and the concatenation of queries. Setting this
+                            value too low can degrade performance.""")
 
 
 def check_args(args):

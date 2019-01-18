@@ -23,6 +23,12 @@ def update_temp_dir(temp_dir, args):
     os.environ['SQLITE_TMPDIR'] = temp_dir
 
 
+def set_blast_batch_size(batch_size):
+    """Use this setting to control blast memory usage & query concatenation."""
+    if batch_size:
+        os.environ['BATCH_SIZE'] = str(batch_size)
+
+
 def temp_dir_exists(temp_dir):
     """Make sure the temporary directory exits."""
     if temp_dir and not os.path.exists(temp_dir):
