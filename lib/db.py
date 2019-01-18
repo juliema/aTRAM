@@ -27,8 +27,8 @@ def connect(blast_db, check_version=False, clean=False):
 
     cxn.execute("PRAGMA page_size = {}".format(2**16))
     cxn.execute("PRAGMA busy_timeout = 10000")
-    cxn.execute("PRAGMA journal_mode = OFF")
-    cxn.execute("PRAGMA synchronous = OFF")
+    cxn.execute("PRAGMA journal_mode = WAL")
+    # cxn.execute("PRAGMA synchronous = OFF")
 
     if check_version:
         check_versions(cxn)
