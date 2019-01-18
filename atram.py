@@ -95,9 +95,10 @@ def parse_command_line():
     cpus = min(10, os.cpu_count() - 4 if os.cpu_count() > 4 else 1)
     group.add_argument('--cpus', '--processes', '--max-processes',
                        type=int, default=cpus,
-                       help='''Number of CPU threads to use. This will also be
-                            used for the assemblers when possible. On this
-                            machine the default is ("{}")'''.format(cpus))
+                       help='''Number of CPU processors to use. This will also
+                            be used for the assemblers when possible. We will
+                            use {} out of {} cpus.'''.format(
+                                cpus, os.cpu_count()))
 
     group.add_argument('--log-file', help='''Log file (full path)."''')
 

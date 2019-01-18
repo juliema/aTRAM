@@ -1,7 +1,6 @@
 """Base class for the various assembler programs."""
 
 import sys
-import math
 from shutil import which
 import psutil
 import lib.log as log
@@ -47,13 +46,13 @@ def command_line_args(parser):
     group.add_argument('--bowtie2', action='store_true',
                        help='Use bowtie2 during assembly. (Trinity)')
 
-    max_mem = max(1.0, math.floor(
-        psutil.virtual_memory().available / 1024**3 / 2))
+    total_mem = psutil.virtual_memory().available >> 30
+    max_mem = max(1.0, total_mem >> 1)
     group.add_argument('--max-memory',
                        default=max_mem, metavar='MEMORY', type=int,
-                       help='Maximum amount of memory to use in gigabytes. '
-                            'The default is "{}". (Trinity, Spades)'.format(
-                                max_mem))
+                       help="""Maximum amount of memory to use in gigabytes.
+                            We will use {} out of {} GB of free/unused memory.
+                            (Trinity, Spades)""".format(max_mem, total_mem))
 
     group.add_argument('--exp-coverage', '--expected-coverage',
                        type=int, default=30,
