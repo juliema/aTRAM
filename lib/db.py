@@ -59,7 +59,7 @@ def aux_detach(cxn):
 
 
 # ########################### misc functions #################################
-# DB_VERSION != version in DB. Don't force DB changes until required. So
+# DB_VERSION != ATRAM_VERSION in DB. Don't force DB changes until required. So
 # this version will tend to lag ATRAM_VERSION.
 
 def check_versions(cxn):
@@ -201,7 +201,7 @@ def insert_blast_hit_batch(cxn, batch):
 
 
 def sra_blast_hits_count(cxn, iteration):
-    """Count the blast hist for select the iteration."""
+    """Count the blast hits for the iteration."""
     sql = """
         SELECT COUNT(*) AS count
           FROM aux.sra_blast_hits

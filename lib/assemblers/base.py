@@ -90,12 +90,11 @@ class BaseAssembler:  # pylint: disable=too-many-public-methods
 
     def no_blast_hits(self):
         """Make sure we have blast hits."""
-        if not db.sra_blast_hits_count(
-                self.state['cxn'], self.state['iteration']):
-            log.info('No blast hits in iteration {}'.format(
-                self.state['iteration']))
-            return True
-        return False
+        count = db.sra_blast_hits_count(
+            self.state['cxn'], self.state['iteration'])
+        log.info('{} blast hits in iteration {}'.format(
+            count, self.state['iteration']))
+        return count == 0
 
     def nothing_assembled(self):
         """Make there is assembler output."""
