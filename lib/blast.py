@@ -10,13 +10,6 @@ from shutil import which
 import lib.log as log
 
 
-# Try to get the sequence name and which end it is from the fasta header
-PARSE_HEADER = re.compile(r'^ \s* ( [^\s/_]+ ) [\s/_]? ( [12] )?', re.VERBOSE)
-
-# Parse blast hits file
-PARSE_RESULTS = re.compile(r'^ ( [^\s/_]+ ) [\s/_] ( [12] )', re.VERBOSE)
-
-
 def create_db(temp_dir, fasta_file, shard):
     """Create a blast database."""
     cmd = 'makeblastdb -dbtype nucl -in {} -out {}'
@@ -227,29 +220,27 @@ def find_program(program):
 
 def parse_fasta_title(title, ends, seq_end_clamp):
     """Try to get the sequence name & which end it is from the fasta title."""
-    match = PARSE_HEADER.match(title)
-    seq_name, seq_end = match.group(1), match.group(2)
-
-    if not seq_end:
-        match2 = re.match(r' ( .* ) \. ( [12] ) $', seq_name, re.VERBOSE)
-        if match2:
-            match = match2
-
-    if match.group(2):
+    parts = title.split()
+    match = re.match(r'(.+)[./_]([12])$', parts[0])
+    if match:
         seq_name = match.group(1)
+        seq_end = match.group(2)
         if ends == 'mixed_ends':
             seq_end = match.group(2)
         else:
             seq_end = seq_end_clamp
+    elif len(parts) > 1 and re.match(r'[12]$', parts[1]):
+        seq_name = parts[0]
+        seq_end = parts[1]
     else:
-        seq_name = title
+        seq_name = parts[0]
         seq_end = seq_end_clamp
     return seq_name, seq_end
 
 
 def parse_blast_title(title):
     """Try to get the sequence name & which end it is from the blast title."""
-    match = PARSE_RESULTS.match(title)
+    match = re.match(r'(.+)[\s./_]([12])$', title)
     if match:
         seq_name = match.group(1)
         seq_end = match.group(2)
