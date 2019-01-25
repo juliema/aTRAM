@@ -55,7 +55,8 @@ def assembly_loop(assembler, blast_db, query):
 
         blast_query_against_all_shards(assembler)
 
-        if assembler.blast_only or assembler.no_blast_hits():
+        count = assembler.count_blast_hits()
+        if assembler.blast_only or count == 0:
             break
 
         assembler.write_input_files()

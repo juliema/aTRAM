@@ -88,13 +88,13 @@ class BaseAssembler:  # pylint: disable=too-many-public-methods
             log.error(msg)
             raise RuntimeError(msg)
 
-    def no_blast_hits(self):
+    def count_blast_hits(self):
         """Make sure we have blast hits."""
         count = db.sra_blast_hits_count(
             self.state['cxn'], self.state['iteration'])
         log.info('{} blast hits in iteration {}'.format(
             count, self.state['iteration']))
-        return count == 0
+        return count
 
     def nothing_assembled(self):
         """Make there is assembler output."""
