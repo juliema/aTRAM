@@ -1,4 +1,4 @@
-# Manual for using aTRAM 2.1: automated Target Restricted Assembly Method
+# Manual for using aTRAM 2.1: automated Target Restricted Assembly Method [![Build Status](https://travis-ci.org/juliema/aTRAM.svg?branch=master)](https://travis-ci.org/juliema/aTRAM)
 
 # Background
 
