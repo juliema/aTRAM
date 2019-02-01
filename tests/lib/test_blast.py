@@ -1,7 +1,5 @@
 """Testing functions in lib/blast."""
 
-# pylint: disable=invalid-name
-
 import lib.blast as blast
 
 

@@ -1,27 +1,26 @@
 """Testing functions in lib/bio."""
 
+import lib.bio as bio
 
-# from hypothesis import given
-# import hypothesis.strategies as st
-# import lib.bio as bio
 
-# DNA = 'ACGTUWSMKRYBDHVNXacgtuwsmkrybdhvnx'
-# REVERSIBLE = 'ACGTWSMKRYBDHVNXacgtwsmkrybdhvnx'  # 'U's removed
-# PROTEIN = 'EFILPQefilpq'
-# HAS_PROTEIN = '[{}]*[{}]+[{}]*'.format(DNA, PROTEIN, DNA)
-#
-#
-# @given(seq=st.text(alphabet=REVERSIBLE))
-# def test_reverse_complement_twice(seq):
-#     actual = bio.reverse_complement(bio.reverse_complement(seq))
-#     assert seq == actual
-#
-#
-# @given(seq=st.text(alphabet=DNA))
-# def test_is_protein_no(seq):
-#     assert not bio.is_protein(seq)
-#
-#
-# @given(seq=st.from_regex(HAS_PROTEIN))
-# def test_is_protein_yes(seq):
-#     assert bio.is_protein(seq)
+def test_reverse_complement_01():
+    """It complements then reverses the string."""
+    seq = 'ACGTUWSMKRYBDHVNXacgtuwsmkrybdhvnx'
+    actual = bio.reverse_complement(seq)
+    assert actual == 'TGCAAWSKMYRVHDBNXtgcaawskmyrvhdbnx'[::-1]
+
+def test_reverse_complement_02():
+    """A reverse complement twice yields the original sequence, except U."""
+    seq = 'ACGTUWSMKRYBDHVNXacgtuwsmkrybdhvnx'
+    actual = bio.reverse_complement(bio.reverse_complement(seq))
+    assert actual == 'ACGTTWSMKRYBDHVNXacgttwsmkrybdhvnx'
+
+def test_is_protein_no():
+    """DNA, RNA, and wildcards are not protein."""
+    seq = 'ACGTUWSMKRYBDHVNXacgtuwsmkrybdhvnx'
+    assert not bio.is_protein(seq)
+
+def test_is_protein_yes():
+    """Any protein character makes the whole sequence a protein."""
+    seq = 'ACGTUWSMKRYBeDHVNXacgtuwsmkrybdhvnx'
+    assert bio.is_protein(seq)
