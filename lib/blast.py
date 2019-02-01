@@ -221,6 +221,8 @@ def find_program(program):
 def parse_fasta_title(title, ends, seq_end_clamp):
     """Try to get the sequence name & which end it is from the fasta title."""
     parts = title.split()
+    if not parts:
+        parts = ['']
     match = re.match(r'(.+)[./_]([12])$', parts[0])
     if match:
         seq_name = match.group(1)
@@ -231,7 +233,10 @@ def parse_fasta_title(title, ends, seq_end_clamp):
             seq_end = seq_end_clamp
     elif len(parts) > 1 and re.match(r'[12]$', parts[1]):
         seq_name = parts[0]
-        seq_end = parts[1]
+        if ends == 'mixed_ends':
+            seq_end = parts[1]
+        else:
+            seq_end = seq_end_clamp
     else:
         seq_name = parts[0]
         seq_end = seq_end_clamp
