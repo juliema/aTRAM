@@ -1,6 +1,6 @@
 """Wrapper for the Spades assembler."""
 
-import os
+from os.path import join
 import shutil
 from lib.assemblers.base import BaseAssembler
 
@@ -19,7 +19,7 @@ class SpadesAssembler(BaseAssembler):
 
         It has has unique requirements.
         """
-        return os.path.join(self.iter_dir(), 'spades')
+        return join(self.state['iter_dir'], 'spades')
 
     def spades(self):
         """Build the command for assembly."""
@@ -45,5 +45,5 @@ class SpadesAssembler(BaseAssembler):
 
     def post_assembly(self):
         """Copy the assembler output."""
-        src = os.path.join(self.work_path(), 'contigs.fasta')
+        src = join(self.work_path(), 'contigs.fasta')
         shutil.move(src, self.file['output'])

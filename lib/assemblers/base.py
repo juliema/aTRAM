@@ -6,7 +6,6 @@ from subprocess import CalledProcessError
 import lib.db as db
 import lib.log as log
 import lib.bio as bio
-import lib.util as util
 
 
 class BaseAssembler:  # pylint: disable=too-many-public-methods
@@ -18,59 +17,54 @@ class BaseAssembler:  # pylint: disable=too-many-public-methods
         self.blast_only = False  # Used to short-circuit the assembler
         self.steps = []          # Assembler steps setup by the assembler
         self.file = {}           # Files and record counts
+
+        # We need to pass these variables to child processes.
+        # So they cannot be directly attached to an object.
         self.state = {
             'iteration': 0,      # Current iteration
             'query_target': '',  # Original name of the query sequence
             'query_file': '',    # Current query file name
             'blast_db': '',      # Current blast DB name
+            'iter_dir': '',      # Name of the temp dir for this interation
             'cxn': cxn}          # Save the DB connection
 
-    def initialize_iteration(self, blast_db, query_file, iteration):
-        """
-        Make file names used by the assembler.
-
-        Do this at the start of each iteration.
-        """
-        self.set_state(blast_db, query_file, iteration)
-
-        self.file['long_reads'] = ''  # Set up in atram.py for now
-        self.file['output'] = self.iter_file('output.fasta')
-        self.file['paired_1'] = self.iter_file('paired_1.fasta')
-        self.file['paired_2'] = self.iter_file('paired_2.fasta')
-        self.file['single_1'] = self.iter_file('single_1.fasta')
-        self.file['single_2'] = self.iter_file('single_2.fasta')
-        self.file['single_any'] = self.iter_file('single_any.fasta')
-
-        self.file['paired_count'] = 0       # paired_1 and paired_2 count
-        self.file['single_1_count'] = 0
-        self.file['single_2_count'] = 0
-        self.file['single_any_count'] = 0
-
-    def set_state(self, blast_db, query_file, iteration):
-        """Set the iteration state."""
+    def init_iteration(self, blast_db, query_file, iteration):
+        """Make file names used by the assembler."""
         self.state['blast_db'] = blast_db
         self.state['query_file'] = query_file
         self.state['iteration'] = iteration
         if iteration == 1:
             self.state['query_target'] = query_file
 
-    def iter_dir(self):
-        """Get the work directory for the current iteration."""
-        return util.iter_dir(
-            self.args['temp_dir'],
-            self.state['blast_db'],
-            self.state['query_target'],
+    def setup_files(self, iter_dir):
+        """Build the file names and counts for the iteration."""
+        self.state['iter_dir'] = iter_dir
+        self.file['long_reads'] = ''  # Set up in atram.py for now
+
+        names = 'output paired_1 paired_2 single_1 single_2 single_any'.split()
+        for name in names:
+            self.file[name] = self.iter_file(name + '.fasta')
+
+        # paired = paired_1_count + paired_2_count
+        for name in 'paired single_1 single_2 single_any'.split():
+            self.file[name + '_count'] = 0
+
+    def file_prefix(self):
+        """Build a prefix for the iteration's work directory."""
+        return '{}_{}_{:02d}_'.format(
+            basename(self.state['blast_db']),
+            basename(self.state['query_target']),
             self.state['iteration'])
 
     def iter_file(self, file_name):
         """Put files into the temp dir."""
-        rel_path = join(self.iter_dir(), file_name)
+        rel_path = join(self.state['iter_dir'], file_name)
         return rel_path
         # return abspath(rel_path)
 
     def work_path(self):
         """Assembler output directory name may have unique requirements."""
-        return self.iter_dir()
+        return self.state['iter_dir']
 
     def run(self):
         """Try to assemble the input."""
@@ -290,4 +284,5 @@ class BaseAssembler:  # pylint: disable=too-many-public-methods
             'blast_db': self.state['blast_db'],
             'iteration': self.state['iteration'],
             'query_file': self.state['query_file'],
-            'query_target': self.state['query_target']}
+            'query_target': self.state['query_target'],
+            'iter_dir': self.state['iter_dir']}

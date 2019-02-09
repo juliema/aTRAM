@@ -108,9 +108,14 @@ def parse_command_line():
                             directories to your path.""")
 
     group.add_argument('-t', '--temp-dir', metavar='DIR',
-                       help="""YPlace temporary files in this directory. All
+                       help="""Place temporary files in this directory. All
                             files will be deleted after aTRAM completes. The
                             directory must exist.""")
+
+    group.add_argument('--debug-dir', metavar='DIR',
+                       help="""This is just like --temp-dir except that the
+                            files are not deleted after aTRAM completes. This
+                            is useful for debugging aTRAM problems.""")
 
     group.add_argument('-T', '--timeout', metavar='SECONDS', default=300,
                        type=int,
@@ -156,7 +161,7 @@ def parse_command_line():
     set_protein_arg(args)
     setup_path_arg(args)
     find_programs(args)
-    util.temp_dir_exists(args['temp_dir'])
+    util.temp_dir_exists(args['temp_dir'], args['debug_dir'])
     util.set_blast_batch_size(args['batch_size'])
 
     return args

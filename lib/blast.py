@@ -2,7 +2,7 @@
 
 import sys
 import os
-from os.path import basename, join
+from os.path import basename, dirname, getsize, join
 import re
 import glob
 import json
@@ -174,7 +174,7 @@ def default_shard_count(shard_count, sra_files):
     if not shard_count:
         total_fasta_size = 0
         for file_name in sra_files:
-            file_size = os.path.getsize(file_name)
+            file_size = getsize(file_name)
             if file_name.lower().endswith('q'):
                 file_size /= 2  # Guessing that fastq files ~2x fasta files
             total_fasta_size += file_size
@@ -186,7 +186,7 @@ def default_shard_count(shard_count, sra_files):
 
 def make_blast_output_dir(blast_db):
     """Make blast DB output directory."""
-    output_dir = os.path.dirname(blast_db)
+    output_dir = dirname(blast_db)
     if output_dir and output_dir not in ['.', '..']:
         os.makedirs(output_dir, exist_ok=True)
 

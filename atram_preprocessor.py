@@ -7,6 +7,7 @@ that does the actual preprocessing (core_preprocessor.py).
 """
 
 import os
+from os.path import join
 import argparse
 import textwrap
 from datetime import date
@@ -81,7 +82,7 @@ def parse_command_line():
 
     group = parser.add_argument_group('preprocessor arguments')
 
-    blast_db = os.path.join('.', 'atram_' + date.today().isoformat())
+    blast_db = join('.', 'atram_' + date.today().isoformat())
     group.add_argument('-b', '--blast-db', '--output', '--db',
                        default=blast_db, metavar='DB',
                        help="""This is the prefix of all of the blast

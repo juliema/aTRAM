@@ -1,7 +1,7 @@
 """Wrapper for the Abyss assembler."""
 
-import os
-import shutil
+from os.path import realpath
+from shutil import copyfile
 from lib.assemblers.base import BaseAssembler
 
 
@@ -40,6 +40,6 @@ class AbyssAssembler(BaseAssembler):
 
     def post_assembly(self):
         """Copy the assembler output into the temp directory."""
-        src = os.path.realpath(self.file['output'] + '-unitigs.fa')
+        src = realpath(self.file['output'] + '-unitigs.fa')
 
-        shutil.copyfile(src, self.file['output'])
+        copyfile(src, self.file['output'])

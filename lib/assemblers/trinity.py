@@ -1,7 +1,7 @@
 """Wrapper for the Trinity assembler."""
 
-import os
-import shutil
+from os.path import join
+from shutil import move
 from lib.assemblers.base import BaseAssembler
 
 
@@ -19,7 +19,7 @@ class TrinityAssembler(BaseAssembler):
 
         It has has unique requirements.
         """
-        return os.path.join(self.iter_dir(), 'trinity')
+        return join(self.state['iter_dir'], 'trinity')
 
     def trinity(self):
         """Build the command for assembly."""
@@ -48,5 +48,5 @@ class TrinityAssembler(BaseAssembler):
 
     def post_assembly(self):
         """Copy the assembler output."""
-        src = os.path.join(self.iter_dir(), 'trinity.Trinity.fasta')
-        shutil.move(src, self.file['output'])
+        src = join(self.state['iter_dir'], 'trinity.Trinity.fasta')
+        move(src, self.file['output'])

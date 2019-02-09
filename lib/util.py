@@ -1,24 +1,13 @@
 """Misc. utilities."""
 
 import os
+from os.path import exists
 import sys
-
-
-def iter_dir(temp_dir, blast_db, query_name, iteration):
-    """
-    Get the work directory for the current iteration.
-
-    We need to call this function in child processes so it cannot be in an
-    object.
-    """
-    name = '{}_{}_{:02d}'.format(
-        os.path.basename(blast_db), os.path.basename(query_name), iteration)
-
-    return os.path.join(temp_dir, name)
 
 
 def update_temp_dir(temp_dir, args):
     """Handle the new temporary directory name."""
+    args['temp_root'] = args['temp_dir']
     args['temp_dir'] = temp_dir
     os.environ['SQLITE_TMPDIR'] = temp_dir
 
@@ -29,7 +18,9 @@ def set_blast_batch_size(batch_size):
         os.environ['BATCH_SIZE'] = str(batch_size)
 
 
-def temp_dir_exists(temp_dir):
+def temp_dir_exists(temp_dir, debug_dir):
     """Make sure the temporary directory exits."""
-    if temp_dir and not os.path.exists(temp_dir):
+    if temp_dir and not exists(temp_dir):
         sys.exit('The temporary directory must exist.')
+    if debug_dir and not exists(debug_dir):
+        sys.exit('The temporary debug directory must exist.')

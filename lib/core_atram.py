@@ -2,8 +2,8 @@
 
 import re
 import os
-from os.path import basename, splitext, join
-import multiprocessing
+from os.path import basename, split, splitext, join
+from multiprocessing import Pool
 from tempfile import TemporaryDirectory
 from Bio import SeqIO
 import lib.db as db
@@ -32,7 +32,7 @@ def assemble(args):
                     assembler = assembly.factory(args, cxn)
 
                     try:
-                        assembly_loop(assembler, blast_db, query)
+                        assembly_loop(args, assembler, blast_db, query)
                     except (TimeoutError, RuntimeError):
                         pass
                     except Exception as err:  # pylint: disable=broad-except
@@ -43,43 +43,55 @@ def assemble(args):
                     db.aux_detach(cxn)
 
 
-def assembly_loop(assembler, blast_db, query):
+def assembly_loop(args, assembler, blast_db, query):
     """Iterate over the assembly processes."""
     for iteration in range(1, assembler.args['iterations'] + 1):
         log.info('aTRAM blast DB = "{}", query = "{}", iteration {}'.format(
-            blast_db, query, iteration))
+            blast_db, split(query)[1], iteration))
 
-        assembler.initialize_iteration(blast_db, query, iteration)
+        assembler.init_iteration(blast_db, query, iteration)
 
-        os.makedirs(assembler.iter_dir(), exist_ok=True)
+        with TemporaryDirectory(
+                prefix=assembler.file_prefix(),
+                dir=assembler.args['temp_root']) as iter_dir:
 
-        blast_query_against_all_shards(assembler)
+            assembler.setup_files(iter_dir)
 
-        count = assembler.count_blast_hits()
-        if assembler.blast_only or count == 0:
-            break
+            query = assembly_loop_iteration(args, assembler)
 
-        assembler.write_input_files()
-
-        assembler.run()
-
-        if assembler.nothing_assembled():
-            break
-
-        high_score = filter_contigs(assembler)
-
-        count = assembler.assembled_contigs_count(high_score)
-
-        if not count:
-            break
-
-        if assembler.no_new_contigs(count):
-            break
-
-        query = create_query_from_contigs(assembler)
+            if not query:
+                break
 
     else:
         log.info('All iterations completed')
+
+
+def assembly_loop_iteration(args, assembler):
+    """One iteration of the assembly loop."""
+    blast_query_against_all_shards(assembler)
+
+    count = assembler.count_blast_hits()
+    if assembler.blast_only or count == 0:
+        return False
+
+    assembler.write_input_files()
+
+    assembler.run()
+
+    if assembler.nothing_assembled():
+        return False
+
+    high_score = filter_contigs(assembler)
+
+    count = assembler.assembled_contigs_count(high_score)
+
+    if not count:
+        return False
+
+    if assembler.no_new_contigs(count):
+        return False
+
+    return create_query_from_contigs(args, assembler)
 
 
 def split_queries(args):
@@ -142,7 +154,7 @@ def blast_query_against_all_shards(assembler):
 
     all_shards = shard_fraction(assembler)
 
-    with multiprocessing.Pool(processes=assembler.args['cpus']) as pool:
+    with Pool(processes=assembler.args['cpus']) as pool:
         results = [pool.apply_async(
             blast_query_against_one_shard,
             (assembler.args, assembler.simple_state(), shard))
@@ -168,13 +180,7 @@ def blast_query_against_one_shard(args, state, shard):
 
     Then write the results to the database.
     """
-    temp_dir = util.iter_dir(
-        args['temp_dir'],
-        state['blast_db'],
-        state['query_target'],
-        state['iteration'])
-
-    output_file = blast.output_file_name(temp_dir, shard)
+    output_file = blast.output_file_name(state['iter_dir'], shard)
 
     blast.against_sra(args, state, output_file, shard)
 
@@ -202,13 +208,13 @@ def filter_contigs(assembler):
         assembler.state['iteration']))
 
     blast_db = blast.temp_db_name(
-        assembler.iter_dir(), assembler.state['blast_db'])
+        assembler.state['iter_dir'], assembler.state['blast_db'])
 
     hits_file = blast.output_file_name(
-        assembler.iter_dir(), assembler.state['blast_db'])
+        assembler.state['iter_dir'], assembler.state['blast_db'])
 
     blast.create_db(
-        assembler.iter_dir(), assembler.file['output'], blast_db)
+        assembler.state['iter_dir'], assembler.file['output'], blast_db)
 
     blast.against_contigs(
         blast_db,
@@ -278,12 +284,16 @@ def save_contigs(assembler, all_hits):
     return high_score
 
 
-def create_query_from_contigs(assembler):
+def create_query_from_contigs(args, assembler):
     """Crate a new file with the contigs used as the next query."""
     log.info('Creating new query files: iteration {}'.format(
         assembler.state['iteration']))
 
-    query = assembler.iter_file('long_reads.fasta')
+    query_dir = join(args['temp_dir'], 'queries')
+    os.makedirs(query_dir, exist_ok=True)
+
+    query_file = assembler.file_prefix() + 'long_reads.fasta'
+    query = join(query_dir, query_file)
     assembler.file['long_reads'] = query
 
     with open(query, 'w') as query_file:

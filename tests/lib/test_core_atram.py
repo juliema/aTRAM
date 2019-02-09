@@ -89,28 +89,24 @@ def test_clean_database_01(
     create_contig_blast_hits_table.assert_called_once_with(dbh)
     create_sra_blast_hits_table.assert_called_once_with(dbh)
 
-@patch('lib.log.info')
-@patch('os.makedirs')
 @patch('lib.core_atram.blast_query_against_all_shards')
 @patch('lib.core_atram.create_query_from_contigs')
 @patch('lib.core_atram.filter_contigs')
-def test_assembly_loop_01(
+def test_assembly_loop_iteration_01(
         filter_contigs,
         create_query_from_contigs,
-        blast_query_against_all_shards,
-        b_makedirs,
-        info):
+        blast_query_against_all_shards):
     """It iterates over the assembly processes."""
     args, _, assembler = set_up()
 
-    iter_dir = 'my_iter_dir'
+    temp_dir = 'my_temp_dir'
 
     assembler.blast_only = False
     assembler.state['query_file'] = args['query'][0]
     assembler.state['blast_db'] = args['blast_db'][0]
+    assembler.state['iter_dir'] = 'my_iter_dir'
 
-    assembler.initialize_iteration = MagicMock()
-    assembler.iter_dir = MagicMock(return_value=iter_dir)
+    assembler.init_iteration = MagicMock()
     assembler.count_blast_hits = MagicMock(return_value=1)
     assembler.write_input_files = MagicMock()
     assembler.run = MagicMock()
@@ -118,37 +114,14 @@ def test_assembly_loop_01(
     assembler.assembled_contigs_count = MagicMock(return_value=11)
     assembler.no_new_contigs = MagicMock(return_value=False)
 
-    core_atram.assembly_loop(
-        assembler, args['blast_db'][0], args['query'][0])
+    core_atram.assembly_loop_iteration(args, assembler)
 
-    calls = [
-        call('aTRAM blast DB = "{}", query = "{}", iteration {}'.format(
-            args['blast_db'][0], args['query'][0], 1)),
-        call('All iterations completed')]
-    info.assert_has_calls(calls)
-
-    assembler.initialize_iteration.assert_called_once_with(
-        args['blast_db'][0], args['query'][0], 1)
-    assert assembler.iter_dir.call_count == 1
-    b_makedirs.assert_called_once_with(iter_dir, exist_ok=True)
     blast_query_against_all_shards.assert_called_once_with(assembler)
     assert assembler.count_blast_hits.call_count == 1
     assembler.no_new_contigs.assert_called_once_with(11)
 
     create_query_from_contigs.create_query_from_contigs(assembler)
     filter_contigs.create_query_from_contigs(assembler)
-
-# def test_assembly_loop_multiple_iterations():
-
-# def test_assembly_loop_blast_only():
-
-# def test_assembly_loop_no_blast_hits():
-
-# def test_assembly_loop_nothing_assembled():
-
-# def test_assembly_loop_no_assembled_contigs_count():
-
-# def test_assembly_loop_no_new_contigs():
 
 @patch('lib.blast.all_shard_paths')
 def test_shard_fraction_01(all_shard_paths):
@@ -181,14 +154,3 @@ def test_shard_fraction_02(all_shard_paths):
     assert ['1st', '2nd'] == shards
 
     all_shard_paths.assert_called_once_with(args['blast_db'][0])
-
-# def test_blast_query_against_one_shard():
-
-# def test_filter_contigs():
-
-# def test_save_blast_against_contigs():
-
-# def test_save_contigs():
-
-
-# def test_create_query_from_contigs(self):
