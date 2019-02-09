@@ -1,6 +1,6 @@
 """Testing functions in core_preprocessor."""
 
-# pylint: disable=too-many-arguments
+# pylint: disable=too-many-arguments,too-many-locals,unused-argument
 
 from os.path import join
 import tempfile
@@ -16,9 +16,12 @@ def set_up():
         'log_file': 'log_file_1',
         'sra_files': 'sra_files_1',
         'shard_count': 4,
-        'temp_dir': 'temp_dir_1'}
+        'temp_dir': 'temp_dir_1',
+        'keep_temp_dir': False}
     return 'cxn', args
 
+@patch('lib.util.make_temp_dir')
+@patch('lib.util.update_temp_dir')
 @patch('lib.log.info')
 @patch('lib.log.setup')
 @patch('lib.db.connect')
@@ -31,7 +34,8 @@ def set_up():
 def test_preprocess_01(
         create_all_blast_shards, assign_seqs_to_shards, load_seqs,
         create_sequences_index, create_sequences_table,
-        create_metadata_table, connect, setup, info):
+        create_metadata_table, connect, setup, info, update_temp_dir,
+        make_temp_dir):
     """It runs the function to build the databases required by atram."""
     _, args = set_up()
     shard_list = ['shard_1', 'shard_4', 'shard_3', 'shard_4']

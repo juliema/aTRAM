@@ -4,7 +4,6 @@ import re
 import os
 from os.path import basename, split, splitext, join
 from multiprocessing import Pool
-from tempfile import TemporaryDirectory
 from Bio import SeqIO
 import lib.db as db
 import lib.log as log
@@ -17,7 +16,10 @@ def assemble(args):
     """Loop thru every blast/query pair and run an assembly for each one."""
     queries = split_queries(args)
 
-    with TemporaryDirectory(prefix='atram_', dir=args['temp_dir']) as temp_dir:
+    with util.make_temp_dir(
+            where=args['temp_dir'],
+            prefix='atram_',
+            keep=args['keep_temp_dir']) as temp_dir:
         util.update_temp_dir(temp_dir, args)
 
         for blast_db in args['blast_db']:
@@ -51,9 +53,10 @@ def assembly_loop(args, assembler, blast_db, query):
 
         assembler.init_iteration(blast_db, query, iteration)
 
-        with TemporaryDirectory(
+        with util.make_temp_dir(
+                where=assembler.args['temp_root'],
                 prefix=assembler.file_prefix(),
-                dir=assembler.args['temp_root']) as iter_dir:
+                keep=args['keep_temp_dir']) as iter_dir:
 
             assembler.setup_files(iter_dir)
 

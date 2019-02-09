@@ -8,7 +8,6 @@ blast and sqlite3 databases.
 from os.path import join, basename, splitext
 import sys
 import multiprocessing
-from tempfile import TemporaryDirectory
 import numpy as np
 from Bio.SeqIO.QualityIO import FastqGeneralIterator
 from Bio.SeqIO.FastaIO import SimpleFastaParser
@@ -22,7 +21,10 @@ def preprocess(args):
     """Build the databases required by atram."""
     log.setup(args['log_file'], args['blast_db'])
 
-    with TemporaryDirectory(prefix='atram_', dir=args['temp_dir']) as temp_dir:
+    with util.make_temp_dir(
+            where=args['temp_dir'],
+            prefix='atram_preprocessor_',
+            keep=args['keep_temp_dir']) as temp_dir:
         util.update_temp_dir(temp_dir, args)
 
         with db.connect(args['blast_db'], clean=True) as cxn:

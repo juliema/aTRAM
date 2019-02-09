@@ -112,10 +112,9 @@ def parse_command_line():
                             files will be deleted after aTRAM completes. The
                             directory must exist.""")
 
-    # group.add_argument('--debug-dir', metavar='DIR',
-    #                    help="""This is just like --temp-dir except that the
-    #                         files are not deleted after aTRAM completes. This
-    #                         is useful for debugging aTRAM problems.""")
+    group.add_argument('--keep-temp-dir', action='store_true',
+                       help="""This flag will keep the temporary files in the
+                            --temp-dir around for debugging.""")
 
     group.add_argument('-T', '--timeout', metavar='SECONDS', default=300,
                        type=int,

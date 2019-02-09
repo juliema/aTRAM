@@ -39,13 +39,15 @@ def test_split_queries_02(write_query_seq):
     args, cxn, assembler = set_up()
     args['query_split'] = ['tests/data/split_queries1.txt']
 
-    queries = core_atram.split_queries(args)
+    with tempfile.TemporaryDirectory(prefix='test_') as temp_dir:
+        args['temp_dir'] = temp_dir
+        queries = core_atram.split_queries(args)
 
     split_files = [
-        'temp_dir_1/queries/split_queries1_seq1_1_1.fasta',
-        'temp_dir_1/queries/split_queries1_seq2_2_2_2.fasta',
-        'temp_dir_1/queries/split_queries1_seq3_3.fasta',
-        'temp_dir_1/queries/split_queries1_seq1_1_4.fasta']
+        join(temp_dir, 'queries', 'split_queries1_seq1_1_1.fasta'),
+        join(temp_dir, 'queries', 'split_queries1_seq2_2_2_2.fasta'),
+        join(temp_dir, 'queries', 'split_queries1_seq3_3.fasta'),
+        join(temp_dir, 'queries', 'split_queries1_seq1_1_4.fasta')]
 
     calls = [
         call(split_files[0], 'seq1/1', 'A' * 10),

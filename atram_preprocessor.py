@@ -102,6 +102,10 @@ def parse_command_line():
                             files will be deleted after aTRAM completes. The
                             directory must exist.""")
 
+    group.add_argument('--keep-temp-dir', action='store_true',
+                       help="""This flag will keep the temporary files in the
+                            --temp-dir around for debugging.""")
+
     group.add_argument('-l', '--log-file',
                        help="""Log file (full path). The default is to use the
                             DB and program name to come up with a name like
