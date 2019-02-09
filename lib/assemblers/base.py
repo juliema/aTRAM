@@ -1,6 +1,6 @@
 """Base class for the various assembler wrappers."""
 
-from os.path import basename, exists, getsize, join, splitext  # , abspath
+from os.path import basename, exists, getsize, join, splitext, abspath
 import datetime
 from subprocess import CalledProcessError
 import lib.db as db
@@ -60,8 +60,8 @@ class BaseAssembler:  # pylint: disable=too-many-public-methods
     def iter_file(self, file_name):
         """Put files into the temp dir."""
         rel_path = join(self.state['iter_dir'], file_name)
-        return rel_path
-        # return abspath(rel_path)
+        # return rel_path
+        return abspath(rel_path)
 
     def work_path(self):
         """Assembler output directory name may have unique requirements."""
