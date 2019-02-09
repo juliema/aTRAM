@@ -66,12 +66,12 @@ def test_setup_files_01():
 
     assert asm.state['iter_dir'] == iter_dir
     assert asm.file['long_reads'] == ''
-    assert asm.file['output'] == join(iter_dir, 'output.fasta')
-    assert asm.file['paired_1'] == join(iter_dir, 'paired_1.fasta')
-    assert asm.file['paired_2'] == join(iter_dir, 'paired_2.fasta')
-    assert asm.file['single_1'] == join(iter_dir, 'single_1.fasta')
-    assert asm.file['single_2'] == join(iter_dir, 'single_2.fasta')
-    assert asm.file['single_any'] == join(iter_dir, 'single_any.fasta')
+    assert asm.file['output'].endswith(join(iter_dir, 'output.fasta'))
+    assert asm.file['paired_1'].endswith(join(iter_dir, 'paired_1.fasta'))
+    assert asm.file['paired_2'].endswith(join(iter_dir, 'paired_2.fasta'))
+    assert asm.file['single_1'].endswith(join(iter_dir, 'single_1.fasta'))
+    assert asm.file['single_2'].endswith(join(iter_dir, 'single_2.fasta'))
+    assert asm.file['single_any'].endswith(join(iter_dir, 'single_any.fasta'))
     assert asm.file['paired_count'] == 0
     assert asm.file['single_1_count'] == 0
     assert asm.file['single_2_count'] == 0
@@ -94,7 +94,7 @@ def test_iter_file_01():
     file_name = 'my_file.txt'
     asm = build_assembler()
     expected = join(asm.state['iter_dir'], file_name)
-    assert asm.iter_file(file_name) == expected
+    assert asm.iter_file(file_name).endswith(expected)
 
 def test_work_path_01():
     """It builds the work directory."""

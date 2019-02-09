@@ -26,7 +26,7 @@ class BaseAssembler:  # pylint: disable=too-many-public-methods
             'query_target': '',  # Original name of the query sequence
             'query_file': '',    # Current query file name
             'blast_db': '',      # Current blast DB name
-            'iter_dir': '',      # Name of the temp dir for this interation
+            'iter_dir': '',      # Name of the temp dir for this iteration
             'cxn': cxn}          # Save the DB connection
 
     def init_iteration(self, blast_db, query_file, iteration):
