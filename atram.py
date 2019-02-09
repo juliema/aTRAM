@@ -112,10 +112,10 @@ def parse_command_line():
                             files will be deleted after aTRAM completes. The
                             directory must exist.""")
 
-    group.add_argument('--debug-dir', metavar='DIR',
-                       help="""This is just like --temp-dir except that the
-                            files are not deleted after aTRAM completes. This
-                            is useful for debugging aTRAM problems.""")
+    # group.add_argument('--debug-dir', metavar='DIR',
+    #                    help="""This is just like --temp-dir except that the
+    #                         files are not deleted after aTRAM completes. This
+    #                         is useful for debugging aTRAM problems.""")
 
     group.add_argument('-T', '--timeout', metavar='SECONDS', default=300,
                        type=int,
@@ -161,7 +161,7 @@ def parse_command_line():
     set_protein_arg(args)
     setup_path_arg(args)
     find_programs(args)
-    util.temp_dir_exists(args['temp_dir'], args['debug_dir'])
+    util.temp_dir_exists(args['temp_dir'], args.get('debug_dir'))
     util.set_blast_batch_size(args['batch_size'])
 
     return args

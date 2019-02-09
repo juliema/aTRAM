@@ -131,8 +131,7 @@ def split_queries(args):
 def write_query_seq(file_name, seq_id, seq):
     """Write the sequence to a fasta file."""
     with open(file_name, 'w') as query_file:
-        query_file.write('>{}\n'.format(seq_id))
-        query_file.write('{}\n'.format(seq))
+        util.write_fasta_record(query_file, seq_id, seq)
 
 
 def clean_database(cxn):
@@ -302,7 +301,6 @@ def create_query_from_contigs(args, assembler):
                 assembler.state['iteration'],
                 assembler.args['bit_score'],
                 assembler.args['contig_length']):
-            query_file.write('>{}\n'.format(row[0]))
-            query_file.write('{}\n'.format(row[1]))
+            util.write_fasta_record(query_file, row[0], row[1])
 
     return query

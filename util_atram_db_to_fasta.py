@@ -7,6 +7,7 @@ import argparse
 import textwrap
 import lib.db as db
 import lib.blast as blast
+import lib.util as util
 
 
 def create_fasta_files(args):
@@ -19,11 +20,7 @@ def create_fasta_files(args):
             files = open_fasta_files(args, cxn)
 
             for rec in db.get_all_sequences(cxn):
-                header = rec[0]
-                if rec[1]:
-                    header += '/' + rec[1]
-                files[rec[1]].write('>{}\n'.format(header))
-                files[rec[1]].write('{}\n'.format(rec[2]))
+                util.write_fasta_record(files[rec[1]], rec[0], rec[2], rec[1])
 
         finally:
             close_fasta_files(files)

@@ -6,6 +6,7 @@ from subprocess import CalledProcessError
 import lib.db as db
 import lib.log as log
 import lib.bio as bio
+import lib.util as util
 
 
 class BaseAssembler:  # pylint: disable=too-many-public-methods
@@ -167,9 +168,8 @@ class BaseAssembler:  # pylint: disable=too-many-public-methods
                 self.file['paired_count'] += 1
                 out_file = end_1 if row['seq_end'] == '1' else end_2
 
-                out_file.write('>{}/{}\n'.format(
-                    row['seq_name'], row['seq_end']))
-                out_file.write('{}\n'.format(row['seq']))
+                util.write_fasta_record(
+                    out_file, row['seq_name'], row['seq'], row['seq_end'])
 
     def write_single_input_files(self):
         """Write blast hits and matching ends to fasta files."""
@@ -193,8 +193,8 @@ class BaseAssembler:  # pylint: disable=too-many-public-methods
                     seq_end = ''
                     self.file['single_any_count'] += 1
 
-                out_file.write('>{}{}\n'.format(row['seq_name'], seq_end))
-                out_file.write('{}\n'.format(row['seq']))
+                util.write_fasta_record(
+                    out_file, row['seq_name'], row['seq'], seq_end)
 
     def final_output_prefix(self, blast_db, query):
         """Build the prefix for the name of the final output file."""
@@ -260,12 +260,11 @@ class BaseAssembler:  # pylint: disable=too-many-public-methods
             seq = bio.reverse_complement(seq)
             suffix = '_REV'
 
-        header = '>{}_{}_{} iteration={} contig_id={} score={}\n'.format(
+        header = '>{}_{}_{} iteration={} contig_id={} score={}'.format(
             contig['iteration'], contig['contig_id'], suffix,
             contig['iteration'], contig['contig_id'], contig['bit_score'])
 
-        output_file.write(header)
-        output_file.write('{}\n'.format(seq))
+        util.write_fasta_record(output_file, header, seq)
 
     def get_single_ends(self):
         """Gather single ends files for the assembly command."""

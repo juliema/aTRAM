@@ -139,6 +139,4 @@ def fill_blast_fasta(blast_db, fasta_path, shard_params):
 
         with open(fasta_path, 'w') as fasta_file:
             for row in db.get_sequences_in_shard(cxn, limit, offset):
-                seq_end = '/{}'.format(row[1]) if row[1] else ''
-                fasta_file.write('>{}{}\n'.format(row[0], seq_end))
-                fasta_file.write('{}\n'.format(row[2]))
+                util.write_fasta_record(fasta_file, row[0], row[2], row[1])

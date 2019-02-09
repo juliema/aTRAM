@@ -1,6 +1,7 @@
 """Null object for the assemblers."""
 
 import lib.db as db
+import lib.util as util
 from lib.assemblers.base import BaseAssembler
 
 
@@ -21,6 +22,5 @@ class NoneAssembler(BaseAssembler):
 
         with open(file_name, 'w') as output_file:
             for row in db.get_sra_blast_hits(self.state['cxn'], 1):
-                output_file.write('>{}_{}\n'.format(
-                    row['seq_name'], row['seq_end']))
-                output_file.write('{}\n'.format(row['seq']))
+                util.write_fasta_record(
+                    output_file, row['seq_name'], row['seq'], row['seq_end'])
