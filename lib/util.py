@@ -4,6 +4,8 @@ import os
 from os.path import exists
 import sys
 from shutil import rmtree
+import gzip
+import bz2
 from contextlib import contextmanager
 from tempfile import mkdtemp
 
@@ -51,3 +53,19 @@ def make_temp_dir(where=None, prefix=None, keep=False):
     finally:
         if not keep or not where:
             rmtree(temp_dir)
+
+
+@contextmanager
+def open_file(args, file_name):
+    """Handle creation and deletion of temporary directory."""
+    if args['gzip']:
+        stream = gzip.open(file_name, 'rt')
+    elif args['bzip']:
+        stream = bz2.open(file_name, 'rt')
+    else:
+        stream = open(file_name)
+
+    try:
+        yield stream
+    finally:
+        stream.close()

@@ -48,17 +48,16 @@ def load_seqs(args, cxn):
                           ('end_2', '2'), ('single_ends', '')]:
         if args.get(ends):
             for file_name in args[ends]:
-                load_one_file(cxn, file_name, ends, clamp)
+                load_one_file(args, cxn, file_name, ends, clamp)
 
 
-def load_one_file(cxn, file_name, ends, seq_end_clamp=''):
+def load_one_file(args, cxn, file_name, ends, seq_end_clamp=''):
     """Load sequences from a fasta/fastq file into the atram database."""
     log.info('Loading "{}" into sqlite database'.format(file_name))
 
-    is_fastq = file_name.lower().endswith('q')
-    parser = FastqGeneralIterator if is_fastq else SimpleFastaParser
+    parser = get_parser(args, file_name)
 
-    with open(file_name) as sra_file:
+    with util.open_file(args, file_name) as sra_file:
         batch = []
 
         for rec in parser(sra_file):
@@ -74,6 +73,17 @@ def load_one_file(cxn, file_name, ends, seq_end_clamp=''):
                 batch = []
 
         db.insert_sequences_batch(cxn, batch)
+
+
+def get_parser(args, file_name):
+    """Get either a fasta or fastq file parser."""
+    if args.get('fasta'):
+        is_fastq = False
+    elif args.get('fastq'):
+        is_fastq = True
+    else:
+        is_fastq = file_name.lower().endswith('q')
+    return FastqGeneralIterator if is_fastq else SimpleFastaParser
 
 
 def assign_seqs_to_shards(cxn, shard_count):
