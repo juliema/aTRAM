@@ -67,11 +67,11 @@ def test_preprocess_01(
 @patch('lib.db.insert_sequences_batch')
 def test_load_one_file_01(insert_sequences_batch, info):
     """Load mixed sequences from a file into the atram database."""
-    cxn, _ = set_up()
+    cxn, args = set_up()
     db.BATCH_SIZE = 5
 
     file_1 = join('tests', 'data', 'load_seq1.txt')
-    core_preprocessor.load_one_file(cxn, file_1, 'mixed_ends')
+    core_preprocessor.load_one_file(args, cxn, file_1, 'mixed_ends')
 
     msg = 'Loading "{}" into sqlite database'.format(file_1)
     info.assert_called_once_with(msg)
@@ -94,11 +94,11 @@ def test_load_one_file_01(insert_sequences_batch, info):
 @patch('lib.db.insert_sequences_batch')
 def test_load_one_file_02(insert_sequences_batch, info):
     """Load end 1 sequences from a file into the atram database."""
-    cxn, _ = set_up()
+    cxn, args = set_up()
     db.BATCH_SIZE = 5
 
     file_1 = join('tests', 'data', 'load_seq1.txt')
-    core_preprocessor.load_one_file(cxn, file_1, 'end_1', '1')
+    core_preprocessor.load_one_file(args, cxn, file_1, 'end_1', '1')
 
     msg = 'Loading "{}" into sqlite database'.format(file_1)
     info.assert_called_once_with(msg)
@@ -121,11 +121,11 @@ def test_load_one_file_02(insert_sequences_batch, info):
 @patch('lib.db.insert_sequences_batch')
 def test_load_one_file_03(insert_sequences_batch, info):
     """Load end 2 sequences from a file into the atram database."""
-    cxn, _ = set_up()
+    cxn, args = set_up()
     db.BATCH_SIZE = 5
 
     file_1 = join('tests', 'data', 'load_seq1.txt')
-    core_preprocessor.load_one_file(cxn, file_1, 'end_2', '2')
+    core_preprocessor.load_one_file(args, cxn, file_1, 'end_2', '2')
 
     msg = 'Loading "{}" into sqlite database'.format(file_1)
     info.assert_called_once_with(msg)
@@ -148,12 +148,12 @@ def test_load_one_file_03(insert_sequences_batch, info):
 @patch('lib.db.insert_sequences_batch')
 def test_load_one_file_04(insert_sequences_batch, info):
     """Load single end sequences from a file into the atram database."""
-    cxn, _ = set_up()
+    cxn, args = set_up()
     db.BATCH_SIZE = 5
 
     file_1 = join('tests', 'data', 'load_seq1.txt')
     core_preprocessor.load_one_file(
-        cxn, file_1, 'single_ends', '')
+        args, cxn, file_1, 'single_ends', '')
 
     msg = 'Loading "{}" into sqlite database'.format(file_1)
     info.assert_called_once_with(msg)
@@ -176,11 +176,11 @@ def test_load_one_file_04(insert_sequences_batch, info):
 @patch('lib.db.insert_sequences_batch')
 def test_load_one_file_05(insert_sequences_batch, info):
     """Load single end sequences from a file into the atram database."""
-    cxn, _ = set_up()
+    cxn, args = set_up()
     db.BATCH_SIZE = 5
 
     file_1 = join('tests', 'data', 'load_seq2.txt')
-    core_preprocessor.load_one_file(cxn, file_1, 'mixed_ends')
+    core_preprocessor.load_one_file(args, cxn, file_1, 'mixed_ends')
 
     msg = 'Loading "{}" into sqlite database'.format(file_1)
     info.assert_called_once_with(msg)

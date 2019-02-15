@@ -58,9 +58,9 @@ def make_temp_dir(where=None, prefix=None, keep=False):
 @contextmanager
 def open_file(args, file_name):
     """Handle creation and deletion of temporary directory."""
-    if args['gzip']:
+    if args.get('gzip'):
         stream = gzip.open(file_name, 'rt')
-    elif args['bzip']:
+    elif args.get('bzip'):
         stream = bz2.open(file_name, 'rt')
     else:
         stream = open(file_name)
