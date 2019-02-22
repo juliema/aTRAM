@@ -14,13 +14,14 @@ import lib.assembler as assembly
 
 def assemble(args):
     """Loop thru every blast/query pair and run an assembly for each one."""
-    queries = split_queries(args)
 
     with util.make_temp_dir(
             where=args['temp_dir'],
             prefix='atram_',
             keep=args['keep_temp_dir']) as temp_dir:
         util.update_temp_dir(temp_dir, args)
+
+        queries = split_queries(args)
 
         for blast_db in args['blast_db']:
 
