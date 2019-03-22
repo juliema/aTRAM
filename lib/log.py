@@ -17,11 +17,19 @@ NAME = 'atram_logger'
 
 def setup(log_file, blast_db, query_file=''):
     """Logger setup."""
+    log_file = file_name(log_file, blast_db, query_file)
+    _setup(log_file)
+
+
+def stitcher_setup(log_file):
+    """Setup logging for the stitcher."""
+    _setup(log_file)
+
+
+def _setup(log_file):
     global LOGGER  # pylint: disable=global-statement
 
     if not LOGGER:
-        log_file = file_name(log_file, blast_db, query_file)
-
         handler = logging.FileHandler(log_file)
         handler.setFormatter(FORMATTER)
         handler.setLevel(logging.DEBUG)

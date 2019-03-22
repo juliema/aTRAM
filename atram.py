@@ -71,7 +71,7 @@ def parse_command_line():
                             So you can identify different blast output file
                             sets. You may include a directory as part of the
                             prefix. aTRAM will add suffixes to differentiate
-                            ouput files.""")
+                            output files.""")
 
     group.add_argument('-a', '--assembler', default='none',
                        choices=['abyss', 'trinity', 'velvet', 'spades',

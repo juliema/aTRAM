@@ -6,7 +6,11 @@ import os
 from os.path import basename, join, exists
 
 
-ATRAM_VERSION = 'v2.1.0'
+ATRAM_VERSION = 'v2.2.0'
+
+# DB_VERSION != ATRAM_VERSION
+# We don't force DB changes until required.
+# Therefore DB_VERSION <= ATRAM_VERSION.
 DB_VERSION = '2.0'
 
 BATCH_SIZE = 1e6  # How many sequence records to insert at a time
@@ -23,11 +27,7 @@ def connect(blast_db, check_version=False, clean=False):
         err = 'Could not find the database file "{}".'.format(db_name)
         sys.exit(err)
 
-    cxn = sqlite3.connect(db_name)
-
-    cxn.execute("PRAGMA page_size = {}".format(2**16))
-    cxn.execute("PRAGMA busy_timeout = 10000")
-    cxn.execute("PRAGMA journal_mode = WAL")
+    cxn = db_setup(db_name)
 
     if check_version:
         check_versions(cxn)
@@ -35,9 +35,9 @@ def connect(blast_db, check_version=False, clean=False):
     return cxn
 
 
-def get_db_name(blast_db):
-    """Build the SQLite DB name from the blast DB argument."""
-    return '{}.sqlite.db'.format(blast_db)
+def get_db_name(db_prefix):
+    """Build the SQLite DB name from the prefix."""
+    return '{}.sqlite.db'.format(db_prefix)
 
 
 def aux_db(cxn, temp_dir, blast_db, query_name):
@@ -58,9 +58,22 @@ def aux_detach(cxn):
     cxn.execute('DETACH DATABASE aux')
 
 
+def temp_db(temp_dir, db_prefix):
+    """Create a temporary database."""
+    db_name = join(temp_dir, get_db_name(db_prefix))
+    return db_setup(db_name)
+
+
+def db_setup(db_name):
+    """Common database setup."""
+    cxn = sqlite3.connect(db_name)
+    cxn.execute("PRAGMA page_size = {}".format(2**16))
+    cxn.execute("PRAGMA busy_timeout = 10000")
+    cxn.execute("PRAGMA journal_mode = WAL")
+    return cxn
+
+
 # ########################### misc functions #################################
-# DB_VERSION != ATRAM_VERSION in DB. Don't force DB changes until required. So
-# this version will tend to lag ATRAM_VERSION.
 
 def check_versions(cxn):
     """Make sure the database version matches what we built it with."""
@@ -397,7 +410,7 @@ def get_all_assembled_contigs(cxn, bit_score=0, length=0):
 
 
 def all_assembled_contigs_count(cxn, bit_score=0, length=0):
-    """Count all assembed contigs."""
+    """Count all assembled contigs."""
     sql = """
         SELECT COUNT(*) AS count
           FROM aux.assembled_contigs
@@ -407,3 +420,12 @@ def all_assembled_contigs_count(cxn, bit_score=0, length=0):
 
     result = cxn.execute(sql, (bit_score, length))
     return result.fetchone()[0]
+
+
+# ############################# stitcher tables ###############################
+
+def create_stitcher_tables(cxn):
+    """Create the stitcher tables."""
+    cxn.execute('DROP TABLE IF EXISTS assemblies')
+    cxn.execute('CREATE TABLE assemblies (seq_name TEXT, seq TEXT)')
+    cxn.execute('CREATE INDEX assemblies_index ON assemblies (seq_name)')
