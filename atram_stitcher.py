@@ -12,7 +12,7 @@ import argparse
 import textwrap
 import lib.db as db
 import lib.util as util
-from lib.core_stitcher import stitch
+from lib.core_stitcher import Sticher
 
 
 def parse_command_line():
@@ -77,4 +77,4 @@ def parse_command_line():
 
 if __name__ == '__main__':
     ARGS = parse_command_line()
-    stitch(ARGS)
+    Sticher(ARGS).stitch()
