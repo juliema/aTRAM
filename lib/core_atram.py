@@ -14,7 +14,6 @@ import lib.assembler as assembly
 
 def assemble(args):
     """Loop thru every blast/query pair and run an assembly for each one."""
-
     with util.make_temp_dir(
             where=args['temp_dir'],
             prefix='atram_',
