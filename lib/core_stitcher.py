@@ -195,13 +195,6 @@ class Sticher:
         return abspath(results_file)
 
     @staticmethod
-    def gene_name_from_ref_gene(ref_file):
-        """Get the gene name from the reference gene file path."""
-        ref_file = ref_file.strip()
-        gene_name = basename(ref_file)
-        return re.sub(r'\.reference\.fasta$', '', gene_name)
-
-    @staticmethod
     def taxon_from_asm(gene_name, asm):
         """Check if the assembly in the taxa set."""
         asm = basename(asm)
