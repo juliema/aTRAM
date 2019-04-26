@@ -5,11 +5,12 @@ It uses amino acid targets and DNA assemblies.
 """
 
 import os
-from os.path import abspath, join, basename, splitext
-import re
+from os.path import abspath, join, basename
 from collections import namedtuple
 import subprocess
 from glob import glob
+from textwrap import shorten
+import csv
 from Bio.SeqIO.FastaIO import SimpleFastaParser
 import lib.db as db
 import lib.log as log
@@ -18,7 +19,7 @@ import lib.util as util
 
 ExonerateHeader = namedtuple(
     'ExonerateHeader',
-    ['gene', 'taxon', 'query_len', 'query_align_len',
+    ['gene_name', 'taxon_name', 'query_len', 'query_align_len',
      'query_align_beg', 'query_align_end', 'target_id'])
 
 
@@ -33,170 +34,222 @@ class Sticher:
 
     def stitch(self):
         """Stitch the exons together."""
-        log.stitcher_setup(self.args['log_file'])
+        log.stitcher_setup(self.args.log_file)
 
         with util.make_temp_dir(
-                where=self.args['temp_dir'],
+                where=self.args.temp_dir,
                 prefix='atram_stitcher_',
-                keep=self.args['keep_temp_dir']) as temp_dir:
+                keep=self.args.keep_temp_dir) as temp_dir:
             self.temp_dir = temp_dir
 
             self.cxn = db.temp_db(temp_dir, 'atram_stitcher')
 
-            self.prepare_fasta_files()
-            self.prepare_reference_genes()
-            # self.find_fasta_files_for_genes()
-            # self.run_exonerate()
-            # self.get_contigs()
+            self.insert_taxa()
+            self.insert_reference_genes()
+            self.insert_contigs()
+            self.create_reference_files()
+            self.create_contig_files()
+            self.run_exonerate()
+            self.get_contigs()
             # self.stitch_contigs()
             # self.summary_stats()
 
-    def prepare_fasta_files(self):
-        """Prepare fasta files for exonerate."""
-        db.create_contigs_table(self.cxn)
-
+    def insert_taxa(self):
+        """Insert taxa into the database."""
         batch = []
 
-        pattern = join(self.args['assemblies_dir'], '*.fasta')
-        for fasta_path in sorted(glob(pattern)):
-            if os.stat(fasta_path).st_size == 0:
-                continue
+        db.create_taxa_table(self.cxn)
 
-            log.info('Preparing fasta file: {}'.format(fasta_path))
+        log.info('Preparing taxa')
 
-            tiebreaker = 0
+        with open(self.args.taxa) as taxa:
+            for taxon_name in taxa:
+                taxon_name = taxon_name.strip()
+                batch.append({'taxon_name': taxon_name})
 
-            with open(fasta_path) as fasta_old:
-                for seq_name, seq in SimpleFastaParser(fasta_old):
-                    tiebreaker += 1
-                    seq_name = seq_name.strip()
-                    seq_name = re.sub(r'[\s,=@+\[\]:!-]+', '_', seq_name)
-                    seq_name = '{}_{}'.format(seq_name, tiebreaker)
-                    batch.append([fasta_path, seq_name, seq])
+        db.insert_taxa(self.cxn, batch)
 
-        db.insert_contigs(self.cxn, batch)
-
-    def prepare_reference_genes(self):
+    def insert_reference_genes(self):
         """Prepare reference sequences for exonerate."""
         batch = []
-        db.create_reference_table(self.cxn)
 
-        ref_genes = self.args['reference_genes']
+        db.create_reference_genes_table(self.cxn)
 
-        log.info('Preparing reference genes: {}'.format(ref_genes))
+        ref_genes = self.args.reference_genes
+
+        log.info('Preparing reference gene: {}'.format(ref_genes))
 
         with open(ref_genes) as ref_in:
 
-            for seq_name, seq in SimpleFastaParser(ref_in):
-                seq_name = re.sub(r'\s+', '_', seq_name)
+            for ref_name, ref_seq in SimpleFastaParser(ref_in):
 
-                batch.append([seq_name, seq])
+                ref_name = util.clean_name(ref_name)
 
-        db.insert_references(self.cxn, batch)
+                ref_file = abspath(join(
+                    self.temp_dir,
+                    '{}.fasta'.format(ref_name)))
 
-    # def find_fasta_files_for_genes(self):
-    #     """
-    #     Find all assemblies for every gene in the gene list.
-    #
-    #     Put this list into file for the gene. One file listing all assemblies
-    #     for every gene in the master gene list.
-    #     """
-    #     with open(self.all_ref_genes_path) as all_ref_genes_file:
-    #         for ref_gene in all_ref_genes_file:
-    #             gene_name = self.gene_name_from_ref_gene(ref_gene)
-    #
-    #             log.info('Finding fasta files for gene: {}'.format(gene_name))
-    #
-    #             with open(self.gene_list_path(gene_name), 'w') as gene_list:
-    #                 pattern = join(
-    #                     self.temp_dir, '*{}*.ed.fasta'.format(gene_name))
-    #                 fasta_list = glob(pattern)
-    #
-    #                 for fasta in fasta_list:
-    #                     gene_list.write(fasta)
-    #                     gene_list.write('\n')
-    #
-    # def run_exonerate(self):
-    #     """Run exonerate on every reference sequence, taxon combination."""
-    #     db.create_exonerate_results_table(self.cxn)
-    #
-    #     with open(self.all_ref_genes_path) as ref_genes_file:
-    #         ref_genes = {x.strip() for x in ref_genes_file}
-    #
-    #     with open(self.args['taxa_list']) as taxa_list:
-    #         taxa = {x.strip() for x in taxa_list}
-    #
-    #     for ref_gene in sorted(ref_genes):
-    #         gene_name = self.gene_name_from_ref_gene(ref_gene)
-    #         log.info('Reference file: {}'.format(gene_name))
-    #         gene_asm_path = self.gene_list_path(gene_name)
-    #         with open(gene_asm_path) as gene_asm_file:
-    #             asms = [asm.strip() for asm in gene_asm_file
-    #                     if self.taxon_from_asm(gene_name, asm) in taxa]
-    #             for asm in sorted(asms):
-    #                 taxon = self.taxon_from_asm(gene_name, asm)
-    #                 self.exonerate_command(ref_gene, gene_name, taxon, asm)
-    #         self.insert_exonerate_results(gene_name)
+                results_file = abspath(join(
+                    self.temp_dir,
+                    '{}.results.fasta'.format(ref_name)))
 
-    def exonerate_command(self, ref_file, gene_name, taxon, asm):
+                batch.append({
+                    'ref_name': ref_name,
+                    'ref_seq': ref_seq,
+                    'ref_file': ref_file,
+                    'results_file': results_file})
+
+        db.insert_reference_genes(self.cxn, batch)
+
+    def insert_contigs(self):
+        """Prepare fasta files for exonerate."""
+        batch = []
+
+        db.create_contigs_table(self.cxn)
+
+        ref_names = set(x['ref_name']
+                        for x in db.select_reference_genes(self.cxn))
+
+        taxon_names = set(x['taxon_name'] for x in db.select_taxa(self.cxn))
+
+        pattern = join(self.args.assemblies_dir, '*.fasta')
+        for contig_path in sorted(glob(pattern)):
+
+            if os.stat(contig_path).st_size == 0:
+                continue
+
+            log.info('Preparing fasta file: {}'.format(contig_path))
+
+            tiebreaker = 0
+
+            with open(contig_path) as contig_old:
+                for contig_name, contig_seq in SimpleFastaParser(contig_old):
+
+                    contig_file = basename(contig_path)
+                    ref_name, taxon_name = contig_file.split('.')[0:2]
+
+                    if ref_name not in ref_names \
+                            or taxon_name not in taxon_names:
+                        continue
+
+                    tiebreaker += 1
+                    contig_name = util.clean_name(contig_name)
+                    contig_name = '{}_{}'.format(contig_name, tiebreaker)
+
+                    contig_file = abspath(join(self.temp_dir, contig_file))
+
+                    batch.append({
+                        'ref_name': ref_name,
+                        'taxon_name': taxon_name,
+                        'contig_name': contig_name,
+                        'contig_seq': contig_seq,
+                        'contig_file': contig_file})
+
+        db.insert_contigs(self.cxn, batch)
+
+    def create_reference_files(self):
+        """Create reference gene fasta files for exonerate."""
+        log.info('Preparing reference gene files for exonerate')
+        for ref in db.select_reference_genes(self.cxn):
+            with open(ref['ref_file'], 'w') as ref_file:
+                util.write_fasta_record(
+                    ref_file,
+                    ref['ref_name'],
+                    ref['ref_seq'])
+
+    def create_contig_files(self):
+        """Create contig fasta files for exonerate."""
+        log.info('Preparing contig files for exonerate')
+
+        for ref in db.select_reference_genes(self.cxn):
+            ref_name = ref['ref_name']
+            for contig_path in \
+                    db.select_conting_files(self.cxn, ref_name):
+                contig_file = contig_path['contig_file']
+                with open(contig_file, 'w') as fasta_file:
+                    for contig in db.select_contings_in_file(
+                            self.cxn, ref_name, contig_file):
+                        util.write_fasta_record(
+                            fasta_file,
+                            contig['contig_name'],
+                            contig['contig_seq'])
+
+    def run_exonerate(self):
+        """Run exonerate on every reference sequence, taxon combination."""
+        db.create_exonerate_table(self.cxn)
+
+        for ref in db.select_reference_genes(self.cxn):
+            log.info('Running exonerate for: {}'.format(ref['ref_name']))
+
+            for contig in db.select_conting_files(self.cxn, ref['ref_name']):
+                self.exonerate_command(ref, contig)
+                self.insert_exonerate_results(ref)
+
+    @staticmethod
+    def exonerate_command(ref, contig):
         """Build and run the exonerate program."""
-        results_file = self.results_file_path(gene_name)
-        cmd = (
-            'exonerate --verbose 0 --model protein2genome {ref_file} {asm} '
-            '--showvulgar no --showalignment no '
-            r'--ryo ">{gene},{taxon},%ql,%qal,%qab,%qae,%ti\n%tcs\n" '
-            '>> {results_file};'
-        ).format(ref_file=ref_file, asm=asm, gene=gene_name, taxon=taxon,
-                 results_file=results_file)
+        cmd = shorten(r"""
+            exonerate --verbose 0 --model protein2genome {ref_file}
+            {contig_file}
+            --showvulgar no --showalignment no
+            --ryo ">{gene_name},{taxon_name},%ti,%qab,%ql,%qal,%qae\n%tcs\n"
+            >> {results_file};""", 9999).format(
+                ref_file=ref['ref_file'],
+                contig_file=contig['contig_file'],
+                gene_name=ref['ref_name'],
+                taxon_name=contig['taxon_name'],
+                results_file=ref['results_file'])
 
         subprocess.check_call(cmd, shell=True)
 
-    def insert_exonerate_results(self, gene_name):
+    def insert_exonerate_results(self, ref):
         """Insert the exonerate results into the database."""
-        results_file = self.results_file_path(gene_name)
         batch = []
-        with open(results_file) as results_fasta:
-            for header, seq in SimpleFastaParser(results_fasta):
+        with open(ref['results_file']) as results_fasta:
+            for header, target_seq in SimpleFastaParser(results_fasta):
                 header = header.split(',')
                 field = ExonerateHeader(*header)
-                batch.append([
-                    field.gene,
-                    field.taxon,
-                    field.query_len,
-                    field.query_align_len,
-                    field.query_align_beg,
-                    field.query_align_end,
-                    field.target_id,
-                    seq])
+                batch.append({
+                    'gene_name': field.gene_name,
+                    'taxon_name': field.taxon_name,
+                    'target_id': field.target_id,
+                    'query_align_beg': field.query_align_beg,
+                    'query_len': field.query_len,
+                    'query_align_len': field.query_align_len,
+                    'query_align_end': field.query_align_end,
+                    'target_seq': target_seq})
         db.insert_exonerate_results(self.cxn, batch)
 
     def get_contigs(self):
         """
-        Sort contigs so they are in the same order they appear in the gene.
+        Create stats file.
 
         1) Sort by the beginning of the contig.
         2) Look for all sorted results from exonerate.
         3) Create a CSV file for each input with all of the information about
             the contigs from exonerate.
         """
+        for ref in db.select_reference_genes(self.cxn):
 
-    def ref_gene_file_path(self, seq_name):
-        """Build reference gene file name from the sequence name."""
-        return join(self.temp_dir, '{}.reference.fasta'.format(seq_name))
+            log.info('Creating stats file for: {}'.format(ref['ref_name']))
 
-    def gene_list_path(self, gene_name):
-        """Build file name with list of assemblies for a reference gene."""
-        return join(self.temp_dir, '{}.list.txt'.format(gene_name))
+            stats_path = '{}.{}.overlap.{}.contig_list.csv'.format(
+                self.args.output_prefix, ref['ref_name'], self.args.overlap)
 
-    def results_file_path(self, gene_name):
-        """Build the file name for the exonerate results."""
-        results_file = join(
-            self.temp_dir, '{}.results.fasta'.format(gene_name))
-        return abspath(results_file)
+            with open(stats_path, 'w') as stats_file:
 
-    @staticmethod
-    def taxon_from_asm(gene_name, asm):
-        """Check if the assembly in the taxa set."""
-        asm = basename(asm)
-        asm = re.sub(r'^{}\.'.format(gene_name), '', asm)
-        return re.sub(r'\.ed\.fasta\s*$', '', asm)
+                writer = csv.writer(stats_file)
+
+                writer.writerow([
+                    'Input gene', ref['ref_name'], 'In file', '',
+                    'Allowing overlap', self.args.overlap])
+
+                taxon_count = db.select_taxon_names(self.cxn, ref['ref_name'])
+                writer.writerow(['There are {} libraries for {}'.format(
+                    taxon_count, ref['ref_name'])])
+
+                writer.writerow([
+                    'Gene', 'Taxon', 'Number of Contigs', 'GeneLength',
+                    'Contigs to Keep', 'Total Overlap',
+                    'Combined Exon Length', 'Beginning', 'End',
+                    'Beginning', 'End', 'ContigName'])

@@ -436,7 +436,11 @@ def all_assembled_contigs_count(cxn, bit_score=0, length=0):
     return result.fetchone()[0]
 
 
-# ############################# stitcher tables ###############################
+# ############################################################################
+# ############################# stitcher tables ##############################
+# ############################################################################
+
+# ############################ stitcher contigs ##############################
 
 def create_contigs_table(cxn):
     """Create a table to hold all of the input fasta files."""
@@ -444,9 +448,11 @@ def create_contigs_table(cxn):
         DROP TABLE IF EXISTS contigs;
 
         CREATE TABLE contigs (
-            fasta_file TEXT,
-            seq_name   TEXT,
-            seq        TEXT);
+            ref_name    TEXT,
+            taxon_name  TEXT,
+            contig_name TEXT,
+            contig_seq  TEXT,
+            contig_file TEXT);
         """)
 
 
@@ -454,32 +460,107 @@ def insert_contigs(cxn, batch):
     """Insert a batch of input contig records into the database."""
     if batch:
         sql = """
-            INSERT INTO contigs (fasta_file, seq_name, seq) VALUES (?, ?, ?)
+            INSERT INTO contigs
+                (ref_name, taxon_name, contig_name, contig_seq, contig_file)
+            VALUES (
+                :ref_name, :taxon_name, :contig_name, :contig_seq,
+                :contig_file);
             """
         cxn.executemany(sql, batch)
         cxn.commit()
 
 
-def create_reference_table(cxn):
+def select_conting_files(cxn, ref_name):
+    """Select all contigs files for a reference gene."""
+    sql = """
+        SELECT DISTINCT contig_file, taxon_name
+          FROM contigs
+         WHERE ref_name = ?
+         ORDER BY contig_file;"""
+    return cxn.execute(sql, (ref_name, ))
+
+
+def select_contings_in_file(cxn, ref_name, contig_file):
+    """Select all contigs for a contig file."""
+    sql = """
+        SELECT *
+          FROM contigs
+         WHERE ref_name = ?
+           AND contig_file = ?
+         ORDER BY ref_name, taxon_name, contig_name;"""
+    return cxn.execute(sql, (ref_name, contig_file))
+
+
+def select_taxon_names(cxn, ref_name):
+    """Count taxon names for a reference gene."""
+    sql = """
+        SELECT COUNT(DISTINCT taxon_name) FROM contigs WHERE ref_name = ?;
+        """
+    result = cxn.execute(sql, (ref_name, ))
+    return result.fetchone()[0]
+
+
+# ############################ stitcher references ###########################
+
+def create_reference_genes_table(cxn):
     """Create a table to hold all reference genes."""
     cxn.executescript("""
-        DROP TABLE IF EXISTS reference;
+        DROP TABLE IF EXISTS reference_genes;
 
-        CREATE TABLE reference (
-            seq_name TEXT,
-            seq      TEXT);
+        CREATE TABLE reference_genes (
+            ref_name     TEXT,
+            ref_seq      TEXT,
+            ref_file     TEXT,
+            results_file TEXT,
+            input_file   TEXT);
         """)
 
 
-def insert_references(cxn, batch):
+def insert_reference_genes(cxn, batch):
     """Insert a batch of reference gene records into the database."""
     if batch:
         sql = """
-            INSERT INTO reference (seq_name, seq) VALUES (?, ?)
-            """
+            INSERT INTO reference_genes
+                (ref_name, ref_seq, ref_file, results_file, input_file)
+            VALUES (
+                :ref_name, :ref_seq, :ref_file, :results_file, :input_file);"""
         cxn.executemany(sql, batch)
         cxn.commit()
 
+
+def select_reference_genes(cxn):
+    """Select all references."""
+    cxn.row_factory = sqlite3.Row
+    return cxn.execute('SELECT * FROM reference_genes ORDER BY ref_name;')
+
+
+# ############################## stitcher taxa ###############################
+
+def create_taxa_table(cxn):
+    """Create a table to hold the exonerate taxa."""
+    cxn.executescript("""
+        DROP TABLE IF EXISTS taxa;
+
+        CREATE TABLE taxa (taxon_name TEXT);
+        """)
+
+
+def insert_taxa(cxn, batch):
+    """Insert a batch of taxon records into the database."""
+    if batch:
+        sql = """
+            INSERT INTO taxa (taxon_name) VALUES (:taxon_name);"""
+        cxn.executemany(sql, batch)
+        cxn.commit()
+
+
+def select_taxa(cxn):
+    """Select all references."""
+    cxn.row_factory = sqlite3.Row
+    return cxn.execute('SELECT * FROM taxa ORDER BY taxon_name;')
+
+
+# ######################## sticher exonerate results #########################
 
 def create_exonerate_table(cxn):
     """Create a table to hold the exonerate results."""
@@ -487,8 +568,8 @@ def create_exonerate_table(cxn):
         DROP TABLE IF EXISTS exonerate;
 
         CREATE TABLE exonerate (
-            gene            TEXT,
-            taxon           TEXT,
+            gene_name       TEXT,
+            taxon_name      TEXT,
             query_len       INTEGER,
             query_align_len INTEGER,
             query_align_beg INTEGER,
@@ -496,8 +577,8 @@ def create_exonerate_table(cxn):
             target_id       TEXT,
             target_seq      TEXT);
 
-        CREATE INDEX exonerate_sort
-            ON exonerate (gene, taxon, query_align_beg);
+        CREATE INDEX exonerate_sort_idx
+            ON exonerate (gene_name, taxon_name, query_align_beg);
         """)
 
 
@@ -506,9 +587,21 @@ def insert_exonerate_results(cxn, batch):
     if batch:
         sql = """
             INSERT INTO exonerate
-                (gene, taxon, query_len, query_align_len,
+                (gene_name, taxon_name, query_len, query_align_len,
                  query_align_beg, query_align_end, target_id, target_seq)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (
+                :gene_name, :taxon_name, :query_len, :query_align_len,
+                :query_align_beg, :query_align_end, :target_id, :target_seq);
             """
         cxn.executemany(sql, batch)
         cxn.commit()
+
+
+def select_exonerate_results(cxn):
+    """Select exonerate results ordered by where contig starts."""
+    sql = """
+        SELECT *
+          FROM exonerate
+      ORDER BY gene_name, taxon_name, query_align_beg;
+        """
+    return cxn.execute(sql)

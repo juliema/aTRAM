@@ -2,6 +2,7 @@
 
 import os
 from os.path import exists
+import re
 import sys
 from shutil import rmtree
 import gzip
@@ -11,7 +12,7 @@ from tempfile import mkdtemp
 
 
 def set_blast_batch_size(batch_size):
-    """Use this setting to control blast memory usage & query concatenation."""
+    """Use this to control blast memory usage & query concatenation."""
     if batch_size:
         os.environ['BATCH_SIZE'] = str(batch_size)
 
@@ -69,3 +70,8 @@ def open_file(args, file_name):
         yield stream
     finally:
         stream.close()
+
+
+def clean_name(name):
+    """Replace problem characters in file names."""
+    return re.sub(r'[^\w.]+', '_', name.strip())

@@ -30,11 +30,11 @@ def parse_command_line():
                         version='%(prog)s {}'.format(db.ATRAM_VERSION))
 
     parser.add_argument(
-        '-T', '--taxa-list', metavar='TAXA', required=True,
-        help="""A text file of all your taxon names.""")
+        '-T', '--taxa', metavar='TAXA', required=True,
+        help="""A text file of all of your taxon names.""")
 
     parser.add_argument(
-        '-r', '--reference-genes', metavar='FASTA', required=True,
+        '-r', '--reference-genes', '--refs', metavar='FASTA', required=True,
         help="""Reference amino acid sequences in a FASTA file.""")
 
     parser.add_argument(
@@ -55,22 +55,28 @@ def parse_command_line():
         help="""This flag will keep the temporary files in the --temp-dir
         around for debugging.""")
 
-    log_file = join('.', 'atram_stitcher_' + date.today().isoformat() + '.log')
     parser.add_argument(
-        '-l', '--log-file', default=log_file,
+        '-l', '--log-file',
         help="""Log file (full path). The default is
             "atram_stitcher_<date>.log".""")
 
     parser.add_argument(
-        '-o', '--output-prefix', required=True,
+        '-o', '--output-prefix',
         help="""This is the prefix of all of the output files. So you can
             identify different stitcher output file sets. You may include a
             directory as part of the prefix. The stitcher will add suffixes to
             differentiate output files.""")
 
-    args = vars(parser.parse_args())
+    args = parser.parse_args()
 
-    util.temp_dir_exists(args['temp_dir'])
+    util.temp_dir_exists(args.temp_dir)
+
+    if not args.output_prefix:
+        args.output_prefix = join(
+            '.', 'atram_stitcher_' + date.today().isoformat())
+
+    if not args.log_file:
+        args.log_file = args.output_prefix + '.log'
 
     return args
 
