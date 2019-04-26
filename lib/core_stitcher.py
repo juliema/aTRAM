@@ -77,7 +77,7 @@ class Sticher:
 
         ref_genes = self.args.reference_genes
 
-        log.info('Preparing reference gene: {}'.format(ref_genes))
+        log.info('Preparing reference genes: {}'.format(ref_genes))
 
         with open(ref_genes) as ref_in:
 
@@ -97,7 +97,8 @@ class Sticher:
                     'ref_name': ref_name,
                     'ref_seq': ref_seq,
                     'ref_file': ref_file,
-                    'results_file': results_file})
+                    'results_file': results_file,
+                    'input_file': ref_genes})
 
         db.insert_reference_genes(self.cxn, batch)
 
@@ -241,7 +242,8 @@ class Sticher:
                 writer = csv.writer(stats_file)
 
                 writer.writerow([
-                    'Input gene', ref['ref_name'], 'In file', '',
+                    'Input gene', ref['ref_name'],
+                    'In file', ref['input_file'],
                     'Allowing overlap', self.args.overlap])
 
                 taxon_count = db.select_taxon_names(self.cxn, ref['ref_name'])
@@ -249,7 +251,7 @@ class Sticher:
                     taxon_count, ref['ref_name'])])
 
                 writer.writerow([
-                    'Gene', 'Taxon', 'Number of Contigs', 'GeneLength',
+                    'Gene', 'Taxon', 'Number of Contigs', 'Gene Length',
                     'Contigs to Keep', 'Total Overlap',
                     'Combined Exon Length', 'Beginning', 'End',
-                    'Beginning', 'End', 'ContigName'])
+                    'Beginning', 'End', 'Contig Name'])
