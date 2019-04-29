@@ -452,7 +452,8 @@ def create_contigs_table(cxn):
             taxon_name  TEXT,
             contig_name TEXT,
             contig_seq  TEXT,
-            contig_file TEXT);
+            contig_file TEXT,
+            contig_rec  INTEGER);
         """)
 
 
@@ -461,10 +462,11 @@ def insert_contigs(cxn, batch):
     if batch:
         sql = """
             INSERT INTO contigs
-                (ref_name, taxon_name, contig_name, contig_seq, contig_file)
+                (ref_name, taxon_name, contig_name, contig_seq, contig_file,
+                contig_rec)
             VALUES (
                 :ref_name, :taxon_name, :contig_name, :contig_seq,
-                :contig_file);
+                :contig_file, :contig_rec);
             """
         cxn.executemany(sql, batch)
         cxn.commit()
@@ -487,7 +489,7 @@ def select_contings_in_file(cxn, ref_name, contig_file):
           FROM contigs
          WHERE ref_name = ?
            AND contig_file = ?
-         ORDER BY ref_name, taxon_name, contig_name;"""
+         ORDER BY contig_rec;"""
     return cxn.execute(sql, (ref_name, contig_file))
 
 

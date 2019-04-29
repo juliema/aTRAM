@@ -124,7 +124,8 @@ class Sticher:
             tiebreaker = 0
 
             with open(contig_path) as contig_old:
-                for contig_name, contig_seq in SimpleFastaParser(contig_old):
+                for i, (contig_name, contig_seq) \
+                        in enumerate(SimpleFastaParser(contig_old)):
 
                     contig_file = basename(contig_path)
                     ref_name, taxon_name = contig_file.split('.')[0:2]
@@ -144,7 +145,8 @@ class Sticher:
                         'taxon_name': taxon_name,
                         'contig_name': contig_name,
                         'contig_seq': contig_seq,
-                        'contig_file': contig_file})
+                        'contig_file': contig_file,
+                        'contig_rec': i})
 
         db.insert_contigs(self.cxn, batch)
 
@@ -241,14 +243,12 @@ class Sticher:
 
                 writer = csv.writer(stats_file)
 
-                writer.writerow([
-                    'Input gene', ref['ref_name'],
-                    'In file', ref['input_file'],
-                    'Allowing overlap', self.args.overlap])
-
                 taxon_count = db.select_taxon_names(self.cxn, ref['ref_name'])
-                writer.writerow(['There are {} libraries for {}'.format(
-                    taxon_count, ref['ref_name'])])
+                writer.writerow([
+                    'Input Gene', ref['ref_name'],
+                    'In File', ref['input_file'],
+                    'Allowing Overlap', self.args.overlap,
+                    'Number of Libraries', taxon_count])
 
                 writer.writerow([
                     'Gene', 'Taxon', 'Number of Contigs', 'Gene Length',
