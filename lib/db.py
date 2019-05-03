@@ -493,7 +493,7 @@ def select_contings_in_file(cxn, ref_name, contig_file):
     return cxn.execute(sql, (ref_name, contig_file))
 
 
-def select_taxon_names(cxn, ref_name):
+def taxon_names_count(cxn, ref_name):
     """Count taxon names for a reference gene."""
     sql = """
         SELECT COUNT(DISTINCT taxon_name) FROM contigs WHERE ref_name = ?;
@@ -570,17 +570,27 @@ def create_exonerate_table(cxn):
         DROP TABLE IF EXISTS exonerate;
 
         CREATE TABLE exonerate (
-            gene_name       TEXT,
-            taxon_name      TEXT,
-            query_len       INTEGER,
-            query_align_len INTEGER,
-            query_align_beg INTEGER,
-            query_align_end INTEGER,
-            target_id       TEXT,
-            target_seq      TEXT);
+            ref_name    TEXT,
+            taxon_name  TEXT,
+            contig_name TEXT,
+            query_len   INTEGER,
+            align_len   INTEGER,
+            align_beg   INTEGER,
+            align_end   INTEGER,
+            target_seq  TEXT);
 
-        CREATE INDEX exonerate_sort_idx
-            ON exonerate (gene_name, taxon_name, query_align_beg);
+        CREATE UNIQUE INDEX exonerate_dup_idx
+            ON exonerate (
+                ref_name, taxon_name, contig_name, align_beg, query_len,
+                align_len, align_beg, align_end);
+
+        CREATE INDEX exonerate_top_idx
+            ON exonerate (
+                ref_name, taxon_name, align_len, contig_name DESC);
+
+        CREATE INDEX exonerate_stitch_idx
+            ON exonerate (
+                ref_name, taxon_name, align_beg, align_end);
         """)
 
 
@@ -588,22 +598,53 @@ def insert_exonerate_results(cxn, batch):
     """Insert a batch of exonerate result records into the database."""
     if batch:
         sql = """
-            INSERT INTO exonerate
-                (gene_name, taxon_name, query_len, query_align_len,
-                 query_align_beg, query_align_end, target_id, target_seq)
+            INSERT OR REPLACE INTO exonerate (
+                ref_name, taxon_name, contig_name, query_len,
+                align_len, align_beg, align_end,
+                target_seq)
             VALUES (
-                :gene_name, :taxon_name, :query_len, :query_align_len,
-                :query_align_beg, :query_align_end, :target_id, :target_seq);
+                :ref_name, :taxon_name, :contig_name, :query_len,
+                :align_len, :align_beg, :align_end,
+                :target_seq);
             """
         cxn.executemany(sql, batch)
         cxn.commit()
 
 
-def select_exonerate_results(cxn):
+def select_exonerate_taxa(cxn, ref_name):
+    """Select exonerate taxa summary."""
+    sql = """
+        SELECT taxon_name,
+               COUNT(*)             AS contig_count,
+               MAX(query_len)       AS gene_len,
+               MAX(align_len) AS max_cover
+          FROM exonerate
+         WHERE ref_name = ?
+      GROUP BY taxon_name;
+        """
+    return cxn.execute(sql, (ref_name, ))
+
+
+def select_top_exonerate_contig(cxn, ref_name, taxon_name):
+    """Select exonerate results ordered by where contig length."""
+    sql = """
+        SELECT *
+          FROM exonerate
+         WHERE ref_name   = ?
+           AND taxon_name = ?
+        ORDER BY ref_name, taxon_name, align_len, contig_name DESC;
+        """
+    result = cxn.execute(sql, (ref_name, taxon_name))
+    return result.fetchone()
+
+
+def select_exonerate_stitch(cxn, ref_name, taxon_name):
     """Select exonerate results ordered by where contig starts."""
     sql = """
         SELECT *
           FROM exonerate
-      ORDER BY gene_name, taxon_name, query_align_beg;
+         WHERE ref_name   = ?
+           AND taxon_name = ?
+        ORDER BY ref_name, taxon_name, align_beg, align_end;
         """
-    return cxn.execute(sql)
+    return cxn.execute(sql, (ref_name, taxon_name))

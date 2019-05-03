@@ -1,26 +1,20 @@
 """
 Stitch together exons from targeted assemblies.
 
-It uses amino acid targets and DNA assemblies.
+It uses amino acid targets and DNA assemblies from aTRAM.
 """
 
 import os
 from os.path import abspath, join, basename
-from collections import namedtuple
+from collections import namedtuple, OrderedDict
+import csv
 import subprocess
 from glob import glob
 from textwrap import shorten
-import csv
 from Bio.SeqIO.FastaIO import SimpleFastaParser
 import lib.db as db
 import lib.log as log
 import lib.util as util
-
-
-ExonerateHeader = namedtuple(
-    'ExonerateHeader',
-    ['gene_name', 'taxon_name', 'query_len', 'query_align_len',
-     'query_align_beg', 'query_align_end', 'target_id'])
 
 
 class Sticher:
@@ -195,11 +189,11 @@ class Sticher:
             exonerate --verbose 0 --model protein2genome {ref_file}
             {contig_file}
             --showvulgar no --showalignment no
-            --ryo ">{gene_name},{taxon_name},%ti,%qab,%ql,%qal,%qae\n%tcs\n"
+            --ryo ">{ref_name},{taxon_name},%ti,%ql,%qal,%qab,%qae\n%tcs\n"
             >> {results_file};""", 9999).format(
                 ref_file=ref['ref_file'],
                 contig_file=contig['contig_file'],
-                gene_name=ref['ref_name'],
+                ref_name=ref['ref_name'],
                 taxon_name=contig['taxon_name'],
                 results_file=ref['results_file'])
 
@@ -207,20 +201,25 @@ class Sticher:
 
     def insert_exonerate_results(self, ref):
         """Insert the exonerate results into the database."""
+        ExonerateHeader = namedtuple(
+            'ExonerateHeader',
+            ['ref_name', 'taxon_name', 'contig_name', 'query_len',
+             'align_len', 'align_beg', 'align_end'])
+
         batch = []
         with open(ref['results_file']) as results_fasta:
             for header, target_seq in SimpleFastaParser(results_fasta):
                 header = header.split(',')
                 field = ExonerateHeader(*header)
                 batch.append({
-                    'gene_name': field.gene_name,
-                    'taxon_name': field.taxon_name,
-                    'target_id': field.target_id,
-                    'query_align_beg': field.query_align_beg,
-                    'query_len': field.query_len,
-                    'query_align_len': field.query_align_len,
-                    'query_align_end': field.query_align_end,
-                    'target_seq': target_seq})
+                    'ref_name':    field.ref_name,
+                    'taxon_name':  field.taxon_name,
+                    'contig_name': field.contig_name,
+                    'query_len':   field.query_len,
+                    'align_len':   field.align_len,
+                    'align_beg':   field.align_beg,
+                    'align_end':   field.align_end,
+                    'target_seq':  target_seq})
         db.insert_exonerate_results(self.cxn, batch)
 
     def get_contigs(self):
@@ -233,19 +232,21 @@ class Sticher:
             the contigs from exonerate.
         """
         for ref in db.select_reference_genes(self.cxn):
+            ref_name = ref['ref_name']
 
-            log.info('Creating stats file for: {}'.format(ref['ref_name']))
+            log.info('Creating stats file for: {}'.format(ref_name))
 
             stats_path = '{}.{}.overlap.{}.contig_list.csv'.format(
-                self.args.output_prefix, ref['ref_name'], self.args.overlap)
+                self.args.output_prefix, ref_name, self.args.overlap)
 
             with open(stats_path, 'w') as stats_file:
 
                 writer = csv.writer(stats_file)
 
-                taxon_count = db.select_taxon_names(self.cxn, ref['ref_name'])
+                taxon_count = db.taxon_names_count(self.cxn, ref_name)
+
                 writer.writerow([
-                    'Input Gene', ref['ref_name'],
+                    'Input Gene', ref_name,
                     'In File', ref['input_file'],
                     'Allowing Overlap', self.args.overlap,
                     'Number of Libraries', taxon_count])
@@ -255,3 +256,67 @@ class Sticher:
                     'Contigs to Keep', 'Total Overlap',
                     'Combined Exon Length', 'Beginning', 'End',
                     'Beginning', 'End', 'Contig Name'])
+
+                for taxon in db.select_exonerate_taxa(self.cxn, ref_name):
+
+                    row = [ref_name,
+                           taxon['taxon_name'],
+                           taxon['contig_count'],
+                           taxon['gene_len']]
+
+                    if taxon['max_cover'] == taxon['gene_len'] \
+                            or taxon['contig_count'] == 1:
+                        self.use_one_contig(ref, taxon, row)
+                    else:
+                        self.stitch_multiple_contigs(ref, taxon, row)
+
+                    writer.writerow(row)
+
+    def use_one_contig(self, ref, taxon, row):
+        """Use a single contig."""
+        top_contig = db.select_top_exonerate_contig(
+            self.cxn, ref['ref_name'], taxon['taxon_name'])
+        row += [
+            1,  # Contigs to keep
+            0,  # Total overlap
+            top_contig['align_len'],
+            top_contig['align_beg'],
+            top_contig['align_end'],
+            top_contig['contig_name']]
+
+    def stitch_multiple_contigs(self, ref, taxon, row):
+        """Stitch multiple contigs together."""
+        sum_ = 0
+        overlap = 0
+        keepers = OrderedDict()
+
+        contigs = db.select_exonerate_stitch(
+            self.cxn, ref['ref_name'], taxon['taxon_name'])
+
+        curr = next(contigs)
+        for nxt in contigs:
+            curr_end = curr['align_end']
+            next_beg = nxt['align_beg']
+            next_end = nxt['align_end']
+
+            if next_beg > (curr_end - self.args.overlap) \
+                    and (next_end > curr_end):
+
+                overlap += (curr['align_end'] - next_beg)
+                if not sum_:
+                    sum_ = curr['query_len'] + nxt['query_len']
+                else:
+                    sum_ += nxt['query_len']
+
+                keepers[curr['contig_name']] = curr
+                keepers[nxt['contig_name']] = nxt
+
+            elif next_beg <= (curr_end - self.args.overlap):
+                pass
+
+            curr = nxt
+
+        row += []
+
+    def stitch_contigs(self):
+        """Stitch the contigs together."""
