@@ -6,11 +6,10 @@ It uses amino acid targets and DNA assemblies from aTRAM.
 
 import os
 from os.path import abspath, join, basename
-from collections import namedtuple, OrderedDict
-import csv
+from collections import namedtuple
+# import csv
 import subprocess
 from glob import glob
-from textwrap import shorten
 from Bio.SeqIO.FastaIO import SimpleFastaParser
 import lib.db as db
 import lib.log as log
@@ -44,7 +43,7 @@ class Sticher:
             self.create_reference_files()
             self.create_contig_files()
             self.run_exonerate()
-            self.get_contigs()
+            self.choose_contigs()
             # self.stitch_contigs()
             # self.summary_stats()
 
@@ -98,6 +97,8 @@ class Sticher:
 
     def insert_contigs(self):
         """Prepare fasta files for exonerate."""
+        log.info('Preparing fasta files: {}'.format(self.args.assemblies_dir))
+
         batch = []
 
         db.create_contigs_table(self.cxn)
@@ -112,8 +113,6 @@ class Sticher:
 
             if os.stat(contig_path).st_size == 0:
                 continue
-
-            log.info('Preparing fasta file: {}'.format(contig_path))
 
             tiebreaker = 0
 
@@ -150,51 +149,48 @@ class Sticher:
         for ref in db.select_reference_genes(self.cxn):
             with open(ref['ref_file'], 'w') as ref_file:
                 util.write_fasta_record(
-                    ref_file,
-                    ref['ref_name'],
-                    ref['ref_seq'])
+                    ref_file, ref['ref_name'], ref['ref_seq'])
 
     def create_contig_files(self):
         """Create contig fasta files for exonerate."""
         log.info('Preparing contig files for exonerate')
 
-        for ref in db.select_reference_genes(self.cxn):
-            ref_name = ref['ref_name']
-            for contig_path in \
-                    db.select_conting_files(self.cxn, ref_name):
-                contig_file = contig_path['contig_file']
-                with open(contig_file, 'w') as fasta_file:
-                    for contig in db.select_contings_in_file(
-                            self.cxn, ref_name, contig_file):
-                        util.write_fasta_record(
-                            fasta_file,
-                            contig['contig_name'],
-                            contig['contig_seq'])
+        for contig_path in db.select_contig_files(self.cxn):
+            contig_file = contig_path['contig_file']
+            with open(contig_file, 'w') as fasta_file:
+                for contig in db.select_contigs_in_file(self.cxn, contig_file):
+                    util.write_fasta_record(
+                        fasta_file,
+                        contig['contig_name'],
+                        contig['contig_seq'])
 
     def run_exonerate(self):
         """Run exonerate on every reference sequence, taxon combination."""
         db.create_exonerate_table(self.cxn)
 
+        taxon_names = set(x['taxon_name'] for x in db.select_taxa(self.cxn))
+
         for ref in db.select_reference_genes(self.cxn):
             log.info('Running exonerate for: {}'.format(ref['ref_name']))
-
-            for contig in db.select_conting_files(self.cxn, ref['ref_name']):
-                self.exonerate_command(ref, contig)
-                self.insert_exonerate_results(ref)
+            for taxon_name in taxon_names:
+                for contig_file in db.select_files(
+                        self.cxn, ref['ref_name'], taxon_name):
+                    self.exonerate_command(ref, taxon_name, contig_file)
+                    self.insert_exonerate_results(ref)
 
     @staticmethod
-    def exonerate_command(ref, contig):
+    def exonerate_command(ref, taxon_name, contig_file):
         """Build and run the exonerate program."""
-        cmd = shorten(r"""
+        cmd = util.shorten(r"""
             exonerate --verbose 0 --model protein2genome {ref_file}
             {contig_file}
             --showvulgar no --showalignment no
-            --ryo ">{ref_name},{taxon_name},%ti,%ql,%qal,%qab,%qae\n%tcs\n"
-            >> {results_file};""", 9999).format(
+            --ryo ">{ref_name},{taxon_name},%ti,%qab,%qae\n%tcs\n"
+            >> {results_file};""").format(
                 ref_file=ref['ref_file'],
-                contig_file=contig['contig_file'],
+                contig_file=contig_file['contig_file'],
                 ref_name=ref['ref_name'],
-                taxon_name=contig['taxon_name'],
+                taxon_name=taxon_name,
                 results_file=ref['results_file'])
 
         subprocess.check_call(cmd, shell=True)
@@ -203,120 +199,67 @@ class Sticher:
         """Insert the exonerate results into the database."""
         ExonerateHeader = namedtuple(
             'ExonerateHeader',
-            ['ref_name', 'taxon_name', 'contig_name', 'query_len',
-             'align_len', 'align_beg', 'align_end'])
+            ['ref_name', 'taxon_name', 'contig_name', 'beg', 'end'])
 
         batch = []
         with open(ref['results_file']) as results_fasta:
             for header, target_seq in SimpleFastaParser(results_fasta):
                 header = header.split(',')
                 field = ExonerateHeader(*header)
-                batch.append({
-                    'ref_name':    field.ref_name,
-                    'taxon_name':  field.taxon_name,
+                result = {
+                    'ref_name': field.ref_name,
+                    'taxon_name': field.taxon_name,
                     'contig_name': field.contig_name,
-                    'query_len':   field.query_len,
-                    'align_len':   field.align_len,
-                    'align_beg':   field.align_beg,
-                    'align_end':   field.align_end,
-                    'target_seq':  target_seq})
+                    'beg': field.beg,
+                    'end': field.end,
+                    'target_seq': target_seq}
+                batch.append(result)
         db.insert_exonerate_results(self.cxn, batch)
 
-    def get_contigs(self):
-        """
-        Create stats file.
+    def choose_contigs(self):
+        """Choose the contigs to cover the reference gene."""
+        taxon_names = set(x['taxon_name'] for x in db.select_taxa(self.cxn))
 
-        1) Sort by the beginning of the contig.
-        2) Look for all sorted results from exonerate.
-        3) Create a CSV file for each input with all of the information about
-            the contigs from exonerate.
-        """
         for ref in db.select_reference_genes(self.cxn):
             ref_name = ref['ref_name']
 
-            log.info('Creating stats file for: {}'.format(ref_name))
+            log.info('Selecting contigs for: {}'.format(ref_name))
 
-            stats_path = '{}.{}.overlap.{}.contig_list.csv'.format(
-                self.args.output_prefix, ref_name, self.args.overlap)
+            for taxon_name in taxon_names:
+                prev_contig = db.select_next(self.cxn, ref_name, taxon_name)
 
-            with open(stats_path, 'w') as stats_file:
+                if prev_contig:
+                    if prev_contig['beg'] > 0:
+                        pass
+                        # Write filler
+                    # Write contig
 
-                writer = csv.writer(stats_file)
+                while prev_contig:
 
-                taxon_count = db.taxon_names_count(self.cxn, ref_name)
+                    curr_contig = db.select_overlap(
+                        self.cxn,
+                        ref_name,
+                        taxon_name,
+                        prev_contig['beg'] + 1,
+                        prev_contig['end'] - self.args.overlap,
+                        prev_contig['end'])
 
-                writer.writerow([
-                    'Input Gene', ref_name,
-                    'In File', ref['input_file'],
-                    'Allowing Overlap', self.args.overlap,
-                    'Number of Libraries', taxon_count])
+                    if curr_contig:
+                        # Write curr_contig
+                        prev_contig = curr_contig
+                        continue
 
-                writer.writerow([
-                    'Gene', 'Taxon', 'Number of Contigs', 'Gene Length',
-                    'Contigs to Keep', 'Total Overlap',
-                    'Combined Exon Length', 'Beginning', 'End',
-                    'Beginning', 'End', 'Contig Name'])
+                    curr_contig = db.select_next(
+                        self.cxn, ref_name, taxon_name, contig['end'])
 
-                for taxon in db.select_exonerate_taxa(self.cxn, ref_name):
+                    if curr_contig:
+                        # Write filler
+                        # Write curr_contig
+                        continue
 
-                    row = [ref_name,
-                           taxon['taxon_name'],
-                           taxon['contig_count'],
-                           taxon['gene_len']]
+                    contig = curr_contig
 
-                    if taxon['max_cover'] == taxon['gene_len'] \
-                            or taxon['contig_count'] == 1:
-                        self.use_one_contig(ref, taxon, row)
-                    else:
-                        self.stitch_multiple_contigs(ref, taxon, row)
-
-                    writer.writerow(row)
-
-    def use_one_contig(self, ref, taxon, row):
-        """Use a single contig."""
-        top_contig = db.select_top_exonerate_contig(
-            self.cxn, ref['ref_name'], taxon['taxon_name'])
-        row += [
-            1,  # Contigs to keep
-            0,  # Total overlap
-            top_contig['align_len'],
-            top_contig['align_beg'],
-            top_contig['align_end'],
-            top_contig['contig_name']]
-
-    def stitch_multiple_contigs(self, ref, taxon, row):
-        """Stitch multiple contigs together."""
-        sum_ = 0
-        overlap = 0
-        keepers = OrderedDict()
-
-        contigs = db.select_exonerate_stitch(
-            self.cxn, ref['ref_name'], taxon['taxon_name'])
-
-        curr = next(contigs)
-        for nxt in contigs:
-            curr_end = curr['align_end']
-            next_beg = nxt['align_beg']
-            next_end = nxt['align_end']
-
-            if next_beg > (curr_end - self.args.overlap) \
-                    and (next_end > curr_end):
-
-                overlap += (curr['align_end'] - next_beg)
-                if not sum_:
-                    sum_ = curr['query_len'] + nxt['query_len']
-                else:
-                    sum_ += nxt['query_len']
-
-                keepers[curr['contig_name']] = curr
-                keepers[nxt['contig_name']] = nxt
-
-            elif next_beg <= (curr_end - self.args.overlap):
-                pass
-
-            curr = nxt
-
-        row += []
+                if contig['last']
 
     def stitch_contigs(self):
         """Stitch the contigs together."""

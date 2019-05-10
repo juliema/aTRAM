@@ -11,6 +11,11 @@ from contextlib import contextmanager
 from tempfile import mkdtemp
 
 
+def shorten(text):
+    """Collapse whitespace in a string."""
+    return ' '.join(text.split())
+
+
 def set_blast_batch_size(batch_size):
     """Use this to control blast memory usage & query concatenation."""
     if batch_size:
