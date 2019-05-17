@@ -42,8 +42,9 @@ def parse_command_line():
         help="""The path to the target assemblies directory.""")
 
     parser.add_argument(
-        '-O', '--overlap', default=10,
-        help=""".""")
+        '-O', '--overlap', type=int, default=10,
+        help="""Contigs must overlap by this many codons before it is 
+            considered a real overlap.""")
 
     parser.add_argument(
         '-t', '--temp-dir', metavar='DIR',
