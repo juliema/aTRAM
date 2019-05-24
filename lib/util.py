@@ -80,3 +80,11 @@ def open_file(args, file_name):
 def clean_name(name):
     """Replace problem characters in file names."""
     return re.sub(r'[^\w.]+', '_', name.strip())
+
+
+def as_word(number):
+    """Convert a number in a word.
+
+    If this gets complex we will add the inflect module instead.
+    """
+    return 'First' if number == 1 else 'Second'

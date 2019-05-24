@@ -53,7 +53,7 @@ class Sticher:
             self.contig_file_write()
             self.run_exonerate()
             # self.stitch_everything()
-            #
+
             # self.iteration += 1
             # self.get_contigs_from_previous_stitch()
             # self.contig_file_write()
@@ -120,7 +120,7 @@ class Sticher:
         files.
         """
         log.info('{} contig insert: {}'.format(
-            self.as_word(self.iteration), self.args.assemblies_dir))
+            util.as_word(self.iteration), self.args.assemblies_dir))
 
         batch = []
 
@@ -169,7 +169,7 @@ class Sticher:
         In this iteration we are getting all of the contigs from the first
         stitch and combining them into one long contig sequence.
         """
-        log.info('{} contig insert'.format(self.as_word(self.iteration)))
+        log.info('{} contig insert'.format(util.as_word(self.iteration)))
 
         batch = []
 
@@ -204,7 +204,7 @@ class Sticher:
 
     def contig_file_write(self):
         """Create contig fasta files for exonerate."""
-        log.info('{} contig file write'.format(self.as_word(self.iteration)))
+        log.info('{} contig file write'.format(util.as_word(self.iteration)))
 
         for contig_path in db.select_contig_files(
                 self.cxn, iteration=self.iteration):
@@ -221,7 +221,7 @@ class Sticher:
         """Run exonerate on every reference sequence, taxon combination."""
         for ref in db.select_reference_genes(self.cxn):
             log.info('{} exonerate run for: {}'.format(
-                self.as_word(self.iteration), ref['ref_name']))
+                util.as_word(self.iteration), ref['ref_name']))
 
             results_file = abspath(join(
                     self.temp_dir,
@@ -357,9 +357,8 @@ class Sticher:
                             iteration=self.iteration)
                         if curr_contig:
                             curr_contig = dict(curr_contig)
-                            prev_end = prev_contig['end']
-                            beg = (prev_end - curr_contig['beg']) * CODON_LEN
-                            seq = curr_contig['seq'][beg:]
+                            beg = prev_contig['end'] - curr_contig['beg'] - 1
+                            seq = curr_contig['seq'][beg * CODON_LEN:]
 
                     if not curr_contig:
                         curr_contig = db.select_next(
@@ -371,8 +370,8 @@ class Sticher:
                         if curr_contig:
                             curr_contig = dict(curr_contig)
                             seq = curr_contig['seq']
-                            gap = max(-1, curr_contig['beg'])
-                            gap -= prev_contig['end'] + 1
+                            gap = curr_contig['beg'] - 1
+                            gap -= max(-1, prev_contig['end'])
                             if gap > 0:
                                 position += 1
                                 contigs.append({
@@ -446,11 +445,3 @@ class Sticher:
                             taxon_name, first_contig_name, len(contig_names))
 
                     util.write_fasta_record(out_file, header, ''.join(seqs))
-
-    @staticmethod
-    def as_word(number):
-        """Convert a number in a word.
-
-        If this gets complex we will add the inflect module instead.
-        """
-        return 'First' if number == 1 else 'Second'

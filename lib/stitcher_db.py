@@ -163,7 +163,7 @@ def select_next(cxn, ref_name, taxon_name, beg=-1, iteration=0):
            AND taxon_name = ?
            AND beg        > ?
            AND iteration  = ?
-         ORDER BY beg, end DESC
+         ORDER BY beg, end DESC, contig_name
          LIMIT 1;
         """
     result = cxn.execute(sql, (ref_name, taxon_name, beg, iteration))
@@ -188,7 +188,7 @@ def select_overlap(
            AND iteration  = ?
            AND end        > ?
            AND beg BETWEEN ? AND ?
-         ORDER BY end DESC
+         ORDER BY end DESC, contig_name
          LIMIT 1;
         """
     result = cxn.execute(
