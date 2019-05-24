@@ -41,25 +41,6 @@ def select_reference_genes(cxn):
     return cxn.execute('SELECT * FROM reference_genes ORDER BY ref_name;')
 
 
-# ################################## taxa ####################################
-
-def create_taxa_table(cxn):
-    """Create a table to hold the exonerate taxa."""
-    cxn.executescript("""
-        DROP TABLE IF EXISTS taxa;
-
-        CREATE TABLE taxa (taxon_name TEXT);
-        """)
-
-
-def insert_taxa(cxn, batch):
-    """Insert a batch of taxon records into the database."""
-    sql = 'INSERT INTO taxa (taxon_name) VALUES (:taxon_name);'
-    if batch:
-        cxn.executemany(sql, batch)
-        cxn.commit()
-
-
 # ################################# contigs ##################################
 
 def create_contigs_table(cxn):
@@ -73,7 +54,8 @@ def create_contigs_table(cxn):
             contig_name TEXT,
             contig_seq  TEXT,
             contig_file TEXT,
-            contig_rec  INTEGER);
+            contig_rec  INTEGER,
+            iteration   INTEGER);
         """)
 
 
@@ -83,42 +65,45 @@ def insert_contigs(cxn, batch):
         sql = """
             INSERT INTO contigs
                 (ref_name, taxon_name, contig_name, contig_seq, contig_file,
-                contig_rec)
+                contig_rec, iteration)
             VALUES (
                 :ref_name, :taxon_name, :contig_name, :contig_seq,
-                :contig_file, :contig_rec);
+                :contig_file, :contig_rec, :iteration);
             """
         cxn.executemany(sql, batch)
         cxn.commit()
 
 
-def select_contig_files(cxn):
+def select_contig_files(cxn, iteration=0):
     """Select all contigs files for a reference gene."""
     sql = """
         SELECT DISTINCT contig_file
           FROM contigs
+         WHERE iteration = ?
          ORDER BY contig_file;"""
-    return cxn.execute(sql)
+    return cxn.execute(sql, (iteration, ))
 
 
-def select_contigs_in_file(cxn, contig_file):
+def select_contigs_in_file(cxn, contig_file, iteration=0):
     """Select all contigs for a contig file."""
     return cxn.execute(
         """SELECT * FROM contigs 
             WHERE contig_file = ?
+              AND iteration   = ?
          ORDER BY contig_rec;""",
-        (contig_file, ))
+        (contig_file, iteration))
 
 
-def select_first_exonerate_run(cxn, ref_name):
+def select_contigs(cxn, ref_name, iteration=0):
     """Select all contig files for a reference name, taxon name combination."""
     return cxn.execute(
         """SELECT DISTINCT taxon_name, contig_file
              FROM contigs
-            WHERE ref_name = ?
+            WHERE ref_name  = ?
+              AND iteration = ?
          ORDER BY taxon_name, contig_file
         """,
-        (ref_name, ))
+        (ref_name, iteration))
 
 
 # ############################# exonerate results ############################
@@ -134,17 +119,20 @@ def create_exonerate_table(cxn):
             contig_name TEXT,
             beg         INTEGER,
             end         INTEGER,
+            iteration   INTEGER,
             seq         TEXT);
         """)
 
 
-def select_stitch(cxn):
+def select_stitch(cxn, iteration=0):
     """Select all reference name, taxon name combination."""
     return cxn.execute(
         """SELECT DISTINCT ref_name, taxon_name
              FROM exonerate
+            WHERE iteration = ?
          ORDER BY taxon_name, taxon_name
-        """)
+        """,
+        (iteration, ))
 
 
 def insert_exonerate_results(cxn, batch):
@@ -152,15 +140,16 @@ def insert_exonerate_results(cxn, batch):
     if batch:
         sql = """
             INSERT INTO exonerate (
-                ref_name, taxon_name, contig_name, beg, end, seq)
+                ref_name, taxon_name, contig_name, beg, end, iteration, seq)
             VALUES (
-                :ref_name, :taxon_name, :contig_name, :beg, :end, :seq);
+                :ref_name, :taxon_name, :contig_name, :beg, :end, 
+                :iteration, :seq);
             """
         cxn.executemany(sql, batch)
         cxn.commit()
 
 
-def select_next(cxn, ref_name, taxon_name, beg=-1):
+def select_next(cxn, ref_name, taxon_name, beg=-1, iteration=0):
     """
     Find the next contig for the assembly.
 
@@ -173,14 +162,16 @@ def select_next(cxn, ref_name, taxon_name, beg=-1):
          WHERE ref_name   = ?
            AND taxon_name = ?
            AND beg        > ?
+           AND iteration  = ?
          ORDER BY beg, end DESC
          LIMIT 1;
         """
-    result = cxn.execute(sql, (ref_name, taxon_name, beg))
+    result = cxn.execute(sql, (ref_name, taxon_name, beg, iteration))
     return result.fetchone()
 
 
-def select_overlap(cxn, ref_name, taxon_name, beg_lo, beg_hi, end):
+def select_overlap(
+        cxn, ref_name, taxon_name, beg_lo, beg_hi, end, iteration=0):
     """
     Find the best overlapping contig for the assembly.
 
@@ -194,12 +185,14 @@ def select_overlap(cxn, ref_name, taxon_name, beg_lo, beg_hi, end):
           FROM exonerate
          WHERE ref_name   = ?
            AND taxon_name = ?
+           AND iteration  = ?
            AND end        > ?
            AND beg BETWEEN ? AND ?
          ORDER BY end DESC
          LIMIT 1;
         """
-    result = cxn.execute(sql, (ref_name, taxon_name, end, beg_lo, beg_hi))
+    result = cxn.execute(
+            sql, (ref_name, taxon_name, iteration, end, beg_lo, beg_hi))
     return result.fetchone()
 
 
@@ -217,6 +210,7 @@ def create_stitch_table(cxn):
             taxon_name  TEXT,
             contig_name TEXT,
             position    INTEGER,
+            iteration   INTEGER,
             seq         TEXT);
         """)
 
@@ -226,21 +220,23 @@ def insert_stitched_genes(cxn, batch):
     if batch:
         sql = """
             INSERT INTO stitched (
-                ref_name, taxon_name, contig_name, position, seq)
+                ref_name, taxon_name, contig_name, position, iteration, seq)
             VALUES (
-                :ref_name, :taxon_name, :contig_name, :position, :seq);
+                :ref_name, :taxon_name, :contig_name, :position, :iteration, 
+                :seq);
             """
         cxn.executemany(sql, batch)
         cxn.commit()
 
 
-def select_stitched_contigs(cxn, ref_name, taxon_name):
+def select_stitched_contigs(cxn, ref_name, taxon_name, iteration=0):
     """Select stitched contigs for a reference taxon pair."""
     return cxn.execute(
         """SELECT *
              FROM stitched
             WHERE ref_name   = ?
               AND taxon_name = ?
+              AND iteration  = ?
          ORDER BY position
         """,
-        (ref_name, taxon_name))
+        (ref_name, taxon_name, iteration))
