@@ -52,15 +52,16 @@ class Sticher:
             self.get_contigs_from_fasta()
             self.contig_file_write()
             self.run_exonerate()
-            # self.stitch_everything()
+            self.stitch_everything()
 
-            # self.iteration += 1
-            # self.get_contigs_from_previous_stitch()
-            # self.contig_file_write()
-            # self.run_exonerate()
+            self.iteration += 1
+            self.get_contigs_from_previous_stitch()
+            self.contig_file_write()
+            self.run_exonerate()
             self.stitch_with_gaps()
 
-            self.output_results()
+            self.output_stitched_genes()
+            self.output_summary()
 
     def create_tables(self):
         """Create database tables."""
@@ -179,7 +180,7 @@ class Sticher:
             for taxon_name in self.taxon_names:
 
                 seqs = []
-                contig_name = '{}_{}'.format(ref_name, taxon_name)
+                contig_name = '{}.{}'.format(ref_name, taxon_name)
                 contig_file = '{}.stitched.fasta'.format(contig_name)
                 contig_file = abspath(join(self.temp_dir, contig_file))
 
@@ -187,7 +188,7 @@ class Sticher:
                         self.cxn,
                         ref_name,
                         taxon_name,
-                        iteration=self.iteration):
+                        iteration=self.iteration - 1):
 
                     seqs.append(contig['seq'])
 
@@ -281,7 +282,7 @@ class Sticher:
         Build one long sequence from all of the non-overlapping contigs in the
         exonerate results. We want maximal coverage of the reference gene.
         """
-        log.info('First stitching run')
+        log.info('{} stitching run'.format(util.as_word(self.iteration)))
 
         for stitch in db.select_stitch(self.cxn, iteration=self.iteration):
             contigs = []
@@ -306,7 +307,7 @@ class Sticher:
                         self.cxn,
                         stitch['ref_name'],
                         stitch['taxon_name'],
-                        beg=prev_contig['end'],
+                        beg=prev_contig['end'] - self.args.overlap,
                         iteration=self.iteration)
 
                 if curr_contig:
@@ -333,7 +334,8 @@ class Sticher:
             ref_name = ref['ref_name']
             ref_len = len(ref['ref_seq']) * CODON_LEN
 
-            log.info('Second stitching run for: {}'.format(ref_name))
+            log.info('{} stitching run for: {}'.format(
+                    util.as_word(self.iteration), ref_name))
 
             for taxon_name in self.taxon_names:
 
@@ -365,7 +367,7 @@ class Sticher:
                             self.cxn,
                             ref_name,
                             taxon_name,
-                            beg=prev_contig['end'],
+                            beg=prev_contig['end'] - self.args.overlap,
                             iteration=self.iteration)
                         if curr_contig:
                             curr_contig = dict(curr_contig)
@@ -409,7 +411,7 @@ class Sticher:
                         'seq': 'N' * missing})
                 db.insert_stitched_genes(self.cxn, contigs)
 
-    def output_results(self):
+    def output_stitched_genes(self):
         """Print results."""
 
         for ref in db.select_reference_genes(self.cxn):
@@ -445,3 +447,6 @@ class Sticher:
                             taxon_name, first_contig_name, len(contig_names))
 
                     util.write_fasta_record(out_file, header, ''.join(seqs))
+
+    def output_summary(self):
+        """Print summary statistics."""
