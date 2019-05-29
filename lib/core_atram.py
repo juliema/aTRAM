@@ -37,7 +37,7 @@ def assemble(args):
                         assembly_loop(args, assembler, blast_db, query)
                     except (TimeoutError, RuntimeError):
                         pass
-                    except Exception as err:  # pylint: disable=broad-except
+                    except Exception as err:
                         log.error('Exception: {}'.format(err))
                     finally:
                         assembler.write_final_output(blast_db, query)

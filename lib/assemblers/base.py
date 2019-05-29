@@ -260,7 +260,7 @@ class BaseAssembler:  # pylint: disable=too-many-public-methods
             seq = bio.reverse_complement(seq)
             suffix = '_REV'
 
-        header = '>{}_{}_{} iteration={} contig_id={} score={}'.format(
+        header = '{}_{}_{} iteration={} contig_id={} score={}'.format(
             contig['iteration'], contig['contig_id'], suffix,
             contig['iteration'], contig['contig_id'], contig['bit_score'])
 
