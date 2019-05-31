@@ -44,24 +44,31 @@ class Sticher:
 
             self.create_tables()
 
-            self.insert_taxa()
+            self.get_taxa()
             self.insert_reference_genes()
             self.create_reference_files()
 
+            # First iteration gets its data from the input
             self.iteration += 1
             self.get_contigs_from_fasta()
             self.contig_file_write()
             self.run_exonerate()
-            self.stitch_everything()
 
-            self.iteration += 1
-            self.get_contigs_from_previous_stitch()
-            self.contig_file_write()
-            self.run_exonerate()
+            # Iterations 2-N get their data from the previous stitch
+            for i in range(1, self.args.iterations):
+                self.stitch_everything()
+
+                self.iteration += 1
+                self.get_contigs_from_previous_stitch()
+                self.contig_file_write()
+                self.run_exonerate()
+
+            # The final stitch is pickier than the others
             self.stitch_with_gaps()
 
             self.output_stitched_genes()
-            self.output_summary()
+            self.output_summary_per_gene()
+            self.output_summary_per_taxon()
 
     def create_tables(self):
         """Create database tables."""
@@ -70,7 +77,7 @@ class Sticher:
         db.create_contigs_table(self.cxn)
         db.create_stitch_table(self.cxn)
 
-    def insert_taxa(self):
+    def get_taxa(self):
         """Insert taxa into the database."""
         log.info('Preparing taxa')
 
@@ -448,5 +455,8 @@ class Sticher:
 
                     util.write_fasta_record(out_file, header, ''.join(seqs))
 
-    def output_summary(self):
+    def output_summary_per_gene(self):
+        """Print summary statistics."""
+
+    def output_summary_per_taxon(self):
         """Print summary statistics."""

@@ -11,6 +11,7 @@ from datetime import date
 import argparse
 import textwrap
 import lib.db as db
+import lib.log as log
 import lib.util as util
 from lib.core_stitcher import Sticher
 
@@ -62,6 +63,11 @@ def parse_command_line():
             "atram_stitcher_<date>.log".""")
 
     parser.add_argument(
+            '-i', '--iterations', type=int, default=2, metavar='N',
+            help="""The number of times to run the main stitcher loop. The 
+                minimum is "1" and the default is "2".""")
+
+    parser.add_argument(
         '-o', '--output-prefix',
         help="""This is the prefix of all of the output files. So you can
             identify different stitcher output file sets. You may include a
@@ -78,6 +84,9 @@ def parse_command_line():
 
     if not args.log_file:
         args.log_file = args.output_prefix + '.log'
+
+    if args.iterations < 1:
+        log.fatal('The iterations must be >= 1.')
 
     return args
 

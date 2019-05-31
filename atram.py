@@ -97,7 +97,7 @@ def parse_command_line():
                        type=int, default=cpus,
                        help="""Number of CPU processors to use. This will also
                             be used for the assemblers when possible. We will
-                            use {} out of {} cpus.""".format(
+                            use {} out of {} CPUs.""".format(
                                 cpus, os.cpu_count()))
 
     group.add_argument('--log-file', help="""Log file (full path)".""")

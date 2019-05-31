@@ -1,7 +1,5 @@
 """Common logging functions."""
 
- # pylint: disable=try-except-raise
-
 from os.path import basename, splitext
 import sys
 import logging
@@ -27,7 +25,7 @@ def stitcher_setup(log_file):
 
 
 def _setup(log_file):
-    global LOGGER  # pylint: disable=global-statement
+    global LOGGER
 
     if not LOGGER:
         handler = logging.FileHandler(log_file)

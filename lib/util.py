@@ -87,4 +87,9 @@ def as_word(number):
 
     If this gets complex we will add the inflect module instead.
     """
-    return 'First' if number == 1 else 'Second'
+    ordinal = {
+        1: 'First',
+        2: 'Second',
+        3: 'Third',
+    }
+    return ordinal.get(number, '{}th'.format(number))
