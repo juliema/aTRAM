@@ -71,7 +71,7 @@ def parse_command_line():
                             So you can identify different blast output file
                             sets. You may include a directory as part of the
                             prefix. aTRAM will add suffixes to differentiate
-                            ouput files.""")
+                            output files.""")
 
     group.add_argument('-a', '--assembler', default='none',
                        choices=['abyss', 'trinity', 'velvet', 'spades',
@@ -97,7 +97,7 @@ def parse_command_line():
                        type=int, default=cpus,
                        help="""Number of CPU processors to use. This will also
                             be used for the assemblers when possible. We will
-                            use {} out of {} cpus.""".format(
+                            use {} out of {} CPUs.""".format(
                                 cpus, os.cpu_count()))
 
     group.add_argument('--log-file', help="""Log file (full path)".""")

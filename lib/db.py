@@ -6,7 +6,11 @@ import os
 from os.path import basename, join, exists
 
 
-ATRAM_VERSION = 'v2.1.0'
+ATRAM_VERSION = 'v2.2.0'
+
+# DB_VERSION != ATRAM_VERSION
+# We don't force DB changes until required.
+# Therefore DB_VERSION <= ATRAM_VERSION.
 DB_VERSION = '2.0'
 
 BATCH_SIZE = 1e6  # How many sequence records to insert at a time
@@ -23,11 +27,7 @@ def connect(blast_db, check_version=False, clean=False):
         err = 'Could not find the database file "{}".'.format(db_name)
         sys.exit(err)
 
-    cxn = sqlite3.connect(db_name)
-
-    cxn.execute("PRAGMA page_size = {}".format(2**16))
-    cxn.execute("PRAGMA busy_timeout = 10000")
-    cxn.execute("PRAGMA journal_mode = WAL")
+    cxn = db_setup(db_name)
 
     if check_version:
         check_versions(cxn)
@@ -35,9 +35,9 @@ def connect(blast_db, check_version=False, clean=False):
     return cxn
 
 
-def get_db_name(blast_db):
-    """Build the SQLite DB name from the blast DB argument."""
-    return '{}.sqlite.db'.format(blast_db)
+def get_db_name(db_prefix):
+    """Build the SQLite DB name from the prefix."""
+    return '{}.sqlite.db'.format(db_prefix)
 
 
 def aux_db(cxn, temp_dir, blast_db, query_name):
@@ -58,9 +58,22 @@ def aux_detach(cxn):
     cxn.execute('DETACH DATABASE aux')
 
 
+def temp_db(temp_dir, db_prefix):
+    """Create a temporary database."""
+    db_name = join(temp_dir, get_db_name(db_prefix))
+    return db_setup(db_name)
+
+
+def db_setup(db_name):
+    """Database setup."""
+    cxn = sqlite3.connect(db_name)
+    cxn.execute("PRAGMA page_size = {}".format(2**16))
+    cxn.execute("PRAGMA busy_timeout = 10000")
+    cxn.execute("PRAGMA journal_mode = WAL")
+    return cxn
+
+
 # ########################### misc functions #################################
-# DB_VERSION != ATRAM_VERSION in DB. Don't force DB changes until required. So
-# this version will tend to lag ATRAM_VERSION.
 
 def check_versions(cxn):
     """Make sure the database version matches what we built it with."""
@@ -82,9 +95,13 @@ def create_metadata_table(cxn):
     A single record used to tell if we are running atram.py against the
     schema version we built with atram_preprocessor.py.
     """
-    cxn.execute("""DROP TABLE IF EXISTS metadata""")
-    sql = 'CREATE TABLE metadata (label TEXT, value TEXT)'
-    cxn.execute(sql)
+    cxn.executescript("""
+        DROP TABLE IF EXISTS metadata;
+
+        CREATE TABLE metadata (
+            label TEXT,
+            value TEXT);
+        """)
 
     with cxn:
         sql = """INSERT INTO metadata (label, value) VALUES (?, ?)"""
@@ -105,10 +122,15 @@ def get_version(cxn):
 # ########################## sequences table ##################################
 
 def create_sequences_table(cxn):
-    """Create the sequence table."""
-    cxn.execute("""DROP TABLE IF EXISTS sequences""")
-    sql = 'CREATE TABLE sequences (seq_name TEXT, seq_end TEXT, seq TEXT)'
-    cxn.execute(sql)
+    """Create a table to hold the raw input sequences."""
+    cxn.executescript("""
+        DROP TABLE IF EXISTS sequences;
+
+        CREATE TABLE sequences (
+            seq_name TEXT,
+            seq_end  TEXT,
+            seq      TEXT);
+        """)
 
 
 def create_sequences_index(cxn):
@@ -125,7 +147,7 @@ def insert_sequences_batch(cxn, batch):
     """Insert a batch of sequence records into the database."""
     if batch:
         sql = """INSERT INTO sequences (seq_name, seq_end, seq)
-                      VALUES (?, ?, ?)
+                    VALUES (?, ?, ?)
             """
         cxn.executemany(sql, batch)
         cxn.commit()
@@ -169,23 +191,19 @@ def get_all_sequences(cxn):
 # ######################## sra_blast_hits table ###############################
 
 def create_sra_blast_hits_table(cxn):
-    """
-    Reset the DB.
+    """Create a table to hold the blast hits for all iterations."""
+    cxn.executescript("""
+        DROP TABLE IF EXISTS aux.sra_blast_hits;
 
-    Delete the tables and recreate them.
-    """
-    cxn.execute("""DROP TABLE IF EXISTS aux.sra_blast_hits""")
-    sql = """
-        CREATE TABLE aux.sra_blast_hits
-                   (iteration INTEGER, seq_name TEXT, seq_end TEXT, shard TEXT)
-        """
-    cxn.execute(sql)
+        CREATE TABLE aux.sra_blast_hits (
+            iteration INTEGER,
+            seq_name  TEXT,
+            seq_end   TEXT,
+            shard     TEXT);
 
-    sql = """
         CREATE INDEX aux.sra_blast_hits_index
-                  ON sra_blast_hits (iteration, seq_name, seq_end)
-        """
-    cxn.execute(sql)
+            ON sra_blast_hits (iteration, seq_name, seq_end);
+        """)
 
 
 def insert_blast_hit_batch(cxn, batch):
@@ -249,22 +267,26 @@ def get_blast_hits_by_end_count(cxn, iteration, end_count):
 # ####################### contig_blast_hits table #############################
 
 def create_contig_blast_hits_table(cxn):
-    """Reset the database. Delete the tables and recreate them."""
-    cxn.execute("""DROP TABLE IF EXISTS aux.contig_blast_hits""")
-    sql = """
-        CREATE TABLE aux.contig_blast_hits
-                     (iteration INTEGER, contig_id TEXT, description TEXT,
-                      bit_score NUMERIC, len INTEGER,
-                      query_from INTEGER, query_to INTEGER, query_strand TEXT,
-                      hit_from INTEGER, hit_to INTEGER, hit_strand TEXT)
-        """
-    cxn.execute(sql)
+    """Create a table to hold blast hits against the contigs."""
+    cxn.executescript("""
+        DROP TABLE IF EXISTS aux.contig_blast_hits;
 
-    sql = """
+        CREATE TABLE aux.contig_blast_hits (
+            iteration    INTEGER,
+            contig_id    TEXT,
+            description  TEXT,
+            bit_score    NUMERIC,
+            len          INTEGER,
+            query_from   INTEGER,
+            query_to     INTEGER,
+            query_strand TEXT,
+            hit_from     INTEGER,
+            hit_to       INTEGER,
+            hit_strand   TEXT);
+
         CREATE INDEX aux.contig_blast_hits_index
-                  ON contig_blast_hits (iteration, bit_score, len)
-        """
-    cxn.execute(sql)
+            ON contig_blast_hits (iteration, bit_score, len);
+        """)
 
 
 def insert_contig_hit_batch(cxn, batch):
@@ -298,22 +320,27 @@ def get_contig_blast_hits(cxn, iteration):
 # ####################### assembled_contigs table #############################
 
 def create_assembled_contigs_table(cxn):
-    """Reset the database. Delete the tables and recreate them."""
-    cxn.execute("""DROP TABLE IF EXISTS aux.assembled_contigs""")
-    sql = """
-        CREATE TABLE aux.assembled_contigs
-                     (iteration INTEGER, contig_id TEXT, seq TEXT,
-                      description TEXT, bit_score NUMERIC, len INTEGER,
-                      query_from INTEGER, query_to INTEGER, query_strand TEXT,
-                      hit_from INTEGER, hit_to INTEGER, hit_strand TEXT)
-        """
-    cxn.execute(sql)
+    """Create a table to hold the assembled contigs."""
+    cxn.executescript("""
+        DROP TABLE IF EXISTS aux.assembled_contigs;
 
-    sql = """
+        CREATE TABLE aux.assembled_contigs (
+            iteration    INTEGER,
+            contig_id    TEXT,
+            seq          TEXT,
+            description  TEXT,
+            bit_score    NUMERIC,
+            len          INTEGER,
+            query_from   INTEGER,
+            query_to     INTEGER,
+            query_strand TEXT,
+            hit_from     INTEGER,
+            hit_to       INTEGER,
+            hit_strand   TEXT);
+
         CREATE INDEX aux.assembled_contigs_index
-                  ON assembled_contigs (iteration, contig_id)
-        """
-    cxn.execute(sql)
+                  ON assembled_contigs (iteration, contig_id);
+        """)
 
 
 def assembled_contigs_count(cxn, iteration, bit_score, length):
@@ -397,7 +424,7 @@ def get_all_assembled_contigs(cxn, bit_score=0, length=0):
 
 
 def all_assembled_contigs_count(cxn, bit_score=0, length=0):
-    """Count all assembed contigs."""
+    """Count all assembled contigs."""
     sql = """
         SELECT COUNT(*) AS count
           FROM aux.assembled_contigs

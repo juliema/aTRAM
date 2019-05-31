@@ -139,7 +139,7 @@ def parse_command_line():
 
     group.add_argument(
         '--bzip', action='store_true',
-        help="""Are these gzip files?""")
+        help="""Are these bzip files?""")
 
     args = vars(parser.parse_args())
 

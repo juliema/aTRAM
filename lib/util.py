@@ -2,6 +2,7 @@
 
 import os
 from os.path import exists
+import re
 import sys
 from shutil import rmtree
 import gzip
@@ -10,8 +11,13 @@ from contextlib import contextmanager
 from tempfile import mkdtemp
 
 
+def shorten(text):
+    """Collapse whitespace in a string."""
+    return ' '.join(text.split())
+
+
 def set_blast_batch_size(batch_size):
-    """Use this setting to control blast memory usage & query concatenation."""
+    """Use this to control blast memory usage & query concatenation."""
     if batch_size:
         os.environ['BATCH_SIZE'] = str(batch_size)
 
@@ -69,3 +75,21 @@ def open_file(args, file_name):
         yield stream
     finally:
         stream.close()
+
+
+def clean_name(name):
+    """Replace problem characters in file names."""
+    return re.sub(r'[^\w.]+', '_', name.strip())
+
+
+def as_word(number):
+    """Convert a number in a word.
+
+    If this gets complex we will add the inflect module instead.
+    """
+    ordinal = {
+        1: 'First',
+        2: 'Second',
+        3: 'Third',
+    }
+    return ordinal.get(number, '{}th'.format(number))

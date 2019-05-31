@@ -18,6 +18,7 @@ admin/
 data/
 build/
 junk*
+exon_stitching/
 
 .coverage
 .cache
