@@ -240,3 +240,56 @@ def select_stitched_contigs(cxn, ref_name, taxon_name, iteration=0):
          ORDER BY position
         """,
         (ref_name, taxon_name, iteration))
+
+
+def select_per_gene_stats(cxn):
+    """Get data for the per gene summary report."""
+    return cxn.execute(
+        """SELECT ref_name, taxon_name,
+                LENGTH(ref_seq)      AS query_len,
+                SUM(LENGTH(seq)) / 3 AS target_len
+             FROM stitched
+             JOIN reference_genes USING (ref_name)
+            WHERE contig_name IS NOT NULL
+         GROUP BY ref_name, taxon_name;
+        """)
+
+
+def select_per_taxon_stats(cxn):
+    """Get data for the per taxon summary report."""
+    return cxn.execute(
+        """
+        WITH 
+        properties AS (
+            SELECT taxon_name, ref_name,
+                   CAST(SUM(LENGTH(seq)) / 3 AS REAL) 
+                   / CAST(LENGTH(ref_seq) AS REAL) AS property
+             FROM stitched
+             JOIN reference_genes USING (ref_name)
+            WHERE contig_name IS NOT NULL
+         GROUP BY taxon_name, ref_name),
+        thresholds AS (
+            SELECT taxon_name, ref_name,
+                   property,
+                   property  = 1.00  AS eq100,
+                   property >= 0.95  AS gt95,
+                   property >= 0.90  AS ge90,
+                   property >= 0.80  AS ge80,
+                   property >= 0.70  AS ge70,
+                   property >= 0.50  AS ge50,
+                   property >= 0.10  AS ge10,
+                   property >  0.10  AS lt10
+              FROM properties)
+        SELECT taxon_name,
+               COUNT(DISTINCT ref_name) AS genes,
+               SUM(eq100) AS eq100,
+               SUM(gt95)  AS gt95,
+               SUM(ge90)  AS ge90,
+               SUM(ge80)  AS ge80,
+               SUM(ge70)  AS ge70,
+               SUM(ge50)  AS ge50,
+               SUM(ge10)  AS ge10,
+               SUM(lt10)  AS lt10
+          FROM thresholds
+      GROUP BY taxon_name;
+        """)

@@ -7,7 +7,7 @@ It uses amino acid targets and DNA assemblies from aTRAM.
 import os
 from os.path import abspath, join, basename
 from collections import namedtuple
-# import csv
+import csv
 import subprocess
 from glob import glob
 from Bio.SeqIO.FastaIO import SimpleFastaParser
@@ -66,6 +66,7 @@ class Sticher:
             # The final stitch is pickier than the others
             self.stitch_with_gaps()
 
+            log.info('Writing output')
             self.output_stitched_genes()
             self.output_summary_per_gene()
             self.output_summary_per_taxon()
@@ -456,7 +457,41 @@ class Sticher:
                     util.write_fasta_record(out_file, header, ''.join(seqs))
 
     def output_summary_per_gene(self):
-        """Print summary statistics."""
+        """Print per gene summary statistics."""
+        out_path = '{}summary_stats_per_gene.csv'.format(
+                self.args.output_prefix)
+        with open(out_path, 'w') as out_file:
+            writer = csv.writer(out_file)
+            writer.writerow(
+                    ['Locus', 'Taxon', 'Query_Length', 'Target_Length'])
+
+            for stats in db.select_per_gene_stats(self.cxn):
+                writer.writerow([
+                    stats['ref_name'],
+                    stats['taxon_name'],
+                    stats['query_len'],
+                    stats['target_len']])
 
     def output_summary_per_taxon(self):
-        """Print summary statistics."""
+        """Print per taxon summary statistics."""
+        out_path = '{}summary_stats_per_taxon.csv'.format(
+                self.args.output_prefix)
+        with open(out_path, 'w') as out_file:
+            writer = csv.writer(out_file)
+            writer.writerow([
+                'Taxon',
+                'Number_Genes',
+                'Full_Exons',
+                '95%', '90%', '80%', '70%', '50%', '10%'])
+
+            for stats in db.select_per_taxon_stats(self.cxn):
+                writer.writerow([
+                    stats['taxon_name'],
+                    stats['genes'],
+                    stats['eq100'],
+                    stats['gt95'],
+                    stats['ge90'],
+                    stats['ge80'],
+                    stats['ge70'],
+                    stats['ge50'],
+                    stats['ge10']])
