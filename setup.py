@@ -58,4 +58,7 @@ setup(
     license=license(),
     url="https://github.com/juliema/aTRAM",
     python_requires='>=3.4',
-    scripts=['atram/atram.py', 'atram/atram_preprocessor.py'])
+    scripts=[
+        'atram/atram.py', 
+        'atram/atram_preprocessor.py', 
+        'atram/atram_stitcher.py'])
