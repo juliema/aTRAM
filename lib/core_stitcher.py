@@ -237,15 +237,16 @@ class Sticher:
                     '{}.iteration_{}.results.fasta'.format(
                         ref['ref_name'], self.iteration)))
 
-            for contig_file in db.select_contigs(
-                    self.cxn, ref['ref_name'], iteration=self.iteration):
+            with open(results_file, 'w') as _:
 
-                self.exonerate_command(ref, contig_file, results_file)
+                for contig_file in db.select_contigs(
+                        self.cxn, ref['ref_name'], iteration=self.iteration):
+
+                    self.exonerate_command(ref, contig_file, results_file)
 
             self.insert_exonerate_results(results_file)
 
-    @staticmethod
-    def exonerate_command(ref, contig_file, results_file):
+    def exonerate_command(self, ref, contig_file, results_file):
         """Build and run the exonerate program."""
         cmd = util.shorten(r"""
             exonerate --verbose 0 --model protein2genome {ref_file}
@@ -259,7 +260,7 @@ class Sticher:
                 taxon_name=contig_file['taxon_name'],
                 results_file=results_file)
 
-        subprocess.check_call(cmd, shell=True)
+        log.subcommand(cmd, self.temp_dir)
 
     def insert_exonerate_results(self, results_file):
         """Insert the exonerate results into the database."""
