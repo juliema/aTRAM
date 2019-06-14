@@ -96,6 +96,14 @@ def as_word(number):
     return ordinal.get(number, '{}th'.format(number))
 
 
+def plural(word, number):
+    """Pluralize a word.
+
+    If this gets complex we will add the inflect module instead.
+    """
+    return word if number == 1 else word + 's'
+
+
 def fasta_file_is_empty(fasta_path):
     """Check if a fasta file is either empty or does not have a sequence."""
     if os.stat(fasta_path).st_size == 0:

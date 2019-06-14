@@ -439,13 +439,16 @@ class Sticher:
                     first_contig_name = None
                     seqs = []
 
-                    if not db.select_stitched_contig_count(
-                            self.cxn,
-                            ref_name,
-                            taxon_name,
-                            iteration=self.iteration):
-                        log.info('No hits for: {} {}'.format(
-                            ref_name, taxon_name))
+                    hits = db.select_stitched_contig_count(
+                        self.cxn,
+                        ref_name,
+                        taxon_name,
+                        iteration=self.iteration)
+
+                    log.info('{} {} for: {} {}'.format(
+                        hits, util.plural('hit', hits), ref_name, taxon_name))
+
+                    if not hits:
                         continue
 
                     for contig in db.select_stitched_contigs(
