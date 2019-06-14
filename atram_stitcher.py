@@ -24,6 +24,7 @@ def parse_command_line():
         """
 
     parser = argparse.ArgumentParser(
+        fromfile_prefix_chars='@',
         formatter_class=argparse.RawDescriptionHelpFormatter,
         description=textwrap.dedent(description))
 

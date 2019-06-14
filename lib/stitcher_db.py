@@ -242,6 +242,20 @@ def select_stitched_contigs(cxn, ref_name, taxon_name, iteration=0):
         (ref_name, taxon_name, iteration))
 
 
+def select_stitched_contig_count(cxn, ref_name, taxon_name, iteration=0):
+    """Select stitched contigs for a reference taxon pair."""
+    result = cxn.execute(
+        """SELECT COUNT(*) AS hits
+             FROM stitched
+            WHERE ref_name   = ?
+              AND taxon_name = ?
+              AND iteration  = ?
+              AND contig_name IS NOT NULL;
+        """,
+        (ref_name, taxon_name, iteration))
+    return result.fetchone()['hits']
+
+
 def select_per_gene_stats(cxn):
     """Get data for the per gene summary report."""
     return cxn.execute(

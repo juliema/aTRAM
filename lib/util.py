@@ -9,6 +9,7 @@ import gzip
 import bz2
 from contextlib import contextmanager
 from tempfile import mkdtemp
+from Bio.SeqIO.FastaIO import SimpleFastaParser
 
 
 def shorten(text):
@@ -93,3 +94,17 @@ def as_word(number):
         3: 'Third',
     }
     return ordinal.get(number, '{}th'.format(number))
+
+
+def fasta_file_is_empty(fasta_path):
+    """Check if a fasta file is either empty or does not have a sequence."""
+    if os.stat(fasta_path).st_size == 0:
+        return True
+
+    with open(fasta_path) as fasta_file:
+        _, seq = next(SimpleFastaParser(fasta_file))
+
+    if not seq:
+        return True
+
+    return False

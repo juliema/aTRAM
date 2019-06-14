@@ -242,6 +242,9 @@ class Sticher:
             for contig_file in db.select_contigs(
                     self.cxn, ref['ref_name'], iteration=self.iteration):
 
+                if util.fasta_file_is_empty(contig_file['contig_file']):
+                    continue
+
                 self.exonerate_command(ref, contig_file, results_file)
 
             self.insert_exonerate_results(results_file)
@@ -435,6 +438,15 @@ class Sticher:
                     contig_names = set()
                     first_contig_name = None
                     seqs = []
+
+                    if not db.select_stitched_contig_count(
+                            self.cxn,
+                            ref_name,
+                            taxon_name,
+                            iteration=self.iteration):
+                        log.info('No hits for: {} {}'.format(
+                            ref_name, taxon_name))
+                        continue
 
                     for contig in db.select_stitched_contigs(
                             self.cxn,
