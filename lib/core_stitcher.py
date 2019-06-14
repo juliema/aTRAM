@@ -431,14 +431,12 @@ class Sticher:
         for ref in db.select_reference_genes(self.cxn):
             ref_name = ref['ref_name']
 
-            out_path = '{}{}.stitched_exons.fasta'.format(
+            out_path = '{}.{}.stitched_exons.fasta'.format(
                     self.args.output_prefix, ref_name)
 
             with open(out_path, 'w') as out_file:
 
                 for taxon_name in self.taxon_names:
-                    contig_names = set()
-                    first_contig_name = None
                     seqs = []
 
                     hits = db.select_stitched_contig_count(
@@ -448,7 +446,7 @@ class Sticher:
                         iteration=self.iteration)
 
                     has_hits = 'hits' if hits else 'no hits'
-                    log.info('{} {} has {}'.format(
+                    log.info('{}.{} has {}'.format(
                         ref_name, taxon_name, has_hits))
 
                     if not hits:
@@ -460,24 +458,17 @@ class Sticher:
                             taxon_name,
                             iteration=self.iteration):
 
-                        contig_name = contig['contig_name']
-
-                        if contig_name:
-                            if not first_contig_name:
-                                first_contig_name = contig_name
-
-                            contig_names.add(contig_name)
-
                         seqs.append(contig['seq'])
 
-                    header = '{}. {}.{}'.format(
-                            taxon_name, first_contig_name, len(contig_names))
+                    header = taxon_name
+                    if self.args.reference_name:
+                        header = '{}.{}'.format(ref_name, taxon_name)
 
                     util.write_fasta_record(out_file, header, ''.join(seqs))
 
     def output_summary_per_gene(self):
         """Print per gene summary statistics."""
-        out_path = '{}summary_stats_per_gene.csv'.format(
+        out_path = '{}.summary_stats_per_gene.csv'.format(
                 self.args.output_prefix)
         with open(out_path, 'w') as out_file:
             writer = csv.writer(out_file)
@@ -493,7 +484,7 @@ class Sticher:
 
     def output_summary_per_taxon(self):
         """Print per taxon summary statistics."""
-        out_path = '{}summary_stats_per_taxon.csv'.format(
+        out_path = '{}.summary_stats_per_taxon.csv'.format(
                 self.args.output_prefix)
         with open(out_path, 'w') as out_file:
             writer = csv.writer(out_file)

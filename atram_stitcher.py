@@ -75,6 +75,13 @@ def parse_command_line():
             directory as part of the prefix. The stitcher will add suffixes to
             differentiate output files.""")
 
+    parser.add_argument(
+            '--reference-name',  action='store_true',
+            help="""Add the reference name to the final assembled gene name? 
+                if false the gene name in the reference file with just be the 
+                <taxon-name> if you select this then the assembled gene name 
+                will be <reference-name>.<taxon-name>.""")
+
     args = parser.parse_args()
 
     util.temp_dir_exists(args.temp_dir)
