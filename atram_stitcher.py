@@ -65,8 +65,8 @@ def parse_command_line():
 
     parser.add_argument(
             '-i', '--iterations', type=int, default=2, metavar='N',
-            help="""The number of times to run the main stitcher loop. The 
-                minimum is "1" and the default is "2".""")
+            help="""The number of times to run the main stitcher loop. This 
+                must be either 1 or 2, the default is 2.""")
 
     parser.add_argument(
         '-o', '--output-prefix',
@@ -86,8 +86,8 @@ def parse_command_line():
     if not args.log_file:
         args.log_file = args.output_prefix + '.log'
 
-    if args.iterations < 1:
-        log.fatal('The iterations must be >= 1.')
+    if 1 > args.iterations > 2:
+        log.fatal('The iterations must be either 1 or 2.')
 
     return args
 

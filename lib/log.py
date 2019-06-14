@@ -41,6 +41,7 @@ def _setup(log_file):
         LOGGER.addHandler(handler)
         LOGGER.addHandler(stream)
 
+        info('#' * 80)
         info('aTRAM version: {}'.format(db.ATRAM_VERSION))
         info('Python version: {}'.format(' '.join(sys.version.split())))
         info(' '.join(sys.argv[:]))

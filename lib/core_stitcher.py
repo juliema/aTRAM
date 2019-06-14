@@ -71,6 +71,8 @@ class Sticher:
             self.output_summary_per_gene()
             self.output_summary_per_taxon()
 
+            log.info('Finished.')
+
     def create_tables(self):
         """Create database tables."""
         db.create_reference_genes_table(self.cxn)
@@ -445,8 +447,9 @@ class Sticher:
                         taxon_name,
                         iteration=self.iteration)
 
-                    log.info('{} {} for: {} {}'.format(
-                        hits, util.plural('hit', hits), ref_name, taxon_name))
+                    has_hits = 'hits' if hits else 'no hits'
+                    log.info('{} {} has {}'.format(
+                        ref_name, taxon_name, has_hits))
 
                     if not hits:
                         continue
