@@ -6,9 +6,9 @@ It uses amino acid targets and DNA assemblies from aTRAM.
 
 import os
 from os.path import abspath, join, basename
+from pathlib import Path
 from collections import namedtuple
 import csv
-import subprocess
 from glob import glob
 from Bio.SeqIO.FastaIO import SimpleFastaParser
 import lib.stitcher_db as db
@@ -237,12 +237,12 @@ class Sticher:
                     '{}.iteration_{}.results.fasta'.format(
                         ref['ref_name'], self.iteration)))
 
-            with open(results_file, 'w') as _:
+            Path(results_file).touch()
 
-                for contig_file in db.select_contigs(
-                        self.cxn, ref['ref_name'], iteration=self.iteration):
+            for contig_file in db.select_contigs(
+                    self.cxn, ref['ref_name'], iteration=self.iteration):
 
-                    self.exonerate_command(ref, contig_file, results_file)
+                self.exonerate_command(ref, contig_file, results_file)
 
             self.insert_exonerate_results(results_file)
 
