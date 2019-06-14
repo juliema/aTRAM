@@ -42,7 +42,7 @@ def _setup(log_file):
         LOGGER.addHandler(stream)
 
         info('aTRAM version: {}'.format(db.ATRAM_VERSION))
-        info('Python version: {}'.format(sys.version))
+        info('Python version: {}'.format(' '.join(sys.version.split())))
         info(' '.join(sys.argv[:]))
 
 
