@@ -7,6 +7,7 @@ from multiprocessing import Pool
 from Bio import SeqIO
 import lib.db as db
 import lib.log as log
+import lib.bio as bio
 import lib.util as util
 import lib.blast as blast
 import lib.assembler as assembly
@@ -54,7 +55,7 @@ def assembly_loop(args, assembler, blast_db, query):
         assembler.init_iteration(blast_db, query, iteration)
 
         with util.make_temp_dir(
-                where=assembler.args['temp_root'],
+                where=args['temp_dir'],
                 prefix=assembler.file_prefix(),
                 keep=args['keep_temp_dir']) as iter_dir:
 
@@ -127,6 +128,9 @@ def split_queries(args):
                 write_query_seq(query_file, rec.id, str(rec.seq))
 
                 queries.append(query_file)
+
+    if not args['protein']:
+        args['protein'] = bio.fasta_file_has_protein(queries)
 
     return queries
 
