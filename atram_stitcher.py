@@ -41,7 +41,7 @@ def parse_command_line():
 
     parser.add_argument(
         '-a', '--assemblies-dir', metavar='PATH', required=True,
-        help="""The path to the target assemblies directory.""")
+        help="""The path to the DNA contigs.""")
 
     parser.add_argument(
         '-O', '--overlap', type=int, default=10,
