@@ -129,7 +129,7 @@ def split_queries(args):
 
                 queries.append(query_file)
 
-    if not args['protein']:
+    if not args.get('protein'):
         args['protein'] = bio.fasta_file_has_protein(queries)
 
     return queries

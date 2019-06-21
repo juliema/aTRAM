@@ -21,6 +21,7 @@ def set_up():
     assembler = BaseAssembler(args, cxn)
     return args, cxn, assembler
 
+
 @patch('lib.core_atram.write_query_seq')
 def test_split_queries_01(write_query_seq):
     """Test split queries where there are no fasta files to split."""
@@ -33,11 +34,13 @@ def test_split_queries_01(write_query_seq):
 
     assert args['query'] == queries
 
+
 @patch('lib.core_atram.write_query_seq')
 def test_split_queries_02(write_query_seq):
     """Test split queries where there are fasta files to split."""
     args, cxn, assembler = set_up()
     args['query_split'] = ['tests/data/split_queries1.txt']
+    args['protein'] = True
 
     with tempfile.TemporaryDirectory(prefix='test_') as temp_dir:
         args['temp_dir'] = temp_dir
@@ -58,6 +61,7 @@ def test_split_queries_02(write_query_seq):
 
     assert split_files == queries
 
+
 def test_write_query_seq_01():
     """It writes a sequence to a fasta file."""
     args, cxn, assembler = set_up()
@@ -75,6 +79,7 @@ def test_write_query_seq_01():
                 'aaaacccgggtt\n')
             assert expect == test_file.read()
 
+
 @patch('lib.db.create_sra_blast_hits_table')
 @patch('lib.db.create_contig_blast_hits_table')
 @patch('lib.db.create_assembled_contigs_table')
@@ -90,6 +95,7 @@ def test_clean_database_01(
     create_assembled_contigs_table.assert_called_once_with(dbh)
     create_contig_blast_hits_table.assert_called_once_with(dbh)
     create_sra_blast_hits_table.assert_called_once_with(dbh)
+
 
 @patch('lib.core_atram.blast_query_against_all_shards')
 @patch('lib.core_atram.create_query_from_contigs')
@@ -125,6 +131,7 @@ def test_assembly_loop_iteration_01(
     create_query_from_contigs.create_query_from_contigs(assembler)
     filter_contigs.create_query_from_contigs(assembler)
 
+
 @patch('lib.blast.all_shard_paths')
 def test_shard_fraction_01(all_shard_paths):
     """It gets the shards we are using when there is no split."""
@@ -140,6 +147,7 @@ def test_shard_fraction_01(all_shard_paths):
     assert returns == shards
 
     all_shard_paths.assert_called_once_with(args['blast_db'][0])
+
 
 @patch('lib.blast.all_shard_paths')
 def test_shard_fraction_02(all_shard_paths):

@@ -181,7 +181,7 @@ def setup_blast_args(args):
 
 def check_query_args(args):
     """Validate the query arguments."""
-    if not args['query'] and not args['query_split']:
+    if not args.get('query') and not args.get('query_split'):
         err = 'You must have at least one --query or --query-split argument.'
         log.fatal(err)
 
