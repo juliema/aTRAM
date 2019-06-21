@@ -256,7 +256,7 @@ def select_stitched_contig_count(cxn, ref_name, taxon_name, iteration=0):
     return result.fetchone()['hits']
 
 
-def select_per_gene_stats(cxn):
+def select_per_gene_stats(cxn, iteration):
     """Get data for the per gene summary report."""
     return cxn.execute(
         """SELECT ref_name, taxon_name,
@@ -265,11 +265,13 @@ def select_per_gene_stats(cxn):
              FROM stitched
              JOIN reference_genes USING (ref_name)
             WHERE contig_name IS NOT NULL
+              AND iteration = ?
          GROUP BY ref_name, taxon_name;
-        """)
+        """,
+        (iteration, ))
 
 
-def select_per_taxon_stats(cxn):
+def select_per_taxon_stats(cxn, iteration):
     """Get data for the per taxon summary report."""
     return cxn.execute(
         """
@@ -281,6 +283,7 @@ def select_per_taxon_stats(cxn):
              FROM stitched
              JOIN reference_genes USING (ref_name)
             WHERE contig_name IS NOT NULL
+              AND iteration = ?
          GROUP BY taxon_name, ref_name),
         thresholds AS (
             SELECT taxon_name, ref_name,
@@ -306,4 +309,5 @@ def select_per_taxon_stats(cxn):
                SUM(lt10)  AS lt10
           FROM thresholds
       GROUP BY taxon_name;
-        """)
+        """,
+        (iteration, ))

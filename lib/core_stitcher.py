@@ -59,7 +59,8 @@ def stitch(args):
 
         log.info('Writing output')
         output_stitched_genes(args, cxn, taxon_names, iteration)
-        output_summary_per_taxon(args, cxn)
+        output_summary_per_gene(args, cxn, iteration)
+        output_summary_per_taxon(args, cxn, iteration)
 
         log.info('Finished.')
 
@@ -123,8 +124,7 @@ def create_reference_files(cxn):
 def get_contigs_from_fasta(args, temp_dir, cxn, taxon_names, iteration):
     """Prepare fasta files for exonerate.
 
-    In this iteration we are getting the contigs from the given fasta
-    files.
+    In this iteration we are getting the contigs from the given fasta files.
     """
     log.info('{} contig insert: {}'.format(
         util.as_word(iteration), args.assemblies_dir))
@@ -172,8 +172,8 @@ def get_contigs_from_fasta(args, temp_dir, cxn, taxon_names, iteration):
 def get_contigs_from_previous_stitch(temp_dir, cxn, taxon_names, iteration):
     """Prepare fasta files for exonerate.
 
-    In this iteration we are getting all of the contigs from the first
-    stitch and combining them into one long contig sequence.
+    In this iteration we are getting all of the contigs from the first stitch
+    and combining them into one long contig sequence.
     """
     log.info('{} contig insert'.format(util.as_word(iteration)))
 
@@ -461,14 +461,14 @@ def output_stitched_genes(args, cxn, taxon_names, iteration):
                 util.write_fasta_record(out_file, header, ''.join(seqs))
 
 
-def output_summary_per_gene(args, cxn):
+def output_summary_per_gene(args, cxn, iteration):
     """Print per gene summary statistics."""
-    out_path = '{}.summary_stats_per_gene.csv'.format(args.output_prefix)
+    out_path = '{}.summary_stats_per_ref_gene.csv'.format(args.output_prefix)
     with open(out_path, 'w') as out_file:
         writer = csv.writer(out_file)
         writer.writerow(['Locus', 'Taxon', 'Query_Length', 'Target_Length'])
 
-        for stats in db.select_per_gene_stats(cxn):
+        for stats in db.select_per_gene_stats(cxn, iteration):
             writer.writerow([
                 stats['ref_name'],
                 stats['taxon_name'],
@@ -476,7 +476,7 @@ def output_summary_per_gene(args, cxn):
                 stats['target_len']])
 
 
-def output_summary_per_taxon(args, cxn):
+def output_summary_per_taxon(args, cxn, iteration):
     """Print per taxon summary statistics."""
     out_path = '{}.summary_stats_per_taxon.csv'.format(args.output_prefix)
     with open(out_path, 'w') as out_file:
@@ -487,7 +487,7 @@ def output_summary_per_taxon(args, cxn):
             'Full_Exons',
             '95%', '90%', '80%', '70%', '50%', '10%'])
 
-        for stats in db.select_per_taxon_stats(cxn):
+        for stats in db.select_per_taxon_stats(cxn, iteration):
             writer.writerow([
                 stats['taxon_name'],
                 stats['genes'],
