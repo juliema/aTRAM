@@ -13,7 +13,7 @@ import textwrap
 import lib.db as db
 import lib.log as log
 import lib.util as util
-from lib.core_stitcher import Sticher
+import lib.core_stitcher as stitcher
 
 
 def parse_command_line():
@@ -101,4 +101,4 @@ def parse_command_line():
 
 if __name__ == '__main__':
     ARGS = parse_command_line()
-    Sticher(ARGS).stitch()
+    stitcher.stitch(ARGS)

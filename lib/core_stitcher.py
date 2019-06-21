@@ -19,489 +19,482 @@ import lib.util as util
 CODON_LEN = 3
 
 
-class Sticher:
-    """Container for sticher data."""
+def stitch(args):
+    """Stitch the exons together."""
+    log.stitcher_setup(args.log_file)
+    iteration = 0
 
-    def __init__(self, args):
-        """Setup."""
-        self.args = args
-        self.cxn = None
-        self.temp_dir = None
-        self.taxon_names = []
-        self.iteration = 0
+    with util.make_temp_dir(
+            where=args.temp_dir,
+            prefix='atram_stitcher_',
+            keep=args.keep_temp_dir) as temp_dir:
+        temp_dir = temp_dir
 
-    def stitch(self):
-        """Stitch the exons together."""
-        log.stitcher_setup(self.args.log_file)
+        cxn = db.connect(temp_dir, 'atram_stitcher')
 
-        with util.make_temp_dir(
-                where=self.args.temp_dir,
-                prefix='atram_stitcher_',
-                keep=self.args.keep_temp_dir) as temp_dir:
-            self.temp_dir = temp_dir
+        create_tables(cxn)
 
-            self.cxn = db.connect(temp_dir, 'atram_stitcher')
+        taxon_names = get_taxa(args)
+        insert_reference_genes(args, temp_dir, cxn)
+        create_reference_files(cxn)
 
-            self.create_tables()
+        # First iteration gets its data from the input
+        iteration += 1
+        get_contigs_from_fasta(args, temp_dir, cxn, taxon_names, iteration)
+        contig_file_write(cxn, iteration)
+        run_exonerate(temp_dir, cxn, iteration)
 
-            self.get_taxa()
-            self.insert_reference_genes()
-            self.create_reference_files()
+        # Iterations 2-N get their data from the previous stitch
+        for i in range(1, args.iterations):
+            stitch_everything(args, cxn, iteration)
 
-            # First iteration gets its data from the input
-            self.iteration += 1
-            self.get_contigs_from_fasta()
-            self.contig_file_write()
-            self.run_exonerate()
+            iteration += 1
+            get_contigs_from_previous_stitch(
+                temp_dir, cxn, taxon_names, iteration)
+            contig_file_write(cxn, iteration)
+            run_exonerate(temp_dir, cxn, iteration)
 
-            # Iterations 2-N get their data from the previous stitch
-            for i in range(1, self.args.iterations):
-                self.stitch_everything()
+        # The final stitch is pickier than the others
+        stitch_with_gaps(args, cxn, taxon_names, iteration)
 
-                self.iteration += 1
-                self.get_contigs_from_previous_stitch()
-                self.contig_file_write()
-                self.run_exonerate()
+        log.info('Writing output')
+        output_stitched_genes(args, cxn, taxon_names, iteration)
+        output_summary_per_taxon(args, cxn)
 
-            # The final stitch is pickier than the others
-            self.stitch_with_gaps()
+        log.info('Finished.')
 
-            log.info('Writing output')
-            self.output_stitched_genes()
-            self.output_summary_per_gene()
-            self.output_summary_per_taxon()
 
-            log.info('Finished.')
+def create_tables(cxn):
+    """Create database tables."""
+    db.create_reference_genes_table(cxn)
+    db.create_exonerate_table(cxn)
+    db.create_contigs_table(cxn)
+    db.create_stitch_table(cxn)
 
-    def create_tables(self):
-        """Create database tables."""
-        db.create_reference_genes_table(self.cxn)
-        db.create_exonerate_table(self.cxn)
-        db.create_contigs_table(self.cxn)
-        db.create_stitch_table(self.cxn)
 
-    def get_taxa(self):
-        """Insert taxa into the database."""
-        log.info('Preparing taxa')
+def get_taxa(args):
+    """Insert taxa into the database."""
+    log.info('Preparing taxa')
 
-        with open(self.args.taxa) as taxa:
-            for taxon_name in taxa:
-                taxon_name = taxon_name.strip()
-                self.taxon_names.append(taxon_name)
+    taxon_names = []
 
-        self.taxon_names = sorted(self.taxon_names)
+    with open(args.taxa) as taxa:
+        for taxon_name in taxa:
+            taxon_name = taxon_name.strip()
+            taxon_names.append(taxon_name)
 
-    def insert_reference_genes(self):
-        """Prepare reference sequences for exonerate."""
-        batch = []
+    return sorted(taxon_names)
 
-        ref_genes = self.args.reference_genes
 
-        log.info('Preparing reference genes: {}'.format(ref_genes))
+def insert_reference_genes(args, temp_dir, cxn):
+    """Prepare reference sequences for exonerate."""
+    batch = []
 
-        with open(ref_genes) as ref_in:
+    ref_genes = args.reference_genes
 
-            for ref_name, ref_seq in SimpleFastaParser(ref_in):
+    log.info('Preparing reference genes: {}'.format(ref_genes))
 
-                ref_name = util.clean_name(ref_name)
+    with open(ref_genes) as ref_in:
 
-                ref_file = abspath(join(
-                    self.temp_dir,
-                    '{}.fasta'.format(ref_name)))
+        for ref_name, ref_seq in SimpleFastaParser(ref_in):
 
-                batch.append({
-                    'ref_name': ref_name,
-                    'ref_seq': ref_seq,
-                    'ref_file': ref_file})
+            ref_name = util.clean_name(ref_name)
 
-        db.insert_reference_genes(self.cxn, batch)
+            ref_file = abspath(join(
+                temp_dir,
+                '{}.fasta'.format(ref_name)))
 
-    def create_reference_files(self):
-        """Create reference gene fasta files for exonerate."""
-        log.info('Preparing reference gene files for exonerate')
-        for ref in db.select_reference_genes(self.cxn):
-            with open(ref['ref_file'], 'w') as ref_file:
-                util.write_fasta_record(
-                    ref_file, ref['ref_name'], ref['ref_seq'])
+            batch.append({
+                'ref_name': ref_name,
+                'ref_seq': ref_seq,
+                'ref_file': ref_file})
 
-    def get_contigs_from_fasta(self):
-        """Prepare fasta files for exonerate.
+    db.insert_reference_genes(cxn, batch)
 
-        In this iteration we are getting the contigs from the given fasta
-        files.
-        """
-        log.info('{} contig insert: {}'.format(
-            util.as_word(self.iteration), self.args.assemblies_dir))
 
-        batch = []
+def create_reference_files(cxn):
+    """Create reference gene fasta files for exonerate."""
+    log.info('Preparing reference gene files for exonerate')
+    for ref in db.select_reference_genes(cxn):
+        with open(ref['ref_file'], 'w') as ref_file:
+            util.write_fasta_record(ref_file, ref['ref_name'], ref['ref_seq'])
 
-        ref_names = set(x['ref_name']
-                        for x in db.select_reference_genes(self.cxn))
 
-        pattern = join(self.args.assemblies_dir, '*.fasta')
-        for contig_path in sorted(glob(pattern)):
+def get_contigs_from_fasta(args, temp_dir, cxn, taxon_names, iteration):
+    """Prepare fasta files for exonerate.
 
-            if os.stat(contig_path).st_size == 0:
-                continue
+    In this iteration we are getting the contigs from the given fasta
+    files.
+    """
+    log.info('{} contig insert: {}'.format(
+        util.as_word(iteration), args.assemblies_dir))
 
-            tiebreaker = 0
+    batch = []
 
-            with open(contig_path) as contig_old:
-                for i, (contig_name, contig_seq) \
-                        in enumerate(SimpleFastaParser(contig_old)):
+    ref_names = set(x['ref_name'] for x in db.select_reference_genes(cxn))
 
-                    contig_file = basename(contig_path)
-                    ref_name, taxon_name = contig_file.split('.')[0:2]
+    pattern = join(args.assemblies_dir, '*.fasta')
+    for contig_path in sorted(glob(pattern)):
 
-                    if ref_name not in ref_names \
-                            or taxon_name not in self.taxon_names:
-                        continue
+        if os.stat(contig_path).st_size == 0:
+            continue
 
-                    tiebreaker += 1
-                    contig_name = util.clean_name(contig_name)
-                    contig_name = '{}_{}'.format(contig_name, tiebreaker)
+        tiebreaker = 0
 
-                    contig_file = abspath(join(self.temp_dir, contig_file))
+        with open(contig_path) as contig_old:
+            for i, (contig_name, contig_seq) \
+                    in enumerate(SimpleFastaParser(contig_old)):
 
-                    batch.append({
-                        'ref_name': ref_name,
-                        'taxon_name': taxon_name,
-                        'contig_name': contig_name,
-                        'contig_seq': contig_seq,
-                        'contig_file': contig_file,
-                        'contig_rec': i,
-                        'iteration': self.iteration})
+                contig_file = basename(contig_path)
+                ref_name, taxon_name = contig_file.split('.')[0:2]
 
-        db.insert_contigs(self.cxn, batch)
+                if ref_name not in ref_names or taxon_name not in taxon_names:
+                    continue
 
-    def get_contigs_from_previous_stitch(self):
-        """Prepare fasta files for exonerate.
+                tiebreaker += 1
+                contig_name = util.clean_name(contig_name)
+                contig_name = '{}_{}'.format(contig_name, tiebreaker)
 
-        In this iteration we are getting all of the contigs from the first
-        stitch and combining them into one long contig sequence.
-        """
-        log.info('{} contig insert'.format(util.as_word(self.iteration)))
-
-        batch = []
-
-        for ref in db.select_reference_genes(self.cxn):
-            ref_name = ref['ref_name']
-
-            for taxon_name in self.taxon_names:
-
-                seqs = []
-                contig_name = '{}.{}'.format(ref_name, taxon_name)
-                contig_file = '{}.stitched.fasta'.format(contig_name)
-                contig_file = abspath(join(self.temp_dir, contig_file))
-
-                for contig in db.select_stitched_contigs(
-                        self.cxn,
-                        ref_name,
-                        taxon_name,
-                        iteration=self.iteration - 1):
-
-                    seqs.append(contig['seq'])
+                contig_file = abspath(join(temp_dir, contig_file))
 
                 batch.append({
                     'ref_name': ref_name,
                     'taxon_name': taxon_name,
                     'contig_name': contig_name,
-                    'contig_seq': ''.join(seqs),
+                    'contig_seq': contig_seq,
                     'contig_file': contig_file,
-                    'contig_rec': 1,
-                    'iteration': self.iteration})
+                    'contig_rec': i,
+                    'iteration': iteration})
 
-        db.insert_contigs(self.cxn, batch)
+    db.insert_contigs(cxn, batch)
 
-    def contig_file_write(self):
-        """Create contig fasta files for exonerate."""
-        log.info('{} contig file write'.format(util.as_word(self.iteration)))
 
-        for contig_path in db.select_contig_files(
-                self.cxn, iteration=self.iteration):
-            contig_file = contig_path['contig_file']
-            with open(contig_file, 'w') as fasta_file:
-                for contig in db.select_contigs_in_file(
-                        self.cxn, contig_file, iteration=self.iteration):
-                    util.write_fasta_record(
-                        fasta_file,
-                        contig['contig_name'],
-                        contig['contig_seq'])
+def get_contigs_from_previous_stitch(temp_dir, cxn, taxon_names, iteration):
+    """Prepare fasta files for exonerate.
 
-    def run_exonerate(self):
-        """Run exonerate on every reference sequence, taxon combination."""
-        for ref in db.select_reference_genes(self.cxn):
-            log.info('{} exonerate run for: {}'.format(
-                util.as_word(self.iteration), ref['ref_name']))
+    In this iteration we are getting all of the contigs from the first
+    stitch and combining them into one long contig sequence.
+    """
+    log.info('{} contig insert'.format(util.as_word(iteration)))
 
-            results_file = abspath(join(
-                    self.temp_dir,
-                    '{}.iteration_{}.results.fasta'.format(
-                        ref['ref_name'], self.iteration)))
+    batch = []
 
-            Path(results_file).touch()
+    for ref in db.select_reference_genes(cxn):
+        ref_name = ref['ref_name']
 
-            for contig_file in db.select_contigs(
-                    self.cxn, ref['ref_name'], iteration=self.iteration):
+        for taxon_name in taxon_names:
 
-                if util.fasta_file_is_empty(contig_file['contig_file']):
-                    continue
+            seqs = []
+            contig_name = '{}.{}'.format(ref_name, taxon_name)
+            contig_file = '{}.stitched.fasta'.format(contig_name)
+            contig_file = abspath(join(temp_dir, contig_file))
 
-                self.exonerate_command(ref, contig_file, results_file)
+            for contig in db.select_stitched_contigs(
+                    cxn, ref_name, taxon_name, iteration=iteration - 1):
 
-            self.insert_exonerate_results(results_file)
+                seqs.append(contig['seq'])
 
-    def exonerate_command(self, ref, contig_file, results_file):
-        """Build and run the exonerate program."""
-        cmd = util.shorten(r"""
-            exonerate --verbose 0 --model protein2genome {ref_file}
-            {contig_file}
-            --showvulgar no --showalignment no
-            --ryo ">{ref_name},{taxon_name},%ti,%qab,%qae\n%tcs\n"
-            >> {results_file};""").format(
-                ref_file=ref['ref_file'],
-                contig_file=contig_file['contig_file'],
-                ref_name=ref['ref_name'],
-                taxon_name=contig_file['taxon_name'],
-                results_file=results_file)
+            batch.append({
+                'ref_name': ref_name,
+                'taxon_name': taxon_name,
+                'contig_name': contig_name,
+                'contig_seq': ''.join(seqs),
+                'contig_file': contig_file,
+                'contig_rec': 1,
+                'iteration': iteration})
 
-        log.subcommand(cmd, self.temp_dir)
+    db.insert_contigs(cxn, batch)
 
-    def insert_exonerate_results(self, results_file):
-        """Insert the exonerate results into the database."""
-        ExonerateHeader = namedtuple(
-                'ExonerateHeader',
-                ['ref_name', 'taxon_name', 'contig_name', 'beg', 'end'])
 
-        batch = []
-        with open(results_file) as results_fasta:
-            for header, seq in SimpleFastaParser(results_fasta):
-                header = header.split(',')
-                field = ExonerateHeader(*header)
-                result = {
-                    'ref_name': field.ref_name,
-                    'taxon_name': field.taxon_name,
-                    'contig_name': field.contig_name,
-                    'beg': field.beg,
-                    'end': field.end,
-                    'iteration': self.iteration,
-                    'seq': seq}
-                batch.append(result)
+def contig_file_write(cxn, iteration):
+    """Create contig fasta files for exonerate."""
+    log.info('{} contig file write'.format(util.as_word(iteration)))
 
-        db.insert_exonerate_results(self.cxn, batch)
+    for contig_path in db.select_contig_files(cxn, iteration=iteration):
+        contig_file = contig_path['contig_file']
+        with open(contig_file, 'w') as fasta_file:
+            for contig in db.select_contigs_in_file(
+                    cxn, contig_file, iteration=iteration):
+                util.write_fasta_record(
+                    fasta_file,
+                    contig['contig_name'],
+                    contig['contig_seq'])
 
-    def stitch_everything(self):
-        """Build one long contig that covers the reference gene.
 
-        Build one long sequence from all of the non-overlapping contigs in the
-        exonerate results. We want maximal coverage of the reference gene.
-        """
-        log.info('{} stitching run'.format(util.as_word(self.iteration)))
+def run_exonerate(temp_dir, cxn, iteration):
+    """Run exonerate on every reference sequence, taxon combination."""
+    for ref in db.select_reference_genes(cxn):
+        log.info('{} exonerate run for: {}'.format(
+            util.as_word(iteration), ref['ref_name']))
 
-        for stitch in db.select_stitch(self.cxn, iteration=self.iteration):
+        results_file = abspath(join(
+                temp_dir,
+                '{}.iteration_{}.results.fasta'.format(
+                    ref['ref_name'], iteration)))
+
+        Path(results_file).touch()
+
+        for contig_file in db.select_contigs(
+                cxn, ref['ref_name'], iteration=iteration):
+
+            if util.fasta_file_is_empty(contig_file['contig_file']):
+                continue
+
+            exonerate_command(temp_dir, ref, contig_file, results_file)
+
+        insert_exonerate_results(cxn, iteration, results_file)
+
+
+def exonerate_command(temp_dir, ref, contig_file, results_file):
+    """Build and run the exonerate program."""
+    cmd = util.shorten(r"""
+        exonerate --verbose 0 --model protein2genome {ref_file}
+        {contig_file}
+        --showvulgar no --showalignment no
+        --ryo ">{ref_name},{taxon_name},%ti,%qab,%qae\n%tcs\n"
+        >> {results_file};""").format(
+            ref_file=ref['ref_file'],
+            contig_file=contig_file['contig_file'],
+            ref_name=ref['ref_name'],
+            taxon_name=contig_file['taxon_name'],
+            results_file=results_file)
+
+    log.subcommand(cmd, temp_dir)
+
+
+def insert_exonerate_results(cxn, iteration, results_file):
+    """Insert the exonerate results into the database."""
+    ExonerateHeader = namedtuple(
+            'ExonerateHeader',
+            ['ref_name', 'taxon_name', 'contig_name', 'beg', 'end'])
+
+    batch = []
+    with open(results_file) as results_fasta:
+        for header, seq in SimpleFastaParser(results_fasta):
+            header = header.split(',')
+            field = ExonerateHeader(*header)
+            result = {
+                'ref_name': field.ref_name,
+                'taxon_name': field.taxon_name,
+                'contig_name': field.contig_name,
+                'beg': field.beg,
+                'end': field.end,
+                'iteration': iteration,
+                'seq': seq}
+            batch.append(result)
+
+    db.insert_exonerate_results(cxn, batch)
+
+
+def stitch_everything(args, cxn, iteration):
+    """Build one long contig that covers the reference gene.
+
+    Build one long sequence from all of the non-overlapping contigs in the
+    exonerate results. We want maximal coverage of the reference gene.
+    """
+    log.info('{} stitching run'.format(util.as_word(iteration)))
+
+    for thread in db.select_stitch(cxn, iteration=iteration):
+        contigs = []
+        position = 0
+        prev_contig = {'end': -1}
+        curr_contig = None
+
+        while prev_contig:
+
+            if prev_contig['end'] > 0:
+                curr_contig = db.select_overlap(
+                    cxn,
+                    thread['ref_name'],
+                    thread['taxon_name'],
+                    prev_contig['beg'] + 1,
+                    prev_contig['end'] - args.overlap,
+                    prev_contig['end'],
+                    iteration=iteration)
+
+            if not curr_contig:
+                curr_contig = db.select_next(
+                    cxn,
+                    thread['ref_name'],
+                    thread['taxon_name'],
+                    beg=prev_contig['end'] - args.overlap,
+                    iteration=iteration)
+
+            if curr_contig:
+                curr_contig = dict(curr_contig)
+                position += 1
+                contigs.append({
+                    'ref_name': thread['ref_name'],
+                    'taxon_name': thread['taxon_name'],
+                    'contig_name': curr_contig['contig_name'],
+                    'position': position,
+                    'iteration': iteration,
+                    'seq': curr_contig['seq']})
+
+            prev_contig = curr_contig
+
+        db.insert_stitched_genes(cxn, contigs)
+
+
+def stitch_with_gaps(args, cxn, taxon_names, iteration):
+    """Choose the contigs to cover the reference gene.
+
+    In this stitching iteration we are assembling the exon with gaps.
+    """
+    for ref in db.select_reference_genes(cxn):
+        ref_name = ref['ref_name']
+        ref_len = len(ref['ref_seq']) * CODON_LEN
+
+        log.info('{} stitching run for: {}'.format(
+                util.as_word(iteration), ref_name))
+
+        for taxon_name in taxon_names:
+
             contigs = []
             position = 0
             prev_contig = {'end': -1}
             curr_contig = None
+            first_time = True
 
             while prev_contig:
+                seq = ''
 
-                if prev_contig['end'] > 0:
+                if not first_time:
                     curr_contig = db.select_overlap(
-                        self.cxn,
-                        stitch['ref_name'],
-                        stitch['taxon_name'],
+                        cxn,
+                        ref_name,
+                        taxon_name,
                         prev_contig['beg'] + 1,
-                        prev_contig['end'] - self.args.overlap,
+                        prev_contig['end'] - args.overlap,
                         prev_contig['end'],
-                        iteration=self.iteration)
+                        iteration=iteration)
+                    if curr_contig:
+                        curr_contig = dict(curr_contig)
+                        beg = prev_contig['end'] - curr_contig['beg'] - 1
+                        seq = curr_contig['seq'][beg * CODON_LEN:]
 
                 if not curr_contig:
                     curr_contig = db.select_next(
-                        self.cxn,
-                        stitch['ref_name'],
-                        stitch['taxon_name'],
-                        beg=prev_contig['end'] - self.args.overlap,
-                        iteration=self.iteration)
+                        cxn,
+                        ref_name,
+                        taxon_name,
+                        beg=prev_contig['end'] - args.overlap,
+                        iteration=iteration)
+                    if curr_contig:
+                        curr_contig = dict(curr_contig)
+                        seq = curr_contig['seq']
+                        gap = curr_contig['beg'] - 1
+                        gap -= max(-1, prev_contig['end'])
+                        if gap > 0:
+                            position += 1
+                            contigs.append({
+                                'ref_name': ref_name,
+                                'taxon_name': taxon_name,
+                                'contig_name': None,
+                                'position': position,
+                                'iteration': iteration,
+                                'seq': 'N' * (gap * CODON_LEN)})
 
                 if curr_contig:
-                    curr_contig = dict(curr_contig)
-                    position += 1
-                    contigs.append({
-                        'ref_name': stitch['ref_name'],
-                        'taxon_name': stitch['taxon_name'],
-                        'contig_name': curr_contig['contig_name'],
-                        'position': position,
-                        'iteration': self.iteration,
-                        'seq': curr_contig['seq']})
-
-                prev_contig = curr_contig
-
-            db.insert_stitched_genes(self.cxn, contigs)
-
-    def stitch_with_gaps(self):
-        """Choose the contigs to cover the reference gene.
-
-        In this stitching iteration we are assembling the exon with gaps.
-        """
-        for ref in db.select_reference_genes(self.cxn):
-            ref_name = ref['ref_name']
-            ref_len = len(ref['ref_seq']) * CODON_LEN
-
-            log.info('{} stitching run for: {}'.format(
-                    util.as_word(self.iteration), ref_name))
-
-            for taxon_name in self.taxon_names:
-
-                contigs = []
-                position = 0
-                prev_contig = {'end': -1}
-                curr_contig = None
-                first_time = True
-
-                while prev_contig:
-                    seq = ''
-
-                    if not first_time:
-                        curr_contig = db.select_overlap(
-                            self.cxn,
-                            ref_name,
-                            taxon_name,
-                            prev_contig['beg'] + 1,
-                            prev_contig['end'] - self.args.overlap,
-                            prev_contig['end'],
-                            iteration=self.iteration)
-                        if curr_contig:
-                            curr_contig = dict(curr_contig)
-                            beg = prev_contig['end'] - curr_contig['beg'] - 1
-                            seq = curr_contig['seq'][beg * CODON_LEN:]
-
-                    if not curr_contig:
-                        curr_contig = db.select_next(
-                            self.cxn,
-                            ref_name,
-                            taxon_name,
-                            beg=prev_contig['end'] - self.args.overlap,
-                            iteration=self.iteration)
-                        if curr_contig:
-                            curr_contig = dict(curr_contig)
-                            seq = curr_contig['seq']
-                            gap = curr_contig['beg'] - 1
-                            gap -= max(-1, prev_contig['end'])
-                            if gap > 0:
-                                position += 1
-                                contigs.append({
-                                    'ref_name': ref_name,
-                                    'taxon_name': taxon_name,
-                                    'contig_name': None,
-                                    'position': position,
-                                    'iteration': self.iteration,
-                                    'seq': 'N' * (gap * CODON_LEN)})
-
-                    if curr_contig:
-                        position += 1
-                        contigs.append({
-                            'ref_name': ref_name,
-                            'taxon_name': taxon_name,
-                            'contig_name': curr_contig['contig_name'],
-                            'position': position,
-                            'iteration': self.iteration,
-                            'seq': seq})
-
-                    prev_contig = curr_contig
-                    first_time = False
-
-                # Final NNNs
-                stitch_len = sum(len(x['seq']) for x in contigs)
-                missing = ref_len - stitch_len
-                if missing > 0:
                     position += 1
                     contigs.append({
                         'ref_name': ref_name,
                         'taxon_name': taxon_name,
-                        'contig_name': None,
+                        'contig_name': curr_contig['contig_name'],
                         'position': position,
-                        'iteration': self.iteration,
-                        'seq': 'N' * missing})
-                db.insert_stitched_genes(self.cxn, contigs)
+                        'iteration': iteration,
+                        'seq': seq})
 
-    def output_stitched_genes(self):
-        """Print results."""
+                prev_contig = curr_contig
+                first_time = False
 
-        for ref in db.select_reference_genes(self.cxn):
-            ref_name = ref['ref_name']
+            # Final NNNs
+            stitch_len = sum(len(x['seq']) for x in contigs)
+            missing = ref_len - stitch_len
+            if missing > 0:
+                position += 1
+                contigs.append({
+                    'ref_name': ref_name,
+                    'taxon_name': taxon_name,
+                    'contig_name': None,
+                    'position': position,
+                    'iteration': iteration,
+                    'seq': 'N' * missing})
+            db.insert_stitched_genes(cxn, contigs)
 
-            out_path = '{}.{}.stitched_exons.fasta'.format(
-                    self.args.output_prefix, ref_name)
 
-            with open(out_path, 'w') as out_file:
+def output_stitched_genes(args, cxn, taxon_names, iteration):
+    """Print results."""
+    for ref in db.select_reference_genes(cxn):
+        ref_name = ref['ref_name']
 
-                for taxon_name in self.taxon_names:
-                    seqs = []
+        out_path = '{}.{}.stitched_exons.fasta'.format(
+                args.output_prefix, ref_name)
 
-                    hits = db.select_stitched_contig_count(
-                        self.cxn,
-                        ref_name,
-                        taxon_name,
-                        iteration=self.iteration)
-
-                    has_hits = 'hits' if hits else 'no hits'
-                    log.info('{}.{} has {}'.format(
-                        ref_name, taxon_name, has_hits))
-
-                    if not hits:
-                        continue
-
-                    for contig in db.select_stitched_contigs(
-                            self.cxn,
-                            ref_name,
-                            taxon_name,
-                            iteration=self.iteration):
-
-                        seqs.append(contig['seq'])
-
-                    header = taxon_name
-                    if self.args.reference_name:
-                        header = '{}.{}'.format(ref_name, taxon_name)
-
-                    util.write_fasta_record(out_file, header, ''.join(seqs))
-
-    def output_summary_per_gene(self):
-        """Print per gene summary statistics."""
-        out_path = '{}.summary_stats_per_gene.csv'.format(
-                self.args.output_prefix)
         with open(out_path, 'w') as out_file:
-            writer = csv.writer(out_file)
-            writer.writerow(
-                    ['Locus', 'Taxon', 'Query_Length', 'Target_Length'])
 
-            for stats in db.select_per_gene_stats(self.cxn):
-                writer.writerow([
-                    stats['ref_name'],
-                    stats['taxon_name'],
-                    stats['query_len'],
-                    stats['target_len']])
+            for taxon_name in taxon_names:
+                seqs = []
 
-    def output_summary_per_taxon(self):
-        """Print per taxon summary statistics."""
-        out_path = '{}.summary_stats_per_taxon.csv'.format(
-                self.args.output_prefix)
-        with open(out_path, 'w') as out_file:
-            writer = csv.writer(out_file)
+                hits = db.select_stitched_contig_count(
+                    cxn,
+                    ref_name,
+                    taxon_name,
+                    iteration=iteration)
+
+                has_hits = 'hits' if hits else 'no hits'
+                log.info('{}.{} has {}'.format(
+                    ref_name, taxon_name, has_hits))
+
+                if not hits:
+                    continue
+
+                for contig in db.select_stitched_contigs(
+                        cxn, ref_name, taxon_name, iteration=iteration):
+
+                    seqs.append(contig['seq'])
+
+                header = taxon_name
+                if args.reference_name:
+                    header = '{}.{}'.format(ref_name, taxon_name)
+
+                util.write_fasta_record(out_file, header, ''.join(seqs))
+
+
+def output_summary_per_gene(args, cxn):
+    """Print per gene summary statistics."""
+    out_path = '{}.summary_stats_per_gene.csv'.format(args.output_prefix)
+    with open(out_path, 'w') as out_file:
+        writer = csv.writer(out_file)
+        writer.writerow(['Locus', 'Taxon', 'Query_Length', 'Target_Length'])
+
+        for stats in db.select_per_gene_stats(cxn):
             writer.writerow([
-                'Taxon',
-                'Number_Genes',
-                'Full_Exons',
-                '95%', '90%', '80%', '70%', '50%', '10%'])
+                stats['ref_name'],
+                stats['taxon_name'],
+                stats['query_len'],
+                stats['target_len']])
 
-            for stats in db.select_per_taxon_stats(self.cxn):
-                writer.writerow([
-                    stats['taxon_name'],
-                    stats['genes'],
-                    stats['eq100'],
-                    stats['gt95'],
-                    stats['ge90'],
-                    stats['ge80'],
-                    stats['ge70'],
-                    stats['ge50'],
-                    stats['ge10']])
+
+def output_summary_per_taxon(args, cxn):
+    """Print per taxon summary statistics."""
+    out_path = '{}.summary_stats_per_taxon.csv'.format(args.output_prefix)
+    with open(out_path, 'w') as out_file:
+        writer = csv.writer(out_file)
+        writer.writerow([
+            'Taxon',
+            'Number_Genes',
+            'Full_Exons',
+            '95%', '90%', '80%', '70%', '50%', '10%'])
+
+        for stats in db.select_per_taxon_stats(cxn):
+            writer.writerow([
+                stats['taxon_name'],
+                stats['genes'],
+                stats['eq100'],
+                stats['gt95'],
+                stats['ge90'],
+                stats['ge80'],
+                stats['ge70'],
+                stats['ge50'],
+                stats['ge10']])
