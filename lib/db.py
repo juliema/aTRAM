@@ -416,7 +416,7 @@ def get_all_assembled_contigs(cxn, bit_score=0, length=0):
           FROM aux.assembled_contigs
          WHERE bit_score >= ?
            AND len >= ?
-      ORDER BY bit_score DESC, iteration
+      ORDER BY bit_score DESC, len DESC, iteration
         """
 
     cxn.row_factory = sqlite3.Row
