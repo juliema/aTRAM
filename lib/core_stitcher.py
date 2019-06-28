@@ -43,6 +43,7 @@ def stitch(args):
         get_contigs_from_fasta(args, temp_dir, cxn, taxon_names, iteration)
         contig_file_write(cxn, iteration)
         run_exonerate(temp_dir, cxn, iteration)
+        early_exit_check(cxn)
 
         # Iterations 2-N get their data from the previous stitch
         for i in range(1, args.iterations):
@@ -292,6 +293,15 @@ def insert_exonerate_results(cxn, iteration, results_file):
             batch.append(result)
 
     db.insert_exonerate_results(cxn, batch)
+
+
+def early_exit_check(cxn):
+    """Check for empty results after the first iteration."""
+    if db.select_exonerate_count(cxn):
+        return
+    log.fatal(util.shorten("""
+        There were no hits. Please make sure your contig file names contain
+        both a reference gene name and taxon name in them."""))
 
 
 def stitch_everything(args, cxn, iteration):

@@ -124,6 +124,12 @@ def create_exonerate_table(cxn):
         """)
 
 
+def select_exonerate_count(cxn):
+    """Select all reference name, taxon name combination."""
+    result = cxn.execute("""SELECT COUNT(*) AS n FROM exonerate;""")
+    return result.fetchone()['n']
+
+
 def select_stitch(cxn, iteration=0):
     """Select all reference name, taxon name combination."""
     return cxn.execute(
