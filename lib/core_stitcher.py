@@ -4,10 +4,11 @@ Stitch together exons from targeted assemblies.
 It uses amino acid targets and DNA assemblies from aTRAM.
 """
 
+import re
 import os
 from os.path import abspath, join, basename
 from pathlib import Path
-from collections import namedtuple
+from collections import namedtuple, defaultdict
 import csv
 from glob import glob
 from Bio.SeqIO.FastaIO import SimpleFastaParser
@@ -36,6 +37,7 @@ def stitch(args):
 
         taxon_names = get_taxa(args)
         insert_reference_genes(args, temp_dir, cxn)
+        check_file_counts(args, cxn, taxon_names)
         create_reference_files(cxn)
 
         # First iteration gets its data from the input
@@ -122,10 +124,52 @@ def create_reference_files(cxn):
             util.write_fasta_record(ref_file, ref['ref_name'], ref['ref_seq'])
 
 
+def check_file_counts(args, cxn, taxon_names):
+    """Only one contig file may match a reference/taxon pair."""
+    ref_names = set(x['ref_name'] for x in db.select_reference_genes(cxn))
+
+    pattern = join(args.assemblies_dir, args.file_filter)
+    contig_files = sorted(glob(pattern))
+
+    counts = defaultdict(list)
+    for contig_file in contig_files:
+        ref_name, taxon_name = parse_contig_file_name(
+                ref_names, taxon_names, contig_file)
+        if not ref_name or not taxon_name:
+            continue
+        counts[(ref_name, taxon_name)].append(contig_file)
+
+    counts = {k: v for k, v in counts.items() if len(v) > 1}
+
+    if not counts:
+        return
+
+    msg = []
+    for key, contig_files in counts.items():
+        msg.append(
+            'Multiple files match reference {} and taxon {}:'.format(*key))
+        msg += contig_files
+
+    log.fatal('\n'.join(msg))
+
+
 def parse_contig_file_name(ref_names, taxon_names, contig_file):
     """Extract the reference & taxon names from the contig file name."""
-    ref_name = [x for x in ref_names if x in contig_file] + [None]
-    taxon_name = [x for x in taxon_names if x in contig_file] + [None]
+    sep = r'[_. ]'
+
+    ref_names = sorted(ref_names, key=lambda x: (len(x), x), reverse=True)
+    ref_names = [x + sep for x in ref_names]
+
+    taxon_names = sorted(taxon_names, key=lambda x: (len(x), x), reverse=True)
+    taxon_names = [x + sep for x in taxon_names]
+
+    ref_name = [x[:-len(sep)] for x in ref_names if re.search(x, contig_file)]
+    taxon_name = [x[:-len(sep)] for x in taxon_names
+                  if re.search(x, contig_file)]
+
+    ref_name += [None]
+    taxon_name += [None]
+
     return ref_name[0], taxon_name[0]
 
 
@@ -460,9 +504,9 @@ def output_stitched_genes(args, cxn, taxon_names, iteration):
                     taxon_name,
                     iteration=iteration)
 
-                has_hits = 'hits' if hits else 'no hits'
-                log.info('{}.{} has {}'.format(
-                    ref_name, taxon_name, has_hits))
+                # has_hits = 'hits' if hits else 'no hits'
+                # log.info('{}.{} has {}'.format(
+                #     ref_name, taxon_name, has_hits))
 
                 if not hits:
                     continue
