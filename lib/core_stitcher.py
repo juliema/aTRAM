@@ -141,7 +141,7 @@ def get_contigs_from_fasta(args, temp_dir, cxn, taxon_names, iteration):
 
     ref_names = set(x['ref_name'] for x in db.select_reference_genes(cxn))
 
-    pattern = join(args.assemblies_dir, '*.fasta')
+    pattern = join(args.assemblies_dir, args.file_filter)
     for contig_path in sorted(glob(pattern)):
 
         if os.stat(contig_path).st_size == 0:

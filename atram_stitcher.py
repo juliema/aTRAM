@@ -76,6 +76,14 @@ def parse_command_line():
             differentiate output files.""")
 
     parser.add_argument(
+        '-f', '--file-filter', default='*.fasta',
+        help="""Use this to filter files in the assemblies directory. For 
+            example '*filtered*.fasta' will select all fasta files in the 
+            assemblies directory with the word filtered in them. The default 
+            is to select all fasta files in the assemblies directory 
+            '*.fasta'.""")
+
+    parser.add_argument(
             '--reference-name',  action='store_true',
             help="""Add the reference name to the final assembled gene name? 
                 if false the gene name in the reference file with just be the 
