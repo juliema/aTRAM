@@ -121,6 +121,13 @@ def create_reference_files(cxn):
             util.write_fasta_record(ref_file, ref['ref_name'], ref['ref_seq'])
 
 
+def parse_contig_file_name(ref_names, taxon_names, contig_file):
+    """Extract the reference & taxon names from the contig file name."""
+    ref_name = [x for x in ref_names if x in contig_file] + [None]
+    taxon_name = [x for x in taxon_names if x in contig_file] + [None]
+    return ref_name[0], taxon_name[0]
+
+
 def get_contigs_from_fasta(args, temp_dir, cxn, taxon_names, iteration):
     """Prepare fasta files for exonerate.
 
@@ -146,7 +153,8 @@ def get_contigs_from_fasta(args, temp_dir, cxn, taxon_names, iteration):
                     in enumerate(SimpleFastaParser(contig_old)):
 
                 contig_file = basename(contig_path)
-                ref_name, taxon_name = contig_file.split('.')[0:2]
+                ref_name, taxon_name = parse_contig_file_name(
+                        ref_names, taxon_names, contig_file)
 
                 if ref_name not in ref_names or taxon_name not in taxon_names:
                     continue
