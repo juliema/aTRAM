@@ -42,6 +42,7 @@ def parse_command_line():
         """
 
     parser = argparse.ArgumentParser(
+        fromfile_prefix_chars='@',
         formatter_class=argparse.RawDescriptionHelpFormatter,
         description=textwrap.dedent(description))
 
@@ -83,7 +84,7 @@ def parse_command_line():
 
     blast_db = join('.', 'atram_' + date.today().isoformat())
     group.add_argument(
-        '-b', '--blast-db', '--output', '--db', default=blast_db, metavar='DB',
+        '-b', '--blast-db', '--db', default=blast_db, metavar='DB',
         help="""This is the prefix of all of the blast database files. So you
             can identify different blast database sets. You may include a
             directory as part of the prefix. The default is "{}".

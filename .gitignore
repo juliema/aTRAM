@@ -3,6 +3,7 @@
 *.swp
 __pycache__
 
+args/
 venv/*
 venv35/*
 temp*/*

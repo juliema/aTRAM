@@ -45,7 +45,7 @@ def parse_command_line():
 
     parser.add_argument(
         '-O', '--overlap', type=int, default=10,
-        help="""Contigs must overlap by this many codons before it is 
+        help="""Contigs must overlap by this many codons before it is
             considered a real overlap.""")
 
     parser.add_argument(
@@ -64,9 +64,9 @@ def parse_command_line():
             "atram_stitcher_<date>.log".""")
 
     parser.add_argument(
-            '-i', '--iterations', type=int, default=2, metavar='N',
-            help="""The number of times to run the main stitcher loop. This 
-                must be either 1 or 2, the default is 2.""")
+        '-i', '--iterations', type=int, default=2, metavar='N',
+        help="""The number of times to run the main stitcher loop. This
+            must be either 1 or 2, the default is 2.""")
 
     parser.add_argument(
         '-o', '--output-prefix',
@@ -77,18 +77,18 @@ def parse_command_line():
 
     parser.add_argument(
         '-f', '--file-filter', default='*.fasta',
-        help="""Use this to filter files in the assemblies directory. For 
-            example '*filtered*.fasta' will select all fasta files in the 
-            assemblies directory with the word filtered in them. The default 
-            is to select all fasta files in the assemblies directory 
+        help="""Use this to filter files in the assemblies directory. For
+            example '*filtered*.fasta' will select all fasta files in the
+            assemblies directory with the word filtered in them. The default
+            is to select all fasta files in the assemblies directory
             '*.fasta'.""")
 
     parser.add_argument(
-            '--reference-name',  action='store_true',
-            help="""Add the reference name to the final assembled gene name? 
-                if false the gene name in the reference file with just be the 
-                <taxon-name> if you select this then the assembled gene name 
-                will be <reference-name>.<taxon-name>.""")
+        '--reference-name', action='store_true',
+        help="""Add the reference name to the final assembled gene name?
+            if false the gene name in the reference file with just be the
+            <taxon-name> if you select this then the assembled gene name
+            will be <reference-name>.<taxon-name>.""")
 
     args = parser.parse_args()
 
