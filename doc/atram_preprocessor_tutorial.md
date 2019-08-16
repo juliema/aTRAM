@@ -61,7 +61,7 @@ When you run the command you should see atram_preprocessor log output that looks
 
 There is some information about the aTRAM run-time environment. Following that, we are noting when important events in the database build process happened. Finally, we timestamp when aTRAM is finished. In this case the "Finished making blast all 1 DBs" indicates that the size of the input FASTA files are small and there is only one BLAST database shard needed. When you run this on larger datasets there will be more.
 
-# atram_preprocessor.py output
+## atram_preprocessor.py output
 
 Let's look at what is created in the atram_db directory:
 - A set of BLAST files starting `tutorial.001.*`. The '001' is the shard count.
