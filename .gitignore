@@ -12,11 +12,11 @@ input/
 output/
 query/
 db/
+atram_db/
 perl/
 log/
 old/
 admin/
-data/
 build/
 junk*
 exon_stitching/
