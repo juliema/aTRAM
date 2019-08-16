@@ -32,6 +32,9 @@ exon_stitching/
 .spyproject/
 .mypy_cache/
 
+.ipynb_checkpoints/
+.~lock*
+
 build/
 dist/
 exon_stitching/
