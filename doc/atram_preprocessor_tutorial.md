@@ -4,7 +4,6 @@ This program reads a series of related FASTA or FASTQ files and builds an aTRAM 
 
 - An SQLite3 database that holds the contents of the FASTA/FASTQ files in a format that can be easily and quickly queried. It takes three pieces of information from the original files are: the sequence name, sequence end (1, 2, or none), and the sequence itself.
 
-
 - A set of BLAST databases. atram.py uses multiple BLAST databases. This dataset division enables parallelized read queries and greatly improves performance even for serial queries.
 
 ![atram_preprocessor.py](images/atram_preprocessor.png "aTRAM pre-processor")

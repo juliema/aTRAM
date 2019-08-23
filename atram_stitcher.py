@@ -85,7 +85,7 @@ def parse_command_line():
 
     parser.add_argument(
         '--reference-name', action='store_true',
-        help="""Add the reference name to the final assembled gene name?
+        help="""Prepend the reference name to the final assembled gene name?
             if false the gene name in the reference file with just be the
             <taxon-name> if you select this then the assembled gene name
             will be <reference-name>.<taxon-name>.""")

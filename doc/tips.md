@@ -2,8 +2,6 @@
 
 ## Creating an argument file
 
-TODO: Add an atram.py example.
-
 There are a lot of arguments to aTRAM and even I don't remember them all. To help with this a lot of people create Bash scripts once they have tuned the arguments for their needs. I prefer to use a slightly different method, an argument file. This is a text file that lists the arguments to a program, one argument in long form per line.
 
 For the atram_preprocessor tutorial I would create a file, let's call it `atram_preprocessor.args`, like so:
@@ -15,5 +13,9 @@ For the atram_preprocessor tutorial I would create a file, let's call it `atram_
 ```
 And then you would use it like this:
 ```bash
-../atram_preprocessor.py @atram_preprocessor.args
+atram_preprocessor.py @atram_preprocessor.args
+```
+You can still add command-line arguments. Like so:
+```bash
+atram_preprocessor.py @atram_preprocessor.args --cpus=8
 ```
