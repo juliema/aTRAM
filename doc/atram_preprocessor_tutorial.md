@@ -1,5 +1,9 @@
 # A tutorial for atram_preprocessor.py
 
+- [The input FASTA files](#The-input-FASTA-files)
+- [Naming the database](#Naming-the-database)
+- [Running the preprocessor](#Running-the-preprocessor)
+
 This program reads a series of related FASTA or FASTQ files and builds an aTRAM
 database. This aTRAM database is actually two or more databases
 (typically several).
@@ -38,7 +42,7 @@ input files are called `tutorial_end_1.fasta.gz` and `tutorial_end_2.fasta.gz`
 I'm going to call the database `tutorial` but you may use whatever name you
 want.
 
-## Running aTRAM
+## Running the preprocessor
 
 We now have everything we need to run the aTRAM preprocessor.
 - Where we are storing the aTRAM databases (`/path/to/atram_db/`)

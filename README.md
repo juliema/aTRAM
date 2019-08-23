@@ -1,5 +1,12 @@
 # aTRAM: automated Target Restricted Assembly Method [![Build Status](https://travis-ci.org/juliema/aTRAM.svg?branch=master)](https://travis-ci.org/juliema/aTRAM)
 
+- [Background](#Background)
+- [Installation](#Installation)
+- [Quick start](#Quick-start)
+- [Documentation](#Documentation)
+
+## Background
+
 aTRAM ("automated target restricted assembly method") is an iterative assembler
 that performs reference-guided local de novo assemblies using a variety of
 available methods. It is well-suited to various tasks where Next-Generation
@@ -18,7 +25,7 @@ restricted assembly method a fast method for assembling loci across divergent
 taxa from next-generation sequencing data. BMC Bioinformatics 16:98
 DOI 10.1186/s12859-015-0515-2`
 
-A paper on aTRAM 2.0 is now in press:
+The reference for aTRAM 2.0:
 `Allen J.M., R. LaFrance, R. A. Folk, K. P. Johnson, and R. P. Guralnick
 In Press.  aTRAM 2.0: An improved, flexible locus assembler for NGS data.
 Evolutionary Informatics`
@@ -33,25 +40,28 @@ git clone https://github.com/juliema/aTRAM.git
 pip install --user --requirement atram/requirements.txt
 ```
 
-### aTRAM uses these programs so you need to install some of them.
+### aTRAM uses these programs so you need to install them.
 
 You will need to use a locally installed BLAST:
+
 - [BLAST](
 http://blast.ncbi.nlm.nih.gov/Blast.cgi?PAGE_TYPE=BlastDocs&DOC_TYPE=Download),
 version 2.7.1
 
 You will also need at least one of the supported assembly modules:
+
 - [Velvet](https://www.ebi.ac.uk/~zerbino/velvet/)
 - [Trinity](http://trinityrnaseq.github.io/), version 2.5.1
 - [Abyss](http://www.bcgsc.ca/platform/bioinfo/software/abyss), version 2.0.2
 - [SPAdes](http://cab.spbu.ru/software/spades/), version 3.11.1
 
 If you want to use the atram stitcher you will need to install exonerate:
+
 - [exonerate](
 https://www.ebi.ac.uk/about/vertebrate-genomics/software/exonerate-user-guide)
 
 
-## Quick start guide
+## Quick start
 
 Note: aTRAM 2 is not backwards compatible with aTRAM 1. It is also best to
 rebuild any libraries after major updates.
