@@ -5,24 +5,24 @@ assemblies using a variety of available methods. It is well-suited to various
 tasks where Next-Generation Sequencing (NGS) data needs to be queried for gene
 sequences, such as phylogenomics. It is actually a suite of programs:
 
-1. [atram_preprocessor.py](#atram_preprocessor.py): Builds a set of databases
+1. [atram_preprocessor.py](#atram_preprocessor): Builds a set of databases
 from your input NGS sequences. One is an SQLite3 database that holds the
 original NGS sequences. It also creates a set of BLAST databases for finding
 sequence matches.
 
-2. [atram.py](#atram.py): Uses the databases from step 1 along with a reference
+2. [atram.py](#atram): Uses the databases from step 1 along with a reference
 sequence (aka a bait sequence) and a *de novo* assembler program. It's the part
 of aTRAM that actually builds the assemblies.
     1. [BLAST bait sequences against the aTRAM BLAST databases](#BLAST-bait-sequences-against-the-aTRAM-BLAST-databases)
     1. [Find mate pairs to in the aTRAM SQLite3 database for all of the BLAST hits](#Find-mate-pairs-to-in-the-aTRAM-SQLite3-database-for-all-of-the-BLAST-hits)
-    1. [Use a *de novo* assembler to build contigs](#Use-a-*de-novo*-assembler-to-build-contigs)
+    1. [Use a *de novo* assembler to build contigs](#Use-a-de-novo-assembler-to-build-contigs)
     1. [Assembled contigs become the new bait sequences for the next iteration](#Assembled-contigs-become-the-new-bait-sequences-for-the-next-iteration)
 
-3. [atram_stitcher.py](#atram_stitcher.py): Takes the assemblies from atram.py
+3. [atram_stitcher.py](#atram_stitcher): Takes the assemblies from atram.py
 and joins them together. It also uses an iterative approach and the
 Exonerate program.
 
-## atram_preprocessor.py
+## atram_preprocessor
 
 This program reads a series of related FASTA or FASTQ files and builds an aTRAM
 database. This aTRAM database is actually two or more databases
@@ -44,7 +44,7 @@ SQLite3 and BLAST databases will also be built.
 
 ![atram_preprocessor.py](images/atram_preprocessor.png "aTRAM pre-processor")
 
-## atram.py
+## atram
 
 This is the heart of aTRAM. This program performs the actual gene assembly.
 There are many options and knobs for atram.py but the basic algorithm is:
@@ -73,7 +73,7 @@ process.
 
 ![atram.py step 2](images/atram_step_2.png?03 "aTRAM step 2")
 
-### Use a *de novo* assembler to build contigs
+### Use a de novo assembler to build contigs
 
 Contigs are built up using any one of the following assemblers: Velvet,
 Trinity, Abyss, or Spades. Further, because the reads are assembled *de novo*,
@@ -93,7 +93,7 @@ limit is reached or no new contigs are assembled.
 
 ![atram.py step 4](images/atram_step_4.png?05 "aTRAM step 2")
 
-## atram_stitcher.py
+## atram_stitcher
 
 This program takes the contigs assembled by atram.py and stitches them into
 longer sequences.
