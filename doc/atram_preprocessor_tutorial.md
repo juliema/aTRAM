@@ -89,3 +89,8 @@ than the output to the screen and is useful for debugging problems.
 - An SQLite3 database that contains the data from the FASTA files that atram.py
 needs. The data in this database is tightly coupled to the BLAST databases so
 if there is a need to edit your data you will need to rerun the preprocessor.
+
+## Next
+
+We are now ready to run atram itself. See the 
+[aTRAM tutorial](atram_tutorial.md).

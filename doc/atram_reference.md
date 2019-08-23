@@ -1,144 +1,208 @@
+# aTRAM
 
+This  takes a query sequence and a blast database built with the 
+atram_preprocessor.py script and builds assemblies.
 
-Fill in the capitalized portions with your options, and fill in the paths.
+If you specify more than one query sequence and/or more than one blast
+database then aTRAM will build one assembly for each query/blast
+DB pair.
 
-There are many more options than this, so for reference list them like so:
+NOTE: You may use a text file to hold the command-line arguments
+like: @/path/to/args.txt. This is particularly useful when specifying
+multiple blast databases or multiple query sequences.
 
-atram.py -h`
+ ## Arguments
+ 
+`-h, --help`
 
-# aTRAM main script arguments
+Show this help message and exit.
 
-Several arguments have synonyms, given below.
+`--version`
 
-## General:
+Show program's version number and exit.
 
-- `-h, --help`
+`-b DB [DB ...], --blast-db DB [DB ...], --sra DB [DB ...], --db DB [DB ...],
+--database DB [DB ...]`
+                    
+This needs to match the DB prefix you entered for
+atram_preprocessor.py. You may repeat this argument to
+run the --query sequence(s) against multiple blast
+databases.
+                    
+`-q QUERY [QUERY ...], --query QUERY [QUERY ...], --target QUERY [QUERY ...],
+--probe QUERY [QUERY ...]`
 
-  - List arguments
+The path to the fasta file with sequences of interest.
+You may repeat this argument. If you do then Each
+--query sequence file will be run against every
+--blast-db.
 
-- `--version`
+`-Q QUERY_SPLIT [QUERY_SPLIT ...], --query-split QUERY_SPLIT [QUERY_SPLIT ...],
+--target-split QUERY_SPLIT [QUERY_SPLIT ...]
+`
+The path to the fasta file with multiple sequences of
+interest. This will take every sequence in the fasta
+file and treat it as if it were its own --query
+argument. So every sequence in --query-split will be
+run against every --blast-db.
 
-  - Give version number
+`-o OUTPUT_PREFIX, --output-prefix OUTPUT_PREFIX`
 
-## Required arguments:
+This is the prefix of all of the output files. So you
+can identify different blast output file sets. You may
+include a directory as part of the prefix. aTRAM will
+add suffixes to differentiate output files.
 
-- `-b DB, --blast-db DB, --sra DB, --db DB, --database DB`
+`-a {abyss,trinity,velvet,spades,none}, --assembler
+{abyss,trinity,velvet,spades,none}`
 
-  - The aTRAM library. match the name you gave for the library prefix in `atram_preprocessor.py`.
+Which assembler to use. Choosing "none" (the default)
+will do a single blast run and stop before any
+assembly.
 
-- `-o OUTPUT, --output OUTPUT`
+`-i N, --iterations N`
 
-  - Give a prefix for output files. You may include a directory path as part of the prefix.
+The number of pipeline iterations. The default is "5".
 
-- `-q QUERY, --query QUERY, --target QUERY` or
-  `-Q QUERY_SPLIT, --query QUERY_SPLIT, --target QUERY_SPLIT`
+`-p, --protein`
 
-  - This specifies the query sequence or sequences.  If one sequence use the "-q" option.  For many query sequences, "-Q".
+Are the query sequences protein? aTRAM will guess if you skip this argument.
 
-## Optional aTRAM arguments:
+`--fraction FRACTION`
 
-- `a {abyss,trinity,velvet,spades}, --assembler {abyss,trinity,velvet,spades}`
+Use only the specified fraction of the aTRAM database. The default is 1.0.
 
-  - Choose which assembler to use from the list. If you do not use this argument then aTRAM will do a single blast run and stop before assembly.
+`--cpus CPUS, --processes CPUS, --max-processes CPUS`
 
-- `-i N, --iterations N`
+Number of CPU processors to use. This will also be
+used for the assemblers when possible. We will use 8
+out of 12 CPUs.
 
-  - The number of pipeline iterations. The default is "5".
+`--log-file LOG_FILE`
 
-- `-p, --protein`
+Log file (full path)".
 
-  - Are the query sequences protein? aTRAM will guess if you skip this argument.
+`--path PATH`
 
-- `--fraction FRACTION`
+If the assembler or blast you want to use is not in
+your $PATH then use this to prepend directories to
+your path.
 
-  - Use only the specified fraction of the aTRAM database. The default is to use all data (=1.0). This option is useful for very large datasets and for high-copy targets such as mitochondria.
+`-t DIR, --temp-dir DIR`
 
-- `--cpus CPUS, --processes CPUS, --max-processes CPUS`
+Place temporary files in this directory. All files
+will be deleted after aTRAM completes. The directory
+must exist.
+                    
+`--keep-temp-dir`
 
-  - We default to a number that will not use up all of your cores. You may set this number to use more preocessors, but be aware that aTRAM uses a lot of temporary disk space (usually in /tmp), so you should balance the increased parallelization with the increase in temporary disk space. We should also note that you can use the `--temp-dir` option (below) to use a higher capacity disk.
+This flag will keep the temporary files in the --temp-dir around for debugging.
 
-- `--log-file LOG_FILE`
-
-  - Specifies the full path of the log file (full path). The default is to use the DIR and DB arguments to come up with a name like so: `DIR/DB_atram.log`
-
-- `-T SECONDS, --timeout SECONDS`
-
-  - How many seconds to wait for an assembler before stopping the run. To wait forever set this to 0\. The default is "300" (5 minutes). This option was added to account for assembler module errors we observed in Abyss when long reads are used; under certain conditions Abyss can rarely run indefinitely and must be killed.
-
-## Optional values for blast-filtering contigs:
-
-- `--bit-score SCORE`
-
-  - Remove contigs that have a value less than this. The default is 70.0\. This is turned off by the --no-filter argument. Increasing this arguement is useful if you are getting non-target contigs; if small or divergent targets are missed, reducing it can also be tried.
-
-- `--contig-length CONTIG_LENGTH, --length CONTIG_LENGTH`
-
-  - Remove blast hits that are shorter than this length. The default is 100\. This is turned off by the --no-filter argument.
-
-- `--no-filter`
-
-  - Do not filter the assembled contigs. This will set both the --bit-score and --contig-length to 0
-
-## Optional blast arguments:
-
-- `--db-gencode CODE`
-
-  - The genetic code to use during blast runs. The default is "1", the standard eukaryotic code. For chloroplast, mitochondrial, and bacterial protein targets, refer to [NCBI codes](https://www.ncbi.nlm.nih.gov/Taxonomy/Utils/wprintgc.cgi#SG1) for the correct option.
-
-- `--evalue EVALUE`
-
-  - The default evalue for BLAST is 1e-10.
-
-- `--max-target-seqs MAX`
-
-  - Maximum hit sequences per shard. The default is calculated automatically based on the available memory and the number of shards. this could be useful for very high-copy targets.
-
-optional assembler arguments:
-
-- `--no-long-reads`
-
-  - Do not use long reads during assembly (Abyss, Trinity, Velvet). This controls behavior of a new option, where previously recovered contigs are used in assemblies as "long read data." If jobs do not finish due to assembly module problems, refer above to time limits on aTRAM runs.
-
-- `--kmer KMER`
-
-  - k-mer size. The default is 64 for Abyss and 31 for Velvet. Note: the maximum kmer length for Velvet is 31 (Abyss, Velvet).
-
-- `--mpi`
-
-  - Use MPI for this assembler. The assembler must have been compiled to use MPI (Abyss) and mpirun must be available in the path.
-
-- `--bowtie2`
-
-  - Use bowtie2 during assembly (Trinity).
-
-- `--max-memory MEMORY`
-
-  - Maximum amount of memory to use in gigabytes. The default is 30 (Trinity, Spades).
-
-- `--exp-coverage EXP_COVERAGE, --expected-coverage EXP_COVERAGE`
-
-  - The expected coverage of the region. The default is 30 (Velvet). Refer to the Velvet manual for this option.
-
-- `--ins-length INS_LENGTH`
-
-  - The mean size of the fragments used in the short-read library. The default is 300 (Velvet). This can be calculated from short read data given a reference, or refer to your library construction solution.
-
-- `--min-contig-length MIN_CONTIG_LENGTH`
-
-  - The minimum contig length used by the assembler itself. The default is 100 (Velvet).
-
-- `--cov-cutoff COV_CUTOFF`
-
-  - Read coverage cutoff value (Spades). Must be a positive float value, or "auto", or "off". The default value is "off".
-
-# Assembling multiple genes against a library
-
- aTRAM2.0 can assemble a set of genes against a single library.  Create a single file with multiple fasta-formatted sequences and then simply use `-Q QUERY_SPLIT` where QUERY_SPLIT is the name of the file you created above.
-
-
-# Example of running a shell loop
-
-In many cases it is convenient to run aTRAM 2 as a loop, assembling a set of genes for a set of taxa. These can be set up in two parts, as shown below.  Note that aTRAM2 has built in functions supporting assembly of many genes against a library, as described just above.
+`-T SECONDS, --timeout SECONDS`
+
+How many seconds to wait for an assembler before
+stopping the run. To wait forever set this to 0. The
+default is "300" (5 minutes).
+
+`--no-filter`
+
+Do not filter the assembled contigs. This will: set
+both the --bit-score and --contig-length to 0
+                    
+`--bit-score SCORE`
+
+Remove contigs that have a value less than this. The
+default is "70.0". This is turned off by the --no-
+filter argument.
+
+`--contig-length CONTIG_LENGTH, --length CONTIG_LENGTH`
+                    
+Remove blast hits that are shorter than this length.
+The default is "100". This is turned off by the --no-
+filter argument.
+
+`--db-gencode CODE
+`
+The genetic code to use during blast runs. The default is "1".
+
+`--evalue EVALUE`
+
+The default evalue is "1e-10".
+
+`--word-size WORD_SIZE
+`
+Word size for wordfinder algorithm. 'Must be >= 2.
+
+`--max-target-seqs MAX`
+
+Maximum hit sequences per shard. Default is calculated
+based on the available memory and the number of
+shards.
+                    
+`--batch-size BATCH_SIZE`
+                    
+Use this option to control blast memory usage and the
+concatenation of queries. Setting this value too low
+can degrade performance.
+
+`--no-long-reads`
+
+Do not use long reads during assembly. (Abyss, Trinity, Velvet)
+                    
+`--kmer KMER`
+
+k-mer size. The default is 64 for Abyss and 31 for
+Velvet. Note: the maximum kmer length for Velvet is
+31. (Abyss, Velvet)
+                    
+`--mpi`
+
+Use MPI for this assembler. The assembler 'must have
+been compiled to use MPI. (Abyss)
+
+`--bowtie2
+`
+Use bowtie2 during assembly. (Trinity)
+
+`--max-memory MEMORY`
+
+Maximum amount of memory to use in gigabytes. We will
+use 12 out of 24 GB of free/unused memory. (Trinity,
+Spades)
+
+`--exp-coverage EXP_COVERAGE, --expected-coverage EXP_COVERAGE`
+ 
+The expected coverage of the region. The default is
+"30". (Velvet)
+                    
+`--ins-length INS_LENGTH`
+                    
+The size of the fragments used in the short-read
+library. The default is "300". (Velvet)
+                    
+`--min-contig-length MIN_CONTIG_LENGTH`
+
+The minimum contig length used by the assembler
+itself. The default is "100". (Velvet)
+                    
+`--cov-cutoff COV_CUTOFF`
+                    
+Read coverage cutoff value. Must be a positive float
+value, or "auto", or "off". The default is "off".
+(Spades)
+
+## Assembling multiple genes against a library
+
+ aTRAM2.0 can assemble a set of genes against a single library. Create a single
+ file with multiple fasta-formatted sequences and then simply use `
+ -Q QUERY_SPLIT` where QUERY_SPLIT is the name of the file you created above.
+
+## Example of running a shell loop
+
+In many cases it is convenient to run aTRAM 2 as a loop, assembling a set of 
+genes for a set of taxa. These can be set up in two parts, as shown below.
+Note that aTRAM2 has built in functions supporting assembly of many genes
+against a library, as described just above.
 
 ```
 # Make aTRAM libraries
@@ -150,9 +214,11 @@ do
 done
 ```
 
-The part `${a}_P*.fq` will have to be modified to match the name pattern of your input fastq files.
+The part `${a}_P*.fq` will have to be modified to match the name pattern of 
+your input fastq files.
 
-Then, supposing we have a set of genes stored in a single file and wish to use Abyss:
+Then, supposing we have a set of genes stored in a single file and wish to use 
+Abyss:
 
 ```
 # Assemble genes

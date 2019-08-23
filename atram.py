@@ -21,9 +21,8 @@ from lib.core_atram import assemble
 def parse_command_line():
     """Process command-line arguments."""
     description = """
-        This is the aTRAM script. It takes a query sequence and a blast
-        database built with the atram_preprocessor.py script and builds an
-        assembly.
+        This  takes a query sequence and a blast database built with the 
+        atram_preprocessor.py script and builds assemblies.
 
         If you specify more than one query sequence and/or more than one blast
         database then aTRAM will build one assembly for each query/blast
