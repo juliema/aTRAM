@@ -116,15 +116,15 @@ atram_stitcher.py \
 
 ## Documentation
 
-- [aTRAM Overview](docs/introduction.md)
-- [Tips for using aTRAM](docs/tips.md)
+- [aTRAM Overview](doc/introduction.md)
+- [Tips for using aTRAM](doc/tips.md)
 
 ### Tutorials
-- [Pre-processing tutorial](docs/atram_preprocessor_tutorial.md)
-- [aTRAM tutorial](docs/atram_tutorial.md)
-- [Stitcher tutorial](docs/atram_stitcher_tutorial.md)
+- [Pre-processing tutorial](doc/atram_preprocessor_tutorial.md)
+- [aTRAM tutorial](doc/atram_tutorial.md)
+- [Stitcher tutorial](doc/atram_stitcher_tutorial.md)
 
 ### References
-- [atram_preprocessor.py](docs/atram_preprocessor_reference.md)
-- [atram.py](docs/atram_reference.md)
-- [atram_stitcher.py](docs/atram_stitcher_reference.md)
+- [atram_preprocessor.py](doc/atram_preprocessor_reference.md)
+- [atram.py](doc/atram_reference.md)
+- [atram_stitcher.py](doc/atram_stitcher_reference.md)
