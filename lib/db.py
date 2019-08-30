@@ -92,8 +92,7 @@ def create_metadata_table(cxn, args):
     """
     Create the metadata table.
 
-    A single record used to tell if we are running atram.py against the
-    schema version we built with atram_preprocessor.py.
+    Information used to tell how aTRAM was set up.
     """
     cxn.executescript("""
         DROP TABLE IF EXISTS metadata;
@@ -106,7 +105,7 @@ def create_metadata_table(cxn, args):
     with cxn:
         sql = """INSERT INTO metadata (label, value) VALUES (?, ?)"""
         cxn.execute(sql, ('version', DB_VERSION))
-        cxn.execute(sql, ('single_ends', bool(args['single_ends'])))
+        cxn.execute(sql, ('single_ends', bool(args.get('single_ends'))))
         cxn.commit()
 
 

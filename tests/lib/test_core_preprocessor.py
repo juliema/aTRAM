@@ -20,6 +20,7 @@ def set_up():
         'keep_temp_dir': False}
     return 'cxn', args
 
+
 @patch('lib.util.make_temp_dir')
 @patch('lib.util.update_temp_dir')
 @patch('lib.log.info')
@@ -53,7 +54,7 @@ def test_preprocess_01(
         call().__exit__(None, None, None)]
     connect.assert_has_calls(calls)
 
-    create_metadata_table.assert_called_once_with(dbh)
+    create_metadata_table.assert_called_once_with(dbh, args)
     create_sequences_table.assert_called_once_with(dbh)
     load_seqs.assert_called_once_with(args, dbh)
     info.assert_called_once_with(
@@ -62,6 +63,7 @@ def test_preprocess_01(
     assign_seqs_to_shards.assert_called_once_with(
         dbh, args['shard_count'])
     create_all_blast_shards.assert_called_once_with(args, shard_list)
+
 
 @patch('lib.log.info')
 @patch('lib.db.insert_sequences_batch')
@@ -90,6 +92,7 @@ def test_load_one_file_01(insert_sequences_batch, info):
             ('seq4', '2', 'AAAAAAAAAAGGGGGGGGGG')])]
     insert_sequences_batch.assert_has_calls(calls)
 
+
 @patch('lib.log.info')
 @patch('lib.db.insert_sequences_batch')
 def test_load_one_file_02(insert_sequences_batch, info):
@@ -116,6 +119,7 @@ def test_load_one_file_02(insert_sequences_batch, info):
             ('seq3', '1', 'AAAAAAAAAA'),
             ('seq4', '1', 'AAAAAAAAAAGGGGGGGGGG')])]
     insert_sequences_batch.assert_has_calls(calls)
+
 
 @patch('lib.log.info')
 @patch('lib.db.insert_sequences_batch')
@@ -144,6 +148,7 @@ def test_load_one_file_03(insert_sequences_batch, info):
             ('seq4', '2', 'AAAAAAAAAAGGGGGGGGGG')])]
     insert_sequences_batch.assert_has_calls(calls)
 
+
 @patch('lib.log.info')
 @patch('lib.db.insert_sequences_batch')
 def test_load_one_file_04(insert_sequences_batch, info):
@@ -160,17 +165,18 @@ def test_load_one_file_04(insert_sequences_batch, info):
 
     calls = [
         call(cxn, [
-            ('seq1', '', 'AAAAAAAAAA'),
-            ('seq2', '', 'AAAAAAAAAAGGGGGGGGGG'),
-            ('seq3', '', 'AAAAAAAAAA'),
-            ('seq4', '', 'AAAAAAAAAA'),
+            ('seq1/1', '', 'AAAAAAAAAA'),
+            ('seq2 1', '', 'AAAAAAAAAAGGGGGGGGGG'),
+            ('seq3 1', '', 'AAAAAAAAAA'),
+            ('seq4_1', '', 'AAAAAAAAAA'),
             ('seq5/3', '', 'AAAAAAAAAAGGGGGGGGGG')]),
         call(cxn, [
-            ('seq1', '', 'AAAAAAAAAA'),
-            ('seq2', '', 'AAAAAAAAAAGGGGGGGGGG'),
-            ('seq3', '', 'AAAAAAAAAA'),
-            ('seq4', '', 'AAAAAAAAAAGGGGGGGGGG')])]
+            ('seq1/2', '', 'AAAAAAAAAA'),
+            ('seq2 2', '', 'AAAAAAAAAAGGGGGGGGGG'),
+            ('seq3 2', '', 'AAAAAAAAAA'),
+            ('seq4_2', '', 'AAAAAAAAAAGGGGGGGGGG')])]
     insert_sequences_batch.assert_has_calls(calls)
+
 
 @patch('lib.log.info')
 @patch('lib.db.insert_sequences_batch')
@@ -193,6 +199,7 @@ def test_load_one_file_05(insert_sequences_batch, info):
             ('seq8', '2', 'TTTTTTTTTTCCCCCCCCCC')])]
     insert_sequences_batch.assert_has_calls(calls)
 
+
 @patch('lib.log.info')
 @patch('lib.db.get_sequence_count')
 @patch('lib.db.get_shard_cut')
@@ -212,6 +219,7 @@ def test_assign_seqs_to_shards_01(
     msg = 'Assigning sequences to shards'
     info.assert_called_once_with(msg)
 
+
 @patch('lib.blast.create_db')
 @patch('lib.core_preprocessor.fill_blast_fasta')
 def test_create_one_blast_shard_01(fill_blast_fasta, create_db):
@@ -228,6 +236,7 @@ def test_create_one_blast_shard_01(fill_blast_fasta, create_db):
 
     shard = '{}.{:03d}.blast'.format(args['blast_db'], 11)
     create_db.assert_called_once_with(args['temp_dir'], path, shard)
+
 
 @patch('lib.db.connect')
 @patch('lib.db.get_sequences_in_shard')

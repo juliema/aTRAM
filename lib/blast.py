@@ -230,7 +230,7 @@ def parse_fasta_title(title, ends, seq_end_clamp):
         seq_end = match.group(2) if ends == 'mixed_ends' else seq_end_clamp
     elif len(parts) > 1 and re.match(r'[12]$', parts[1]):
         # seq_name = parts[0]
-        seq_name = ' '.join(parts[:1]) if ends == 'single_ends' else parts[0]
+        seq_name = ' '.join(parts[:2]) if ends == 'single_ends' else parts[0]
         seq_end = parts[1] if ends == 'mixed_ends' else seq_end_clamp
     else:
         seq_name = parts[0]
