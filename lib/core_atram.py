@@ -202,8 +202,10 @@ def blast_query_against_one_shard(args, state, shard):
         batch = []
 
         hits = blast.hits(output_file)
+        is_single_end = db.is_single_end(cxn)
         for hit in hits:
-            seq_name, seq_end = blast.parse_blast_title(hit['title'])
+            seq_name, seq_end = blast.parse_blast_title(
+                hit['title'], is_single_end)
             batch.append((state['iteration'], seq_end, seq_name, shard))
         db.insert_blast_hit_batch(cxn, batch)
 

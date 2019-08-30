@@ -6,12 +6,12 @@ import os
 from os.path import basename, join, exists
 
 
-ATRAM_VERSION = 'v2.2.0'
+ATRAM_VERSION = 'v2.2.1'
 
 # DB_VERSION != ATRAM_VERSION
 # We don't force DB changes until required.
 # Therefore DB_VERSION <= ATRAM_VERSION.
-DB_VERSION = '2.0'
+DB_VERSION = '2.2'
 
 BATCH_SIZE = 1e6  # How many sequence records to insert at a time
 
@@ -88,7 +88,7 @@ def check_versions(cxn):
 
 # ########################## metadata table ##################################
 
-def create_metadata_table(cxn):
+def create_metadata_table(cxn, args):
     """
     Create the metadata table.
 
@@ -106,17 +106,28 @@ def create_metadata_table(cxn):
     with cxn:
         sql = """INSERT INTO metadata (label, value) VALUES (?, ?)"""
         cxn.execute(sql, ('version', DB_VERSION))
+        cxn.execute(sql, ('single_ends', bool(args['single_ends'])))
         cxn.commit()
+
+
+def get_metadata(cxn, key, default=''):
+    """Get the current database version."""
+    sql = """SELECT value FROM metadata WHERE label = ?"""
+    try:
+        result = cxn.execute(sql, (key, ))
+        return result.fetchone()[0]
+    except sqlite3.OperationalError:
+        return default
 
 
 def get_version(cxn):
     """Get the current database version."""
-    sql = """SELECT value FROM metadata WHERE label = ?"""
-    try:
-        result = cxn.execute(sql, ('version', ))
-        return result.fetchone()[0]
-    except sqlite3.OperationalError:
-        return '1.0'
+    return get_metadata(cxn, 'version', default='1.0')
+
+
+def is_single_end(cxn):
+    """Was the database build for single ends."""
+    return get_metadata(cxn, 'single_ends')
 
 
 # ########################## sequences table ##################################

@@ -225,28 +225,26 @@ def parse_fasta_title(title, ends, seq_end_clamp):
         parts = ['']
     match = re.match(r'(.+)[./_]([12])$', parts[0])
     if match:
-        seq_name = match.group(1)
-        seq_end = match.group(2)
-        if ends == 'mixed_ends':
-            seq_end = match.group(2)
-        else:
-            seq_end = seq_end_clamp
+        # seq_name = match.group(1)
+        seq_name = parts[0] if ends == 'single_ends' else match.group(1)
+        seq_end = match.group(2) if ends == 'mixed_ends' else seq_end_clamp
     elif len(parts) > 1 and re.match(r'[12]$', parts[1]):
-        seq_name = parts[0]
-        if ends == 'mixed_ends':
-            seq_end = parts[1]
-        else:
-            seq_end = seq_end_clamp
+        # seq_name = parts[0]
+        seq_name = ' '.join(parts[:1]) if ends == 'single_ends' else parts[0]
+        seq_end = parts[1] if ends == 'mixed_ends' else seq_end_clamp
     else:
         seq_name = parts[0]
         seq_end = seq_end_clamp
     return seq_name, seq_end
 
 
-def parse_blast_title(title):
+def parse_blast_title(title, is_single_end):
     """Try to get the sequence name & which end it is from the blast title."""
     match = re.match(r'(.+)[\s./_]([12])$', title)
-    if match:
+    if is_single_end:
+        seq_name = title
+        seq_end = ''
+    elif match:
         seq_name = match.group(1)
         seq_end = match.group(2)
     else:

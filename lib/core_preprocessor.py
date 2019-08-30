@@ -28,7 +28,7 @@ def preprocess(args):
         util.update_temp_dir(temp_dir, args)
 
         with db.connect(args['blast_db'], clean=True) as cxn:
-            db.create_metadata_table(cxn)
+            db.create_metadata_table(cxn, args)
 
             db.create_sequences_table(cxn)
             load_seqs(args, cxn)
