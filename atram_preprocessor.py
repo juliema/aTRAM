@@ -50,7 +50,7 @@ def parse_command_line():
                         version='%(prog)s {}'.format(db.ATRAM_VERSION))
 
     parser.add_argument(
-        '--end-1', '-1', metavar='FASTA/Q', nargs='+',
+        '--end-1', '-1', metavar='FASTA/Q', action='append',
         help="""Sequence read archive files that have only end 1 sequences. The
             sequence names do not need an end suffix, we will assume the suffix
             is always 1. The files are in fasta or fastq format. You may enter
@@ -58,7 +58,7 @@ def parse_command_line():
             """)
 
     parser.add_argument(
-        '--end-2', '-2', metavar='FASTA/Q', nargs='+',
+        '--end-2', '-2', metavar='FASTA/Q', action='append',
         help="""Sequence read archive files that have only end 2 sequences.
             The sequence names do not need an end suffix, we will assume the
             suffix is always 2. The files are in fasta or fastq format. You may
@@ -66,14 +66,14 @@ def parse_command_line():
             """)
 
     parser.add_argument(
-        '--mixed-ends', '-m', metavar='FASTA/Q', nargs='+',
+        '--mixed-ends', '-m', metavar='FASTA/Q', action='append',
         help="""Sequence read archive files that have a mix of both end 1 and
             end 2 sequences (or single ends). The files are in fasta or fastq
             format. You may enter more than one file or you may use wildcards.
             """)
 
     parser.add_argument(
-        '--single-ends', '-0', metavar='FASTA/Q', nargs='+',
+        '--single-ends', '-0', metavar='FASTA/Q', action='append',
         help="""Sequence read archive files that have only unpaired sequences.
             Any sequence suffix will be ignored. The files are in fasta or
             fastq format. You may enter more than one file or you may use
