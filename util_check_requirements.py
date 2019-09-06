@@ -4,6 +4,7 @@ import re
 import sys
 import subprocess
 from shutil import which
+from itertools import zip_longest
 
 
 RESULTS = {}
@@ -39,18 +40,21 @@ def check_modules():
     for module, required in required_list.items():
         installed = installed_list[module]
 
-        r_cmp = required['compare']
+        cmp = required['compare']
 
-        for r_part, i_part in zip(required['version'], installed['version']):
-            if r_cmp == '==' and i_part != r_part:
+        parts = zip_longest(
+            required['version'], installed['version'], fillvalue=0)
+
+        for req_part, inst_part in parts:
+            if cmp == '==' and inst_part != req_part:
                 test_format(module, False)
                 break
-            elif r_cmp == '>=' and i_part > r_part:
+            elif cmp == '>=' and inst_part > req_part:
                 test_format(module, True)
                 break
-            elif r_part > i_part:
+            elif inst_part < req_part:
                 test_format(module, False)
-            break
+                break
         else:
             test_format(module, True)
 
