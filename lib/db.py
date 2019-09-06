@@ -115,7 +115,7 @@ def get_metadata(cxn, key, default=''):
     try:
         result = cxn.execute(sql, (key, ))
         result = result.fetchone()
-        return default if result is None else result[0]
+        return default if not result else result[0]
     except sqlite3.OperationalError:
         return default
 
@@ -127,7 +127,8 @@ def get_version(cxn):
 
 def is_single_end(cxn):
     """Was the database build for single ends."""
-    return get_metadata(cxn, 'single_ends')
+    result = get_metadata(cxn, 'single_ends')
+    return result != '0'
 
 
 # ########################## sequences table ##################################
