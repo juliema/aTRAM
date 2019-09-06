@@ -48,6 +48,9 @@ def check_modules():
             elif r_cmp == '>=' and i_part > r_part:
                 test_format(module, True)
                 break
+            elif r_part > i_part:
+                test_format(module, False)
+            break
         else:
             test_format(module, True)
 
