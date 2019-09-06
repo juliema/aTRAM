@@ -6,12 +6,12 @@ import os
 from os.path import basename, join, exists
 
 
-ATRAM_VERSION = 'v2.2.1'
+ATRAM_VERSION = 'v2.3.0'
 
 # DB_VERSION != ATRAM_VERSION
 # We don't force DB changes until required.
 # Therefore DB_VERSION <= ATRAM_VERSION.
-DB_VERSION = '2.2'
+DB_VERSION = '2.0'
 
 BATCH_SIZE = 1e6  # How many sequence records to insert at a time
 

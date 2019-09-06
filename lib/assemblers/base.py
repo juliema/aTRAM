@@ -134,7 +134,7 @@ class BaseAssembler:  # pylint: disable=too-many-public-methods
         """
         Use the assembler to build up the contigs.
 
-        We take and array of subprocess steps and execute them in order. We
+        We take an array of subprocess steps and execute them in order. We
         bracket this with pre and post assembly steps.
         """
         for step in self.steps:
