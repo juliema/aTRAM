@@ -153,8 +153,7 @@ def parse_command_line():
         if args.get(ends):
             all_files.extend([i for i in args[ends]])
 
-    args['shard_count'] = blast.default_shard_count(
-        args['shard_count'], all_files)
+    args['shard_count'] = blast.default_shard_count(args, all_files)
 
     blast.make_blast_output_dir(args['blast_db'])
 

@@ -77,12 +77,7 @@ def load_one_file(args, cxn, file_name, ends, seq_end_clamp=''):
 
 def get_parser(args, file_name):
     """Get either a fasta or fastq file parser."""
-    if args.get('fasta'):
-        is_fastq = False
-    elif args.get('fastq'):
-        is_fastq = True
-    else:
-        is_fastq = file_name.lower().endswith('q')
+    is_fastq = util.is_fastq_file(args, file_name)
     return FastqGeneralIterator if is_fastq else SimpleFastaParser
 
 

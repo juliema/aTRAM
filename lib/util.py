@@ -1,7 +1,8 @@
 """Misc. utilities."""
 
 import os
-from os.path import exists
+import io
+from os.path import exists, getsize
 import re
 import sys
 from shutil import rmtree
@@ -107,3 +108,31 @@ def fasta_file_is_empty(fasta_path):
         return True
 
     return False
+
+
+def is_fastq_file(args, file_name):
+    """Check if this a FASTQ file."""
+    if args.get('fasta'):
+        is_fastq = False
+    elif args.get('fastq'):
+        is_fastq = True
+    else:
+        is_fastq = file_name.lower().endswith('q')
+    return is_fastq
+
+
+def shard_file_size(args, file_name):
+    """Calculate shard file size for FASTA/Q files in raw or zipped format."""
+    file_size = getsize(file_name)
+
+    if args.get('gzip'):
+        with gzip.open(file_name, 'rb') as zippy:
+            file_size = zippy.seek(0, io.SEEK_END)
+    elif args.get('bzip'):
+        with bz2.open(file_name, 'rb') as zippy:
+            file_size = zippy.seek(0, io.SEEK_END)
+
+    if is_fastq_file(args, file_name):
+        file_size /= 2  # Guessing that fastq files ~2x fasta files
+
+    return file_size

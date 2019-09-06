@@ -2,12 +2,13 @@
 
 import sys
 import os
-from os.path import basename, dirname, getsize, join
+from os.path import basename, dirname, join
 import re
 import glob
 import json
 from shutil import which
 import lib.log as log
+import lib.util as util
 
 
 def create_db(temp_dir, fasta_file, shard):
@@ -169,15 +170,13 @@ def default_max_target_seqs(max_target_seqs, blast_db, max_memory):
     return max_target_seqs
 
 
-def default_shard_count(shard_count, sra_files):
+def default_shard_count(args, sra_files):
     """Calculate the default number of shards."""
+    shard_count = args['shard_count']
     if not shard_count:
         total_fasta_size = 0
         for file_name in sra_files:
-            file_size = getsize(file_name)
-            if file_name.lower().endswith('q'):
-                file_size /= 2  # Guessing that fastq files ~2x fasta files
-            total_fasta_size += file_size
+            total_fasta_size += util.shard_file_size(args, file_name)
         shard_count = int(total_fasta_size / 2.5e8)
         shard_count = shard_count if shard_count else 1
 
