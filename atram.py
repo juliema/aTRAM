@@ -114,10 +114,10 @@ def parse_command_line():
             around for debugging.""")
 
     group.add_argument(
-        '-T', '--timeout', metavar='SECONDS', default=300, type=int,
-        help="""How many seconds to wait for an assembler before stopping the
-            run. To wait forever set this to 0. The default is "300"
-            (5 minutes).""")
+        '-T', '--timeout', metavar='SECONDS', default=600, type=int,
+        help="""How many seconds to wait for an assembler or BLAST before
+            stopping the run. To wait forever set this to 0. The default 
+            is "600" (10 minutes).""")
 
     group = parser.add_argument_group(
         'optional values for blast-filtering contigs')

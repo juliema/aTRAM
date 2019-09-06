@@ -39,7 +39,7 @@ def against_sra(args, state, hits_file, shard):
         cmd.append('-word_size {}'.format(args['word_size']))
 
     command = ' '.join(cmd)
-    log.subcommand(command, args['temp_dir'])
+    log.subcommand(command, args['temp_dir'], timeout=args['timeout'])
 
 
 def against_contigs(blast_db, query_file, hits_file, **kwargs):
@@ -62,7 +62,7 @@ def against_contigs(blast_db, query_file, hits_file, **kwargs):
     cmd.append('-outfmt 15')
 
     command = ' '.join(cmd)
-    log.subcommand(command, kwargs['temp_dir'])
+    log.subcommand(command, kwargs['temp_dir'], timeout=kwargs['timeout'])
 
 
 def all_shard_paths(blast_db):

@@ -230,7 +230,8 @@ def filter_contigs(assembler):
         hits_file,
         protein=assembler.args['protein'],
         db_gencode=assembler.args['db_gencode'],
-        temp_dir=assembler.args['temp_dir'])
+        temp_dir=assembler.args['temp_dir'],
+        timeout=assembler.args['timeout'])
 
     save_blast_against_contigs(assembler, hits_file)
 
