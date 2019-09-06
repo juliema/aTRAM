@@ -114,7 +114,8 @@ def get_metadata(cxn, key, default=''):
     sql = """SELECT value FROM metadata WHERE label = ?"""
     try:
         result = cxn.execute(sql, (key, ))
-        return result.fetchone()[0]
+        result = result.fetchone()
+        return default if result is None else result[0]
     except sqlite3.OperationalError:
         return default
 

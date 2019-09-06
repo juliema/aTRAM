@@ -24,7 +24,7 @@ def test_get_db_name_01():
 
 def test_get_version_01():
     """It returns the current DB version."""
-    assert db.get_version(cxn) == '2.2'
+    assert db.get_version(cxn) == '2.0'
 
 
 def test_get_version_02():
