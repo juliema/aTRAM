@@ -68,7 +68,7 @@ rebuild any libraries after major updates.
 
 ### Library Preparation
 
-Use `atram_preprocessor.py` for this. 
+Use `atram_preprocessor.py` for this.
 
 - Define your new library name with the --blast-db option. Which consists of a
 path and the library prefix itself. This program will add suffixes to
@@ -76,13 +76,13 @@ differentiate different database files.
 
 - Then give it your fastq files. You can either list the forward and reverse
 read files, or put them into one file and use the --mixed-ends option.
- 
+
  Under the hood, aTRAM is building BLAST databases and an SQLite3 database for
  rapid read retrieval.
 
 ```bash
 atram_preprocessor.py \
-  --blast-db=path_to_atram_library/LIBRARY_PREFIX \ 
+  --blast-db=path_to_atram_library/LIBRARY_PREFIX \
   --end-1=path_to_reads/read_1.fastq \
   --end-2=path_to_reads/read_2.fastq
 ```
@@ -92,12 +92,12 @@ atram_preprocessor.py \
 `atram.py` uses the databases built by `atram_preprocessor.py` to assemble
 loci.
 
-- You need to give it the same --blast-db option from the preprocessor. 
+- You need to give it the same --blast-db option from the preprocessor.
 - You also need to give it a query sequence. The query sequence is a FASTA
 file.
 - An assembler choice. The assembler choice is one of the assemblers mentioned
-above (velvet, trinity, abyss, or spades). 
-- And an output prefix. The `--output-prefix` works just like the 
+above (velvet, trinity, abyss, or spades).
+- And an output prefix. The `--output-prefix` works just like the
 `--blast-db-prefix` with the directory part and the library prefix itself.
 
 ```bash
@@ -128,13 +128,14 @@ atram_stitcher.py \
 
 - [aTRAM Overview](doc/introduction.md)
 - [Tips for using aTRAM](doc/tips.md)
+- [Troubleshooting](doc/troubleshooting.md)
 
 ### Tutorials
 - [Pre-processing tutorial](doc/atram_preprocessor_tutorial.md)
 - [aTRAM tutorial](doc/atram_tutorial.md)
 - [Stitcher tutorial](doc/atram_stitcher_tutorial.md)
 
-### References
+### Program Reference
 - [atram_preprocessor.py](doc/atram_preprocessor_reference.md)
 - [atram.py](doc/atram_reference.md)
 - [atram_stitcher.py](doc/atram_stitcher_reference.md)
