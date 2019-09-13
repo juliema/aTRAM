@@ -40,23 +40,35 @@ examine the directory contents or use it for
 
 ## Debugging assembler issues
 
-*Advanced*
+*Advanced debugging technique.*
 
 The log file will almost always have a meaningful error message but in rare
-cases it can be useful to see how the assembler behaves. If aTRAM crashes while
-running an assembler we can debug the actual assembler error if we kept the
-[temporary data](#Saving-temporary-data). What I do is take the assembler
-command that is typically displayed within single quotes `'` in the aTRAM
-output.
+cases it can be useful to see how the assembler itself behaves. If aTRAM
+crashes while running an assembler we can debug the actual assembler error if
+we kept the [temporary data](#Saving-temporary-data). What I do is take the
+assembler command that is typically displayed within single quotes `'` in the
+aTRAM output and run it directly from the command line.
 
 **TODO Change to use tutorial arguments**
 
 For instance if I ran atram with the following arguments.
+```bash
+./atram.py \
+  --query=query/Phum.PHUM003340-PA.pep.fasta \
+  --blast-db=db/ptgor \
+  --output-prefix=output/ptgor \
+  --assembler=velvet
 ```
---query=query/Phum.PHUM003340-PA.pep.fasta
---blast-db=db/ptgor
---output-prefix=output/ptgor
---assembler=velvet
+
+I add the temporary directory arguments and rerun atram.py:
+```bash
+./atram.py \
+  --query=query/Phum.PHUM003340-PA.pep.fasta \
+  --blast-db=db/ptgor \
+  --output-prefix=output/ptgor \
+  --assembler=velvet \
+  --temp-dir=temp \
+  --keep-temp-dir
 ```
 
 And I see the following error message.
@@ -78,4 +90,4 @@ velveth temp/atram_dt0jmqy0/ptgor_Phum.PHUM003340-PA.pep.fasta_01_7xy5cnle 31
 '/home/user/work/aTRAM/temp/atram_dt0jmqy0/ptgor_Phum.PHUM003340-PA.pep.fasta_01_7xy5cnle/paired_2.fasta'
 -short '/home/user/work/aTRAM/temp/atram_dt0jmqy0/ptgor_Phum.PHUM003340-PA.pep.fasta_01_7xy5cnle/single_1.fasta'
 ```
-And then paste it into the command line to see what happens with the assembler.
+And then paste it into the command line to see what happens to the assembler.
