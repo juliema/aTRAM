@@ -55,7 +55,7 @@ We now have everything we need to run the aTRAM preprocessor.
 The command becomes:
 
 ```bash
-./atram_preprocessor.py
+./atram_preprocessor.py \
   --blast-db=/path/to/atram_db/tutorial \
   --end-1=/path/to/doc/data/tutorial_end_1.fasta.gz \
   --end-2=/path/to/doc/data/tutorial_end_2.fasta.gz \
@@ -96,5 +96,5 @@ if there is a need to edit your data you will need to rerun the preprocessor.
 
 ## Next
 
-We are now ready to run atram itself. See the 
+We are now ready to run atram itself. See the
 [aTRAM tutorial](atram_tutorial.md).
