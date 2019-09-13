@@ -21,7 +21,7 @@ from lib.core_atram import assemble
 def parse_command_line():
     """Process command-line arguments."""
     description = """
-        This  takes a query sequence and a blast database built with the 
+        This  takes a query sequence and a blast database built with the
         atram_preprocessor.py script and builds assemblies.
 
         If you specify more than one query sequence and/or more than one blast
@@ -116,7 +116,7 @@ def parse_command_line():
     group.add_argument(
         '-T', '--timeout', metavar='SECONDS', default=600, type=int,
         help="""How many seconds to wait for an assembler or BLAST before
-            stopping the run. To wait forever set this to 0. The default 
+            stopping the run. To wait forever set this to 0. The default
             is "600" (10 minutes).""")
 
     group = parser.add_argument_group(
