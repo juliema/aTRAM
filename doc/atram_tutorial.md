@@ -6,8 +6,8 @@ run it because you will need the output for this tutorial.
 
 ```bash
 ./atram.py \
-  --query=doc/data/tutorial-query.pep.fasta \
-  --blast-db=atram_db/tutorial \
-  --output=output/tutorial \
+  --query=/path/to/doc/data/tutorial-query.pep.fasta \
+  --blast-db=/path/to/atram_db/tutorial \
+  --output=/path/to/output/tutorial \
   --assembler=velvet
 ```
