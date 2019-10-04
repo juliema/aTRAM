@@ -3,6 +3,7 @@
 import sqlite3
 import sys
 import os
+from contextlib import contextmanager
 from os.path import basename, join, exists
 
 
@@ -27,12 +28,11 @@ def connect(blast_db, check_version=False, clean=False):
         err = 'Could not find the database file "{}".'.format(db_name)
         sys.exit(err)
 
-    cxn = db_setup(db_name)
-
     if check_version:
-        check_versions(cxn)
+        with db_setup(db_name) as cxn:
+            check_versions(cxn)
 
-    return cxn
+    return db_setup(db_name)
 
 
 def get_db_name(db_prefix):
@@ -64,13 +64,17 @@ def temp_db(temp_dir, db_prefix):
     return db_setup(db_name)
 
 
+@contextmanager
 def db_setup(db_name):
     """Database setup."""
-    cxn = sqlite3.connect(db_name)
-    cxn.execute("PRAGMA page_size = {}".format(2**16))
-    cxn.execute("PRAGMA busy_timeout = 10000")
-    cxn.execute("PRAGMA journal_mode = WAL")
-    return cxn
+    try:
+        cxn = sqlite3.connect(db_name)
+        cxn.execute("PRAGMA page_size = {}".format(2**16))
+        cxn.execute("PRAGMA busy_timeout = 10000")
+        cxn.execute("PRAGMA journal_mode = WAL")
+        yield cxn
+    finally:
+        cxn.close()
 
 
 # ########################### misc functions #################################
