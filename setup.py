@@ -16,14 +16,12 @@ def readme():
     """Get README.md content."""
     with open("README.md", 'r') as f:
         return f.read()
-    return None
 
 
 def license():
     """Get LICENSE.txt content."""
     with open("LICENSE.txt", 'r') as f:
         return f.read()
-    return None
 
 
 def find_version():
@@ -41,9 +39,6 @@ def find_requirements():
     """Read requirements.txt file and returns list of requirements."""
     with open("requirements.txt", 'r') as f:
         return f.read().splitlines()
-
-    raise RuntimeError("Unable to list requirements.")
-
 
 setup(
     name="atram",

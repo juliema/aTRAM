@@ -5,8 +5,8 @@ import re
 import sys
 import subprocess
 from functools import reduce
+from distutils.version import LooseVersion
 from shutil import which
-from itertools import zip_longest
 
 
 RESULTS = {}
@@ -26,7 +26,7 @@ def parse_requirements(requirements):
         match = re.match(r'^([^>=<]+)([>=<]+)([^>=<]+)$', req)
         module = match.group(1)
         compare = match.group(2)
-        version = match.group(3).split('.')
+        version = LooseVersion(match.group(3)).version
         reqs[module] = {'compare': compare, 'version': version}
     return reqs
 
@@ -43,22 +43,15 @@ def check_modules():
         installed = installed_list[module]
 
         cmp = required['compare']
+        i_version = installed['version']
+        r_version = required['version']
 
-        parts = zip_longest(
-            required['version'], installed['version'], fillvalue=0)
-
-        for req_part, inst_part in parts:
-            if cmp == '==' and inst_part != req_part:
-                test_format(module, False)
-                break
-            elif cmp == '>=' and inst_part > req_part:
-                test_format(module, True)
-                break
-            elif inst_part < req_part:
-                test_format(module, False)
-                break
-        else:
+        if cmp == '==' and i_version != r_version:
+            test_format(module, False)
+        elif cmp == '>=' and i_version > r_version:
             test_format(module, True)
+        elif i_version < r_version:
+            test_format(module, False)
 
 
 def check_programs():

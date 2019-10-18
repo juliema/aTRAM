@@ -1,6 +1,0 @@
-biopython>=1.72
-numpy>=1.15.2
-psutil>=5.4.7
-python-dateutil>=2.8.0
-pytz>=2019.1
-six>=1.12.0
