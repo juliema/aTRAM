@@ -6,8 +6,6 @@ from lib.db import temp_db
 def connect(temp_dir, db_prefix):
     """Create DB connection."""
     cxn = temp_db(temp_dir, db_prefix)
-    cxn.row_factory = lambda c, r: dict(
-            [(col[0], r[idx]) for idx, col in enumerate(c.description)])
     return cxn
 
 

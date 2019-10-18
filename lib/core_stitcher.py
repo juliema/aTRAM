@@ -31,39 +31,41 @@ def stitch(args):
             keep=args.keep_temp_dir) as temp_dir:
         temp_dir = temp_dir
 
-        cxn = db.connect(temp_dir, 'atram_stitcher')
+        with db.connect(temp_dir, 'atram_stitcher') as cxn:
+            cxn.row_factory = lambda c, r: dict(
+                [(col[0], r[idx]) for idx, col in enumerate(c.description)])
 
-        create_tables(cxn)
+            create_tables(cxn)
 
-        taxon_names = get_taxa(args)
-        insert_reference_genes(args, temp_dir, cxn)
-        check_file_counts(args, cxn, taxon_names)
-        create_reference_files(cxn)
+            taxon_names = get_taxa(args)
+            insert_reference_genes(args, temp_dir, cxn)
+            check_file_counts(args, cxn, taxon_names)
+            create_reference_files(cxn)
 
-        # First iteration gets its data from the input
-        iteration += 1
-        get_contigs_from_fasta(args, temp_dir, cxn, taxon_names, iteration)
-        contig_file_write(cxn, iteration)
-        run_exonerate(temp_dir, cxn, iteration)
-        early_exit_check(cxn)
-
-        # Iterations 2-N get their data from the previous stitch
-        for i in range(1, args.iterations):
-            stitch_everything(args, cxn, iteration)
-
+            # First iteration gets its data from the input
             iteration += 1
-            get_contigs_from_previous_stitch(
-                temp_dir, cxn, taxon_names, iteration)
+            get_contigs_from_fasta(args, temp_dir, cxn, taxon_names, iteration)
             contig_file_write(cxn, iteration)
             run_exonerate(temp_dir, cxn, iteration)
+            early_exit_check(cxn)
 
-        # The final stitch is pickier than the others
-        stitch_with_gaps(args, cxn, taxon_names, iteration)
+            # Iterations 2-N get their data from the previous stitch
+            for i in range(1, args.iterations):
+                stitch_everything(args, cxn, iteration)
 
-        log.info('Writing output')
-        output_stitched_genes(args, cxn, taxon_names, iteration)
-        output_summary_per_gene(args, cxn, iteration)
-        output_summary_per_taxon(args, cxn, iteration)
+                iteration += 1
+                get_contigs_from_previous_stitch(
+                    temp_dir, cxn, taxon_names, iteration)
+                contig_file_write(cxn, iteration)
+                run_exonerate(temp_dir, cxn, iteration)
+
+            # The final stitch is pickier than the others
+            stitch_with_gaps(args, cxn, taxon_names, iteration)
+
+            log.info('Writing output')
+            output_stitched_genes(args, cxn, taxon_names, iteration)
+            output_summary_per_gene(args, cxn, iteration)
+            output_summary_per_taxon(args, cxn, iteration)
 
         log.info('Finished.')
 
