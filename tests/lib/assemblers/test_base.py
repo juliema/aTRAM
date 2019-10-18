@@ -25,6 +25,7 @@ def build_assembler():
         'cxn': 'my_cxn'}
     return asm
 
+
 def test_init_01():
     """It initializes an assembler object."""
     asm = BaseAssembler('args', 'cxn')
@@ -42,6 +43,7 @@ def test_init_01():
         'cxn': 'cxn'}
     assert asm.state == expected
 
+
 def test_init_iteration_01():
     """It sets up assembler variables for an iteration."""
     asm = build_assembler()
@@ -55,6 +57,7 @@ def test_init_iteration_01():
     assert asm.state['blast_db'] == blast_db
     assert asm.state['query_file'] == query_file
     assert asm.state['iteration'] == iteration
+
 
 def test_setup_files_01():
     """It sets up assembler file names for an iteration."""
@@ -77,6 +80,7 @@ def test_setup_files_01():
     assert asm.file['single_2_count'] == 0
     assert asm.file['single_any_count'] == 0
 
+
 def test_file_prefix_01():
     """It builds the directory for the iteration."""
 
@@ -89,6 +93,7 @@ def test_file_prefix_01():
 
     assert asm.file_prefix() == expected
 
+
 def test_iter_file_01():
     """It builds a file name with the iter dir."""
     file_name = 'my_file.txt'
@@ -96,10 +101,12 @@ def test_iter_file_01():
     expected = join(asm.state['iter_dir'], file_name)
     assert asm.iter_file(file_name).endswith(expected)
 
+
 def test_work_path_01():
     """It builds the work directory."""
     asm = build_assembler()
     assert asm.work_path() == asm.state['iter_dir']
+
 
 @patch('lib.log.info')
 def test_run_01(info):
@@ -113,6 +120,7 @@ def test_run_01(info):
     info.assert_called_once_with(
         'Assembling shards with {}: iteration {}'.format(
             asm.args['assembler'], asm.state['iteration']))
+
 
 @patch('lib.log.info')
 @patch('lib.log.error')
@@ -142,6 +150,7 @@ def test_run_02(error, info):
         r'Time ran out for the assembler after 0:00:10 \(HH:MM:SS\)')
     assert regex.match(error.call_args[0][0])
 
+
 @patch('lib.log.info')
 @patch('lib.log.error')
 def test_run_03(error, info):
@@ -166,6 +175,7 @@ def test_run_03(error, info):
         asm.args['assembler'], asm.state['iteration'])
     info.assert_called_once_with(expect)
 
+
 @patch('lib.log.info')
 @patch('lib.db.sra_blast_hits_count')
 def test_count_blast_hits_01(sra_blast_hits_count, info):
@@ -178,6 +188,7 @@ def test_count_blast_hits_01(sra_blast_hits_count, info):
 
     info.assert_called_once_with('0 blast hits in iteration {}'.format(
         asm.state['iteration']))
+
 
 @patch('lib.log.info')
 @patch('lib.db.sra_blast_hits_count')
@@ -192,6 +203,7 @@ def test_count_blast_hits_02(sra_blast_hits_count, info):
     info.assert_called_once_with('1 blast hits in iteration {}'.format(
         asm.state['iteration']))
 
+
 @patch('lib.log.info')
 def test_nothing_assembled_01(info):
     """It handles when nothing is assembled."""
@@ -203,6 +215,7 @@ def test_nothing_assembled_01(info):
     info.assert_called_once_with(
         'No new assemblies in iteration {}'.format(
             asm.state['iteration']))
+
 
 @patch('lib.log.info')
 def test_nothing_assembled_02(info):
@@ -216,6 +229,7 @@ def test_nothing_assembled_02(info):
         asm.state['iteration'])
     info.assert_called_once_with(expect)
 
+
 @patch('lib.log.info')
 def test_nothing_assembled_03(info):
     """It handles when something is assembled."""
@@ -225,6 +239,7 @@ def test_nothing_assembled_03(info):
     assert not asm.nothing_assembled()
 
     info.assert_not_called()
+
 
 @patch('lib.log.info')
 @patch('lib.db.assembled_contigs_count')
@@ -246,11 +261,12 @@ def test_assembled_contigs_count_01(assembled_contigs_count, info):
     expect = ('No contigs had a bit score greater than {} and are at '
               'least {} bp long in iteration {}. The highest score for '
               'this iteration is {}').format(
-                  asm.args['bit_score'],
-                  asm.args['contig_length'],
-                  asm.state['iteration'],
-                  high_score)
+        asm.args['bit_score'],
+        asm.args['contig_length'],
+        asm.state['iteration'],
+        high_score)
     info.assert_called_once_with(expect)
+
 
 @patch('lib.log.info')
 @patch('lib.db.assembled_contigs_count')
@@ -272,6 +288,7 @@ def test_assembled_contigs_count_02(assembled_contigs_count, info):
 
     info.assert_not_called()
 
+
 @patch('lib.log.info')
 @patch('lib.db.iteration_overlap_count')
 def test_no_new_contigs_01(iteration_overlap_count, info):
@@ -290,6 +307,7 @@ def test_no_new_contigs_01(iteration_overlap_count, info):
         asm.args['contig_length'])
 
     info.assert_not_called()
+
 
 @patch('lib.log.info')
 @patch('lib.db.iteration_overlap_count')
@@ -311,6 +329,7 @@ def test_no_new_contigs_02(iteration_overlap_count, info):
     expect = 'No new contigs were found in iteration {}'.format(
         asm.state['iteration'])
     info.assert_called_once_with(expect)
+
 
 @patch('lib.log.subcommand')
 def test_assemble(subcommand):
