@@ -3,7 +3,6 @@
 import sqlite3
 import sys
 import os
-from contextlib import contextmanager
 from os.path import basename, join, exists
 
 
@@ -64,17 +63,12 @@ def temp_db(temp_dir, db_prefix):
     return db_setup(db_name)
 
 
-@contextmanager
 def db_setup(db_name):
     """Database setup."""
-    try:
-        cxn = sqlite3.connect(db_name)
-        cxn.execute("PRAGMA page_size = {}".format(2**16))
-        cxn.execute("PRAGMA busy_timeout = 10000")
-        cxn.execute("PRAGMA journal_mode = WAL")
-        yield cxn
-    finally:
-        cxn.close()
+    cxn = sqlite3.connect(db_name, timeout=30.0)
+    cxn.execute("PRAGMA page_size = {}".format(2**16))
+    cxn.execute("PRAGMA journal_mode = WAL")
+    return cxn
 
 
 # ########################### misc functions #################################
@@ -110,7 +104,6 @@ def create_metadata_table(cxn, args):
         sql = """INSERT INTO metadata (label, value) VALUES (?, ?)"""
         cxn.execute(sql, ('version', DB_VERSION))
         cxn.execute(sql, ('single_ends', bool(args.get('single_ends'))))
-        cxn.commit()
 
 
 def get_metadata(cxn, key, default=''):
@@ -161,12 +154,12 @@ def create_sequences_index(cxn):
 
 def insert_sequences_batch(cxn, batch):
     """Insert a batch of sequence records into the database."""
+    sql = """INSERT INTO sequences (seq_name, seq_end, seq)
+                VALUES (?, ?, ?)
+        """
     if batch:
-        sql = """INSERT INTO sequences (seq_name, seq_end, seq)
-                    VALUES (?, ?, ?)
-            """
-        cxn.executemany(sql, batch)
-        cxn.commit()
+        with cxn:
+            cxn.executemany(sql, batch)
 
 
 def get_sequence_count(cxn):
@@ -224,14 +217,14 @@ def create_sra_blast_hits_table(cxn):
 
 def insert_blast_hit_batch(cxn, batch):
     """Insert a batch of blast hit records into the database."""
+    sql = """
+        INSERT INTO aux.sra_blast_hits
+                    (iteration, seq_end, seq_name, shard)
+                    VALUES (?, ?, ?, ?)
+        """
     if batch:
-        sql = """
-            INSERT INTO aux.sra_blast_hits
-                        (iteration, seq_end, seq_name, shard)
-                        VALUES (?, ?, ?, ?)
-            """
-        cxn.executemany(sql, batch)
-        cxn.commit()
+        with cxn:
+            cxn.executemany(sql, batch)
 
 
 def sra_blast_hits_count(cxn, iteration):
@@ -307,16 +300,16 @@ def create_contig_blast_hits_table(cxn):
 
 def insert_contig_hit_batch(cxn, batch):
     """Insert a batch of blast hit records into the database."""
+    sql = """
+        INSERT INTO aux.contig_blast_hits
+                    (iteration, contig_id, description, bit_score, len,
+                     query_from, query_to, query_strand,
+                     hit_from, hit_to, hit_strand)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """
     if batch:
-        sql = """
-            INSERT INTO aux.contig_blast_hits
-                        (iteration, contig_id, description, bit_score, len,
-                         query_from, query_to, query_strand,
-                         hit_from, hit_to, hit_strand)
-                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            """
-        cxn.executemany(sql, batch)
-        cxn.commit()
+        with cxn:
+            cxn.executemany(sql, batch)
 
 
 def get_contig_blast_hits(cxn, iteration):
@@ -394,17 +387,17 @@ def iteration_overlap_count(cxn, iteration, bit_score, length):
 
 def insert_assembled_contigs_batch(cxn, batch):
     """Insert a batch of blast hit records into the database."""
+    sql = """
+         INSERT INTO aux.assembled_contigs
+                     (iteration, contig_id, seq, description,
+                      bit_score, len,
+                      query_from, query_to, query_strand,
+                      hit_from, hit_to, hit_strand)
+              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+         """
     if batch:
-        sql = """
-            INSERT INTO aux.assembled_contigs
-                        (iteration, contig_id, seq, description,
-                         bit_score, len,
-                         query_from, query_to, query_strand,
-                         hit_from, hit_to, hit_strand)
-                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            """
-        cxn.executemany(sql, batch)
-        cxn.commit()
+        with cxn:
+            cxn.executemany(sql, batch)
 
 
 def get_assembled_contigs(cxn, iteration, bit_score, length):

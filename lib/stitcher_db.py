@@ -25,13 +25,13 @@ def create_reference_genes_table(cxn):
 
 def insert_reference_genes(cxn, batch):
     """Insert a batch of reference gene records into the database."""
+    sql = """
+        INSERT INTO reference_genes (ref_name, ref_seq, ref_file)
+        VALUES (:ref_name, :ref_seq, :ref_file);
+        """
     if batch:
-        sql = """
-            INSERT INTO reference_genes (ref_name, ref_seq, ref_file)
-            VALUES (:ref_name, :ref_seq, :ref_file);
-            """
-        cxn.executemany(sql, batch)
-        cxn.commit()
+        with cxn:
+            cxn.executemany(sql, batch)
 
 
 def select_reference_genes(cxn):
@@ -59,8 +59,7 @@ def create_contigs_table(cxn):
 
 def insert_contigs(cxn, batch):
     """Insert a batch of input contig records into the database."""
-    if batch:
-        sql = """
+    sql = """
             INSERT INTO contigs
                 (ref_name, taxon_name, contig_name, contig_seq, contig_file,
                 contig_rec, iteration)
@@ -68,8 +67,9 @@ def insert_contigs(cxn, batch):
                 :ref_name, :taxon_name, :contig_name, :contig_seq,
                 :contig_file, :contig_rec, :iteration);
             """
-        cxn.executemany(sql, batch)
-        cxn.commit()
+    if batch:
+        with cxn:
+            cxn.executemany(sql, batch)
 
 
 def select_contig_files(cxn, iteration=0):
@@ -141,16 +141,16 @@ def select_stitch(cxn, iteration=0):
 
 def insert_exonerate_results(cxn, batch):
     """Insert a batch of exonerate result records into the database."""
-    if batch:
-        sql = """
+    sql = """
             INSERT INTO exonerate (
                 ref_name, taxon_name, contig_name, beg, end, iteration, seq)
             VALUES (
                 :ref_name, :taxon_name, :contig_name, :beg, :end, 
                 :iteration, :seq);
             """
-        cxn.executemany(sql, batch)
-        cxn.commit()
+    if batch:
+        with cxn:
+            cxn.executemany(sql, batch)
 
 
 def select_next(cxn, ref_name, taxon_name, beg=-1, iteration=0):
@@ -221,16 +221,16 @@ def create_stitch_table(cxn):
 
 def insert_stitched_genes(cxn, batch):
     """Insert a batch of stitched contig records into the database."""
+    sql = """
+        INSERT INTO stitched (
+            ref_name, taxon_name, contig_name, position, iteration, seq)
+        VALUES (
+            :ref_name, :taxon_name, :contig_name, :position, :iteration, 
+            :seq);
+        """
     if batch:
-        sql = """
-            INSERT INTO stitched (
-                ref_name, taxon_name, contig_name, position, iteration, seq)
-            VALUES (
-                :ref_name, :taxon_name, :contig_name, :position, :iteration, 
-                :seq);
-            """
-        cxn.executemany(sql, batch)
-        cxn.commit()
+        with cxn:
+            cxn.executemany(sql, batch)
 
 
 def select_stitched_contigs(cxn, ref_name, taxon_name, iteration=0):
