@@ -208,6 +208,7 @@ def blast_query_against_one_shard(args, state, shard):
                 hit['title'], is_single_end)
             batch.append((state['iteration'], seq_end, seq_name, shard))
         db.insert_blast_hit_batch(cxn, batch)
+        db.aux_detach(cxn)
 
 
 def filter_contigs(assembler):
