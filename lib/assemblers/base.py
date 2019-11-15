@@ -3,7 +3,7 @@
 from os.path import basename, exists, getsize, join, splitext, abspath
 import datetime
 from subprocess import CalledProcessError
-import lib.db as db
+import lib.db_atram as db_atram
 import lib.log as log
 import lib.bio as bio
 import lib.util as util
@@ -85,7 +85,7 @@ class BaseAssembler:  # pylint: disable=too-many-public-methods
 
     def count_blast_hits(self):
         """Make sure we have blast hits."""
-        count = db.sra_blast_hits_count(
+        count = db_atram.sra_blast_hits_count(
             self.state['cxn'], self.state['iteration'])
         log.info('{} blast hits in iteration {}'.format(
             count, self.state['iteration']))
@@ -102,7 +102,7 @@ class BaseAssembler:  # pylint: disable=too-many-public-methods
 
     def assembled_contigs_count(self, high_score):
         """How many contigs were assembled and are above the thresholds."""
-        count = db.assembled_contigs_count(
+        count = db_atram.assembled_contigs_count(
             self.state['cxn'],
             self.state['iteration'],
             self.args['bit_score'],
@@ -120,7 +120,7 @@ class BaseAssembler:  # pylint: disable=too-many-public-methods
 
     def no_new_contigs(self, count):
         """Make the are new contigs in the assembler output."""
-        if count == db.iteration_overlap_count(
+        if count == db_atram.iteration_overlap_count(
                 self.state['cxn'],
                 self.state['iteration'],
                 self.args['bit_score'],
@@ -162,7 +162,7 @@ class BaseAssembler:  # pylint: disable=too-many-public-methods
         with open(self.file['paired_1'], 'w') as end_1, \
                 open(self.file['paired_2'], 'w') as end_2:
 
-            for row in db.get_blast_hits_by_end_count(
+            for row in db_atram.get_blast_hits_by_end_count(
                     self.state['cxn'], self.state['iteration'], 2):
 
                 self.file['paired_count'] += 1
@@ -177,7 +177,7 @@ class BaseAssembler:  # pylint: disable=too-many-public-methods
                 open(self.file['single_2'], 'w') as end_2, \
                 open(self.file['single_any'], 'w') as end_any:
 
-            for row in db.get_blast_hits_by_end_count(
+            for row in db_atram.get_blast_hits_by_end_count(
                     self.state['cxn'], self.state['iteration'], 1):
 
                 if row['seq_end'] == '1':
@@ -217,7 +217,7 @@ class BaseAssembler:  # pylint: disable=too-many-public-methods
         if self.args['no_filter']:
             return
 
-        count = db.all_assembled_contigs_count(
+        count = db_atram.all_assembled_contigs_count(
             self.state['cxn'],
             self.args['bit_score'],
             self.args['contig_length'])
@@ -226,7 +226,7 @@ class BaseAssembler:  # pylint: disable=too-many-public-methods
 
         file_name = '{}.{}'.format(prefix, 'filtered_contigs.fasta')
 
-        contigs = db.get_all_assembled_contigs(
+        contigs = db_atram.get_all_assembled_contigs(
             self.state['cxn'],
             self.args['bit_score'],
             self.args['contig_length'])
@@ -237,13 +237,13 @@ class BaseAssembler:  # pylint: disable=too-many-public-methods
 
     def write_all_contigs(self, prefix):
         """Write all contigs to a final ouput file."""
-        count = db.all_assembled_contigs_count(self.state['cxn'])
+        count = db_atram.all_assembled_contigs_count(self.state['cxn'])
         if not count:
             return
 
         file_name = '{}.{}'.format(prefix, 'all_contigs.fasta')
 
-        contigs = db.get_all_assembled_contigs(self.state['cxn'])
+        contigs = db_atram.get_all_assembled_contigs(self.state['cxn'])
 
         with open(file_name, 'w') as output_file:
             for contig in contigs:

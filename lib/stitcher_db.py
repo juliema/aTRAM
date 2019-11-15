@@ -72,6 +72,12 @@ def insert_contigs(cxn, batch):
             cxn.executemany(sql, batch)
 
 
+def select_all_contigs(cxn):
+    """Select all contigs."""
+    sql = """SELECT * FROM contigs;"""
+    return cxn.execute(sql)
+
+
 def select_contig_files(cxn, iteration=0):
     """Select all contigs files for a reference gene."""
     sql = """
@@ -85,7 +91,7 @@ def select_contig_files(cxn, iteration=0):
 def select_contigs_in_file(cxn, contig_file, iteration=0):
     """Select all contigs for a contig file."""
     return cxn.execute(
-        """SELECT * FROM contigs 
+        """SELECT * FROM contigs
             WHERE contig_file = ?
               AND iteration   = ?
          ORDER BY contig_rec;""",
@@ -145,7 +151,7 @@ def insert_exonerate_results(cxn, batch):
             INSERT INTO exonerate (
                 ref_name, taxon_name, contig_name, beg, end, iteration, seq)
             VALUES (
-                :ref_name, :taxon_name, :contig_name, :beg, :end, 
+                :ref_name, :taxon_name, :contig_name, :beg, :end,
                 :iteration, :seq);
             """
     if batch:
@@ -225,7 +231,7 @@ def insert_stitched_genes(cxn, batch):
         INSERT INTO stitched (
             ref_name, taxon_name, contig_name, position, iteration, seq)
         VALUES (
-            :ref_name, :taxon_name, :contig_name, :position, :iteration, 
+            :ref_name, :taxon_name, :contig_name, :position, :iteration,
             :seq);
         """
     if batch:
@@ -279,10 +285,10 @@ def select_per_taxon_stats(cxn, iteration):
     """Get data for the per taxon summary report."""
     return cxn.execute(
         """
-        WITH 
+        WITH
         properties AS (
             SELECT taxon_name, ref_name,
-                   CAST(SUM(LENGTH(seq)) / 3 AS REAL) 
+                   CAST(SUM(LENGTH(seq)) / 3 AS REAL)
                    / CAST(LENGTH(ref_seq) AS REAL) AS property
              FROM stitched
              JOIN reference_genes USING (ref_name)

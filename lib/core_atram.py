@@ -6,6 +6,7 @@ from os.path import basename, split, splitext, join
 from multiprocessing import Pool
 from Bio import SeqIO
 import lib.db as db
+import lib.db_atram as db_atram
 import lib.log as log
 import lib.bio as bio
 import lib.util as util
@@ -143,9 +144,9 @@ def write_query_seq(file_name, seq_id, seq):
 
 def clean_database(cxn):
     """Create database tables for an atram run."""
-    db.create_sra_blast_hits_table(cxn)
-    db.create_contig_blast_hits_table(cxn)
-    db.create_assembled_contigs_table(cxn)
+    db_atram.create_sra_blast_hits_table(cxn)
+    db_atram.create_contig_blast_hits_table(cxn)
+    db_atram.create_assembled_contigs_table(cxn)
 
 
 def blast_query_against_all_shards(assembler):
@@ -207,7 +208,7 @@ def blast_query_against_one_shard(args, state, shard):
             seq_name, seq_end = blast.parse_blast_title(
                 hit['title'], is_single_end)
             batch.append((state['iteration'], seq_end, seq_name, shard))
-        db.insert_blast_hit_batch(cxn, batch)
+        db_atram.insert_blast_hit_batch(cxn, batch)
         db.aux_detach(cxn)
 
 
@@ -238,7 +239,7 @@ def filter_contigs(assembler):
 
     all_hits = {row['contig_id']: row
                 for row
-                in db.get_contig_blast_hits(
+                in db_atram.get_contig_blast_hits(
                     assembler.state['cxn'],
                     assembler.state['iteration'])}
 
@@ -264,7 +265,7 @@ def save_blast_against_contigs(assembler, hits_file):
             hit['hit_to'],
             hit.get('hit_strand', '')))
 
-    db.insert_contig_hit_batch(assembler.state['cxn'], batch)
+    db_atram.insert_contig_hit_batch(assembler.state['cxn'], batch)
 
 
 def save_contigs(assembler, all_hits):
@@ -289,7 +290,7 @@ def save_contigs(assembler, all_hits):
                     hit['hit_from'],
                     hit['hit_to'],
                     hit['hit_strand']))
-    db.insert_assembled_contigs_batch(assembler.state['cxn'], batch)
+    db_atram.insert_assembled_contigs_batch(assembler.state['cxn'], batch)
 
     return high_score
 
@@ -307,7 +308,7 @@ def create_query_from_contigs(args, assembler):
     assembler.file['long_reads'] = query
 
     with open(query, 'w') as query_file:
-        for row in db.get_assembled_contigs(
+        for row in db_atram.get_assembled_contigs(
                 assembler.state['cxn'],
                 assembler.state['iteration'],
                 assembler.args['bit_score'],

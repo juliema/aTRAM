@@ -83,7 +83,6 @@ def test_setup_files_01():
 
 def test_file_prefix_01():
     """It builds the directory for the iteration."""
-
     asm = build_assembler()
 
     expected = '{}_{}_{:02d}_'.format(
@@ -177,7 +176,7 @@ def test_run_03(error, info):
 
 
 @patch('lib.log.info')
-@patch('lib.db.sra_blast_hits_count')
+@patch('lib.db_atram.sra_blast_hits_count')
 def test_count_blast_hits_01(sra_blast_hits_count, info):
     """It handles no blast hits."""
     asm = build_assembler()
@@ -191,7 +190,7 @@ def test_count_blast_hits_01(sra_blast_hits_count, info):
 
 
 @patch('lib.log.info')
-@patch('lib.db.sra_blast_hits_count')
+@patch('lib.db_atram.sra_blast_hits_count')
 def test_count_blast_hits_02(sra_blast_hits_count, info):
     """It handles one blast hits."""
     asm = build_assembler()
@@ -242,7 +241,7 @@ def test_nothing_assembled_03(info):
 
 
 @patch('lib.log.info')
-@patch('lib.db.assembled_contigs_count')
+@patch('lib.db_atram.assembled_contigs_count')
 def test_assembled_contigs_count_01(assembled_contigs_count, info):
     """Handle when here are no contigs."""
     high_score = 5
@@ -261,15 +260,15 @@ def test_assembled_contigs_count_01(assembled_contigs_count, info):
     expect = ('No contigs had a bit score greater than {} and are at '
               'least {} bp long in iteration {}. The highest score for '
               'this iteration is {}').format(
-        asm.args['bit_score'],
-        asm.args['contig_length'],
-        asm.state['iteration'],
-        high_score)
+                  asm.args['bit_score'],
+                  asm.args['contig_length'],
+                  asm.state['iteration'],
+                  high_score)
     info.assert_called_once_with(expect)
 
 
 @patch('lib.log.info')
-@patch('lib.db.assembled_contigs_count')
+@patch('lib.db_atram.assembled_contigs_count')
 def test_assembled_contigs_count_02(assembled_contigs_count, info):
     """Handle when here is one contig."""
     high_score = 5
@@ -290,7 +289,7 @@ def test_assembled_contigs_count_02(assembled_contigs_count, info):
 
 
 @patch('lib.log.info')
-@patch('lib.db.iteration_overlap_count')
+@patch('lib.db_atram.iteration_overlap_count')
 def test_no_new_contigs_01(iteration_overlap_count, info):
     """It handles when there are new contigs."""
     count = 1
@@ -310,7 +309,7 @@ def test_no_new_contigs_01(iteration_overlap_count, info):
 
 
 @patch('lib.log.info')
-@patch('lib.db.iteration_overlap_count')
+@patch('lib.db_atram.iteration_overlap_count')
 def test_no_new_contigs_02(iteration_overlap_count, info):
     """It handles when there are no new contigs."""
     count = 1

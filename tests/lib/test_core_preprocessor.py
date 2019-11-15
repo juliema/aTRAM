@@ -6,11 +6,12 @@ from os.path import join
 import tempfile
 from unittest.mock import patch, call
 import lib.db as db
+import lib.db_preprocessor as db_preprocessor
 import lib.core_preprocessor as core_preprocessor
 
 
 def set_up():
-    """A basic setup for the tests."""
+    """Build structures for the tests."""
     args = {
         'blast_db': 'blast_db_1',
         'log_file': 'log_file_1',
@@ -26,9 +27,9 @@ def set_up():
 @patch('lib.log.info')
 @patch('lib.log.setup')
 @patch('lib.db.connect')
-@patch('lib.db.create_metadata_table')
-@patch('lib.db.create_sequences_table')
-@patch('lib.db.create_sequences_index')
+@patch('lib.db_preprocessor.create_metadata_table')
+@patch('lib.db_preprocessor.create_sequences_table')
+@patch('lib.db_preprocessor.create_sequences_index')
 @patch('lib.core_preprocessor.load_seqs')
 @patch('lib.core_preprocessor.assign_seqs_to_shards')
 @patch('lib.core_preprocessor.create_all_blast_shards')
@@ -66,7 +67,7 @@ def test_preprocess_01(
 
 
 @patch('lib.log.info')
-@patch('lib.db.insert_sequences_batch')
+@patch('lib.db_preprocessor.insert_sequences_batch')
 def test_load_one_file_01(insert_sequences_batch, info):
     """Load mixed sequences from a file into the atram database."""
     cxn, args = set_up()
@@ -94,7 +95,7 @@ def test_load_one_file_01(insert_sequences_batch, info):
 
 
 @patch('lib.log.info')
-@patch('lib.db.insert_sequences_batch')
+@patch('lib.db_preprocessor.insert_sequences_batch')
 def test_load_one_file_02(insert_sequences_batch, info):
     """Load end 1 sequences from a file into the atram database."""
     cxn, args = set_up()
@@ -122,7 +123,7 @@ def test_load_one_file_02(insert_sequences_batch, info):
 
 
 @patch('lib.log.info')
-@patch('lib.db.insert_sequences_batch')
+@patch('lib.db_preprocessor.insert_sequences_batch')
 def test_load_one_file_03(insert_sequences_batch, info):
     """Load end 2 sequences from a file into the atram database."""
     cxn, args = set_up()
@@ -150,7 +151,7 @@ def test_load_one_file_03(insert_sequences_batch, info):
 
 
 @patch('lib.log.info')
-@patch('lib.db.insert_sequences_batch')
+@patch('lib.db_preprocessor.insert_sequences_batch')
 def test_load_one_file_04(insert_sequences_batch, info):
     """Load single end sequences from a file into the atram database."""
     cxn, args = set_up()
@@ -179,7 +180,7 @@ def test_load_one_file_04(insert_sequences_batch, info):
 
 
 @patch('lib.log.info')
-@patch('lib.db.insert_sequences_batch')
+@patch('lib.db_preprocessor.insert_sequences_batch')
 def test_load_one_file_05(insert_sequences_batch, info):
     """Load single end sequences from a file into the atram database."""
     cxn, args = set_up()
@@ -201,8 +202,8 @@ def test_load_one_file_05(insert_sequences_batch, info):
 
 
 @patch('lib.log.info')
-@patch('lib.db.get_sequence_count')
-@patch('lib.db.get_shard_cut')
+@patch('lib.db_preprocessor.get_sequence_count')
+@patch('lib.db_preprocessor.get_shard_cut')
 def test_assign_seqs_to_shards_01(
         get_shard_cut, get_sequence_count, info):
     """It assigns sequences to blast DB shards."""
@@ -239,7 +240,7 @@ def test_create_one_blast_shard_01(fill_blast_fasta, create_db):
 
 
 @patch('lib.db.connect')
-@patch('lib.db.get_sequences_in_shard')
+@patch('lib.db_preprocessor.get_sequences_in_shard')
 def test_fill_blast_fasta_01(get_sequences_in_shard, connect):
     """It fills the fasta file used as blast input."""
     dbh = 'my_db'

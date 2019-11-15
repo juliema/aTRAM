@@ -10,7 +10,7 @@ from lib.assemblers.base import BaseAssembler
 
 
 def set_up():
-    """Setup a generic assembler."""
+    """Build a generic assembler."""
     cxn = 'cxn'
     args = {
         'query': ['query_file_1', 'query_file_2'],
@@ -80,9 +80,9 @@ def test_write_query_seq_01():
             assert expect == test_file.read()
 
 
-@patch('lib.db.create_sra_blast_hits_table')
-@patch('lib.db.create_contig_blast_hits_table')
-@patch('lib.db.create_assembled_contigs_table')
+@patch('lib.db_atram.create_sra_blast_hits_table')
+@patch('lib.db_atram.create_contig_blast_hits_table')
+@patch('lib.db_atram.create_assembled_contigs_table')
 def test_clean_database_01(
         create_assembled_contigs_table,
         create_contig_blast_hits_table,

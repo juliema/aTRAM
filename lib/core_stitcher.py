@@ -7,17 +7,15 @@ It uses amino acid targets and DNA assemblies from aTRAM.
 import re
 import os
 from os.path import abspath, join, basename
-from pathlib import Path
-from collections import namedtuple, defaultdict
+from collections import defaultdict
 import csv
 from glob import glob
 from Bio.SeqIO.FastaIO import SimpleFastaParser
+import lib.bio as bio
 import lib.stitcher_db as db
 import lib.log as log
 import lib.util as util
-
-
-CODON_LEN = 3
+import lib.exonerate as exonerate
 
 
 def stitch(args):
@@ -29,11 +27,9 @@ def stitch(args):
             where=args.temp_dir,
             prefix='atram_stitcher_',
             keep=args.keep_temp_dir) as temp_dir:
-        temp_dir = temp_dir
-
         with db.connect(temp_dir, 'atram_stitcher') as cxn:
-            cxn.row_factory = lambda c, r: dict(
-                [(col[0], r[idx]) for idx, col in enumerate(c.description)])
+            cxn.row_factory = lambda c, r: {
+                col[0]: r[idx] for idx, col in enumerate(c.description)}
 
             create_tables(cxn)
 
@@ -46,18 +42,18 @@ def stitch(args):
             iteration += 1
             get_contigs_from_fasta(args, temp_dir, cxn, taxon_names, iteration)
             contig_file_write(cxn, iteration)
-            run_exonerate(temp_dir, cxn, iteration)
+            exonerate.run_exonerate(temp_dir, cxn, iteration)
             early_exit_check(cxn)
 
             # Iterations 2-N get their data from the previous stitch
-            for i in range(1, args.iterations):
+            for _ in range(1, args.iterations):
                 stitch_everything(args, cxn, iteration)
 
                 iteration += 1
                 get_contigs_from_previous_stitch(
                     temp_dir, cxn, taxon_names, iteration)
                 contig_file_write(cxn, iteration)
-                run_exonerate(temp_dir, cxn, iteration)
+                exonerate.run_exonerate(temp_dir, cxn, iteration)
 
             # The final stitch is pickier than the others
             stitch_with_gaps(args, cxn, taxon_names, iteration)
@@ -136,7 +132,7 @@ def check_file_counts(args, cxn, taxon_names):
     counts = defaultdict(list)
     for contig_file in contig_files:
         ref_name, taxon_name = parse_contig_file_name(
-                ref_names, taxon_names, contig_file)
+            ref_names, taxon_names, contig_file)
         if not ref_name or not taxon_name:
             continue
         counts[(ref_name, taxon_name)].append(contig_file)
@@ -201,7 +197,7 @@ def get_contigs_from_fasta(args, temp_dir, cxn, taxon_names, iteration):
 
                 contig_file = basename(contig_path)
                 ref_name, taxon_name = parse_contig_file_name(
-                        ref_names, taxon_names, contig_file)
+                    ref_names, taxon_names, contig_file)
 
                 if ref_name not in ref_names or taxon_name not in taxon_names:
                     continue
@@ -276,71 +272,6 @@ def contig_file_write(cxn, iteration):
                     contig['contig_seq'])
 
 
-def run_exonerate(temp_dir, cxn, iteration):
-    """Run exonerate on every reference sequence, taxon combination."""
-    for ref in db.select_reference_genes(cxn):
-        log.info('{} exonerate run for: {}'.format(
-            util.as_word(iteration), ref['ref_name']))
-
-        results_file = abspath(join(
-                temp_dir,
-                '{}.iteration_{}.results.fasta'.format(
-                    ref['ref_name'], iteration)))
-
-        Path(results_file).touch()
-
-        for contig_file in db.select_contigs(
-                cxn, ref['ref_name'], iteration=iteration):
-
-            if util.fasta_file_is_empty(contig_file['contig_file']):
-                continue
-
-            exonerate_command(temp_dir, ref, contig_file, results_file)
-
-        insert_exonerate_results(cxn, iteration, results_file)
-
-
-def exonerate_command(temp_dir, ref, contig_file, results_file):
-    """Build and run the exonerate program."""
-    cmd = util.shorten(r"""
-        exonerate --verbose 0 --model protein2genome {ref_file}
-        {contig_file}
-        --showvulgar no --showalignment no
-        --ryo ">{ref_name},{taxon_name},%ti,%qab,%qae\n%tcs\n"
-        >> {results_file};""").format(
-            ref_file=ref['ref_file'],
-            contig_file=contig_file['contig_file'],
-            ref_name=ref['ref_name'],
-            taxon_name=contig_file['taxon_name'],
-            results_file=results_file)
-
-    log.subcommand(cmd, temp_dir)
-
-
-def insert_exonerate_results(cxn, iteration, results_file):
-    """Insert the exonerate results into the database."""
-    ExonerateHeader = namedtuple(
-            'ExonerateHeader',
-            ['ref_name', 'taxon_name', 'contig_name', 'beg', 'end'])
-
-    batch = []
-    with open(results_file) as results_fasta:
-        for header, seq in SimpleFastaParser(results_fasta):
-            header = header.split(',')
-            field = ExonerateHeader(*header)
-            result = {
-                'ref_name': field.ref_name,
-                'taxon_name': field.taxon_name,
-                'contig_name': field.contig_name,
-                'beg': field.beg,
-                'end': field.end,
-                'iteration': iteration,
-                'seq': seq}
-            batch.append(result)
-
-    db.insert_exonerate_results(cxn, batch)
-
-
 def early_exit_check(cxn):
     """Check for empty results after the first iteration."""
     if db.select_exonerate_count(cxn):
@@ -401,16 +332,17 @@ def stitch_everything(args, cxn, iteration):
 
 
 def stitch_with_gaps(args, cxn, taxon_names, iteration):
-    """Choose the contigs to cover the reference gene.
+    """
+    Choose the contigs to cover the reference gene.
 
     In this stitching iteration we are assembling the exon with gaps.
     """
     for ref in db.select_reference_genes(cxn):
         ref_name = ref['ref_name']
-        ref_len = len(ref['ref_seq']) * CODON_LEN
+        ref_len = len(ref['ref_seq']) * bio.CODON_LEN
 
         log.info('{} stitching run for: {}'.format(
-                util.as_word(iteration), ref_name))
+            util.as_word(iteration), ref_name))
 
         for taxon_name in taxon_names:
 
@@ -435,7 +367,7 @@ def stitch_with_gaps(args, cxn, taxon_names, iteration):
                     if curr_contig:
                         curr_contig = dict(curr_contig)
                         beg = prev_contig['end'] - curr_contig['beg'] - 1
-                        seq = curr_contig['seq'][beg * CODON_LEN:]
+                        seq = curr_contig['seq'][beg * bio.CODON_LEN:]
 
                 if not curr_contig:
                     curr_contig = db.select_next(
@@ -457,7 +389,7 @@ def stitch_with_gaps(args, cxn, taxon_names, iteration):
                                 'contig_name': None,
                                 'position': position,
                                 'iteration': iteration,
-                                'seq': 'N' * (gap * CODON_LEN)})
+                                'seq': 'N' * (gap * bio.CODON_LEN)})
 
                 if curr_contig:
                     position += 1
@@ -493,7 +425,7 @@ def output_stitched_genes(args, cxn, taxon_names, iteration):
         ref_name = ref['ref_name']
 
         out_path = '{}.{}.stitched_exons.fasta'.format(
-                args.output_prefix, ref_name)
+            args.output_prefix, ref_name)
 
         with open(out_path, 'w') as out_file:
 

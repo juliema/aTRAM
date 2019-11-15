@@ -151,7 +151,7 @@ def parse_command_line():
     all_files = []
     for ends in ['mixed_ends', 'end_1', 'end_2', 'single_ends']:
         if args.get(ends):
-            all_files.extend([i for i in args[ends]])
+            all_files.extend(i for i in args[ends])
 
     args['shard_count'] = blast.default_shard_count(args, all_files)
 

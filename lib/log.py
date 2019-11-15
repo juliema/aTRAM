@@ -20,12 +20,12 @@ def setup(log_file, blast_db, query_file=''):
 
 
 def stitcher_setup(log_file):
-    """Setup logging for the stitcher."""
+    """Build a logger for the stitcher."""
     _setup(log_file)
 
 
 def _setup(log_file):
-    global LOGGER
+    global LOGGER  # pylint: disable=global-statement
 
     if not LOGGER:
         handler = logging.FileHandler(log_file)
@@ -82,8 +82,6 @@ def subcommand(cmd, temp_dir, timeout=None):
                 timeout=timeout,
                 stdout=log_output,
                 stderr=log_output)
-        except (subprocess.CalledProcessError, TimeoutError):
-            raise
         finally:
             with open(log_output.name) as log_input:
                 for line in log_input:

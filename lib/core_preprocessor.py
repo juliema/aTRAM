@@ -12,6 +12,7 @@ import numpy as np
 from Bio.SeqIO.QualityIO import FastqGeneralIterator
 from Bio.SeqIO.FastaIO import SimpleFastaParser
 import lib.db as db
+import lib.db_preprocessor as db_preprocessor
 import lib.log as log
 import lib.util as util
 import lib.blast as blast
@@ -28,13 +29,13 @@ def preprocess(args):
         util.update_temp_dir(temp_dir, args)
 
         with db.connect(args['blast_db'], clean=True) as cxn:
-            db.create_metadata_table(cxn, args)
+            db_preprocessor.create_metadata_table(cxn, args)
 
-            db.create_sequences_table(cxn)
+            db_preprocessor.create_sequences_table(cxn)
             load_seqs(args, cxn)
 
             log.info('Creating an index for the sequence table')
-            db.create_sequences_index(cxn)
+            db_preprocessor.create_sequences_index(cxn)
 
             shard_list = assign_seqs_to_shards(cxn, args['shard_count'])
 
@@ -69,10 +70,10 @@ def load_one_file(args, cxn, file_name, ends, seq_end_clamp=''):
             batch.append((seq_name, seq_end, seq))
 
             if len(batch) >= db.BATCH_SIZE:
-                db.insert_sequences_batch(cxn, batch)
+                db_preprocessor.insert_sequences_batch(cxn, batch)
                 batch = []
 
-        db.insert_sequences_batch(cxn, batch)
+        db_preprocessor.insert_sequences_batch(cxn, batch)
 
 
 def get_parser(args, file_name):
@@ -85,9 +86,9 @@ def assign_seqs_to_shards(cxn, shard_count):
     """Assign sequences to blast DB shards."""
     log.info('Assigning sequences to shards')
 
-    total = db.get_sequence_count(cxn)
+    total = db_preprocessor.get_sequence_count(cxn)
     offsets = np.linspace(0, total - 1, dtype=int, num=shard_count + 1)
-    cuts = [db.get_shard_cut(cxn, offset) for offset in offsets]
+    cuts = [db_preprocessor.get_shard_cut(cxn, offset) for offset in offsets]
 
     # Make sure the last sequence gets included
     cuts[-1] = cuts[-1] + 'z'
@@ -145,5 +146,6 @@ def fill_blast_fasta(blast_db, fasta_path, shard_params):
         limit, offset = shard_params
 
         with open(fasta_path, 'w') as fasta_file:
-            for row in db.get_sequences_in_shard(cxn, limit, offset):
+            for row in db_preprocessor.get_sequences_in_shard(
+                    cxn, limit, offset):
                 util.write_fasta_record(fasta_file, row[0], row[2], row[1])

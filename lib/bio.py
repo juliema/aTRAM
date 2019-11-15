@@ -3,6 +3,8 @@
 import re
 from Bio import SeqIO
 
+CODON_LEN = 3
+
 COMPLEMENT = str.maketrans('ACGTUWSMKRYBDHVNXacgtuwsmkrybdhvnx',
                            'TGCAAWSKMYRVHDBNXtgcaawskmyrvhdbnx')
 
