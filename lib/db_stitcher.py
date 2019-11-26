@@ -128,6 +128,12 @@ def create_exonerate_table(cxn):
         """)
 
 
+def select_exonerate_ref_gene(cxn, ref_name):
+    """Get all exonerate results for a reference gene."""
+    return cxn.execute(
+        """SELECT * FROM exonerate WHERE ref_name = ?""", (ref_name, ))
+
+
 def select_exonerate_count(cxn):
     """Select all reference name, taxon name combination."""
     result = cxn.execute("""SELECT COUNT(*) AS n FROM exonerate;""")
