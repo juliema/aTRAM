@@ -50,7 +50,8 @@ def output_contigs(args, cxn):
 
         with open(out_path, 'w') as out_file:
 
-            for contig in db.select_exonerate_ref_gene(cxn, ref_name):
+            for contig in db.select_exonerate_ref_gene(
+                    cxn, ref_name, args.min_length):
                 beg = contig['beg'] * bio.CODON_LEN
                 end = contig['end'] * bio.CODON_LEN
                 beg_seq = 'N' * beg if beg else ''

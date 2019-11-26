@@ -43,6 +43,11 @@ def parse_command_line():
         help="""The path to the DNA contigs.""")
 
     parser.add_argument(
+        '-m', '--min-length', metavar='LENGTH', default=100, type=int,
+        help="""Remove contigs that are less than this length. The default is
+            100.""")
+
+    parser.add_argument(
         '-t', '--temp-dir', metavar='DIR',
         help="""Place temporary files in this directory. All files will be
             deleted after aTRAM completes. The directory must exist.""")
