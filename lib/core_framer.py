@@ -1,7 +1,7 @@
 """Put exons into the correct reading frames."""
 
 import lib.exonerate as exonerate
-import lib.stitcher_db as db
+import lib.db_stitcher as db
 import lib.log as log
 import lib.util as util
 
@@ -39,6 +39,7 @@ def frame(args):
 
 def frame_contigs(cxn):
     """Add NNNs to align the contigs to the reference sequence."""
+    log.info('Framing contigs')
 
 
 def output_framed_contigs(args, cxn):
