@@ -5,8 +5,8 @@ from Bio import SeqIO
 
 CODON_LEN = 3
 
-COMPLEMENT = str.maketrans('ACGTUWSMKRYBDHVNXacgtuwsmkrybdhvnx',
-                           'TGCAAWSKMYRVHDBNXtgcaawskmyrvhdbnx')
+COMPLEMENT = str.maketrans('ACGTUWSMKRYBDHVNXacgtuwsmkrybdhvnx-',
+                           'TGCAAWSKMYRVHDBNXtgcaawskmyrvhdbnx-')
 
 IS_PROTEIN = re.compile(r'[EFILPQ]', re.IGNORECASE)
 
