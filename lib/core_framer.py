@@ -52,9 +52,7 @@ def output_contigs(args, cxn):
 
             for contig in db.select_exonerate_ref_gene(
                     cxn, ref_name, args.min_length):
-                beg = contig['beg'] * bio.CODON_LEN
-                end = contig['end'] * bio.CODON_LEN
-                beg_seq = 'N' * beg if beg else ''
-                end_seq = 'N' * (ref_len - end) if end < ref_len else ''
-                seq = beg_seq + contig['seq'] + end_seq
+                seq = 'N' * (contig['beg'] * bio.CODON_LEN)
+                seq += contig["seq"]
+                seq += 'N' * (ref_len - len(seq))
                 util.write_fasta_record(out_file, contig['contig_name'], seq)
