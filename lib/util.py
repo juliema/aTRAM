@@ -55,7 +55,6 @@ def update_temp_dir(temp_dir, args):
 def make_temp_dir(where=None, prefix=None, keep=False):
     """Handle creation and deletion of temporary directory."""
     temp_dir = mkdtemp(prefix=prefix, dir=where)
-    print(temp_dir)
     try:
         yield temp_dir
     finally:
