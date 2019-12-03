@@ -9,7 +9,7 @@ from shutil import rmtree
 import gzip
 import bz2
 from contextlib import contextmanager
-from tempfile import mkstemp
+from tempfile import mkdtemp
 from Bio.SeqIO.FastaIO import SimpleFastaParser
 
 
@@ -54,7 +54,8 @@ def update_temp_dir(temp_dir, args):
 @contextmanager
 def make_temp_dir(where=None, prefix=None, keep=False):
     """Handle creation and deletion of temporary directory."""
-    temp_dir = mkstemp(prefix=prefix, dir=where)
+    temp_dir = mkdtemp(prefix=prefix, dir=where)
+    print(temp_dir)
     try:
         yield temp_dir
     finally:
