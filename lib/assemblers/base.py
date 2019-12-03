@@ -200,7 +200,8 @@ class BaseAssembler:  # pylint: disable=too-many-public-methods
         """Build the prefix for the name of the final output file."""
         blast_db = basename(blast_db)
         query = splitext(basename(query))[0]
-        return '{}.{}_{}'.format(self.args['output_prefix'], blast_db, query)
+        return util.prefix_file(
+            self.args['output_prefix'], '{}_{}'.format(blast_db, query))
 
     def write_final_output(self, blast_db, query):
         """Write the assembler results file.

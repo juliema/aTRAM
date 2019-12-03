@@ -128,15 +128,16 @@ def create_exonerate_table(cxn):
         """)
 
 
-def select_exonerate_ref_gene(cxn, ref_name, min_len):
+def select_exonerate_taxa(cxn, taxon_name, min_len):
     """Get all exonerate results for a reference gene."""
     return cxn.execute(
         """SELECT *
-             FROM exonerate 
-            WHERE ref_name = ?
+             FROM exonerate
+             JOIN reference_genes USING (ref_name)
+            WHERE taxon_name = ?
               AND LENGTH(seq) >= ?
          GROUP BY seq;""",
-        (ref_name, min_len))
+        (taxon_name, min_len))
 
 
 def select_exonerate_count(cxn):

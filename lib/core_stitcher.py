@@ -251,8 +251,8 @@ def output_stitched_genes(args, cxn, taxon_names, iteration):
     for ref in db.select_reference_genes(cxn):
         ref_name = ref['ref_name']
 
-        out_path = '{}.{}.stitched_exons.fasta'.format(
-            args.output_prefix, ref_name)
+        out_path = util.prefix_file(
+            args.output_prefix, '{}.stitched_exons.fasta'.format(ref_name))
 
         with open(out_path, 'w') as out_file:
 
@@ -286,7 +286,8 @@ def output_stitched_genes(args, cxn, taxon_names, iteration):
 
 def output_summary_per_gene(args, cxn, iteration):
     """Print per gene summary statistics."""
-    out_path = '{}.summary_stats_per_ref_gene.csv'.format(args.output_prefix)
+    out_path = util.prefix_file(
+        args.output_prefix, 'summary_stats_per_ref_gene.csv')
     with open(out_path, 'w') as out_file:
         writer = csv.writer(out_file)
         writer.writerow(['Locus', 'Taxon', 'Query_Length', 'Target_Length'])
@@ -301,7 +302,8 @@ def output_summary_per_gene(args, cxn, iteration):
 
 def output_summary_per_taxon(args, cxn, iteration):
     """Print per taxon summary statistics."""
-    out_path = '{}.summary_stats_per_taxon.csv'.format(args.output_prefix)
+    out_path = util.prefix_file(
+        args.output_prefix, 'summary_stats_per_taxon.csv')
     with open(out_path, 'w') as out_file:
         writer = csv.writer(out_file)
         writer.writerow([

@@ -210,7 +210,7 @@ def get_contigs_from_fasta(args, temp_dir, cxn, taxon_names, iteration):
 
                 tiebreaker += 1
                 contig_name = '{}@{}_{}_{}'.format(
-                    ref_name, taxon_name, contig_name, tiebreaker)
+                    taxon_name, ref_name, contig_name, tiebreaker)
                 contig_name = re.sub(r'[^\w@]+', '_', contig_name.strip())
 
                 contig_file = abspath(join(temp_dir, contig_name + '.fasta'))

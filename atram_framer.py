@@ -92,7 +92,11 @@ def parse_command_line():
         args.output_prefix = join(
             '.', 'atram_framer_' + date.today().isoformat())
 
-    if not args.log_file:
+    if not args.log_file and args.output_prefix[-1] == '/':
+        args.log_file = join(
+            args.output_prefix,
+            'atram_stitcher_' + date.today().isoformat() + '.log')
+    else:
         args.log_file = args.output_prefix + '.log'
 
     return args

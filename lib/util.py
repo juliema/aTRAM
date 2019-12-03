@@ -2,7 +2,7 @@
 
 import os
 import io
-from os.path import exists, getsize
+from os.path import exists, getsize, join, split
 import re
 import sys
 from shutil import rmtree
@@ -135,3 +135,10 @@ def shard_file_size(args, file_name):
         file_size /= 2  # Guessing that fastq files ~2x fasta files
 
     return file_size
+
+
+def prefix_file(prefix, name):
+    """Calculate the output path."""
+    dir_, file_ = split(prefix)
+    file_ += '.' if file_ and file_[-1] != '.' else ''
+    return join(dir_, file_ + name)
