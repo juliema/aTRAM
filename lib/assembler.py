@@ -5,11 +5,11 @@ from shutil import which
 import textwrap
 import psutil
 import lib.log as log
-from lib.assemblers.abyss import AbyssAssembler
-from lib.assemblers.spades import SpadesAssembler
-from lib.assemblers.trinity import TrinityAssembler
-from lib.assemblers.velvet import VelvetAssembler
-from lib.assemblers.none import NoneAssembler
+from .assemblers.abyss import AbyssAssembler
+from .assemblers.spades import SpadesAssembler
+from .assemblers.trinity import TrinityAssembler
+from .assemblers.velvet import VelvetAssembler
+from .assemblers.none import NoneAssembler
 
 
 ASSEMBLERS = {

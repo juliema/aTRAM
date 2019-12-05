@@ -1,6 +1,6 @@
 """Database functions for the preprocessor."""
 
-from lib.db import DB_VERSION
+from .db import DB_VERSION
 
 
 # ########################## metadata table ##################################

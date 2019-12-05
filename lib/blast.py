@@ -7,8 +7,8 @@ import re
 import glob
 import json
 from shutil import which
-import lib.log as log
-import lib.util as util
+from . import log
+from . import util
 
 
 def create_db(temp_dir, fasta_file, shard):

@@ -1,10 +1,10 @@
 """Put exons into the correct reading frames."""
 
-import lib.bio as bio
-import lib.exonerate as exonerate
-import lib.db_stitcher as db
-import lib.log as log
-import lib.util as util
+from . import bio
+from . import exonerate
+from . import db_stitcher as db
+from . import log
+from . import util
 
 
 def frame(args):

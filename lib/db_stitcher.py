@@ -1,6 +1,6 @@
 """Handle database functions for the stitcher utility."""
 
-from lib.db import temp_db
+from .db import temp_db
 
 
 def connect(temp_dir, db_prefix):
@@ -214,7 +214,7 @@ def select_overlap(
          LIMIT 1;
         """
     result = cxn.execute(
-            sql, (ref_name, taxon_name, iteration, end, beg_lo, beg_hi))
+        sql, (ref_name, taxon_name, iteration, end, beg_lo, beg_hi))
     return result.fetchone()
 
 

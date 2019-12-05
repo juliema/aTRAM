@@ -1,8 +1,8 @@
 """Null object for the assemblers."""
 
-import lib.db as db
-import lib.util as util
-from lib.assemblers.base import BaseAssembler
+from .. import db
+from .. import util
+from .base import BaseAssembler
 
 
 class NoneAssembler(BaseAssembler):

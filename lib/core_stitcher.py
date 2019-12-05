@@ -6,11 +6,11 @@ It uses amino acid targets and DNA assemblies from aTRAM.
 
 from os.path import abspath, join
 import csv
-import lib.bio as bio
-import lib.db_stitcher as db
-import lib.log as log
-import lib.util as util
-import lib.exonerate as exonerate
+from . import bio
+from . import db_stitcher as db
+from . import log
+from . import util
+from . import exonerate
 
 
 def stitch(args):

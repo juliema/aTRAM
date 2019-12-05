@@ -3,10 +3,10 @@
 from os.path import basename, exists, getsize, join, splitext, abspath
 import datetime
 from subprocess import CalledProcessError
-import lib.db_atram as db_atram
-import lib.log as log
-import lib.bio as bio
-import lib.util as util
+from .. import db_atram
+from .. import log
+from .. import bio
+from .. import util
 
 
 class BaseAssembler:  # pylint: disable=too-many-public-methods

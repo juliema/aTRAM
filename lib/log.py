@@ -5,7 +5,7 @@ import sys
 import logging
 import tempfile
 import subprocess
-import lib.db as db
+from . import db
 
 LOGGER = None  # Global logger so we can switch between queries & blast DBs
 FORMATTER = logging.Formatter('%(asctime)s %(levelname)s: %(message)s',

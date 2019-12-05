@@ -2,7 +2,7 @@
 
 from os.path import join
 import shutil
-from lib.assemblers.base import BaseAssembler
+from .base import BaseAssembler
 
 
 class SpadesAssembler(BaseAssembler):

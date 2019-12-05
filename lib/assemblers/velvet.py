@@ -1,7 +1,7 @@
 """Wrapper for the Velvet assembler."""
 
 import shutil
-from lib.assemblers.base import BaseAssembler
+from .base import BaseAssembler
 
 
 class VelvetAssembler(BaseAssembler):

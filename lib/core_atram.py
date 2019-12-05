@@ -5,13 +5,13 @@ import os
 from os.path import basename, split, splitext, join
 from multiprocessing import Pool
 from Bio import SeqIO
-import lib.db as db
-import lib.db_atram as db_atram
-import lib.log as log
-import lib.bio as bio
-import lib.util as util
-import lib.blast as blast
-import lib.assembler as assembly
+from . import db
+from . import db_atram
+from . import log
+from . import bio
+from . import util
+from . import blast
+from . import assembler as assembly
 
 
 def assemble(args):

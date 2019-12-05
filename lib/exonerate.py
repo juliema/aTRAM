@@ -3,14 +3,13 @@
 import re
 import os
 from os.path import abspath, join, basename
-from collections import defaultdict
+from collections import defaultdict, namedtuple
 from glob import glob
 from pathlib import Path
-from collections import namedtuple
 from Bio.SeqIO.FastaIO import SimpleFastaParser
-import lib.db_stitcher as db
-import lib.log as log
-import lib.util as util
+from . import db_stitcher as db
+from . import log
+from . import util
 
 
 def run_exonerate(temp_dir, cxn, iteration):

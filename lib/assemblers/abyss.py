@@ -2,7 +2,7 @@
 
 from os.path import realpath
 from shutil import copyfile
-from lib.assemblers.base import BaseAssembler
+from .base import BaseAssembler
 
 
 class AbyssAssembler(BaseAssembler):

@@ -11,11 +11,11 @@ import multiprocessing
 import numpy as np
 from Bio.SeqIO.QualityIO import FastqGeneralIterator
 from Bio.SeqIO.FastaIO import SimpleFastaParser
-import lib.db as db
-import lib.db_preprocessor as db_preprocessor
-import lib.log as log
-import lib.util as util
-import lib.blast as blast
+from . import db
+from . import db_preprocessor
+from . import log
+from . import util
+from . import blast
 
 
 def preprocess(args):
