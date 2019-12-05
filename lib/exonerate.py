@@ -12,6 +12,9 @@ from . import log
 from . import util
 
 
+TIEBREAKER = 0
+
+
 def run_exonerate(temp_dir, cxn, iteration):
     """Run exonerate on every reference sequence, taxon combination."""
     for ref in db.select_reference_genes(cxn):
@@ -194,10 +197,8 @@ def get_contigs_from_fasta(args, temp_dir, cxn, taxon_names, iteration):
         if os.stat(contig_path).st_size == 0:
             continue
 
-        tiebreaker = 0
-
         with open(contig_path) as contig_old:
-            for i, (contig_name, contig_seq) \
+            for i, (header, contig_seq) \
                     in enumerate(SimpleFastaParser(contig_old)):
 
                 contig_file = basename(contig_path)
@@ -207,11 +208,7 @@ def get_contigs_from_fasta(args, temp_dir, cxn, taxon_names, iteration):
                 if ref_name not in ref_names or taxon_name not in taxon_names:
                     continue
 
-                tiebreaker += 1
-                contig_name = '{}@{}_{}_{}'.format(
-                    taxon_name, ref_name, contig_name, tiebreaker)
-                contig_name = re.sub(r'[^\w@]+', '_', contig_name.strip())
-
+                contig_name = name_contig(taxon_name, ref_name, header)
                 contig_file = abspath(join(temp_dir, contig_name + '.fasta'))
 
                 batch.append({
@@ -236,3 +233,13 @@ def contig_file_write(cxn):
                 fasta_file,
                 contig['contig_name'],
                 contig['contig_seq'])
+
+
+def name_contig(taxon_name, ref_name, header):
+    """Shorten contig names."""
+    global TIEBREAKER  # pylint: disable=global-statement
+    TIEBREAKER += 1
+    contig_name = header.split()[0]
+    name = '{}@{}_{}_{}'.format(taxon_name, ref_name, contig_name, TIEBREAKER)
+    name = re.sub(r'[^\w@]+', '_', name.strip())
+    return name

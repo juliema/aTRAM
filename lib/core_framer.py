@@ -31,26 +31,28 @@ def frame(args):
                 args, temp_dir, cxn, taxon_names, iteration)
             exonerate.contig_file_write(cxn)
             exonerate.run_exonerate(temp_dir, cxn, iteration)
-            output_contigs(args, cxn, taxon_names)
+            output_contigs(args, cxn)
 
             log.info('Writing output')
 
         log.info('Finished.')
 
 
-def output_contigs(args, cxn, taxon_names):
+def output_contigs(args, cxn):
     """Add NNNs to align the contigs to the reference sequence."""
     log.info('Framing contigs')
 
-    for taxon in taxon_names:
+    for ref in db.select_reference_genes(cxn):
+        ref_name = ref['ref_name']
+        ref_len = len(ref['ref_seq']) * bio.CODON_LEN
+
         out_path = util.prefix_file(
-            args.output_prefix, '{}.fasta'.format(taxon))
+            args.output_prefix, '{}.fasta'.format(ref_name))
 
         with open(out_path, 'w') as out_file:
 
-            for contig in db.select_exonerate_taxa(
-                    cxn, taxon, args.min_length):
-                ref_len = len(contig['ref_seq']) * bio.CODON_LEN
+            for contig in db.select_exonerate_ref_gene(
+                    cxn, ref_name, args.min_length):
                 seq = 'N' * (contig['beg'] * bio.CODON_LEN)
                 seq += contig["seq"]
                 seq += 'N' * (ref_len - len(seq))

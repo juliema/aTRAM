@@ -182,11 +182,11 @@ class BaseAssembler:  # pylint: disable=too-many-public-methods
 
                 if row['seq_end'] == '1':
                     out_file = end_1
-                    seq_end = '/1'
+                    seq_end = '1'
                     self.file['single_1_count'] += 1
                 elif row['seq_end'] == '2':
                     out_file = end_2
-                    seq_end = '/2'
+                    seq_end = '2'
                     self.file['single_2_count'] += 1
                 else:
                     out_file = end_any
@@ -261,7 +261,7 @@ class BaseAssembler:  # pylint: disable=too-many-public-methods
             seq = bio.reverse_complement(seq)
             suffix = '_REV'
 
-        header = '{}_{}_{} iteration={} contig_id={} score={}'.format(
+        header = '{}_{}{} iteration={} contig_id={} score={}'.format(
             contig['iteration'], contig['contig_id'], suffix,
             contig['iteration'], contig['contig_id'], contig['bit_score'])
 
