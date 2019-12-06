@@ -35,7 +35,7 @@ def frame(args):
 
             log.info('Writing output')
 
-        log.info('Finished.')
+        log.info('Finished')
 
 
 def output_contigs(args, cxn):

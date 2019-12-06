@@ -20,6 +20,8 @@ admin/
 build/
 junk*
 exon_stitching/
+dist/
+data/
 
 .coverage
 .cache
@@ -34,7 +36,3 @@ exon_stitching/
 
 .ipynb_checkpoints/
 .~lock*
-
-build/
-dist/
-exon_stitching/

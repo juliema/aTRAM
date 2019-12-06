@@ -59,7 +59,7 @@ def stitch(args):
             output_summary_per_gene(args, cxn, iteration)
             output_summary_per_taxon(args, cxn, iteration)
 
-        log.info('Finished.')
+        log.info('Finished')
 
 
 def get_contigs_from_previous_stitch(temp_dir, cxn, taxon_names, iteration):

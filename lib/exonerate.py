@@ -18,8 +18,7 @@ TIEBREAKER = 0
 def run_exonerate(temp_dir, cxn, iteration):
     """Run exonerate on every reference sequence, taxon combination."""
     for ref in db.select_reference_genes(cxn):
-        log.info('{} exonerate run for: {}'.format(
-            util.as_word(iteration), ref['ref_name']))
+        log.info('Exonerate run for: {}'.format(ref['ref_name']))
 
         results_file = abspath(join(
             temp_dir,
@@ -240,6 +239,7 @@ def name_contig(taxon_name, ref_name, header):
     global TIEBREAKER  # pylint: disable=global-statement
     TIEBREAKER += 1
     contig_name = header.split()[0]
+    contig_name = re.sub(r'_(length|cov|iteration|score).*', '', contig_name)
     name = '{}@{}_{}_{}'.format(taxon_name, ref_name, contig_name, TIEBREAKER)
     name = re.sub(r'[^\w@]+', '_', name.strip())
     return name
