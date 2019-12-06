@@ -233,22 +233,27 @@ def contig_file_write(cxn):
 
 TIEBREAKER = 0
 ITERATION = re.compile(r'iteration.(\d+)', re.IGNORECASE)
-COVERAGE = re.compile(r'cov.(\d+)', re.IGNORECASE)
-SCORE = re.compile(r'score.(\d+)', re.IGNORECASE)
+COVERAGE = re.compile(r'cov.([\d.]+)', re.IGNORECASE)
+SCORE = re.compile(r'score.([\d.]+)', re.IGNORECASE)
 
 
 def name_contig(taxon_name, ref_name, header):
     """Shorten contig names."""
     global TIEBREAKER  # pylint: disable=global-statement
     TIEBREAKER += 1
-    hit = ITERATION.search(header)
-    iteration = 'i{}'.format(hit[1]) if hit else ''
-    hit = COVERAGE.search(header)
-    coverage = 'c{}'.format(hit[1]) if hit else ''
-    hit = SCORE.search(header)
-    score = 's{}'.format(hit[1]) if hit else ''
+
+    match = ITERATION.search(header)
+    iteration = 'i{}'.format(match[1]) if match else ''
+
+    match = COVERAGE.search(header)
+    coverage = 'c{}'.format(round(float(match[1]))) if match else ''
+
+    match = SCORE.search(header)
+    score = 's{}'.format(round(float(match[1]))) if match else ''
+
     contig = '{}{}{}'.format(iteration, coverage, score)
     contig = contig if contig else str(TIEBREAKER)
+
     name = '{}@{}_{}'.format(taxon_name, ref_name, contig)
     name = re.sub(r'[^\w@]+', '_', name.strip())
     return name
