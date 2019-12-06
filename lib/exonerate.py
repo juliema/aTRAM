@@ -12,9 +12,6 @@ from . import log
 from . import util
 
 
-TIEBREAKER = 0
-
-
 def run_exonerate(temp_dir, cxn, iteration):
     """Run exonerate on every reference sequence, taxon combination."""
     for ref in db.select_reference_genes(cxn):
@@ -234,6 +231,7 @@ def contig_file_write(cxn):
                 contig['contig_seq'])
 
 
+TIEBREAKER = 0
 ITERATION = re.compile(r'iteration.(\d+)', re.IGNORECASE)
 COVERAGE = re.compile(r'cov.(\d+)', re.IGNORECASE)
 SCORE = re.compile(r'score.(\d+)', re.IGNORECASE)
@@ -251,8 +249,6 @@ def name_contig(taxon_name, ref_name, header):
     score = 's{}'.format(hit[1]) if hit else ''
     contig = '{}{}{}'.format(iteration, coverage, score)
     contig = contig if contig else str(TIEBREAKER)
-    # contig_name = header.split()[0]
-    # contig = re.sub(r'_(length|cov|iteration|score).*', '', contig_name)
     name = '{}@{}_{}'.format(taxon_name, ref_name, contig)
     name = re.sub(r'[^\w@]+', '_', name.strip())
     return name
