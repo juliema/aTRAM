@@ -1,8 +1,8 @@
 """Misc. utilities."""
 
 import os
-import io
 from os.path import exists, getsize, join, split
+import io
 import re
 import sys
 from shutil import rmtree

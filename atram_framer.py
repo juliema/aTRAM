@@ -60,7 +60,7 @@ def parse_command_line():
     parser.add_argument(
         '-l', '--log-file',
         help="""Log file (full path). The default is
-            "atram_stitcher_<date>.log".""")
+            "atram_framer_<date>.log".""")
 
     parser.add_argument(
         '-o', '--output-prefix',
@@ -95,7 +95,7 @@ def parse_command_line():
     if not args.log_file and args.output_prefix[-1] == '/':
         args.log_file = join(
             args.output_prefix,
-            'atram_stitcher_' + date.today().isoformat() + '.log')
+            'atram_framer_' + date.today().isoformat() + '.log')
     else:
         args.log_file = args.output_prefix + '.log'
 

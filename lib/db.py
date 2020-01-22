@@ -5,7 +5,6 @@ import sys
 import os
 from os.path import basename, join, exists
 
-
 ATRAM_VERSION = 'v2.3.0'
 
 # DB_VERSION != ATRAM_VERSION
@@ -92,7 +91,7 @@ def temp_db(temp_dir, db_prefix):
 def db_setup(db_name):
     """Database setup."""
     cxn = sqlite3.connect(db_name, timeout=30.0)
-    cxn.execute("PRAGMA page_size = {}".format(2**16))
+    cxn.execute("PRAGMA page_size = {}".format(2 ** 16))
     cxn.execute("PRAGMA journal_mode = WAL")
     return cxn
 
@@ -106,7 +105,7 @@ def check_versions(cxn):
         err = ('The database was built with version {} but you are running '
                'version {}. You need to rebuild the atram database by '
                'running atram_preprocessor.py again.').format(
-                   version, DB_VERSION)
+            version, DB_VERSION)
         sys.exit(err)
 
 
@@ -116,7 +115,7 @@ def get_metadata(cxn, key, default=''):
     """Get the current database version."""
     sql = """SELECT value FROM metadata WHERE label = ?"""
     try:
-        result = cxn.execute(sql, (key, ))
+        result = cxn.execute(sql, (key,))
         result = result.fetchone()
         return default if not result else result[0]
     except sqlite3.OperationalError:
