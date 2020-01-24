@@ -184,6 +184,7 @@ def get_contigs_from_fasta(args, temp_dir, cxn, taxon_names, iteration):
         util.as_word(iteration), args.assemblies_dir))
 
     batch = []
+    names_seen = defaultdict(int)
 
     ref_names = set(x['ref_name'] for x in db.select_reference_genes(cxn))
 
@@ -204,7 +205,8 @@ def get_contigs_from_fasta(args, temp_dir, cxn, taxon_names, iteration):
                 if ref_name not in ref_names or taxon_name not in taxon_names:
                     continue
 
-                contig_name = name_contig(taxon_name, ref_name, header)
+                contig_name = name_contig(
+                    taxon_name, ref_name, header, names_seen)
                 contig_file = abspath(join(temp_dir, contig_name + '.fasta'))
 
                 batch.append({
@@ -231,16 +233,16 @@ def contig_file_write(cxn):
                 contig['contig_seq'])
 
 
-TIEBREAKER = 0
+DEFAULT = 0
 ITERATION = re.compile(r'iteration.(\d+)', re.IGNORECASE)
 COVERAGE = re.compile(r'cov.([\d.]+)', re.IGNORECASE)
 SCORE = re.compile(r'score.([\d.]+)', re.IGNORECASE)
 
 
-def name_contig(taxon_name, ref_name, header):
+def name_contig(taxon_name, ref_name, header, names_seen):
     """Shorten contig names."""
-    global TIEBREAKER  # pylint: disable=global-statement
-    TIEBREAKER += 1
+    global DEFAULT  # pylint: disable=global-statement
+    DEFAULT += 1
 
     match = ITERATION.search(header)
     iteration = 'i{}'.format(match[1]) if match else ''
@@ -252,8 +254,23 @@ def name_contig(taxon_name, ref_name, header):
     score = 's{}'.format(round(float(match[1]))) if match else ''
 
     contig = '{}{}{}'.format(iteration, coverage, score)
-    contig = contig if contig else str(TIEBREAKER)
+    contig = contig if contig else str(DEFAULT)
 
     name = '{}@{}_{}'.format(taxon_name, ref_name, contig)
     name = re.sub(r'[^\w@]+', '_', name.strip())
+
+    name = handle_duplicate_name(name, names_seen)
+
+    return name
+
+
+def handle_duplicate_name(contig_name, names_seen):
+    """Add a tiebreaker to a duplicate contig name."""
+    name = re.sub(r'_v\d+$', '', contig_name, re.IGNORECASE)
+
+    names_seen[name] += 1
+
+    if names_seen[name] > 1:
+        name += '_v{}'.format(names_seen[name])
+
     return name

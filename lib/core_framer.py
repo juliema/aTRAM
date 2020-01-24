@@ -1,5 +1,6 @@
 """Put exons into the correct reading frames."""
 
+from collections import defaultdict
 from . import bio
 from . import exonerate
 from . import db_stitcher as db
@@ -46,6 +47,8 @@ def output_contigs(args, cxn):
         ref_name = ref['ref_name']
         ref_len = len(ref['ref_seq']) * bio.CODON_LEN
 
+        names_seen = defaultdict(int)
+
         out_path = util.prefix_file(
             args.output_prefix, '{}.fasta'.format(ref_name))
 
@@ -53,7 +56,11 @@ def output_contigs(args, cxn):
 
             for contig in db.select_exonerate_ref_gene(
                     cxn, ref_name, args.min_length):
+
+                contig_name = exonerate.handle_duplicate_name(
+                    contig['contig_name'], names_seen)
+
                 seq = 'N' * (contig['beg'] * bio.CODON_LEN)
-                seq += contig["seq"]
+                seq += contig['seq']
                 seq += 'N' * (ref_len - len(seq))
-                util.write_fasta_record(out_file, contig['contig_name'], seq)
+                util.write_fasta_record(out_file, contig_name, seq)
