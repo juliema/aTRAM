@@ -167,7 +167,42 @@ def blast_query_against_all_shards(assembler):
             (assembler.args, assembler.simple_state(), shard))
                    for shard in all_shards]
         all_results = [result.get() for result in results]
+
+    insert_blast_results(all_shards, assembler.args, assembler.simple_state())
     log.info('All {} blast results completed'.format(len(all_results)))
+
+
+def insert_blast_results(all_shards, args, state):
+    """Add all blast results to the auxiliary  database."""
+    with db.connect(state['blast_db']) as cxn:
+        db.aux_db(
+            cxn,
+            args['temp_dir'],
+            state['blast_db'],
+            state['query_target'])
+
+        for shard in all_shards:
+            shard = basename(shard)
+
+            batch = []
+            output_file = blast.output_file_name(state['iter_dir'], shard)
+
+            hits = blast.hits(output_file)
+            is_single_end = db.is_single_end(cxn)
+            for hit in hits:
+                seq_name, seq_end = blast.parse_blast_title(
+                    hit['title'], is_single_end)
+                batch.append((state['iteration'], seq_end, seq_name, shard))
+            db_atram.insert_blast_hit_batch(cxn, batch)
+
+        db.aux_detach(cxn)
+
+
+def blast_query_against_one_shard(args, state, shard):
+    """
+    Blast the query against one blast DB shard."""
+    output_file = blast.output_file_name(state['iter_dir'], shard)
+    blast.against_sra(args, state, output_file, shard)
 
 
 def shard_fraction(assembler):
@@ -179,37 +214,6 @@ def shard_fraction(assembler):
     all_shards = blast.all_shard_paths(assembler.state['blast_db'])
     last_index = int(len(all_shards) * assembler.args['fraction'])
     return all_shards[:last_index]
-
-
-def blast_query_against_one_shard(args, state, shard):
-    """
-    Blast the query against one blast DB shard.
-
-    Then write the results to the database.
-    """
-    output_file = blast.output_file_name(state['iter_dir'], shard)
-
-    blast.against_sra(args, state, output_file, shard)
-
-    with db.connect(state['blast_db']) as cxn:
-        db.aux_db(
-            cxn,
-            args['temp_dir'],
-            state['blast_db'],
-            state['query_target'])
-
-        shard = basename(shard)
-
-        batch = []
-
-        hits = blast.hits(output_file)
-        is_single_end = db.is_single_end(cxn)
-        for hit in hits:
-            seq_name, seq_end = blast.parse_blast_title(
-                hit['title'], is_single_end)
-            batch.append((state['iteration'], seq_end, seq_name, shard))
-        db_atram.insert_blast_hit_batch(cxn, batch)
-        db.aux_detach(cxn)
 
 
 def filter_contigs(assembler):
