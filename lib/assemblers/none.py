@@ -1,6 +1,6 @@
 """Null object for the assemblers."""
 
-from .. import db
+from .. import db_atram
 from .. import util
 from .base import BaseAssembler
 
@@ -21,6 +21,6 @@ class NoneAssembler(BaseAssembler):
         file_name = '{}.fasta'.format(prefix)
 
         with open(file_name, 'w') as output_file:
-            for row in db.get_sra_blast_hits(self.state['cxn'], 1):
+            for row in db_atram.get_sra_blast_hits(self.state['cxn'], 1):
                 util.write_fasta_record(
                     output_file, row['seq_name'], row['seq'], row['seq_end'])

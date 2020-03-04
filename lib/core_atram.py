@@ -199,8 +199,7 @@ def insert_blast_results(all_shards, args, state):
 
 
 def blast_query_against_one_shard(args, state, shard):
-    """
-    Blast the query against one blast DB shard."""
+    """Blast the query against one blast DB shard."""
     output_file = blast.output_file_name(state['iter_dir'], shard)
     blast.against_sra(args, state, output_file, shard)
 
