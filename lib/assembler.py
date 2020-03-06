@@ -68,6 +68,11 @@ def command_line_args(parser):
                        help="""The minimum contig length used by the assembler
                             itself. The default is "100". (Velvet)""")
 
+    group.add_argument('--careful', action='store_true',
+                       help="""Tries to reduce the number of mismatches and
+                            short indels. Also runs MismatchCorrector.
+                            (Spades)""")
+
     group.add_argument('--cov-cutoff', default='off',
                        help="""Read coverage cutoff value. Must be a positive
                             float value, or "auto", or "off".

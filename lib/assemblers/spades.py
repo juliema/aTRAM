@@ -30,6 +30,9 @@ class SpadesAssembler(BaseAssembler):
                '--cov-cutoff {}'.format(self.args['cov_cutoff']),
                '-o {}'.format(self.work_path())]
 
+        if self.args['careful']:
+            cmd.append('--careful')
+
         if self.file['paired_count']:
             cmd.append("--pe1-1 '{}'".format(self.file['paired_1']))
             cmd.append("--pe1-2 '{}'".format(self.file['paired_2']))
