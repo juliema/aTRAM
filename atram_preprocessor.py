@@ -8,6 +8,8 @@ that does the actual preprocessing (core_preprocessor.py).
 
 import os
 from os.path import join
+from glob import glob
+from itertools import chain
 import argparse
 import textwrap
 from datetime import date
@@ -53,31 +55,30 @@ def parse_command_line():
         '--end-1', '-1', metavar='FASTA/Q', action='append',
         help="""Sequence read archive files that have only end 1 sequences. The
             sequence names do not need an end suffix, we will assume the suffix
-            is always 1. The files are in fasta or fastq format. You may enter
-            more than one file or you may use wildcards.
+            is always 1. The files are in fasta or fastq format. You may
+            repeat this argument or use wildcards.
             """)
 
     parser.add_argument(
         '--end-2', '-2', metavar='FASTA/Q', action='append',
         help="""Sequence read archive files that have only end 2 sequences.
             The sequence names do not need an end suffix, we will assume the
-            suffix is always 2. The files are in fasta or fastq format. You may
-            enter more than one file or you may use wildcards.
+            suffix is always 2. The files are in fasta or fastq format. You
+            may repeat this argument or use wildcards.
             """)
 
     parser.add_argument(
         '--mixed-ends', '-m', metavar='FASTA/Q', action='append',
         help="""Sequence read archive files that have a mix of both end 1 and
             end 2 sequences (or single ends). The files are in fasta or fastq
-            format. You may enter more than one file or you may use wildcards.
+            format. You may repeat this argument or use wildcards.
             """)
 
     parser.add_argument(
         '--single-ends', '-0', metavar='FASTA/Q', action='append',
         help="""Sequence read archive files that have only unpaired sequences.
             Any sequence suffix will be ignored. The files are in fasta or
-            fastq format. You may enter more than one file or you may use
-            wildcards.
+            fastq format. You may repeat this argument or use wildcards.
             """)
 
     group = parser.add_argument_group('preprocessor arguments')
@@ -151,7 +152,10 @@ def parse_command_line():
     all_files = []
     for ends in ['mixed_ends', 'end_1', 'end_2', 'single_ends']:
         if args.get(ends):
-            all_files.extend(i for i in args[ends])
+            end_files = [glob(p) for p in args[ends]]
+            end_files = sorted(list(chain.from_iterable(end_files)))
+            args[ends] = end_files
+            all_files.extend(end_files)
 
     args['shard_count'] = blast.default_shard_count(args, all_files)
 
