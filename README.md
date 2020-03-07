@@ -63,7 +63,7 @@ https://www.ebi.ac.uk/about/vertebrate-genomics/software/exonerate-user-guide)
 
 
 
-Alternatively, you can install whole above dependencies by using (`conda`)[https://www.anaconda.com/distribution/]:
+Alternatively, you can install whole above dependencies by using [`conda`](https://www.anaconda.com/distribution/):
 
 
 ```bash
