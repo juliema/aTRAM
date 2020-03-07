@@ -1,0 +1,11 @@
+name: aTRAM
+channels:
+  - bioconda
+  - defaults
+dependencies:
+  - blast
+  - velvet
+  - trinity
+  - abyss
+  - spades
+  - exonerate
