@@ -111,6 +111,11 @@ def parse_command_line():
         '-l', '--log-file',
         help="""Log file (full path). The default is to use the DB and program
             name to come up with a name like "<DB>_atram_preprocessor.log".""")
+    group.add_argument(
+        '--log-level', choices=['debug', 'info', 'error'], default='info',
+        help="""Log messages of the given level (or above). 'debug' shows the
+            most messages and 'error' shows the least. The default is
+            'info'""")
 
     group.add_argument(
         '-s', '--shards', '--number', type=int, metavar='SHARDS',

@@ -48,7 +48,7 @@ def test_preprocess_01(
     core_preprocessor.preprocess(args)
 
     setup.assert_called_once_with(
-        args['log_file'], args['blast_db'])
+        args['log_file'], args['log_file'], args['blast_db'])
 
     calls = [
         call(args['blast_db'], clean=True),

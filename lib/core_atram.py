@@ -31,7 +31,8 @@ def assemble(args):
                     db.aux_db(cxn, args['temp_dir'], blast_db, query)
                     clean_database(cxn)
 
-                    log.setup(args['log_file'], blast_db, query)
+                    log.setup(
+                        args['log_file'], args['log_level'], blast_db, query)
 
                     assembler = assembly.factory(args, cxn)
 

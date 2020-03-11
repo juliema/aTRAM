@@ -20,7 +20,7 @@ from . import blast
 
 def preprocess(args):
     """Build the databases required by atram."""
-    log.setup(args['log_file'], args['blast_db'])
+    log.setup(args['log_file'], args['log_file'], args['blast_db'])
 
     with util.make_temp_dir(
             where=args['temp_dir'],

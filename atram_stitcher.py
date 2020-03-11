@@ -62,6 +62,11 @@ def parse_command_line():
         '-l', '--log-file',
         help="""Log file (full path). The default is
             "atram_stitcher_<date>.log".""")
+    parser.add_argument(
+        '--log-level', choices=['debug', 'info', 'error'], default='info',
+        help="""Log messages of the given level (or above). 'debug' shows the
+            most messages and 'error' shows the least. The default is
+            'info'""")
 
     parser.add_argument(
         '-i', '--iterations', type=int, default=2, metavar='N',

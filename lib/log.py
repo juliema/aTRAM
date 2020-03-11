@@ -13,18 +13,18 @@ FORMATTER = logging.Formatter('%(asctime)s %(levelname)s: %(message)s',
 NAME = 'atram_logger'
 
 
-def setup(log_file, blast_db, query_file=''):
+def setup(log_file, log_level, blast_db, query_file=''):
     """Logger setup."""
     log_file = file_name(log_file, blast_db, query_file)
-    _setup(log_file)
+    _setup(log_file, log_level)
 
 
-def stitcher_setup(log_file):
+def stitcher_setup(log_file, log_level):
     """Build a logger for the stitcher."""
-    _setup(log_file)
+    _setup(log_file, log_level)
 
 
-def _setup(log_file):
+def _setup(log_file, log_level):
     global LOGGER  # pylint: disable=global-statement
 
     if not LOGGER:
@@ -37,7 +37,10 @@ def _setup(log_file):
         stream.setLevel(logging.INFO)
 
         LOGGER = logging.getLogger(log_file)
-        LOGGER.setLevel(logging.DEBUG)
+
+        log_level = getattr(logging, log_level.upper())
+        LOGGER.setLevel(log_level)
+
         LOGGER.addHandler(handler)
         LOGGER.addHandler(stream)
 
