@@ -12,4 +12,4 @@ dependencies:
   - spades
   - exonerate
   - pip:
-    - git+https://github.com/Ulises-Rosas/aTRAM.git#egg=atram[complete]
+    - git+https://github.com/juliema/aTRAM.git#egg=atram[complete]

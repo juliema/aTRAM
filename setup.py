@@ -18,7 +18,7 @@ def readme():
         return f.read()
 
 
-def license():
+def license_():
     """Get LICENSE.txt content."""
     with open("LICENSE.txt", 'r') as f:
         return f.read()
@@ -40,6 +40,7 @@ def find_requirements():
     with open("requirements.txt", 'r') as f:
         return f.read().splitlines()
 
+
 setup(
     name="atram",
     version=find_version(),
@@ -50,10 +51,12 @@ setup(
                    local de novo assemblies using a variety of available
                    methods""",
     long_description=readme(),
-    license=license(),
+    license=license_(),
     url="https://github.com/juliema/aTRAM",
     python_requires='>=3.4',
     scripts=[
         'atram.py',
         'atram_preprocessor.py',
-        'atram_stitcher.py'])
+        'atram_stitcher.py',
+        'atram_framer.py',
+        ])
