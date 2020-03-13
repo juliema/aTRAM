@@ -54,6 +54,6 @@ setup(
     url="https://github.com/juliema/aTRAM",
     python_requires='>=3.4',
     scripts=[
-        'atram/atram.py',
-        'atram/atram_preprocessor.py',
-        'atram/atram_stitcher.py'])
+        'atram.py',
+        'atram_preprocessor.py',
+        'atram_stitcher.py'])
