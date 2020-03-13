@@ -3,9 +3,13 @@ channels:
   - bioconda
   - defaults
 dependencies:
+  - python=3
+  - pip
   - blast
   - velvet
   - trinity
   - abyss
   - spades
   - exonerate
+  - pip:
+    - git+https://github.com/Ulises-Rosas/aTRAM.git#egg=atram[complete]
