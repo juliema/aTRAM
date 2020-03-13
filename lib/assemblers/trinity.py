@@ -4,6 +4,7 @@ from os.path import join
 from shutil import move
 from .base import BaseAssembler
 
+
 class TrinityAssembler(BaseAssembler):
     """Wrapper for the trinity assembler."""
 

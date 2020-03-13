@@ -237,7 +237,7 @@ class BaseAssembler:  # pylint: disable=too-many-public-methods
                 self.output_assembled_contig(output_file, contig)
 
     def write_all_contigs(self, prefix):
-        """Write all contigs to a final ouput file."""
+        """Write all contigs to a final output file."""
         count = db_atram.all_assembled_contigs_count(self.state['cxn'])
         if not count:
             return
