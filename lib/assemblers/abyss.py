@@ -18,8 +18,12 @@ class AbyssAssembler(BaseAssembler):
         cmd = ['abyss-pe',
                "-C '{}'".format(self.work_path()),
                'E=0',
-               'k={}'.format(self.args['kmer']),
-               "name='{}'".format(self.file['output'])]
+               'k={}'.format(self.args['kmer'])]
+
+        if self.args.get('abyss_p') is not None:
+            cmd.append('p={}'.format(self.args['abyss_p']))
+
+        cmd.append("name='{}'".format(self.file['output']))
 
         if self.args['mpi']:
             cmd.append('np={}'.format(self.args['cpus']))

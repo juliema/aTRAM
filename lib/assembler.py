@@ -90,6 +90,10 @@ def command_line_args(parser):
         help="""Read coverage cutoff value. Must be a positive float value,
             or "auto", or "off". Spades: --cov-cutoff <keyword or int>.""")
 
+    group.add_argument(
+        '--abyss-p', type=int,
+        help="""Abyss: Minimum sequence identity of a bubble [0.9].""")
+
 
 def default_kmer(kmer, assembler):
     """Calculate default kmer argument."""
