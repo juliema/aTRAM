@@ -37,8 +37,7 @@ Python.
 
 ```bash
 git clone https://github.com/juliema/aTRAM.git
-cd aTRAM
-python3 setup.py install
+pip install --user --requirement atram/requirements.txt
 ```
 
 ### aTRAM uses these programs so you need to install them.
@@ -61,10 +60,9 @@ If you want to use the atram stitcher you will need to install exonerate:
 - [exonerate](
 https://www.ebi.ac.uk/about/vertebrate-genomics/software/exonerate-user-guide)
 
+### Installation using [`conda`](https://www.anaconda.com/distribution/):
 
-
-Alternatively, you can install whole above dependencies by using [`conda`](https://www.anaconda.com/distribution/):
-
+Alternatively, you can install both dependencies and `aTRAM` by using `conda`:
 
 ```bash
 conda env create -f environment.yml
