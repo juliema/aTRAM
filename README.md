@@ -62,7 +62,7 @@ https://www.ebi.ac.uk/about/vertebrate-genomics/software/exonerate-user-guide)
 
 ### Installation using [`conda`](https://www.anaconda.com/distribution/):
 
-Alternatively, you can install both dependencies and `aTRAM` by using `conda`:
+Alternatively, you can install both dependencies and `aTRAM` by using `conda`. Inside the `aTRAM` directory, run the following:
 
 ```bash
 conda env create -f environment.yml
