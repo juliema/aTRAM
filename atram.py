@@ -97,6 +97,11 @@ def parse_command_line():
             """.format(cpus, os.cpu_count()))
 
     group.add_argument('--log-file', help="""Log file (full path)".""")
+    group.add_argument(
+        '--log-level', choices=['debug', 'info', 'error'], default='info',
+        help="""Log messages of the given level (or above). 'debug' shows the
+            most messages and 'error' shows the least. The default is
+            'info'""")
 
     group.add_argument(
         '--path',

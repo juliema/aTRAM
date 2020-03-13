@@ -10,7 +10,7 @@ from . import util
 
 def frame(args):
     """Frame the exons."""
-    log.stitcher_setup(args.log_file)
+    log.stitcher_setup(args.log_file, args.log_level)
     iteration = 0
 
     with util.make_temp_dir(

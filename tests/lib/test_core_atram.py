@@ -17,6 +17,7 @@ def set_up():
         'blast_db': ['blast_db_1', 'blast_db_2'],
         'iterations': 1,
         'log_file': 'log_file_1',
+        'log_level': 'info',
         'temp_dir': 'temp_dir_1'}
     assembler = BaseAssembler(args, cxn)
     return args, cxn, assembler
