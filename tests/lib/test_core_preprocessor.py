@@ -15,6 +15,7 @@ def set_up():
     args = {
         'blast_db': 'blast_db_1',
         'log_file': 'log_file_1',
+        'log_level': 'info',
         'sra_files': 'sra_files_1',
         'shard_count': 4,
         'temp_dir': 'temp_dir_1',
@@ -48,7 +49,7 @@ def test_preprocess_01(
     core_preprocessor.preprocess(args)
 
     setup.assert_called_once_with(
-        args['log_file'], args['log_file'], args['blast_db'])
+        args['log_file'], args['log_level'], args['blast_db'])
 
     calls = [
         call(args['blast_db'], clean=True),
