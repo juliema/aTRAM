@@ -154,8 +154,7 @@ class BaseAssembler:  # pylint: disable=too-many-public-methods
         """Write blast hits and matching ends to fasta files."""
         log.info('Writing assembler input files: iteration {}'.format(
             self.state['iteration']))
-        if not self.args['single_ends_only']:
-            self.write_paired_input_files()
+        self.write_paired_input_files()
         self.write_single_input_files()
 
     def write_paired_input_files(self):
@@ -178,12 +177,8 @@ class BaseAssembler:  # pylint: disable=too-many-public-methods
                 open(self.file['single_2'], 'w') as end_2, \
                 open(self.file['single_any'], 'w') as end_any:
 
-            if self.args['single_ends_only']:
-                rows = db_atram.get_blast_hits(
-                    self.state['cxn'], self.state['iteration'])
-            else:
-                rows = db_atram.get_blast_hits_by_end_count(
-                    self.state['cxn'], self.state['iteration'], 1)
+            rows = db_atram.get_blast_hits_by_end_count(
+                self.state['cxn'], self.state['iteration'], 1)
 
             for row in rows:
                 if row['seq_end'] == '1':

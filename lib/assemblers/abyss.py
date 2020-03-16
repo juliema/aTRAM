@@ -28,13 +28,19 @@ class AbyssAssembler(BaseAssembler):
         if self.args['mpi']:
             cmd.append('np={}'.format(self.args['cpus']))
 
-        if self.file['paired_count']:
-            cmd.append("in='{} {}'".format(
-                self.file['paired_1'], self.file['paired_2']))
-
-        single_ends = self.get_single_ends()
-        if single_ends:
-            cmd.append("se='{}'".format(' '.join(single_ends)))
+        if self.args.get('single_ends_only'):
+            in_files = []
+            if self.file['paired_count']:
+                in_files += [self.file['paired_1'], self.file['paired_2']]
+            in_files += self.get_single_ends()
+            cmd.append("se='{}'".format(' '.join(in_files)))
+        else:
+            if self.file['paired_count']:
+                cmd.append("in='{} {}'".format(
+                    self.file['paired_1'], self.file['paired_2']))
+            single_ends = self.get_single_ends()
+            if single_ends:
+                cmd.append("se='{}'".format(' '.join(single_ends)))
 
         if self.file['long_reads'] and not self.args['no_long_reads']:
             cmd.append("long='LONGREADS'")
