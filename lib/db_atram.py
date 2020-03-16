@@ -79,6 +79,20 @@ def get_blast_hits_by_end_count(cxn, iteration, end_count):
     return cxn.execute(sql, (iteration, end_count))
 
 
+def get_blast_hits(cxn, iteration):
+    """Get all blast hits for the iteration."""
+    sql = """
+        SELECT s.seq_name, s.seq_end, seq
+          FROM sequences AS s
+          JOIN aux.sra_blast_hits AS h 
+               ON (s.seq_name = h.seq_name AND s.seq_end = h.seq_end)
+           AND iteration = ?
+        """
+
+    cxn.row_factory = sqlite3.Row
+    return cxn.execute(sql, (iteration, ))
+
+
 # ####################### contig_blast_hits table #############################
 
 def create_contig_blast_hits_table(cxn):

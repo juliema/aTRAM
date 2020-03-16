@@ -52,6 +52,13 @@ def command_line_args(parser):
             into np=<int>.""")
 
     group.add_argument(
+        '--single-ends-only', action='store_true',
+        help="""Do not try to use paired ends during the assembly.
+            Abyss: If this is true then all files are passed to the -se
+            argument. Normally, we pass paired input sequences to the -in
+            argument and only unmatched sequences to the -se arguments.""")
+
+    group.add_argument(
         '--bowtie2', action='store_true',
         help="""Use bowtie2 during assembly. Trinity: This will prevent
             --no_bowtie from being passed to Trinity.""")
