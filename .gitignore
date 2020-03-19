@@ -3,36 +3,32 @@
 *.swp
 __pycache__
 
+admin/
 args/
-venv/*
-venv35/*
-temp*/*
-junk.*
+atram_db/
+build/
+data/
+db/
+dist/
 input/
+old/
 output/
 query/
-db/
-atram_db/
-perl/
-log/
-old/
-admin/
-build/
-junk*
-exon_stitching/
-dist/
-data/
+temp/
+venv/
 
-.coverage
+junk*
+
 .cache
+.coverage
 .hypothesis
 .pytest_cache
 
 .idea
-.vscode
+.mypy_cache/
 .ropeproject/
 .spyproject/
-.mypy_cache/
+.vscode
 
 .ipynb_checkpoints/
 .~lock*
