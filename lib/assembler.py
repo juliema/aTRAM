@@ -99,7 +99,8 @@ def command_line_args(parser):
 
     group.add_argument(
         '--abyss-p', type=int,
-        help="""Abyss: Minimum sequence identity of a bubble [0.9].""")
+        help="""Abyss: Minimum sequence identity of a bubble. Enter a single
+            digit integer [0-9].""")
 
 
 def default_kmer(kmer, assembler):
