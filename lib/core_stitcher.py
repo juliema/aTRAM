@@ -265,10 +265,6 @@ def output_stitched_genes(args, cxn, taxon_names, iteration):
                     taxon_name,
                     iteration=iteration)
 
-                # has_hits = 'hits' if hits else 'no hits'
-                # log.info('{}.{} has {}'.format(
-                #     ref_name, taxon_name, has_hits))
-
                 if not hits:
                     continue
 

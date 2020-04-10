@@ -89,6 +89,11 @@ def parse_command_line():
             <taxon-name> if you select this then the assembled gene name
             will be <reference-name>.<taxon-name>.""")
 
+    parser.add_argument(
+        '--long-contig', type=float, default=0.7,
+        help="""A long contig is considered to be this fraction [0-1] of the
+            longest contig assembled by exonerate. The default is 0.7.""")
+
     args = parser.parse_args()
 
     util.temp_dir_exists(args.temp_dir)

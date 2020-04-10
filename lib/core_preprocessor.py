@@ -91,7 +91,7 @@ def assign_seqs_to_shards(cxn, shard_count):
     cuts = [db_preprocessor.get_shard_cut(cxn, offset) for offset in offsets]
 
     # Make sure the last sequence gets included
-    cuts[-1] = cuts[-1] + 'z'
+    cuts[-1] += 'z'
 
     # Now organize the list into pairs of sequence names
     pairs = [(cuts[i - 1], cuts[i]) for i in range(1, len(cuts))]
@@ -115,7 +115,7 @@ def create_all_blast_shards(args, shard_list):
                 (args, shard_params, idx)))
 
         all_results = [result.get() for result in results]
-    log.info('Finished making blast all {} DBs'.format(len(all_results)))
+    log.info('Finished making all {} blast DBs'.format(len(all_results)))
 
 
 def create_one_blast_shard(args, shard_params, shard_index):

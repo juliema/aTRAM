@@ -1,6 +1,8 @@
 """Put exons into the correct reading frames."""
 
+import csv
 from collections import defaultdict
+from itertools import product
 from . import bio
 from . import exonerate
 from . import db_stitcher as db
@@ -32,9 +34,12 @@ def frame(args):
                 args, temp_dir, cxn, taxon_names, iteration)
             exonerate.contig_file_write(cxn)
             exonerate.run_exonerate(temp_dir, cxn, iteration)
+
             output_contigs(args, cxn)
 
             log.info('Writing output')
+            output_summary_per_gene(args, cxn, taxon_names)
+            output_summary_per_taxon(args, cxn, taxon_names)
 
         log.info('Finished')
 
@@ -64,3 +69,59 @@ def output_contigs(args, cxn):
                 seq += contig['seq']
                 seq += 'N' * (ref_len - len(seq))
                 util.write_fasta_record(out_file, contig_name, seq)
+
+
+def output_summary_per_gene(args, cxn, taxon_names):
+    """Print per gene summary statistics."""
+    longest = max(db.select_longest(cxn), 1)
+    lengths = db.select_seq_lengths(cxn)
+
+    counts = {t: {'total': set(), 'long': set()} for t in taxon_names}
+
+    for length in lengths:
+        taxon_name = length['taxon_name']
+        ref_name = length['ref_name']
+        counts[taxon_name]['total'].add(ref_name)
+        fraction = length['len'] / longest
+        if fraction >= args.long_contig:
+            counts[taxon_name]['long'].add(ref_name)
+
+    out_path = util.prefix_file(
+        args.output_prefix, 'summary_stats_per_ref_gene.csv')
+    with open(out_path, 'w') as out_file:
+        writer = csv.writer(out_file)
+        writer.writerow(['Taxon',
+                         'Total_Genes',
+                         'Total_Genes_>={:0.2}'.format(args.long_contig)])
+        for taxon, count in counts.items():
+            writer.writerow([taxon, len(count['total']), len(count['long'])])
+
+
+def output_summary_per_taxon(args, cxn, taxon_names):
+    """Print per taxon summary statistics."""
+    longest = max(db.select_longest(cxn), 1)
+    lengths = db.select_seq_lengths(cxn)
+    ref_names = [r['ref_name'] for r in db.select_reference_genes(cxn)]
+
+    counts = {c: {'total': 0, 'long': 0}
+              for c in product(taxon_names, ref_names)}
+
+    for length in lengths:
+        taxon_name = length['taxon_name']
+        ref_name = length['ref_name']
+        key = (taxon_name, ref_name)
+        counts[key]['total'] += 1
+        fraction = length['len'] / longest
+        if fraction >= args.long_contig:
+            counts[key]['long'] += 1
+
+    out_path = util.prefix_file(
+        args.output_prefix, 'summary_stats_per_taxon.csv')
+    with open(out_path, 'w') as out_file:
+        writer = csv.writer(out_file)
+        writer.writerow(['Taxon',
+                         'Gene',
+                         'Total_Contigs',
+                         'Total_Contigs_>={:0.2}'.format(args.long_contig)])
+        for key, count in counts.items():
+            writer.writerow([key[0], key[1], count['total'], count['long']])

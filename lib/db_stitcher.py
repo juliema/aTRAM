@@ -191,6 +191,21 @@ def select_next(cxn, ref_name, taxon_name, beg=-1, iteration=0):
     return result.fetchone()
 
 
+def select_longest(cxn):
+    """Get the longest contig for the framer reports."""
+    sql = """SELECT MAX(LENGTH(seq)) AS max_len FROM exonerate;"""
+    result = cxn.execute(sql)
+    return result.fetchone()['max_len']
+
+
+def select_seq_lengths(cxn):
+    """Get the sequence lengths for the framer reports."""
+    sql = """
+        SELECT taxon_name, ref_name, length(seq) AS len
+          FROM exonerate;"""
+    return cxn.execute(sql)
+
+
 def select_overlap(
         cxn, ref_name, taxon_name, beg_lo, beg_hi, end, iteration=0):
     """
