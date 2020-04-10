@@ -85,6 +85,8 @@ def subcommand(cmd, temp_dir, timeout=None):
                 timeout=timeout,
                 stdout=log_output,
                 stderr=log_output)
+        except Exception as err:  # pylint: disable=broad-except
+            error('Exception: {}'.format(err))
         finally:
             with open(log_output.name) as log_input:
                 for line in log_input:
