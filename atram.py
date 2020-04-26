@@ -158,6 +158,11 @@ def parse_command_line():
     args['max_target_seqs'] = blast.default_max_target_seqs(
         args['max_target_seqs'], args['blast_db'], args['max_memory'])
 
+    # Timeout: As always, None != 0
+    args['timeout'] = max(0, args['timeout'])
+    if not(args['timeout']):
+        args['timeout'] = None
+
     setup_blast_args(args)
     set_protein_arg(args)
     setup_path_arg(args)
