@@ -160,12 +160,13 @@ def parse_contig_file_name(ref_names, taxon_names, contig_file):
     sep = r'[_. ]'
 
     ref_names = sorted(ref_names, key=lambda x: (len(x), x), reverse=True)
-    ref_names = [x + sep for x in ref_names]
+    ref_names = [re.sub(sep, sep, x) + sep for x in ref_names]
 
     taxon_names = sorted(taxon_names, key=lambda x: (len(x), x), reverse=True)
-    taxon_names = [x + sep for x in taxon_names]
+    taxon_names = [re.sub(sep, sep, x) + sep for x in taxon_names]
 
-    ref_name = [x[:-len(sep)] for x in ref_names if re.search(x, contig_file)]
+    ref_name = [x[:-len(sep)] for x in ref_names
+                if re.search(x, contig_file)]
     taxon_name = [x[:-len(sep)] for x in taxon_names
                   if re.search(x, contig_file)]
 
