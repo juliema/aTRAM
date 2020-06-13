@@ -90,7 +90,7 @@ def create_all_blast_shards(args, cxn, shard_count):
     with multiprocessing.Pool(processes=args['cpus']) as pool:
         results = []
         for shard_idx in range(shard_count):
-            fasta_path = create_input_fasta(args, cxn, shard_count, shard_idx)
+            fasta_path = fill_blast_fasta(args, cxn, shard_count, shard_idx)
             results.append(pool.apply_async(
                 create_one_blast_shard,
                 (args, fasta_path, shard_idx)))
@@ -100,7 +100,7 @@ def create_all_blast_shards(args, cxn, shard_count):
     log.info('Finished making all {} blast DBs'.format(len(all_results)))
 
 
-def create_input_fasta(args, cxn, shard_count, shard_index):
+def fill_blast_fasta(args, cxn, shard_count, shard_index):
     """Fill the shard input files with sequences."""
     exe_name, _ = splitext(basename(sys.argv[0]))
     fasta_name = '{}_{:03d}.fasta'.format(exe_name, shard_index + 1)
