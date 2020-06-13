@@ -51,32 +51,6 @@ def aux_db(cxn, temp_dir, blast_db, query_name):
     cxn.execute(sql)
 
 
-def subprocess_db_name(temp_dir, blast_db, query_name, shard):
-    """Build the subprocess database name."""
-    db_name = '{}_{}_{}_temp.sqlite.db'.format(
-        basename(blast_db), basename(query_name), basename(shard))
-    db_name = join(temp_dir, 'db', db_name)
-    return db_name
-
-
-def subprocess_db(temp_dir, blast_db, query_name, shard):
-    """Create a temporary database for a shard/subprocess."""
-    db_name = subprocess_db_name(temp_dir, blast_db, query_name, shard)
-    return db_setup(db_name)
-
-
-def subprocess_attach(cxn, temp_dir, blast_db, query_name, shard):
-    """Attach the subprocess database to the main database."""
-    db_name = subprocess_db_name(temp_dir, blast_db, query_name, shard)
-    sql = """ATTACH DATABASE '{}' AS subprocess""".format(db_name)
-    cxn.execute(sql)
-
-
-def subprocess_detach(cxn):
-    """Detach the temporary database."""
-    cxn.execute('DETACH DATABASE subprocess')
-
-
 def aux_detach(cxn):
     """Detach the temporary database."""
     cxn.execute('DETACH DATABASE aux')
@@ -141,5 +115,5 @@ def get_sequence_ends(cxn):
 
 
 def get_all_sequences(cxn):
-    """Get a list of all seq_ends in the database."""
+    """Get a list of all sequences in the database."""
     return cxn.execute('SELECT * FROM sequences')

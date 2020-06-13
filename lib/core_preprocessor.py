@@ -8,7 +8,6 @@ blast and sqlite3 databases.
 from os.path import join, basename, splitext
 import sys
 import multiprocessing
-import numpy as np
 from Bio.SeqIO.QualityIO import FastqGeneralIterator
 from Bio.SeqIO.FastaIO import SimpleFastaParser
 from . import db
@@ -37,9 +36,7 @@ def preprocess(args):
             log.info('Creating an index for the sequence table')
             db_preprocessor.create_sequences_index(cxn)
 
-            shard_list = assign_seqs_to_shards(cxn, args['shard_count'])
-
-        create_all_blast_shards(args, shard_list)
+            create_all_blast_shards(args, cxn, args['shard_count'])
 
 
 def load_seqs(args, cxn):
@@ -82,70 +79,44 @@ def get_parser(args, file_name):
     return FastqGeneralIterator if is_fastq else SimpleFastaParser
 
 
-def assign_seqs_to_shards(cxn, shard_count):
-    """Assign sequences to blast DB shards."""
-    log.info('Assigning sequences to shards')
-
-    total = db_preprocessor.get_sequence_count(cxn)
-    offsets = np.linspace(0, total - 1, dtype=int, num=shard_count + 1)
-    cuts = [db_preprocessor.get_shard_cut(cxn, offset) for offset in offsets]
-
-    # Make sure the last sequence gets included
-    cuts[-1] += 'z'
-
-    # Now organize the list into pairs of sequence names
-    pairs = [(cuts[i - 1], cuts[i]) for i in range(1, len(cuts))]
-
-    return pairs
-
-
-def create_all_blast_shards(args, shard_list):
+def create_all_blast_shards(args, cxn, shard_count):
     """
     Assign processes to make the blast DBs.
 
     One process for each blast DB shard.
     """
     log.info('Making blast DBs')
+    db_preprocessor.aux_db(cxn, args['temp_dir'])
+    db_preprocessor.create_seq_names_table(cxn)
 
     with multiprocessing.Pool(processes=args['cpus']) as pool:
         results = []
-        for idx, shard_params in enumerate(shard_list, 1):
+        for shard_idx in range(shard_count):
+            fasta_path = create_input_fasta(args, cxn, shard_count, shard_idx)
             results.append(pool.apply_async(
                 create_one_blast_shard,
-                (args, shard_params, idx)))
+                (args, fasta_path, shard_idx)))
 
         all_results = [result.get() for result in results]
+    db_preprocessor.aux_detach(cxn)
     log.info('Finished making all {} blast DBs'.format(len(all_results)))
 
 
-def create_one_blast_shard(args, shard_params, shard_index):
-    """
-    Create a blast DB from the shard.
-
-    We fill a fasta file with the appropriate sequences and hand things off
-    to the makeblastdb program.
-    """
-    shard = '{}.{:03d}.blast'.format(args['blast_db'], shard_index)
+def create_input_fasta(args, cxn, shard_count, shard_index):
+    """Fill the shard input files with sequences."""
     exe_name, _ = splitext(basename(sys.argv[0]))
-    fasta_name = '{}_{:03d}.fasta'.format(exe_name, shard_index)
+    fasta_name = '{}_{:03d}.fasta'.format(exe_name, shard_index + 1)
     fasta_path = join(args['temp_dir'], fasta_name)
 
-    fill_blast_fasta(args['blast_db'], fasta_path, shard_params)
+    with open(fasta_path, 'w') as fasta_file:
+        for row in db_preprocessor.get_sequences_in_shard(
+                cxn, shard_count, shard_index):
+            util.write_fasta_record(fasta_file, row[0], row[2], row[1])
 
+    return fasta_path
+
+
+def create_one_blast_shard(args, fasta_path, shard_index):
+    """Create a blast DB from the shard."""
+    shard = '{}.{:03d}.blast'.format(args['blast_db'], shard_index + 1)
     blast.create_db(args['temp_dir'], fasta_path, shard)
-
-
-def fill_blast_fasta(blast_db, fasta_path, shard_params):
-    """
-    Fill the fasta file used as input into blast.
-
-    Use sequences from the sqlite3 DB. We use the shard partitions passed in to
-    determine which sequences to get for this shard.
-    """
-    with db.connect(blast_db) as cxn:
-        limit, offset = shard_params
-
-        with open(fasta_path, 'w') as fasta_file:
-            for row in db_preprocessor.get_sequences_in_shard(
-                    cxn, limit, offset):
-                util.write_fasta_record(fasta_file, row[0], row[2], row[1])
