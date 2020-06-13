@@ -1,7 +1,7 @@
 """Database functions for the preprocessor."""
 
 import os
-from os.path import basename, join, exists
+from os.path import join
 
 from .db import DB_VERSION
 

@@ -5,16 +5,14 @@ It takes sequence read archive (SRA) files and converts them into coordinated
 blast and sqlite3 databases.
 """
 
-from os.path import join, basename, splitext
-import sys
 import multiprocessing
-from Bio.SeqIO.QualityIO import FastqGeneralIterator
+import sys
+from os.path import basename, join, splitext
+
 from Bio.SeqIO.FastaIO import SimpleFastaParser
-from . import db
-from . import db_preprocessor
-from . import log
-from . import util
-from . import blast
+from Bio.SeqIO.QualityIO import FastqGeneralIterator
+
+from . import blast, db, db_preprocessor, log, util
 
 
 def preprocess(args):
