@@ -2,7 +2,6 @@
 
 # pylint: disable=too-many-arguments,too-many-locals,unused-argument
 
-import tempfile
 from os.path import join
 from unittest.mock import call, patch
 
