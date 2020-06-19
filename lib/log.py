@@ -99,12 +99,14 @@ def subcommand(cmd, temp_dir, timeout=None):
 
 def info(msg):
     """Log an info message."""
-    LOGGER.info(msg)
+    if LOGGER:
+        LOGGER.info(msg)
 
 
 def error(msg):
     """Log an error message."""
-    LOGGER.error(msg)
+    if LOGGER:
+        LOGGER.error(msg)
 
 
 def fatal(msg):
