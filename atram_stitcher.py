@@ -6,14 +6,15 @@ This wrapper module parses the input arguments and passes them to the module
 that does the actual stitching (core_stitcher.py).
 """
 
-from os.path import join
-from datetime import date
 import argparse
 import textwrap
-import lib.db as db
-import lib.log as log
-import lib.util as util
+from datetime import date
+from os.path import join
+
 import lib.core_stitcher as stitcher
+import lib.db as db
+from lib.log import Logger
+import lib.util as util
 
 
 def parse_command_line():
@@ -24,9 +25,7 @@ def parse_command_line():
         """
 
     parser = argparse.ArgumentParser(
-        fromfile_prefix_chars='@',
-        formatter_class=argparse.RawDescriptionHelpFormatter,
-        description=textwrap.dedent(description))
+        fromfile_prefix_chars='@', description=textwrap.dedent(description))
 
     parser.add_argument('--version', action='version',
                         version='%(prog)s {}'.format(db.ATRAM_VERSION))
@@ -111,6 +110,7 @@ def parse_command_line():
         args.log_file = args.output_prefix + '.log'
 
     if 1 > args.iterations > 2:
+        log = Logger(args.get('log_file'), args.get('log_level'))
         log.fatal('The iterations must be either 1 or 2.')
 
     return args

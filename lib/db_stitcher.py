@@ -85,7 +85,7 @@ def select_contig_files(cxn, iteration=0):
           FROM contigs
          WHERE iteration = ?
          ORDER BY contig_file;"""
-    return cxn.execute(sql, (iteration, ))
+    return cxn.execute(sql, (iteration,))
 
 
 def select_contigs_in_file(cxn, contig_file, iteration=0):
@@ -153,7 +153,7 @@ def select_stitch(cxn, iteration=0):
             WHERE iteration = ?
          ORDER BY taxon_name, taxon_name
         """,
-        (iteration, ))
+        (iteration,))
 
 
 def insert_exonerate_results(cxn, batch):
@@ -304,7 +304,7 @@ def select_per_gene_stats(cxn, iteration):
               AND iteration = ?
          GROUP BY ref_name, taxon_name;
         """,
-        (iteration, ))
+        (iteration,))
 
 
 def select_per_taxon_stats(cxn, iteration):
@@ -346,4 +346,4 @@ def select_per_taxon_stats(cxn, iteration):
           FROM thresholds
       GROUP BY taxon_name;
         """,
-        (iteration, ))
+        (iteration,))

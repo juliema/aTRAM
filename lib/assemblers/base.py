@@ -1,33 +1,32 @@
 """Base class for the various assembler wrappers."""
 
-from os.path import basename, exists, getsize, join, splitext, abspath
 import datetime
+from os.path import abspath, basename, exists, getsize, join, splitext
 from subprocess import CalledProcessError
-from .. import db_atram
-from .. import log
-from .. import bio
-from .. import util
+
+from .. import bio, db_atram, util
 
 
 class BaseAssembler:  # pylint: disable=too-many-public-methods
     """A base class for the assemblers."""
 
-    def __init__(self, args, cxn):
+    def __init__(self, args, cxn, log):
         """Build the assembler."""
-        self.args = args         # Parsed command line arguments
+        self.args = args  # Parsed command line arguments
         self.blast_only = False  # Used to short-circuit the assembler
-        self.steps = []          # Assembler steps setup by the assembler
-        self.file = {}           # Files and record counts
+        self.steps = []  # Assembler steps setup by the assembler
+        self.file = {}  # Files and record counts
+        self.log = log
 
         # We need to pass these variables to child processes.
         # So they cannot be directly attached to an object.
         self.state = {
-            'iteration': 0,      # Current iteration
+            'iteration': 0,  # Current iteration
             'query_target': '',  # Original name of the query sequence
-            'query_file': '',    # Current query file name
-            'blast_db': '',      # Current blast DB name
-            'iter_dir': '',      # Name of the temp dir for this iteration
-            'cxn': cxn}          # Save the DB connection
+            'query_file': '',  # Current query file name
+            'blast_db': '',  # Current blast DB name
+            'iter_dir': '',  # Name of the temp dir for this iteration
+            'cxn': cxn}  # Save the DB connection
 
     def init_iteration(self, blast_db, query_file, iteration):
         """Make file names used by the assembler."""
@@ -70,24 +69,24 @@ class BaseAssembler:  # pylint: disable=too-many-public-methods
     def run(self):
         """Try to assemble the input."""
         try:
-            log.info('Assembling shards with {}: iteration {}'.format(
+            self.log.info('Assembling shards with {}: iteration {}'.format(
                 self.args['assembler'], self.state['iteration']))
             self.assemble()
         except TimeoutError:
             msg = 'Time ran out for the assembler after {} (HH:MM:SS)'.format(
                 datetime.timedelta(seconds=self.args['timeout']))
-            log.error(msg)
+            self.log.error(msg)
             raise TimeoutError(msg)
         except CalledProcessError as cpe:
             msg = 'The assembler failed with error: ' + str(cpe)
-            log.error(msg)
+            self.log.error(msg)
             raise RuntimeError(msg)
 
     def count_blast_hits(self):
         """Make sure we have blast hits."""
         count = db_atram.sra_blast_hits_count(
             self.state['cxn'], self.state['iteration'])
-        log.info('{} blast hits in iteration {}'.format(
+        self.log.info('{} blast hits in iteration {}'.format(
             count, self.state['iteration']))
         return count
 
@@ -95,7 +94,7 @@ class BaseAssembler:  # pylint: disable=too-many-public-methods
         """Make there is assembler output."""
         if not exists(self.file['output']) \
                 or not getsize(self.file['output']):
-            log.info('No new assemblies in iteration {}'.format(
+            self.log.info('No new assemblies in iteration {}'.format(
                 self.state['iteration']))
             return True
         return False
@@ -109,13 +108,14 @@ class BaseAssembler:  # pylint: disable=too-many-public-methods
             self.args['contig_length'])
 
         if not count:
-            log.info('No contigs had a bit score greater than {} and are at '
-                     'least {} bp long in iteration {}. The highest score for '
-                     'this iteration is {}'.format(
-                         self.args['bit_score'],
-                         self.args['contig_length'],
-                         self.state['iteration'],
-                         high_score))
+            self.log.info(
+                'No contigs had a bit score greater than {} and '
+                'are at least {} bp long in iteration {}. The '
+                'highest score for this iteration is {}'.format(
+                    self.args['bit_score'],
+                    self.args['contig_length'],
+                    self.state['iteration'],
+                    high_score))
         return count
 
     def no_new_contigs(self, count):
@@ -125,7 +125,7 @@ class BaseAssembler:  # pylint: disable=too-many-public-methods
                 self.state['iteration'],
                 self.args['bit_score'],
                 self.args['contig_length']):
-            log.info('No new contigs were found in iteration {}'.format(
+            self.log.info('No new contigs were found in iteration {}'.format(
                 self.state['iteration']))
             return True
         return False
@@ -139,7 +139,8 @@ class BaseAssembler:  # pylint: disable=too-many-public-methods
         """
         for step in self.steps:
             cmd = step()
-            log.subcommand(cmd, self.args['temp_dir'], self.args['timeout'])
+            self.log.subcommand(
+                cmd, self.args['temp_dir'], self.args['timeout'])
         self.post_assembly()
 
     def post_assembly(self):
@@ -152,7 +153,7 @@ class BaseAssembler:  # pylint: disable=too-many-public-methods
 
     def write_input_files(self):
         """Write blast hits and matching ends to fasta files."""
-        log.info('Writing assembler input files: iteration {}'.format(
+        self.log.info('Writing assembler input files: iteration {}'.format(
             self.state['iteration']))
         self.write_paired_input_files()
         self.write_single_input_files()

@@ -1,115 +1,97 @@
 """Common logging functions."""
 
-from os.path import basename, splitext
-import sys
-import logging
-import tempfile
+from datetime import datetime
 import subprocess
+import sys
+import tempfile
+
 from . import db
 
-LOGGER = None  # Global logger so we can switch between queries & blast DBs
-FORMATTER = logging.Formatter('%(asctime)s %(levelname)s: %(message)s',
-                              datefmt='%Y-%m-%d %H:%M:%S')
-NAME = 'atram_logger'
+
+DEBUG = 10
+INFO = 20
+ERROR = 30
+FATAL = 40
+
+LEVEL = {
+    'debug': DEBUG,
+    'info': INFO,
+    'error': ERROR,
+    'fatal': FATAL,
+}
 
 
-def setup(log_file, log_level, blast_db, query_file=''):
-    """Logger setup."""
-    log_file = file_name(log_file, blast_db, query_file)
-    _setup(log_file, log_level)
+class Logger:
+    """Common logging functions."""
 
+    def __init__(self, log_file, log_level):
+        self.log_file = log_file
+        self.log_level = LEVEL[log_level]
+        self.file_handle = open(log_file, 'a') if log_file else None
 
-def stitcher_setup(log_file, log_level):
-    """Build a logger for the stitcher."""
-    _setup(log_file, log_level)
+    def __del__(self):
+        if self.file_handle:
+            self.file_handle.close()
 
+    def header(self):
+        """Log header information."""
+        self.info('#' * 80)
+        self.info('aTRAM version: {}'.format(db.ATRAM_VERSION))
+        self.info('Python version: {}'.format(' '.join(sys.version.split())))
+        self.info(' '.join(sys.argv[:]))
 
-def _setup(log_file, log_level):
-    global LOGGER  # pylint: disable=global-statement
+    def subcommand(self, cmd, temp_dir, timeout=None):
+        """
+        Call a subprocess and log the output.
 
-    if not LOGGER:
-        handler = logging.FileHandler(log_file)
-        handler.setFormatter(FORMATTER)
-        handler.setLevel(logging.DEBUG)
+        Note: stdout=PIPE is blocking and large logs cause a hang.
+        So we don't use it.
+        """
+        self.debug(cmd)
 
-        stream = logging.StreamHandler()
-        stream.setFormatter(FORMATTER)
-        stream.setLevel(logging.INFO)
-
-        LOGGER = logging.getLogger(log_file)
-
-        log_level = getattr(logging, log_level.upper())
-        LOGGER.setLevel(log_level)
-
-        LOGGER.addHandler(handler)
-        LOGGER.addHandler(stream)
-
-        info('#' * 80)
-        info('aTRAM version: {}'.format(db.ATRAM_VERSION))
-        info('Python version: {}'.format(' '.join(sys.version.split())))
-        info(' '.join(sys.argv[:]))
-
-
-def file_name(log_file, blast_db, query_file=''):
-    """
-    Create the log file name for each run.
-
-    Honor user's argument if given.
-    """
-    if log_file:
-        return log_file
-
-    program = splitext(basename(sys.argv[0]))[0]
-
-    if query_file:
-        query_file = splitext(basename(query_file))[0]
-        return '{}.{}.{}.log'.format(blast_db, query_file, program)
-
-    return '{}.{}.log'.format(blast_db, program)
-
-
-def subcommand(cmd, temp_dir, timeout=None):
-    """
-    Call a subprocess and log the output.
-
-    Note: stdout=PIPE is blocking and large logs cause a hang.
-    So we don't use it.
-    """
-    if LOGGER:
-        LOGGER.debug(cmd)
-
-    with tempfile.NamedTemporaryFile(mode='w', dir=temp_dir) as log_output:
-        try:
-            subprocess.check_call(
-                cmd,
-                shell=True,
-                timeout=timeout,
-                stdout=log_output,
-                stderr=log_output)
-        except Exception as err:  # pylint: disable=broad-except
-            error('Exception: {}'.format(err))
-        finally:
-            if LOGGER:
+        with tempfile.NamedTemporaryFile(mode='w', dir=temp_dir) as log_output:
+            try:
+                subprocess.check_call(
+                    cmd,
+                    shell=True,
+                    timeout=timeout,
+                    stdout=log_output,
+                    stderr=log_output)
+            except Exception as err:  # pylint: disable=broad-except
+                self.error('Exception: {}'.format(err))
+            finally:
                 with open(log_output.name) as log_input:
                     for line in log_input:
                         line = line.strip()
                         if line:
-                            LOGGER.debug(line)
+                            self.debug(line)
 
+    def _output(self, msg, level):
+        timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        msg = '{} {:<5}: {}'.format(timestamp, level, msg)
+        print(msg)
+        if self.file_handle:
+            self.file_handle.write(msg)
+            self.file_handle.write('\n')
+            self.file_handle.flush()
 
-def info(msg):
-    """Log an info message."""
-    if LOGGER:
-        LOGGER.info(msg)
+    def debug(self, msg):
+        """Log an info message."""
+        if self.log_level <= DEBUG:
+            self._output(msg, 'DEBUG')
 
+    def info(self, msg):
+        """Log an info message."""
+        if self.log_level <= INFO:
+            self._output(msg, 'INFO')
 
-def error(msg):
-    """Log an error message."""
-    if LOGGER:
-        LOGGER.error(msg)
+    def error(self, msg):
+        """Log an error message."""
+        if self.log_level <= ERROR:
+            self._output(msg, 'ERROR')
 
-
-def fatal(msg):
-    """Log an error message and exit."""
-    error(msg)
-    sys.exit(1)
+    def fatal(self, msg):
+        """Log an error message and exit."""
+        if self.log_level <= FATAL:
+            self._output(msg, 'FATAL')
+        sys.exit(1)

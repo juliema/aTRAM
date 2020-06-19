@@ -1,16 +1,16 @@
 """Base class for the various assembler programs."""
 
 import sys
-from shutil import which
 import textwrap
+from shutil import which
+
 import psutil
-import lib.log as log
+
 from .assemblers.abyss import AbyssAssembler
+from .assemblers.none import NoneAssembler
 from .assemblers.spades import SpadesAssembler
 from .assemblers.trinity import TrinityAssembler
 from .assemblers.velvet import VelvetAssembler
-from .assemblers.none import NoneAssembler
-
 
 ASSEMBLERS = {
     'abyss': AbyssAssembler,
@@ -20,11 +20,11 @@ ASSEMBLERS = {
     'none': NoneAssembler}
 
 
-def factory(args, cxn):
+def factory(args, cxn, log):
     """Return the assembler based upon the configuration options."""
     name = args['assembler'].lower()
     assembler = ASSEMBLERS[name]
-    return assembler(args, cxn)
+    return assembler(args, cxn, log)
 
 
 def command_line_args(parser):
@@ -111,13 +111,14 @@ def default_kmer(kmer, assembler):
     return kmer
 
 
-def default_cov_cutoff(cov_cutoff):
+def default_cov_cutoff(log, cov_cutoff):
     """Calculate default coverage cutoff argument."""
     if cov_cutoff in ['off', 'auto']:
         return cov_cutoff
 
     err = ('Read coverage cutoff value. Must be a positive '
            'float value, or "auto", or "off"')
+    value = None
     try:
         value = float(cov_cutoff)
     except ValueError:

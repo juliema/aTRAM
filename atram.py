@@ -6,16 +6,17 @@ This wrapper module parses the input arguments and passes them to the module
 that does the actual processing (core_atram.py).
 """
 
-import os
 import argparse
+import os
 import textwrap
-import lib.db as db
-import lib.log as log
-import lib.bio as bio
-import lib.util as util
-import lib.blast as blast
+
 import lib.assembler as assembly
+import lib.bio as bio
+import lib.blast as blast
+import lib.db as db
+import lib.util as util
 from lib.core_atram import assemble
+from lib.log import Logger
 
 
 def parse_command_line():
@@ -33,9 +34,7 @@ def parse_command_line():
         multiple blast databases or multiple query sequences.
         """
     parser = argparse.ArgumentParser(
-        fromfile_prefix_chars='@',
-        formatter_class=argparse.RawDescriptionHelpFormatter,
-        description=textwrap.dedent(description))
+        fromfile_prefix_chars='@', description=textwrap.dedent(description))
 
     parser.add_argument('--version', action='version',
                         version='%(prog)s {}'.format(db.ATRAM_VERSION))
@@ -148,19 +147,21 @@ def parse_command_line():
 
     args = vars(parser.parse_args())
 
-    check_query_args(args)
+    log = Logger(args.get('log_file'), args.get('log_level'))
+
+    check_query_args(args, log)
     blast.check_args(args)
 
     # Set defaults and adjust arguments based on other arguments
-    args['cov_cutoff'] = assembly.default_cov_cutoff(args['cov_cutoff'])
+    args['cov_cutoff'] = assembly.default_cov_cutoff(log, args['cov_cutoff'])
     args['blast_db'] = blast.touchup_blast_db_names(args['blast_db'])
     args['kmer'] = assembly.default_kmer(args['kmer'], args['assembler'])
     args['max_target_seqs'] = blast.default_max_target_seqs(
-        args['max_target_seqs'], args['blast_db'], args['max_memory'])
+        log, args['max_target_seqs'], args['blast_db'], args['max_memory'])
 
     # Timeout: As always, None != 0
     args['timeout'] = max(0, args['timeout'])
-    if not(args['timeout']):
+    if not (args['timeout']):
         args['timeout'] = None
 
     setup_blast_args(args)
@@ -186,7 +187,7 @@ def setup_blast_args(args):
         args['contig_length'] = 0
 
 
-def check_query_args(args):
+def check_query_args(args, log):
     """Validate the query arguments."""
     if not args.get('query') and not args.get('query_split'):
         err = 'You must have at least one --query or --query-split argument.'

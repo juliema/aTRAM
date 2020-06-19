@@ -3,16 +3,16 @@
 import csv
 from collections import defaultdict
 from itertools import product
-from . import bio
-from . import exonerate
-from . import db_stitcher as db
-from . import log
-from . import util
+
+from . import bio, db_stitcher as db, exonerate, util
+from .log import Logger
 
 
 def frame(args):
     """Frame the exons."""
-    log.stitcher_setup(args.log_file, args.log_level)
+    log = Logger(args.log_file, args.log_level)
+    log.header()
+
     iteration = 0
 
     with util.make_temp_dir(
@@ -24,18 +24,18 @@ def frame(args):
                 col[0]: r[idx] for idx, col in enumerate(c.description)}
             exonerate.create_tables(cxn)
 
-            taxon_names = exonerate.get_taxa(args)
-            exonerate.insert_reference_genes(args, temp_dir, cxn)
-            exonerate.check_file_counts(args, cxn, taxon_names)
-            exonerate.create_reference_files(cxn)
+            taxon_names = exonerate.get_taxa(args, log)
+            exonerate.insert_reference_genes(args, temp_dir, cxn, log)
+            exonerate.check_file_counts(args, cxn, log, taxon_names)
+            exonerate.create_reference_files(cxn, log)
 
             iteration += 1
             exonerate.get_contigs_from_fasta(
-                args, temp_dir, cxn, taxon_names, iteration)
-            exonerate.contig_file_write(cxn)
-            exonerate.run_exonerate(temp_dir, cxn, iteration)
+                args, temp_dir, cxn, log, taxon_names, iteration)
+            exonerate.contig_file_write(cxn, log)
+            exonerate.run_exonerate(temp_dir, cxn, log, iteration)
 
-            output_contigs(args, cxn)
+            output_contigs(args, cxn, log)
 
             log.info('Writing output')
             output_summary_per_gene(args, cxn, taxon_names)
@@ -44,7 +44,7 @@ def frame(args):
         log.info('Finished')
 
 
-def output_contigs(args, cxn):
+def output_contigs(args, cxn, log):
     """Add NNNs to align the contigs to the reference sequence."""
     log.info('Framing contigs')
 

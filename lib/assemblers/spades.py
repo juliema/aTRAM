@@ -1,16 +1,17 @@
 """Wrapper for the Spades assembler."""
 
-from os.path import join
 import shutil
+from os.path import join
+
 from .base import BaseAssembler
 
 
 class SpadesAssembler(BaseAssembler):
     """Wrapper for the Spades assembler."""
 
-    def __init__(self, args, cxn):
+    def __init__(self, args, cxn, log):
         """Build the assembler."""
-        super().__init__(args, cxn)
+        super().__init__(args, cxn, log)
         self.steps = [self.spades]
 
     def work_path(self):

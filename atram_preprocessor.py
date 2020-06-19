@@ -6,16 +6,17 @@ This wrapper module parses the input arguments and passes them to the module
 that does the actual preprocessing (core_preprocessor.py).
 """
 
-import os
-from os.path import join
-from glob import glob
-from itertools import chain
 import argparse
+import os
 import textwrap
 from datetime import date
+from glob import glob
+from itertools import chain
+from os.path import join
+
+import lib.blast as blast
 import lib.db as db
 import lib.util as util
-import lib.blast as blast
 from lib.core_preprocessor import preprocess
 
 
@@ -44,9 +45,7 @@ def parse_command_line():
         """
 
     parser = argparse.ArgumentParser(
-        fromfile_prefix_chars='@',
-        formatter_class=argparse.RawDescriptionHelpFormatter,
-        description=textwrap.dedent(description))
+        fromfile_prefix_chars='@', description=textwrap.dedent(description))
 
     parser.add_argument('--version', action='version',
                         version='%(prog)s {}'.format(db.ATRAM_VERSION))
@@ -107,14 +106,12 @@ def parse_command_line():
         help="""This flag will keep the temporary files in the --temp-dir
         around for debugging.""")
 
+    group.add_argument('-l', '--log-file', help="""Log file (full path).""")
     group.add_argument(
-        '-l', '--log-file',
-        help="""Log file (full path). The default is to use the DB and program
-            name to come up with a name like "<DB>_atram_preprocessor.log".""")
-    group.add_argument(
-        '--log-level', choices=['debug', 'info', 'error'], default='info',
+        '--log-level', choices=['debug', 'info', 'error', 'fatal'],
+        default='info',
         help="""Log messages of the given level (or above). 'debug' shows the
-            most messages and 'error' shows the least. The default is
+            most messages and 'fatal' shows the least. The default is
             'info'""")
 
     group.add_argument(

@@ -1,15 +1,16 @@
 """Wrapper for the Velvet assembler."""
 
 import shutil
+
 from .base import BaseAssembler
 
 
 class VelvetAssembler(BaseAssembler):
     """Wrapper for the Velvet assembler."""
 
-    def __init__(self, args, cxn):
+    def __init__(self, args, cxn, log):
         """Build the assembler."""
-        super().__init__(args, cxn)
+        super().__init__(args, cxn, log)
         self.steps = [self.velveth, self.velvetg]
 
     @staticmethod

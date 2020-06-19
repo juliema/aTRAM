@@ -4,18 +4,18 @@ Stitch together exons from targeted assemblies.
 It uses amino acid targets and DNA assemblies from aTRAM.
 """
 
-from os.path import abspath, join
 import csv
-from . import bio
-from . import db_stitcher as db
-from . import log
-from . import util
-from . import exonerate
+from os.path import abspath, join
+
+from . import bio, db_stitcher as db, exonerate, util
+from .log import Logger
 
 
 def stitch(args):
     """Stitch the exons together."""
-    log.stitcher_setup(args.log_file, args.log_level)
+    log = Logger(args.log_file, args.log_level)
+    log.header()
+
     iteration = 0
 
     with util.make_temp_dir(
@@ -28,31 +28,31 @@ def stitch(args):
 
             exonerate.create_tables(cxn)
 
-            taxon_names = exonerate.get_taxa(args)
-            exonerate.insert_reference_genes(args, temp_dir, cxn)
-            exonerate.check_file_counts(args, cxn, taxon_names)
-            exonerate.create_reference_files(cxn)
+            taxon_names = exonerate.get_taxa(args, log)
+            exonerate.insert_reference_genes(args, temp_dir, cxn, log)
+            exonerate.check_file_counts(args, cxn, log, taxon_names)
+            exonerate.create_reference_files(cxn, log)
 
             # First iteration gets its data from the input
             iteration += 1
             exonerate.get_contigs_from_fasta(
-                args, temp_dir, cxn, taxon_names, iteration)
-            exonerate.contig_file_write(cxn)
-            exonerate.run_exonerate(temp_dir, cxn, iteration)
-            early_exit_check(cxn)
+                args, temp_dir, cxn, log, taxon_names, iteration)
+            exonerate.contig_file_write(cxn, log)
+            exonerate.run_exonerate(temp_dir, cxn, log, iteration)
+            early_exit_check(cxn, log)
 
             # Iterations 2-N get their data from the previous stitch
             for _ in range(1, args.iterations):
-                stitch_everything(args, cxn, iteration)
+                stitch_everything(args, cxn, log, iteration)
 
                 iteration += 1
                 get_contigs_from_previous_stitch(
-                    temp_dir, cxn, taxon_names, iteration)
-                exonerate.contig_file_write(cxn)
-                exonerate.run_exonerate(temp_dir, cxn, iteration)
+                    temp_dir, cxn, log, taxon_names, iteration)
+                exonerate.contig_file_write(cxn, log)
+                exonerate.run_exonerate(temp_dir, cxn, log, iteration)
 
             # The final stitch is pickier than the others
-            stitch_with_gaps(args, cxn, taxon_names, iteration)
+            stitch_with_gaps(args, cxn, log, taxon_names, iteration)
 
             log.info('Writing output')
             output_stitched_genes(args, cxn, taxon_names, iteration)
@@ -62,7 +62,8 @@ def stitch(args):
         log.info('Finished')
 
 
-def get_contigs_from_previous_stitch(temp_dir, cxn, taxon_names, iteration):
+def get_contigs_from_previous_stitch(
+        temp_dir, cxn, log, taxon_names, iteration):
     """Prepare fasta files for exonerate.
 
     In this iteration we are getting all of the contigs from the first stitch
@@ -99,7 +100,7 @@ def get_contigs_from_previous_stitch(temp_dir, cxn, taxon_names, iteration):
     db.insert_contigs(cxn, batch)
 
 
-def early_exit_check(cxn):
+def early_exit_check(cxn, log):
     """Check for empty results after the first iteration."""
     if db.select_exonerate_count(cxn):
         return
@@ -108,7 +109,7 @@ def early_exit_check(cxn):
         both a reference gene name and taxon name in them."""))
 
 
-def stitch_everything(args, cxn, iteration):
+def stitch_everything(args, cxn, log, iteration):
     """Build one long contig that covers the reference gene.
 
     Build one long sequence from all of the non-overlapping contigs in the
@@ -158,7 +159,7 @@ def stitch_everything(args, cxn, iteration):
         db.insert_stitched_genes(cxn, contigs)
 
 
-def stitch_with_gaps(args, cxn, taxon_names, iteration):
+def stitch_with_gaps(args, cxn, log, taxon_names, iteration):
     """
     Choose the contigs to cover the reference gene.
 

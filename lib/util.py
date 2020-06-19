@@ -1,15 +1,16 @@
 """Misc. utilities."""
 
-import os
-from os.path import exists, getsize, join, split
+import bz2
+import gzip
 import io
+import os
 import re
 import sys
-from shutil import rmtree
-import gzip
-import bz2
 from contextlib import contextmanager
+from os.path import exists, getsize, join, split
+from shutil import rmtree
 from tempfile import mkdtemp
+
 from Bio.SeqIO.FastaIO import SimpleFastaParser
 
 

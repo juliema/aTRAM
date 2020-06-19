@@ -2,15 +2,16 @@
 
 from os.path import realpath
 from shutil import copyfile
+
 from .base import BaseAssembler
 
 
 class AbyssAssembler(BaseAssembler):
     """Wrapper for the Abyss assembler."""
 
-    def __init__(self, args, cxn):
+    def __init__(self, args, cxn, log):
         """Build the assembler."""
-        super().__init__(args, cxn)
+        super().__init__(args, cxn, log)
         self.steps = [self.abyss]
 
     def abyss(self):

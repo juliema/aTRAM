@@ -12,12 +12,14 @@ from os.path import basename, join, splitext
 from Bio.SeqIO.FastaIO import SimpleFastaParser
 from Bio.SeqIO.QualityIO import FastqGeneralIterator
 
-from . import blast, db, db_preprocessor, log, util
+from . import blast, db, db_preprocessor, util
+from .log import Logger
 
 
 def preprocess(args):
     """Build the databases required by atram."""
-    log.setup(args['log_file'], args['log_level'], args['blast_db'])
+    log = Logger(args['log_file'], args['log_level'])
+    log.header()
 
     with util.make_temp_dir(
             where=args['temp_dir'],
@@ -29,25 +31,25 @@ def preprocess(args):
             db_preprocessor.create_metadata_table(cxn, args)
 
             db_preprocessor.create_sequences_table(cxn)
-            load_seqs(args, cxn)
+            load_seqs(args, cxn, log)
 
             log.info('Creating an index for the sequence table')
             db_preprocessor.create_sequences_index(cxn)
 
-            create_all_blast_shards(args, cxn, args['shard_count'])
+            create_all_blast_shards(args, cxn, log, args['shard_count'])
 
 
-def load_seqs(args, cxn):
+def load_seqs(args, cxn, log):
     """Load sequences from a fasta/fastq files into the atram database."""
     # We have to clamp the end suffix depending on the file type.
     for (ends, clamp) in [('mixed_ends', ''), ('end_1', '1'),
                           ('end_2', '2'), ('single_ends', '')]:
         if args.get(ends):
             for file_name in args[ends]:
-                load_one_file(args, cxn, file_name, ends, clamp)
+                load_one_file(args, cxn, log, file_name, ends, clamp)
 
 
-def load_one_file(args, cxn, file_name, ends, seq_end_clamp=''):
+def load_one_file(args, cxn, log, file_name, ends, seq_end_clamp=''):
     """Load sequences from a fasta/fastq file into the atram database."""
     log.info('Loading "{}" into sqlite database'.format(file_name))
 
@@ -77,7 +79,7 @@ def get_parser(args, file_name):
     return FastqGeneralIterator if is_fastq else SimpleFastaParser
 
 
-def create_all_blast_shards(args, cxn, shard_count):
+def create_all_blast_shards(args, cxn, log, shard_count):
     """
     Assign processes to make the blast DBs.
 
@@ -116,5 +118,6 @@ def fill_blast_fasta(args, cxn, shard_count, shard_index):
 
 def create_one_blast_shard(args, fasta_path, shard_index):
     """Create a blast DB from the shard."""
+    log = Logger(args['log_file'], args['log_level'])
     shard = '{}.{:03d}.blast'.format(args['blast_db'], shard_index + 1)
-    blast.create_db(args['temp_dir'], fasta_path, shard)
+    blast.create_db(log, args['temp_dir'], fasta_path, shard)

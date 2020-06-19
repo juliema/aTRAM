@@ -2,15 +2,16 @@
 
 from os.path import join
 from shutil import move
+
 from .base import BaseAssembler
 
 
 class TrinityAssembler(BaseAssembler):
     """Wrapper for the trinity assembler."""
 
-    def __init__(self, args, cxn):
+    def __init__(self, args, cxn, log):
         """Build the assembler."""
-        super().__init__(args, cxn)
+        super().__init__(args, cxn, log)
         self.steps = [self.trinity]
 
     def work_path(self):

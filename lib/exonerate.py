@@ -1,18 +1,18 @@
 """Common exonerate related functions."""
 
-import re
 import os
-from os.path import abspath, join, basename
+import re
 from collections import defaultdict, namedtuple
 from glob import glob
+from os.path import abspath, basename, join
 from pathlib import Path
+
 from Bio.SeqIO.FastaIO import SimpleFastaParser
-from . import db_stitcher as db
-from . import log
-from . import util
+
+from . import db_stitcher as db, util
 
 
-def run_exonerate(temp_dir, cxn, iteration):
+def run_exonerate(temp_dir, cxn, log, iteration):
     """Run exonerate on every reference sequence, taxon combination."""
     for ref in db.select_reference_genes(cxn):
         log.info('Exonerate run for: {}'.format(ref['ref_name']))
@@ -30,12 +30,12 @@ def run_exonerate(temp_dir, cxn, iteration):
             if util.fasta_file_is_empty(contig_file['contig_file']):
                 continue
 
-            exonerate_command(temp_dir, ref, contig_file, results_file)
+            exonerate_command(temp_dir, log, ref, contig_file, results_file)
 
         insert_exonerate_results(cxn, iteration, results_file)
 
 
-def exonerate_command(temp_dir, ref, contig_file, results_file):
+def exonerate_command(temp_dir, log, ref, contig_file, results_file):
     """Build and run the exonerate program."""
     cmd = util.shorten(r"""
         exonerate --verbose 0 --model protein2genome {ref_file}
@@ -43,11 +43,11 @@ def exonerate_command(temp_dir, ref, contig_file, results_file):
         --showvulgar no --showalignment no
         --ryo ">{ref_name},{taxon_name},%ti,%qab,%qae\n%tcs\n"
         >> {results_file};""").format(
-            ref_file=ref['ref_file'],
-            contig_file=contig_file['contig_file'],
-            ref_name=ref['ref_name'],
-            taxon_name=contig_file['taxon_name'],
-            results_file=results_file)
+        ref_file=ref['ref_file'],
+        contig_file=contig_file['contig_file'],
+        ref_name=ref['ref_name'],
+        taxon_name=contig_file['taxon_name'],
+        results_file=results_file)
 
     log.subcommand(cmd, temp_dir)
 
@@ -84,7 +84,7 @@ def create_tables(cxn):
     db.create_stitch_table(cxn)
 
 
-def get_taxa(args):
+def get_taxa(args, log):
     """Insert taxa into the database."""
     log.info('Preparing taxa')
     with open(args.taxa) as taxa:
@@ -92,7 +92,7 @@ def get_taxa(args):
     return sorted(taxon_names)
 
 
-def insert_reference_genes(args, temp_dir, cxn):
+def insert_reference_genes(args, temp_dir, cxn, log):
     """Prepare reference sequences for exonerate."""
     batch = []
 
@@ -118,7 +118,7 @@ def insert_reference_genes(args, temp_dir, cxn):
     db.insert_reference_genes(cxn, batch)
 
 
-def create_reference_files(cxn):
+def create_reference_files(cxn, log):
     """Create reference gene fasta files for exonerate."""
     log.info('Preparing reference gene files for exonerate')
     for ref in db.select_reference_genes(cxn):
@@ -126,7 +126,7 @@ def create_reference_files(cxn):
             util.write_fasta_record(ref_file, ref['ref_name'], ref['ref_seq'])
 
 
-def check_file_counts(args, cxn, taxon_names):
+def check_file_counts(args, cxn, log, taxon_names):
     """Only one contig file may match a reference/taxon pair."""
     ref_names = set(x['ref_name'] for x in db.select_reference_genes(cxn))
 
@@ -161,11 +161,11 @@ def parse_contig_file_name(ref_names, taxon_names, contig_file):
 
     ref_names = [(x, re.sub(sep, sep, x) + sep) for x in ref_names]
     ref_names = sorted(
-            ref_names, key=lambda x: (len(x[1]), x), reverse=True)
+        ref_names, key=lambda x: (len(x[1]), x), reverse=True)
 
     taxon_names = [(x, re.sub(sep, sep, x) + sep) for x in taxon_names]
     taxon_names = sorted(
-            taxon_names, key=lambda x: (len(x[1]), x), reverse=True)
+        taxon_names, key=lambda x: (len(x[1]), x), reverse=True)
 
     ref_name = [x[0] for x in ref_names if re.search(x[1], contig_file)]
     taxon_name = [x[0] for x in taxon_names if re.search(x[1], contig_file)]
@@ -176,7 +176,7 @@ def parse_contig_file_name(ref_names, taxon_names, contig_file):
     return ref_name[0], taxon_name[0]
 
 
-def get_contigs_from_fasta(args, temp_dir, cxn, taxon_names, iteration):
+def get_contigs_from_fasta(args, temp_dir, cxn, log, taxon_names, iteration):
     """Prepare fasta files for exonerate.
 
     In this iteration we are getting the contigs from the given fasta files.
@@ -222,7 +222,7 @@ def get_contigs_from_fasta(args, temp_dir, cxn, taxon_names, iteration):
     db.insert_contigs(cxn, batch)
 
 
-def contig_file_write(cxn):
+def contig_file_write(cxn, log):
     """Create contig fasta files for exonerate."""
     log.info('Write contig files')
 

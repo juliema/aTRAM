@@ -1,11 +1,11 @@
 """Handle common database functions."""
 
+import os
 import sqlite3
 import sys
-import os
-from os.path import basename, join, exists
+from os.path import basename, exists, join
 
-ATRAM_VERSION = 'v2.3.2'
+ATRAM_VERSION = 'v2.3.3'
 
 # DB_VERSION != ATRAM_VERSION
 # We don't force DB changes until required.

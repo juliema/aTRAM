@@ -1,24 +1,24 @@
 """All blast commands used by aTRAM."""
 
-import sys
-import os
-from os.path import basename, dirname, join
-import re
 import glob
 import json
+import os
+import re
+import sys
+from os.path import basename, dirname, join
 from shutil import which
-from . import log
+
 from . import util
 
 
-def create_db(temp_dir, fasta_file, shard):
+def create_db(log, temp_dir, fasta_file, shard):
     """Create a blast database."""
     cmd = 'makeblastdb -dbtype nucl -in {} -out {}'
     cmd = cmd.format(fasta_file, shard)
     log.subcommand(cmd, temp_dir)
 
 
-def against_sra(args, state, hits_file, shard):
+def against_sra(args, log, state, hits_file, shard):
     """Blast the query sequences against an SRA blast database."""
     cmd = []
 
@@ -42,7 +42,7 @@ def against_sra(args, state, hits_file, shard):
     log.subcommand(command, args['temp_dir'], timeout=args['timeout'])
 
 
-def against_contigs(blast_db, query_file, hits_file, **kwargs):
+def against_contigs(log, blast_db, query_file, hits_file, **kwargs):
     """
     Blast the query sequence against the contigs.
 
@@ -65,7 +65,7 @@ def against_contigs(blast_db, query_file, hits_file, **kwargs):
     log.subcommand(command, kwargs['temp_dir'], timeout=kwargs['timeout'])
 
 
-def all_shard_paths(blast_db):
+def all_shard_paths(log, blast_db):
     """Get all of the BLAST shard names built by the preprocessor."""
     pattern = '{}.*.blast.nhr'.format(blast_db)
 
@@ -73,7 +73,7 @@ def all_shard_paths(blast_db):
     if not files:
         err = ('No blast shards found. Looking for "{}"\n'
                'Verify the --work-dir and --file-prefix options.').format(
-                   pattern[:-4])
+            pattern[:-4])
         log.fatal(err)
 
     return sorted(f[:-4] for f in files)
@@ -92,7 +92,7 @@ def temp_db_name(temp_dir, blast_db):
     return join(temp_dir, file_name)
 
 
-def get_raw_hits(json_file):
+def get_raw_hits(log, json_file):
     """Extract the raw blast hits from the blast json output file."""
     with open(json_file) as blast_file:
         raw = blast_file.read()
@@ -113,10 +113,10 @@ def get_raw_hits(json_file):
         'hits', [])
 
 
-def hits(json_file):
+def hits(log, json_file):
     """Extract the blast hits from the blast json output file."""
     hits_list = []
-    raw_hits = get_raw_hits(json_file)
+    raw_hits = get_raw_hits(log, json_file)
 
     for raw in raw_hits:
         for i, desc in enumerate(raw['description']):
@@ -162,10 +162,10 @@ def check_args(args):
         sys.exit('--word-size must be >= 2.')
 
 
-def default_max_target_seqs(max_target_seqs, blast_db, max_memory):
+def default_max_target_seqs(log, max_target_seqs, blast_db, max_memory):
     """Calculate the default max_target_seqs per shard."""
     if not max_target_seqs:
-        all_shards = all_shard_paths(blast_db)
+        all_shards = all_shard_paths(log, blast_db)
         max_target_seqs = int(2 * max_memory / len(all_shards)) * 1e6
     return max_target_seqs
 

@@ -1,6 +1,7 @@
 """Utilities for working with sequences."""
 
 import re
+
 from Bio import SeqIO
 
 CODON_LEN = 3

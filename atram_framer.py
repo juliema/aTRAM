@@ -6,13 +6,14 @@ This wrapper module parses the input arguments and passes them to the module
 that does the actual framing (core_framer.py).
 """
 
-from os.path import join
-from datetime import date
 import argparse
 import textwrap
+from datetime import date
+from os.path import join
+
+import lib.core_framer as framer
 import lib.db as db
 import lib.util as util
-import lib.core_framer as framer
 
 
 def parse_command_line():
@@ -23,9 +24,7 @@ def parse_command_line():
         """
 
     parser = argparse.ArgumentParser(
-        fromfile_prefix_chars='@',
-        formatter_class=argparse.RawDescriptionHelpFormatter,
-        description=textwrap.dedent(description))
+        fromfile_prefix_chars='@', description=textwrap.dedent(description))
 
     parser.add_argument('--version', action='version',
                         version='%(prog)s {}'.format(db.ATRAM_VERSION))

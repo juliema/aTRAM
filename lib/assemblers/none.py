@@ -1,16 +1,15 @@
 """Null object for the assemblers."""
 
-from .. import db_atram
-from .. import util
 from .base import BaseAssembler
+from .. import db_atram, util
 
 
 class NoneAssembler(BaseAssembler):
     """Null object for the assemblers."""
 
-    def __init__(self, args, cxn):
+    def __init__(self, args, cxn, log):
         """Build the assembler."""
-        super().__init__(args, cxn)
+        super().__init__(args, cxn, log)
         self.steps = []
         self.blast_only = True  # Used to short-circuit the assembler
 

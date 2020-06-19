@@ -41,7 +41,7 @@ def sra_blast_hits_count(cxn, iteration):
          WHERE iteration = ?
         """
 
-    result = cxn.execute(sql, (iteration, ))
+    result = cxn.execute(sql, (iteration,))
     return result.fetchone()[0]
 
 
@@ -57,7 +57,7 @@ def get_sra_blast_hits(cxn, iteration):
         """
 
     cxn.row_factory = sqlite3.Row
-    return cxn.execute(sql, (iteration, ))
+    return cxn.execute(sql, (iteration,))
 
 
 def get_blast_hits_by_end_count(cxn, iteration, end_count):
@@ -90,7 +90,7 @@ def get_blast_hits(cxn, iteration):
         """
 
     cxn.row_factory = sqlite3.Row
-    return cxn.execute(sql, (iteration, ))
+    return cxn.execute(sql, (iteration,))
 
 
 # ####################### contig_blast_hits table #############################
@@ -143,7 +143,7 @@ def get_contig_blast_hits(cxn, iteration):
         """
 
     cxn.row_factory = sqlite3.Row
-    return cxn.execute(sql, (iteration, ))
+    return cxn.execute(sql, (iteration,))
 
 
 # ####################### assembled_contigs table #############################
