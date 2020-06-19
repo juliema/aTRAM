@@ -5,7 +5,7 @@ import sys
 import os
 from os.path import basename, join, exists
 
-ATRAM_VERSION = 'v2.3.1'
+ATRAM_VERSION = 'v2.3.2'
 
 # DB_VERSION != ATRAM_VERSION
 # We don't force DB changes until required.
