@@ -57,14 +57,12 @@ def parse_command_line():
         help="""This flag will keep the temporary files in the --temp-dir
         around for debugging.""")
 
+    parser.add_argument('-l', '--log-file', help="""Log file (full path).""")
     parser.add_argument(
-        '-l', '--log-file',
-        help="""Log file (full path). The default is
-            "atram_stitcher_<date>.log".""")
-    parser.add_argument(
-        '--log-level', choices=['debug', 'info', 'error'], default='info',
+        '--log-level', choices=['debug', 'info', 'error', 'fatal'],
+        default='info',
         help="""Log messages of the given level (or above). 'debug' shows the
-            most messages and 'error' shows the least. The default is
+            most messages and 'fatal' shows the least. The default is
             'info'""")
 
     parser.add_argument(
@@ -101,13 +99,6 @@ def parse_command_line():
     if not args.output_prefix:
         args.output_prefix = join(
             '.', 'atram_stitcher_' + date.today().isoformat())
-
-    if not args.log_file and args.output_prefix[-1] == '/':
-        args.log_file = join(
-            args.output_prefix,
-            'atram_stitcher_' + date.today().isoformat() + '.log')
-    else:
-        args.log_file = args.output_prefix + '.log'
 
     if 1 > args.iterations > 2:
         log = Logger(args.get('log_file'), args.get('log_level'))
