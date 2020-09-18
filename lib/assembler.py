@@ -102,6 +102,16 @@ def command_line_args(parser):
         help="""Abyss: Minimum sequence identity of a bubble. Enter a single
             digit integer [0-9].""")
 
+    group.add_argument(
+        '--abyss-n', type=int,
+        help="""Abyss: Minimum number of pairs required for building contigs
+            [10].""")
+
+    group.add_argument(
+        '--abyss-N', type=int,
+        help="""Abyss: Minimum number of pairs required for building scaffolds
+            [n].""")
+
 
 def default_kmer(kmer, assembler):
     """Calculate default kmer argument."""

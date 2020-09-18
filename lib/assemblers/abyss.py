@@ -24,6 +24,12 @@ class AbyssAssembler(BaseAssembler):
         if self.args.get('abyss_p') is not None:
             cmd.append('p={}'.format(self.args['abyss_p']))
 
+        if self.args.get('abyss_n') is not None:
+            cmd.append('n={}'.format(self.args['abyss_n']))
+
+        if self.args.get('abyss_N') is not None:
+            cmd.append('N={}'.format(self.args['abyss_N']))
+
         cmd.append("name='{}'".format(self.file['output']))
 
         if self.args['mpi']:
