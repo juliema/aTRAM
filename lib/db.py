@@ -64,12 +64,9 @@ def temp_db(temp_dir, db_prefix):
 
 def db_setup(db_name):
     """Database setup."""
-    cxn = sqlite3.connect(db_name, timeout=30.0, check_same_thread=False)
+    cxn = sqlite3.connect(db_name, timeout=30.0)
     cxn.execute('PRAGMA page_size = {}'.format(2 ** 16))
-    try:
-        cxn.execute("PRAGMA journal_mode = WAL")
-    except sqlite3.OperationalError:
-        cxn.execute('PRAGMA journal_mode = OFF')
+    cxn.execute("PRAGMA journal_mode = WAL")
     return cxn
 
 
