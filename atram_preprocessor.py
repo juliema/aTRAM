@@ -145,6 +145,10 @@ def parse_command_line():
         '--bzip', action='store_true',
         help="""Are these bzip files?""")
 
+    group.add_argument(
+        '--shuffle', action='store_true',
+        help="""Shuffle sequences before putting them into blast files?""")
+
     args = vars(parser.parse_args())
 
     # Prepend to PATH environment variable if requested

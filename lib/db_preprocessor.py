@@ -78,6 +78,20 @@ def insert_sequences_batch(cxn, batch):
             cxn.executemany(sql, batch)
 
 
+def get_sequence_count(cxn):
+    """Get the number of sequences in the table."""
+    result = cxn.execute('SELECT COUNT(*) FROM sequences')
+    return result.fetchone()[0]
+
+
+def get_shard_cut(cxn, offset):
+    """Get the sequence name at the given offset."""
+    sql = 'SELECT seq_name FROM sequences ORDER BY seq_name LIMIT 1 OFFSET {}'
+    result = cxn.execute(sql.format(offset))
+    cut = result.fetchone()[0]
+    return cut
+
+
 # ########################## sequence names ##################################
 
 def create_seq_names_table(cxn):
@@ -88,7 +102,18 @@ def create_seq_names_table(cxn):
         """)
 
 
-def get_sequences_in_shard(cxn, shard_count, shard_index):
+def get_sequences_in_shard(cxn, start, end):
+    """Get all sequences in a shard."""
+    sql = """
+        SELECT seq_name, seq_end, seq
+          FROM sequences
+         WHERE seq_name >= ?
+           AND seq_name < ?
+        """
+    return cxn.execute(sql, (start, end))
+
+
+def get_shuffled_sequences_in_shard(cxn, shard_count, shard_index):
     """Split the sequences by row ID to shuffle them into different shards."""
     sql = """
         SELECT seq_name, seq_end, seq
