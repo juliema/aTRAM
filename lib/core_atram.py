@@ -234,7 +234,7 @@ def filter_contigs(log, assembler):
         assembler.state['query_target'],
         hits_file,
         protein=assembler.args['protein'],
-        db_gencode=assembler.args['db_gencode'],
+        blast_db_gencode=assembler.args['blast_db_gencode'],
         temp_dir=assembler.args['temp_dir'],
         timeout=assembler.args['timeout'])
 

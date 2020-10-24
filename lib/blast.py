@@ -24,27 +24,26 @@ def against_sra(args, log, state, hits_file, shard):
 
     if args['protein'] and state['iteration'] == 1:
         cmd.append('tblastn')
-        cmd.append('-db_gencode {}'.format(args['db_gencode']))
+        cmd.append('-db_gencode {}'.format(args['blast_db_gencode']))
     else:
         cmd.append('blastn')
 
-    cmd.append('-evalue {}'.format(args['evalue']))
+    cmd.append('-evalue {}'.format(args['blast_evalue']))
     cmd.append('-outfmt 15')
-    cmd.append('-max_target_seqs {}'.format(args['max_target_seqs']))
+    cmd.append('-max_target_seqs {}'.format(args['blast_max_target_seqs']))
     cmd.append('-out {}'.format(hits_file))
     cmd.append('-db {}'.format(shard))
     cmd.append('-query {}'.format(state['query_file']))
 
-    if args['word_size']:
-        cmd.append('-word_size {}'.format(args['word_size']))
+    if args['blast_word_size']:
+        cmd.append('-word_size {}'.format(args['blast_word_size']))
 
     command = ' '.join(cmd)
     log.subcommand(command, args['temp_dir'], timeout=args['timeout'])
 
 
 def against_contigs(log, blast_db, query_file, hits_file, **kwargs):
-    """
-    Blast the query sequence against the contigs.
+    """Blast the query sequence against the contigs.
 
     The blast output will have the scores for later processing.
     """
@@ -52,7 +51,7 @@ def against_contigs(log, blast_db, query_file, hits_file, **kwargs):
 
     if kwargs['protein']:
         cmd.append('tblastn')
-        cmd.append('-db_gencode {}'.format(kwargs['db_gencode']))
+        cmd.append('-db_gencode {}'.format(kwargs['blast_db_gencode']))
     else:
         cmd.append('blastn')
 
@@ -132,25 +131,25 @@ def command_line_args(parser):
     """Add optional blast arguments to the command-line parser."""
     group = parser.add_argument_group('optional blast arguments')
 
-    group.add_argument('--db-gencode', type=int, default=1,
-                       metavar='CODE',
+    group.add_argument('--blast-db-gencode', '--db-gencode', type=int,
+                       default=1, metavar='CODE',
                        help="""The genetic code to use during blast runs.
                             The default is "1".""")
 
-    group.add_argument('--evalue', type=float, default=1e-10,
+    group.add_argument('--blast-evalue', '--evalue', type=float, default=1e-10,
                        help="""The default evalue is "1e-10".""")
 
-    group.add_argument('--word-size', type=int,
+    group.add_argument('--blast-word-size', '--word-size', type=int,
                        help="""Word size for wordfinder algorithm.
                             'Must be >= 2.""")
 
-    group.add_argument('--max-target-seqs', type=int, default=100000000,
-                       metavar='MAX',
+    group.add_argument('--blast-max-target-seqs', '--max-target-seqs',
+                       type=int, default=100000000, metavar='MAX',
                        help="""Maximum hit sequences per shard.
                             Default is calculated based on the available
                             memory and the number of shards.""")
 
-    group.add_argument('--batch-size', type=int,
+    group.add_argument('--blast-batch-size', '--batch-size', type=int,
                        help="""Use this option to control blast memory usage
                             and the concatenation of queries. Setting this
                             value too low can degrade performance.""")
@@ -158,7 +157,7 @@ def command_line_args(parser):
 
 def check_args(args):
     """Validate blast arguments."""
-    if args['word_size'] and args['word_size'] < 2:
+    if args['blast_word_size'] and args['blast_word_size'] < 2:
         sys.exit('--word-size must be >= 2.')
 
 
@@ -244,3 +243,9 @@ def parse_blast_title(title, is_single_end):
     if match and not is_single_end:
         seq_name, seq_end = match.group(1), match.group(2)
     return seq_name, seq_end
+
+
+def set_blast_batch_size(batch_size):
+    """Use this to control blast memory usage & query concatenation."""
+    if batch_size:
+        os.environ['BATCH_SIZE'] = str(batch_size)

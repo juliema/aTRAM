@@ -19,12 +19,6 @@ def shorten(text):
     return ' '.join(text.split())
 
 
-def set_blast_batch_size(batch_size):
-    """Use this to control blast memory usage & query concatenation."""
-    if batch_size:
-        os.environ['BATCH_SIZE'] = str(batch_size)
-
-
 def write_fasta_record(out_file, seq_name, seq, seq_end=None):
     """Write a fasta record to the file."""
     out_file.write('>')

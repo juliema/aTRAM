@@ -1,7 +1,10 @@
 """Wrapper for the Spades assembler."""
 
+import os
 import shutil
 from os.path import join
+
+import psutil
 
 from .base import BaseAssembler
 
@@ -26,12 +29,12 @@ class SpadesAssembler(BaseAssembler):
         """Build the command for assembly."""
         cmd = ['spades.py ',
                '--only-assembler',
-               '--threads {}'.format(self.args['cpus']),
-               '--memory {}'.format(self.args['max_memory']),
-               '--cov-cutoff {}'.format(self.args['cov_cutoff']),
+               '--threads {}'.format(self.args['spades_threads']),
+               '--memory {}'.format(self.args['spades_memory']),
+               '--cov-cutoff {}'.format(self.args['spades_cov_cutoff']),
                '-o {}'.format(self.work_path())]
 
-        if self.args['careful']:
+        if self.args['spades_careful']:
             cmd.append('--careful')
 
         if self.file['paired_count']:
@@ -51,3 +54,53 @@ class SpadesAssembler(BaseAssembler):
         """Copy the assembler output."""
         src = join(self.work_path(), 'contigs.fasta')
         shutil.move(src, self.file['output'])
+
+    @staticmethod
+    def command_line_args(parser):
+        """Add command-line arguments for this assembler."""
+        group = parser.add_argument_group('optional Spades arguments')
+
+        cpus = min(10, os.cpu_count() - 4 if os.cpu_count() > 4 else 1)
+        group.add_argument(
+            '--spades-threads', type=int, default=cpus,
+            help="""Number of threads to use.
+                Default will use {} threads.""".format(cpus))
+
+        total_mem = psutil.virtual_memory().available >> 30
+        max_mem = max(1.0, total_mem >> 1)
+        group.add_argument(
+            '--spades-memory', default=max_mem, metavar='MEMORY', type=int,
+            help="""Maximum amount of memory to use in gigabytes. We will 
+                use {} out of {} GB of free/unused memory. It passes
+                --memory <int> argument to Spades.""".format(
+                max_mem, total_mem))
+
+        group.add_argument(
+            '--spades-careful', action='store_true',
+            help="""Tries to reduce the number of mismatches and short indels.
+                It passes --careful.""")
+
+        group.add_argument(
+            '--spades-cov-cutoff', default='off',
+            help="""Read coverage cutoff value. Must be a positive float value,
+                or "auto", or "off". It passes  --cov-cutoff
+                <keyword or int>.""")
+
+    @staticmethod
+    def validate_cov_cutoff(log, cov_cutoff):
+        """Calculate default coverage cutoff argument."""
+        if cov_cutoff in ['off', 'auto']:
+            return cov_cutoff
+
+        err = ('Read coverage cutoff value. Must be a positive '
+               'float value, or "auto", or "off"')
+        value = None
+        try:
+            value = float(cov_cutoff)
+        except ValueError:
+            log.fatal(err)
+
+        if value < 0:
+            log.fatal(err)
+
+        return cov_cutoff

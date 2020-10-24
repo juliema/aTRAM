@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-"""
-Start atram.
+"""Start atram.
 
 This wrapper module parses the input arguments and passes them to the module
 that does the actual processing (core_atram.py).
@@ -15,6 +14,7 @@ import lib.bio as bio
 import lib.blast as blast
 import lib.db as db
 import lib.util as util
+from lib.assemblers.spades import SpadesAssembler
 from lib.core_atram import assemble
 from lib.log import Logger
 
@@ -78,6 +78,8 @@ def parse_command_line():
         '-i', '--iterations', type=int, default=5, metavar='N',
         help="""The number of pipeline iterations. The default is "5".""")
 
+    group = parser.add_argument_group('optional arguments')
+
     group.add_argument(
         '-p', '--protein', action='store_true',
         help="""Are the query sequences protein? aTRAM will guess if you skip
@@ -91,8 +93,8 @@ def parse_command_line():
     cpus = min(10, os.cpu_count() - 4 if os.cpu_count() > 4 else 1)
     group.add_argument(
         '--cpus', '--processes', '--max-processes', type=int, default=cpus,
-        help="""Number of CPU processors to use. This will also be used for
-            the assemblers when possible. We will use {} out of {} CPUs.
+        help="""Number of CPU processors to use.
+            Default will use {} out of {} CPUs.
             """.format(cpus, os.cpu_count()))
 
     group.add_argument('--log-file', help="""Log file (full path)".""")
@@ -105,7 +107,7 @@ def parse_command_line():
 
     group.add_argument(
         '--path',
-        help="""If the assembler or blast you want to use is not in your $PATH\
+        help="""If the assembler or blast you want to use is not in your $PATH
             then use this to prepend directories to your path.""")
 
     group.add_argument(
@@ -125,7 +127,7 @@ def parse_command_line():
             is "600" (10 minutes).""")
 
     group = parser.add_argument_group(
-        'optional values for blast-filtering contigs')
+        'optional values for filtering contigs')
 
     group.add_argument(
         '--no-filter', action='store_true',
@@ -154,11 +156,24 @@ def parse_command_line():
     blast.check_args(args)
 
     # Set defaults and adjust arguments based on other arguments
-    args['cov_cutoff'] = assembly.default_cov_cutoff(log, args['cov_cutoff'])
+    if args['spades_cov_cutoff']:
+        args['spades_cov_cutoff'] = SpadesAssembler.validate_cov_cutoff(
+            log, args['spades_cov_cutoff'])
+
     args['blast_db'] = blast.touchup_blast_db_names(args['blast_db'])
-    args['kmer'] = assembly.default_kmer(args['kmer'], args['assembler'])
-    args['max_target_seqs'] = blast.default_max_target_seqs(
-        log, args['max_target_seqs'], args['blast_db'], args['max_memory'])
+
+    args['bowtie2'] = args['trinity_bowtie2']
+    args['max_memory'] = args['trinity_max_memory']
+
+    args['no_long_reads'] = (args.get('trinity_no_long_reads')
+                             | args.get('abyss_no_long')
+                             | args.get('velvet_no_long'))
+
+    args['blast_max_target_seqs'] = blast.default_max_target_seqs(
+        log,
+        args['blast_max_target_seqs'],
+        args['blast_db'],
+        args['max_memory'])
 
     # Timeout: As always, None != 0
     args['timeout'] = max(0, args['timeout'])
@@ -170,7 +185,7 @@ def parse_command_line():
     setup_path_arg(args)
     find_programs(args)
     util.temp_dir_exists(args['temp_dir'], args.get('debug_dir'))
-    util.set_blast_batch_size(args['batch_size'])
+    blast.set_blast_batch_size(args['blast_batch_size'])
 
     return args
 
