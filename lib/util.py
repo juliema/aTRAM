@@ -43,6 +43,7 @@ def temp_dir_exists(temp_dir, debug_dir=None):
 def update_temp_dir(temp_dir, args):
     """Handle the new temporary directory name."""
     args['temp_dir'] = str(temp_dir)
+    os.environ['TMPDIR'] = temp_dir
     os.environ['SQLITE_TMPDIR'] = temp_dir
 
 
