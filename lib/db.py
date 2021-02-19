@@ -5,7 +5,7 @@ import sqlite3
 import sys
 from os.path import basename, exists, join
 
-ATRAM_VERSION = 'v2.3.4'
+ATRAM_VERSION = 'v2.3.5'
 
 # DB_VERSION != ATRAM_VERSION
 # We don't force DB changes until required.

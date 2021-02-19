@@ -2,7 +2,7 @@
 
 import datetime
 from os.path import abspath, basename, exists, getsize, join, splitext
-from subprocess import CalledProcessError
+from subprocess import CalledProcessError, TimeoutExpired
 
 from .. import bio, db_atram, util
 
@@ -72,11 +72,11 @@ class BaseAssembler:  # pylint: disable=too-many-public-methods
             self.log.info('Assembling shards with {}: iteration {}'.format(
                 self.args['assembler'], self.state['iteration']))
             self.assemble()
-        except TimeoutError:
+        except (TimeoutExpired, TimeoutError):
             msg = 'Time ran out for the assembler after {} (HH:MM:SS)'.format(
                 datetime.timedelta(seconds=self.args['timeout']))
             self.log.error(msg)
-            raise TimeoutError(msg)
+            raise TimeoutExpired(msg, timeout=self.args['timeout'])
         except CalledProcessError as cpe:
             msg = 'The assembler failed with error: ' + str(cpe)
             self.log.error(msg)
