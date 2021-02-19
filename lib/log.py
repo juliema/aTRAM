@@ -49,6 +49,8 @@ class Logger:
         """
         self.debug(cmd)
 
+        error = None
+
         with tempfile.NamedTemporaryFile(mode='w', dir=temp_dir) as log_output:
             try:
                 subprocess.check_call(
@@ -59,12 +61,15 @@ class Logger:
                     stderr=log_output)
             except Exception as err:  # pylint: disable=broad-except
                 self.error('Exception: {}'.format(err))
+                error = err
             finally:
                 with open(log_output.name) as log_input:
                     for line in log_input:
                         line = line.strip()
                         if line:
                             self.debug(line)
+                if error:
+                    raise error
 
     def _output(self, msg, level):
         timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')

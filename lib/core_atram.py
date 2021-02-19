@@ -4,6 +4,7 @@ import os
 import re
 from multiprocessing import Pool
 from os.path import basename, join, split, splitext
+from subprocess import TimeoutExpired
 
 from Bio import SeqIO
 
@@ -34,7 +35,7 @@ def assemble(args):
 
                     try:
                         assembly_loop(args, log, assembler, blast_db, query)
-                    except (TimeoutError, RuntimeError):
+                    except (TimeoutExpired, TimeoutError, RuntimeError):
                         pass
                     except Exception as err:  # pylint: disable=broad-except
                         log.error('Exception: {}'.format(err))
