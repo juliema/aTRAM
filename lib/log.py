@@ -1,12 +1,12 @@
 """Common logging functions."""
 
-from datetime import datetime
+import os
 import subprocess
 import sys
 import tempfile
+from datetime import datetime
 
 from . import db
-
 
 DEBUG = 10
 INFO = 20
@@ -72,8 +72,8 @@ class Logger:
                     raise error
 
     def _output(self, msg, level):
-        timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-        msg = '{} {:<5}: {}'.format(timestamp, level, msg)
+        timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')
+        msg = '({:8d}) {} {:<5}: {}'.format(os.getpid(), timestamp, level, msg)
         print(msg)
         if self.file_handle:
             self.file_handle.write(msg)
