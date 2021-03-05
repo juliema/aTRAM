@@ -15,6 +15,8 @@ class NoneAssembler(BaseAssembler):
 
     def write_final_output(self, blast_db, query):
         """Output this file if we are not assembling the contigs."""
+        self.log.info('Writing blast hits.')
+
         prefix = self.final_output_prefix(blast_db, query)
 
         file_name = '{}.fasta'.format(prefix)

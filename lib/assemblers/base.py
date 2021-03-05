@@ -224,6 +224,10 @@ class BaseAssembler:  # pylint: disable=too-many-public-methods
             self.state['cxn'],
             self.args['bit_score'],
             self.args['contig_length'])
+
+        self.log.info('Writing {} filtered contigs after iteration {}'.format(
+            count, self.state['iteration']))
+
         if not count:
             return
 
@@ -241,6 +245,10 @@ class BaseAssembler:  # pylint: disable=too-many-public-methods
     def write_all_contigs(self, prefix):
         """Write all contigs to a final output file."""
         count = db_atram.all_assembled_contigs_count(self.state['cxn'])
+
+        self.log.info('{} total contigs after iteration {}'.format(
+            count, self.state['iteration']))
+
         if not count:
             return
 

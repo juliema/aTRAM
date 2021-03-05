@@ -55,7 +55,7 @@ def make_temp_dir(where=None, prefix=None, keep=False):
         yield temp_dir
     finally:
         if not keep or not where:
-            rmtree(temp_dir)
+            rmtree(temp_dir, ignore_errors=True)
 
 
 @contextmanager
