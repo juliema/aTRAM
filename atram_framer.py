@@ -43,8 +43,8 @@ def parse_command_line():
 
     parser.add_argument(
         '-m', '--min-length', metavar='LENGTH', default=100, type=int,
-        help="""Remove contigs that are less than this length. The default is
-            100.""")
+        help="""Remove contigs that are less than this length.
+            (default %(default)s)""")
 
     parser.add_argument(
         '-t', '--temp-dir', metavar='DIR',
@@ -61,8 +61,8 @@ def parse_command_line():
         '--log-level', choices=['debug', 'info', 'error', 'fatal'],
         default='info',
         help="""Log messages of the given level (or above). 'debug' shows the
-            most messages and 'fatal' shows the least. The default is
-            'info'""")
+            most messages and 'fatal' shows the least.
+            (default %(default)s)""")
 
     parser.add_argument(
         '-o', '--output-prefix',
@@ -76,8 +76,8 @@ def parse_command_line():
         help="""Use this to filter files in the assemblies directory. For
             example '*filtered*.fasta' will select all fasta files in the
             assemblies directory with the word filtered in them. The default
-            is to select all fasta files in the assemblies directory
-            '*.fasta'.""")
+            is to select all fasta files in the assemblies directory.
+           (default %(default)s)""")
 
     parser.add_argument(
         '--reference-name', action='store_true',
@@ -89,7 +89,7 @@ def parse_command_line():
     parser.add_argument(
         '--long-contig', type=float, default=0.7,
         help="""A long contig is considered to be this fraction [0-1] of the
-            longest contig assembled by exonerate. The default is 0.7.""")
+            longest contig assembled by exonerate. (default %(default)s)""")
 
     args = parser.parse_args()
 

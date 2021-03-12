@@ -64,7 +64,7 @@ class SpadesAssembler(BaseAssembler):
         group.add_argument(
             '--spades-threads', type=int, default=cpus,
             help="""Number of threads to use.
-                Default will use {} threads.""".format(cpus))
+                (default %(default)s)""".format(cpus))
 
         total_mem = psutil.virtual_memory().available >> 30
         max_mem = max(1.0, total_mem >> 1)
@@ -84,7 +84,7 @@ class SpadesAssembler(BaseAssembler):
             '--spades-cov-cutoff', default='off',
             help="""Read coverage cutoff value. Must be a positive float value,
                 or "auto", or "off". It passes  --cov-cutoff
-                <keyword or int>.""")
+                <keyword or int>. (default %(default)s)""")
 
     @staticmethod
     def validate_cov_cutoff(log, cov_cutoff):

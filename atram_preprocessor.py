@@ -87,14 +87,14 @@ def parse_command_line():
         '-b', '--blast-db', '--db', default=blast_db, metavar='DB',
         help="""This is the prefix of all of the blast database files. So you
             can identify different blast database sets. You may include a
-            directory as part of the prefix. The default is "{}".
+            directory as part of the prefix. (default %(default)s)
             """.format(blast_db))
 
     cpus = min(10, os.cpu_count() - 4 if os.cpu_count() > 4 else 1)
     group.add_argument(
         '--cpus', '--processes', '--max-processes', type=int, default=cpus,
-        help="""Number of CPU threads to use. On this machine the default is
-        ("{}")""".format(cpus))
+        help="""Number of CPU threads to use. (default %(default)s)
+            """.format(cpus))
 
     group.add_argument(
         '-t', '--temp-dir', metavar='DIR',
@@ -111,8 +111,8 @@ def parse_command_line():
         '--log-level', choices=['debug', 'info', 'error', 'fatal'],
         default='info',
         help="""Log messages of the given level (or above). 'debug' shows the
-            most messages and 'fatal' shows the least. The default is
-            'info'""")
+            most messages and 'fatal' shows the least.
+            (default %(default)s)""")
 
     group.add_argument(
         '-s', '--shards', '--number', type=int, metavar='SHARDS',

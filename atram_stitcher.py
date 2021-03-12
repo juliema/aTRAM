@@ -45,7 +45,7 @@ def parse_command_line():
     parser.add_argument(
         '-O', '--overlap', type=int, default=10,
         help="""Contigs must overlap by this many codons before it is
-            considered a real overlap.""")
+            considered a real overlap. (default %(default)s)""")
 
     parser.add_argument(
         '-t', '--temp-dir', metavar='DIR',
@@ -62,13 +62,13 @@ def parse_command_line():
         '--log-level', choices=['debug', 'info', 'error', 'fatal'],
         default='info',
         help="""Log messages of the given level (or above). 'debug' shows the
-            most messages and 'fatal' shows the least. The default is
-            'info'""")
+            most messages and 'fatal' shows the least.
+            (default %(default)s)""")
 
     parser.add_argument(
         '-i', '--iterations', type=int, default=2, metavar='N',
         help="""The number of times to run the main stitcher loop. This
-            must be either 1 or 2, the default is 2.""")
+            must be either 1 or 2. (default %(default)s)""")
 
     parser.add_argument(
         '-o', '--output-prefix',
@@ -82,8 +82,8 @@ def parse_command_line():
         help="""Use this to filter files in the assemblies directory. For
             example '*filtered*.fasta' will select all fasta files in the
             assemblies directory with the word filtered in them. The default
-            is to select all fasta files in the assemblies directory
-            '*.fasta'.""")
+            is to select all fasta files in the assemblies directory.
+            (default %(default)s)""")
 
     parser.add_argument(
         '--reference-name', action='store_true',

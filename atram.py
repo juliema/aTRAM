@@ -71,12 +71,12 @@ def parse_command_line():
     group.add_argument(
         '-a', '--assembler', default='none',
         choices=['abyss', 'trinity', 'velvet', 'spades', 'none'],
-        help="""Which assembler to use. Choosing "none" (the default) will do
-            a single blast run and stop before any assembly.""")
+        help="""Which assembler to use. Choosing "none" will do a single blast run
+        and stop before any assembly. (default %(default)s)""")
 
     group.add_argument(
         '-i', '--iterations', type=int, default=5, metavar='N',
-        help="""The number of pipeline iterations. The default is "5".""")
+        help="""The number of pipeline iterations. (default %(default)s)""")
 
     group = parser.add_argument_group('optional arguments')
 
@@ -87,8 +87,8 @@ def parse_command_line():
 
     group.add_argument(
         '--fraction', type=float, default=1.0,
-        help="""Use only the specified fraction of the aTRAM database. The
-            default is 1.0.""")
+        help="""Use only the specified fraction of the aTRAM database.
+            (default %(default)s)""")
 
     cpus = min(10, os.cpu_count() - 4 if os.cpu_count() > 4 else 1)
     group.add_argument(
@@ -102,8 +102,8 @@ def parse_command_line():
         '--log-level', choices=['debug', 'info', 'error', 'fatal'],
         default='info',
         help="""Log messages of the given level (or above). 'debug' shows the
-            most messages and 'fatal' shows the least. The default is
-            'info'""")
+            most messages and 'fatal' shows the least.
+            (default %(default)s)""")
 
     group.add_argument(
         '--path',
@@ -123,8 +123,8 @@ def parse_command_line():
     group.add_argument(
         '-T', '--timeout', metavar='SECONDS', default=600, type=int,
         help="""How many seconds to wait for an assembler or BLAST before
-            stopping the run. To wait forever set this to 0. The default
-            is "600" (10 minutes).""")
+            stopping the run. To wait forever set this to 0.
+            (default %(default)s)""")
 
     group = parser.add_argument_group(
         'optional values for filtering contigs')
@@ -136,14 +136,15 @@ def parse_command_line():
 
     group.add_argument(
         '--bit-score', type=float, default=70.0, metavar='SCORE',
-        help="""Remove contigs that have a value less than this. The default
-            is "70.0". This is turned off by the --no-filter argument.""")
+        help="""Remove contigs that have a value less than this.
+            (default %(default)s) This is turned off by the
+            --no-filter argument.""")
 
     group.add_argument(
         '--contig-length', '--length', type=int, default=100,
-        help="""Remove blast hits that are shorter than this length. The
-            default is "100". This is turned off by the --no-filter argument.
-            """)
+        help="""Remove blast hits that are shorter than this length.
+            (default %(default)s) This is turned off by the
+            --no-filter argument.""")
 
     blast.command_line_args(parser)
     assembly.command_line_args(parser)

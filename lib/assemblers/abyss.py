@@ -75,7 +75,7 @@ class AbyssAssembler(BaseAssembler):
 
         group.add_argument(
             '--abyss-kmer', type=int, default=64,
-            help="""k-mer size. I passes k=<int> (default 64).""")
+            help="""k-mer size. It passes k=<int>. (default %(default)s)""")
 
         group.add_argument(
             '--abyss-np', type=int,

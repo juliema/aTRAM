@@ -134,10 +134,10 @@ def command_line_args(parser):
     group.add_argument('--blast-db-gencode', '--db-gencode', type=int,
                        default=1, metavar='CODE',
                        help="""The genetic code to use during blast runs.
-                            The default is "1".""")
+                             (default %(default)s)""")
 
     group.add_argument('--blast-evalue', '--evalue', type=float, default=1e-10,
-                       help="""The default evalue is "1e-10".""")
+                       help="""(default %(default)s)""")
 
     group.add_argument('--blast-word-size', '--word-size', type=int,
                        help="""Word size for wordfinder algorithm.

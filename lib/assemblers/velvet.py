@@ -73,19 +73,19 @@ class VelvetAssembler(BaseAssembler):
 
         group.add_argument(
             '--velvet-kmer', type=int, default=31,
-            help="""k-mer size (default 31).""")
+            help="""k-mer size. ((default %(default)s)""")
 
         group.add_argument(
             '--velvet-exp-cov', type=int, default=30,
-            help="""The expected coverage of the region. -exp_cov <int>
-                (default 30).""")
+            help="""The expected coverage of the region. -exp_cov <int>.
+                ((default %(default)s)""")
 
         group.add_argument(
             '--velvet-ins-length', type=int, default=300,
             help="""The size of the fragments used in the short-read library.
-                -ins_length <int> (default 300).""")
+                -ins_length <int>. ((default %(default)s)""")
 
         group.add_argument(
             '--velvet-min-contig-lgth', type=int, default=100,
             help="""The minimum contig length used by the assembler itself.
-                -min_contig_lgth <int> (default is 100).""")
+                -min_contig_lgth <int>. ((default %(default)s)""")
