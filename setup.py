@@ -53,7 +53,7 @@ setup(
     long_description=readme(),
     license=license_(),
     url="https://github.com/juliema/aTRAM",
-    python_requires='>=3.4',
+    python_requires='>=3.6',
     scripts=[
         'atram.py',
         'atram_preprocessor.py',

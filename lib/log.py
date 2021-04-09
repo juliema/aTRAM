@@ -6,6 +6,8 @@ import sys
 import tempfile
 from datetime import datetime
 
+import psutil
+
 from . import db
 
 DEBUG = 10
@@ -52,24 +54,29 @@ class Logger:
         error = None
 
         with tempfile.NamedTemporaryFile(mode='w', dir=temp_dir) as log_output:
-            try:
-                subprocess.check_call(
-                    cmd,
-                    shell=True,
-                    timeout=timeout,
-                    stdout=log_output,
-                    stderr=log_output)
-            except Exception as err:  # pylint: disable=broad-except
-                self.error('Exception: {}'.format(err))
-                error = err
-            finally:
-                with open(log_output.name) as log_input:
-                    for line in log_input:
-                        line = line.strip()
-                        if line:
-                            self.debug(line)
-                if error:
-                    raise error
+            with subprocess.Popen(
+                    cmd, shell=True, stdout=log_output, stderr=log_output) as proc:
+                try:
+                    proc.communicate(timeout=timeout)
+
+                # Catch any error and kill all child processes
+                except Exception as err:  # pylint: disable=broad-except
+                    parent = psutil.Process(proc.pid)
+                    for child in parent.children(recursive=True):
+                        child.kill()
+                    proc.kill()
+                    self.error('Exception: {}'.format(err))
+                    error = err
+
+                # On success or failure log what we can
+                finally:
+                    with open(log_output.name) as log_input:
+                        for line in log_input:
+                            line = line.strip()
+                            if line:
+                                self.debug(line)
+                    if error:
+                        raise error
 
     def _output(self, msg, level):
         timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')
