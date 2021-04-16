@@ -63,14 +63,14 @@ class Logger:
                 # Catch any error and kill all child processes
                 except Exception as err:  # pylint: disable=broad-except
                     pid = psutil.Process(proc.pid)
-                    kill_wait = 5
+
+                    wait = 5
                     killed, alive = util.kill_proc_tree(
-                        pid, timeout=kill_wait, sig=signal.SIGKILL)
+                        pid, timeout=wait, sig=signal.SIGKILL)
 
                     self.error('Exception: {}'.format(err))
-                    self.error(
-                        'SIGKILL sent to {} and its children, waited {} secs'.format(
-                            pid, kill_wait))
+                    self.error('SIGKILL sent to {} and its children'.format(pid))
+                    self.error('After {} seconds...'.format(wait))
                     self.error('Processes still alive: {}'.format(len(alive)))
                     self.error('Processes killed: {}'.format(len(killed)))
 
