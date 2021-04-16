@@ -65,12 +65,9 @@ class Logger:
                     pid = psutil.Process(proc.pid)
 
                     wait = 5
-                    killed, alive = util.kill_proc_tree(
-                        pid, timeout=wait, sig=signal.SIGKILL)
+                    killed, alive = util.kill_proc_tree(pid, timeout=wait)
 
                     self.error('Exception: {}'.format(err))
-                    self.error('SIGKILL sent to {} and its children'.format(pid))
-                    self.error('After {} seconds...'.format(wait))
                     self.error('Processes still alive: {}'.format(len(alive)))
                     self.error('Processes killed: {}'.format(len(killed)))
 
