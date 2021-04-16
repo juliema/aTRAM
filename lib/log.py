@@ -1,6 +1,7 @@
 """Common logging functions."""
 
 import os
+import signal
 import subprocess
 import sys
 import tempfile
@@ -8,7 +9,7 @@ from datetime import datetime
 
 import psutil
 
-from . import db
+from . import db, util
 
 DEBUG = 10
 INFO = 20
@@ -61,11 +62,18 @@ class Logger:
 
                 # Catch any error and kill all child processes
                 except Exception as err:  # pylint: disable=broad-except
-                    parent = psutil.Process(proc.pid)
-                    for child in parent.children(recursive=True):
-                        child.kill()
-                    proc.kill()
+                    pid = psutil.Process(proc.pid)
+                    kill_wait = 5
+                    killed, alive = util.kill_proc_tree(
+                        pid, timeout=kill_wait, sig=signal.SIGKILL)
+
                     self.error('Exception: {}'.format(err))
+                    self.error(
+                        'SIGKILL sent to {} and its children, waited {} secs'.format(
+                            pid, kill_wait))
+                    self.error('Processes still alive: {}'.format(len(alive)))
+                    self.error('Processes killed: {}'.format(len(killed)))
+
                     error = err
 
                 # On success or failure log what we can

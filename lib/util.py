@@ -5,12 +5,14 @@ import gzip
 import io
 import os
 import re
+import signal
 import sys
 from contextlib import contextmanager
 from os.path import exists, getsize, join, split
 from shutil import rmtree
 from tempfile import mkdtemp
 
+import psutil
 from Bio.SeqIO.FastaIO import SimpleFastaParser
 
 
@@ -139,3 +141,27 @@ def prefix_file(prefix, name):
     dir_, file_ = split(prefix)
     file_ += '.' if file_ and file_[-1] != '.' else ''
     return join(dir_, file_ + name)
+
+
+def kill_proc_tree(
+        pid, sig=signal.SIGTERM, include_parent=True, timeout=None, on_kill=None):
+    """Kill a process tree (including grandchildren etc.) with signal "sig".
+
+    Return a (killed, alive) tuple. "on_terminate", if specified, is a callback
+    function which is called as soon as a child terminates.
+    """
+    parent = psutil.Process(pid)
+    pids = parent.children(recursive=True)
+
+    if include_parent:
+        pids.append(parent)
+
+    for pid in pids:
+        try:
+            pid.send_signal(sig)
+        except psutil.NoSuchProcess:
+            pass
+
+    killed, alive = psutil.wait_procs(pids, timeout=timeout, callback=on_kill)
+
+    return killed, alive
