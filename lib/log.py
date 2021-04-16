@@ -64,14 +64,22 @@ class Logger:
                 except Exception as err:  # pylint: disable=broad-except
                     pid = psutil.Process(proc.pid)
 
-                    wait = 5
-                    killed, alive = util.kill_proc_tree(pid, timeout=wait)
-
+                    error = err
                     self.error('Exception: {}'.format(err))
+
+                    wait = 5
+
+                    killed, alive = util.kill_proc_tree(pid, timeout=wait)
+                    self.error('Killing processes with SIGTERM.')
                     self.error('Processes still alive: {}'.format(len(alive)))
                     self.error('Processes killed: {}'.format(len(killed)))
 
-                    error = err
+                    if alive:
+                        killed, alive = util.kill_proc_tree(
+                            pid, timeout=wait, sig=signal.SIGKILL)
+                        self.error('Killing processes with SIGKILL.')
+                        self.error('Processes still alive: {}'.format(len(alive)))
+                        self.error('Processes killed: {}'.format(len(killed)))
 
                 # On success or failure log what we can
                 finally:
