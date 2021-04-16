@@ -7,8 +7,6 @@ import sys
 import tempfile
 from datetime import datetime
 
-import psutil
-
 from . import db, util
 
 DEBUG = 10

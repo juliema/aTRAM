@@ -151,17 +151,17 @@ def kill_proc_tree(
     function which is called as soon as a child terminates.
     """
     parent = psutil.Process(pid)
-    pids = parent.children(recursive=True)
+    processes = parent.children(recursive=True)
 
     if include_parent:
-        pids.append(parent)
+        processes.append(parent)
 
-    for pid in pids:
+    for proc in processes:
         try:
-            pid.send_signal(sig)
+            proc.send_signal(sig)
         except psutil.NoSuchProcess:
             pass
 
-    killed, alive = psutil.wait_procs(pids, timeout=timeout, callback=on_kill)
+    killed, alive = psutil.wait_procs(processes, timeout=timeout, callback=on_kill)
 
     return killed, alive
