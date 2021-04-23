@@ -63,22 +63,23 @@ class Logger:
                     error = err
                     self.error('Exception: {}'.format(err))
 
+                # On success or failure log what we can
+                finally:
                     wait = 5
 
                     killed, alive = util.kill_proc_tree(proc.pid, timeout=wait)
-                    self.error('Killing processes with SIGTERM.')
-                    self.error('Processes still alive: {}'.format(len(alive)))
-                    self.error('Processes killed: {}'.format(len(killed)))
 
-                    if alive:
+                    if killed:
+                        self.error('Killed {} processes with SIGTERM.'.format(killed))
+
+                    if alive > 0:
+                        self.error('{} alive processes after SIGTERM'.format(alive))
+
                         killed, alive = util.kill_proc_tree(
                             proc.pid, timeout=wait, sig=signal.SIGKILL)
-                        self.error('Killing processes with SIGKILL.')
-                        self.error('Processes still alive: {}'.format(len(alive)))
-                        self.error('Processes killed: {}'.format(len(killed)))
+                        self.error('Killed {} processes with SIGKILL.'.format(killed))
+                        self.error('{} alive processes after SIGKILL'.format(alive))
 
-                # On success or failure log what we can
-                finally:
                     with open(log_output.name) as log_input:
                         for line in log_input:
                             line = line.strip()

@@ -16,6 +16,7 @@ output/
 query/
 temp/
 venv/
+atram_singularity/
 
 junk*
 

@@ -150,8 +150,11 @@ def kill_proc_tree(
     Return a (killed, alive) tuple. "on_terminate", if specified, is a callback
     function which is called as soon as a child terminates.
     """
-    parent = psutil.Process(pid)
-    processes = parent.children(recursive=True)
+    try:
+        parent = psutil.Process(pid)
+        processes = parent.children(recursive=True)
+    except psutil.NoSuchProcess:
+        return 0, 0
 
     if include_parent:
         processes.append(parent)
@@ -162,6 +165,9 @@ def kill_proc_tree(
         except psutil.NoSuchProcess:
             pass
 
-    killed, alive = psutil.wait_procs(processes, timeout=timeout, callback=on_kill)
+    try:
+        killed, alive = psutil.wait_procs(processes, timeout=timeout, callback=on_kill)
+    except psutil.NoSuchProcess:
+        return 0, 0
 
-    return killed, alive
+    return len(killed), len(alive)
