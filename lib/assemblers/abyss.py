@@ -35,6 +35,9 @@ class AbyssAssembler(BaseAssembler):
         if self.args.get('abyss_np'):
             cmd.append('np={}'.format(self.args['abyss_np']))
 
+        if self.args.get('abyss_j'):
+            cmd.append('j={}'.format(self.args['abyss_j']))
+
         if self.args.get('abyss_paired_ends'):
             if self.file['paired_count']:
                 cmd.append("in='{} {}'".format(
@@ -81,6 +84,10 @@ class AbyssAssembler(BaseAssembler):
             '--abyss-np', type=int,
             help="""Abyss must have been compiled to use np.
                 It passes np=<integer>.""")
+
+        group.add_argument(
+            '--abyss-j', type=int,
+            help="""Number of threads for Abyss. It passes j=<integer>.""")
 
         group.add_argument(
             '--abyss-paired-ends', action='store_true',
