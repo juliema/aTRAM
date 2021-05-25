@@ -108,8 +108,7 @@ def get_raw_hits(log, json_file):
                    'You may need to upgrade blast.')
             log.fatal(err)
 
-    return obj['BlastOutput2'][0]['report']['results']['search'].get(
-        'hits', [])
+    return obj['BlastOutput2'][0]['report']['results']['search'].get('hits', [])
 
 
 def hits(log, json_file):

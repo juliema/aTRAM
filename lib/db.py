@@ -103,7 +103,7 @@ def get_version(cxn):
 
 def is_single_end(cxn):
     """Was the database build for single ends."""
-    result = get_metadata(cxn, 'single_ends')
+    result = get_metadata(cxn, 'single_ends', default='0')
     return result != '0'
 
 
