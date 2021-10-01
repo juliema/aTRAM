@@ -32,6 +32,9 @@ class AbyssAssembler(BaseAssembler):
 
         cmd.append("name='{}'".format(self.file['output']))
 
+        if self.args.get('abyss_B'):
+            cmd.append('B={}'.format(self.args['abyss_B']))
+
         if self.args.get('abyss_np'):
             cmd.append('np={}'.format(self.args['abyss_np']))
 
@@ -52,8 +55,7 @@ class AbyssAssembler(BaseAssembler):
             in_files += self.get_single_ends()
             cmd.append("se='{}'".format(' '.join(in_files)))
 
-        if (self.file['long_reads']
-                and not self.args.get('abyss_no_long')):
+        if self.file['long_reads'] and not self.args.get('abyss_no_long'):
             cmd.append("long='LONGREADS'")
             cmd.append("LONGREADS='{}'".format(self.file['long_reads']))
 
@@ -81,8 +83,15 @@ class AbyssAssembler(BaseAssembler):
             help="""k-mer size. It passes k=<int>. (default %(default)s)""")
 
         group.add_argument(
+            '--abyss-B', type=int,
+            help="""Specify the Bloom filter memory budget with the B parameter.
+                B may be specified with unit suffixes 'k' (kilobytes), 'M' (megabytes),
+                'G' (gigabytes). If no units are specified bytes are assumed.
+                It passes B=<memory-budget>. Ex: --abyss-B 5G will pass B=5G.""")
+
+        group.add_argument(
             '--abyss-np', type=int,
-            help="""Abyss must have been compiled to use np.
+            help="""THIS OPTION IS DEPRECATED: Abyss must have been compiled to use np.
                 It passes np=<integer>.""")
 
         group.add_argument(
