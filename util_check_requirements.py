@@ -7,7 +7,9 @@ import subprocess
 from functools import reduce
 from distutils.version import LooseVersion
 from shutil import which
+import warnings
 
+warnings.simplefilter("ignore")
 
 RESULTS = {}
 
@@ -22,11 +24,11 @@ def test_format(name, value):
 def parse_requirements(requirements):
     """Parse a requirement into a module and version parts."""
     reqs = {}
-    for req in requirements.split():
+    for req in requirements.splitlines():
         match = re.match(r'^([^>=<]+)([>=<]+)([^>=<]+)$', req)
         module = match.group(1)
         compare = match.group(2)
-        version = LooseVersion(match.group(3)).version
+        version = LooseVersion(match.group(3))
         reqs[module] = {'compare': compare, 'version': version}
     return reqs
 
@@ -34,24 +36,30 @@ def parse_requirements(requirements):
 def check_modules():
     """Get installed python modules."""
     modules = subprocess.check_output([sys.executable, '-m', 'pip', 'freeze'])
-    installed_list = parse_requirements(modules.decode('utf-8'))
+    installed_modules = parse_requirements(modules.decode('utf-8'))
 
     with open('requirements.txt') as requirements:
-        required_list = parse_requirements(requirements.read())
+        required_modules = parse_requirements(requirements.read())
 
-    for module, required in required_list.items():
-        installed = installed_list[module]
+    for module, required in required_modules.items():
+        installed = installed_modules.get(module)
+
+        if not installed:
+            print(module.ljust(40, '.'), 'MISSING')
+            continue
 
         cmp = required['compare']
         i_version = installed['version']
         r_version = required['version']
 
         if cmp == '==' and i_version != r_version:
-            test_format(module, False)
+            print(module.ljust(40, '.'), 'WRONG VERSION')
         elif cmp == '>=' and i_version > r_version:
-            test_format(module, True)
+            print(module.ljust(40, '.'), 'WRONG VERSION')
         elif i_version < r_version:
-            test_format(module, False)
+            print(module.ljust(40, '.'), 'WRONG VERSION')
+        else:
+            print(module.ljust(40, '.'), 'OK')
 
 
 def check_programs():
@@ -68,18 +76,18 @@ def check_programs():
     test_format('exonerate', which('exonerate'))
 
 
+def assembler(module, but):
+    """Report limited aTRAM functionality."""
+    if not RESULTS.get(module):
+        print('  atram.py will work but {}'.format(but))
+
+
 def requires(module, because, program=None):
     """Show that aTRAM will not work without the given program/module."""
     if not program:
         program = 'atram.py and atram_preprocessor.py'
-    if not RESULTS[module]:
+    if not RESULTS.get(module):
         print('  {} will not work because {}'.format(program, because))
-
-
-def assembler(module, but):
-    """Report limited aTRAM functionality."""
-    if not RESULTS[module]:
-        print('  atram.py will work but {}'.format(but))
 
 
 def report_results():
@@ -94,9 +102,6 @@ def report_results():
     requires('makeblastdb', "BLAST's makeblastdb is not installed")
     requires('tblastn', "BLAST's tblastn is not installed")
     requires('blastn', "BLAST's blastn is not installed")
-    requires('biopython', 'the biopython module is missing (install with pip)')
-    requires('psutil', 'the psutil module is missing (install it with pip)')
-    requires('numpy', 'the numpy module is missing (install it with pip)')
     requires('exonerate', 'exonerate is not installed', 'atram_stitcher.py')
 
     assembler('abyss', 'you are missing the abyss assembler')
