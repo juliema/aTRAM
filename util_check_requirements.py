@@ -54,9 +54,9 @@ def check_modules():
 
         if cmp == '==' and i_version != r_version:
             print(module.ljust(40, '.'), 'WRONG VERSION')
-        elif cmp == '>=' and i_version > r_version:
+        elif cmp == '>=' and i_version < r_version:
             print(module.ljust(40, '.'), 'WRONG VERSION')
-        elif i_version < r_version:
+        elif cmp == '<=' and i_version > r_version:
             print(module.ljust(40, '.'), 'WRONG VERSION')
         else:
             print(module.ljust(40, '.'), 'OK')
